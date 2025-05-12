@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"database/sql"
 	"log"
 	"math"
 	"strings"
@@ -11,6 +12,8 @@ import (
 
 var CreateId = createIdGenerator(32)
 var CreateSmallId = createIdGenerator(8)
+
+var CreateAnimeId = createIdGenerator(8)
 
 var CreateApiTokenId = createIdGenerator(32)
 
@@ -51,4 +54,41 @@ func SplitString(s string) []string {
 
 func TotalPages(perPage, totalItems int) int {
 	return int(math.Ceil(float64(totalItems) / float64(perPage)))
+}
+
+func FixSpaces(s string) string {
+	return strings.Join(strings.Fields(s), " ")
+}
+
+func Int64PtrToSqlNull(i *int64) sql.NullInt64 {
+	if i == nil {
+		return sql.NullInt64{}
+	}
+
+	return sql.NullInt64{
+		Int64: *i,
+		Valid: true,
+	}
+}
+
+func Float64PtrToSqlNull(i *float64) sql.NullFloat64 {
+	if i == nil {
+		return sql.NullFloat64{}
+	}
+
+	return sql.NullFloat64{
+		Float64: *i,
+		Valid:   true,
+	}
+}
+
+func StringPtrToSqlNull(i *string) sql.NullString {
+	if i == nil {
+		return sql.NullString{}
+	}
+
+	return sql.NullString{
+		String: *i,
+		Valid:  true,
+	}
 }

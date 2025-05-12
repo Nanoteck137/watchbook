@@ -8,6 +8,8 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/mattn/go-sqlite3"
+	"github.com/nanoteck137/watchbook/types"
+	"github.com/nanoteck137/watchbook/utils"
 )
 
 type Anime struct {
@@ -15,16 +17,18 @@ type Anime struct {
 
 	Id string `db:"id"`
 
+	MalId string `db:"mal_id"`
+
 	Title        string         `db:"title"`
 	TitleEnglish sql.NullString `db:"title_english"`
 
 	Description string `db:"description"`
 
-	Type         string        `db:"type"`
-	Status       string        `db:"status"`
-	Rating       string        `db:"rating"`
-	AiringSeason string        `db:"airing_season"`
-	EpisodeCount sql.NullInt64 `db:"episode_count"`
+	Type         types.AnimeType   `db:"type"`
+	Status       types.AnimeStatus `db:"status"`
+	Rating       types.AnimeRating `db:"rating"`
+	AiringSeason string            `db:"airing_season"`
+	EpisodeCount sql.NullInt64     `db:"episode_count"`
 
 	StartDate sql.NullString `db:"start_date"`
 	EndDate   sql.NullString `db:"end_date"`
@@ -47,6 +51,8 @@ func AnimeQuery() *goqu.SelectDataset {
 			"animes.rowid",
 
 			"animes.id",
+
+			"animes.mal_id",
 
 			"animes.title",
 			"animes.title_english",
@@ -106,17 +112,36 @@ func (db *Database) GetAnimeById(ctx context.Context, id string) (Anime, error) 
 	return item, nil
 }
 
+func (db *Database) GetAnimeByMalId(ctx context.Context, malId string) (Anime, error) {
+	query := AnimeQuery().
+		Where(goqu.I("animes.mal_id").Eq(malId))
+
+	var item Anime
+	err := db.Get(&item, query)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Anime{}, ErrItemNotFound
+		}
+
+		return Anime{}, err
+	}
+
+	return item, nil
+}
+
 type CreateAnimeParams struct {
 	Id string
+
+	MalId string
 
 	Title        string
 	TitleEnglish sql.NullString
 
 	Description string
 
-	Type         string
-	Status       string
-	Rating       string
+	Type         types.AnimeType
+	Status       types.AnimeStatus
+	Rating       types.AnimeRating
 	AiringSeason string
 	EpisodeCount sql.NullInt64
 
@@ -144,13 +169,27 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 		updated = t
 	}
 
-	// id := params.Id
-	// if id == "" {
-	// 	id = utils.CreateId()
-	// }
+	id := params.Id
+	if id == "" {
+		id = utils.CreateAnimeId()
+	}
+
+	if params.Type == "" {
+		params.Type = types.AnimeTypeUnknown
+	}
+
+	if params.Status == "" {
+		params.Status = types.AnimeStatusUnknown
+	}
+
+	if params.Rating == "" {
+		params.Rating = types.AnimeRatingUnknown
+	}
 
 	query := dialect.Insert("animes").Rows(goqu.Record{
-		"id": params.Id,
+		"id": id,
+
+		"mal_id": params.MalId,
 
 		"title":         params.Title,
 		"title_english": params.TitleEnglish,
@@ -189,14 +228,16 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 }
 
 type AnimeChanges struct {
+	MalId Change[string]
+
 	Title        Change[string]
 	TitleEnglish Change[sql.NullString]
 
 	Description Change[string]
 
-	Type         Change[string]
-	Status       Change[string]
-	Rating       Change[string]
+	Type         Change[types.AnimeType]
+	Status       Change[types.AnimeStatus]
+	Rating       Change[types.AnimeRating]
 	AiringSeason Change[string]
 	EpisodeCount Change[sql.NullInt64]
 
@@ -216,6 +257,8 @@ type AnimeChanges struct {
 func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeChanges) error {
 	record := goqu.Record{}
 
+	addToRecord(record, "mal_id", changes.MalId)
+
 	addToRecord(record, "title", changes.Title)
 	addToRecord(record, "title_english", changes.TitleEnglish)
 
@@ -232,8 +275,8 @@ func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeCha
 
 	addToRecord(record, "score", changes.Score)
 
-    addToRecord(record, "ani_db_url", changes.AniDBUrl)
-    addToRecord(record, "anime_news_network_url", changes.AnimeNewsNetworkUrl) 
+	addToRecord(record, "ani_db_url", changes.AniDBUrl)
+	addToRecord(record, "anime_news_network_url", changes.AnimeNewsNetworkUrl)
 
 	addToRecord(record, "download_date", changes.DownloadDate)
 
@@ -262,7 +305,7 @@ func (db *Database) AddThemeToAnime(ctx context.Context, animeId, themeSlug stri
 	ds := dialect.Insert("anime_themes").
 		Prepared(true).
 		Rows(goqu.Record{
-			"anime_id": animeId,
+			"anime_id":   animeId,
 			"theme_slug": themeSlug,
 		})
 
@@ -298,7 +341,7 @@ func (db *Database) AddGenreToAnime(ctx context.Context, animeId, genreSlug stri
 	ds := dialect.Insert("anime_genres").
 		Prepared(true).
 		Rows(goqu.Record{
-			"anime_id": animeId,
+			"anime_id":   animeId,
 			"genre_slug": genreSlug,
 		})
 
@@ -334,7 +377,7 @@ func (db *Database) AddStudioToAnime(ctx context.Context, animeId, studioSlug st
 	ds := dialect.Insert("anime_studios").
 		Prepared(true).
 		Rows(goqu.Record{
-			"anime_id": animeId,
+			"anime_id":    animeId,
 			"studio_slug": studioSlug,
 		})
 
@@ -370,7 +413,7 @@ func (db *Database) AddProducerToAnime(ctx context.Context, animeId, producerSlu
 	ds := dialect.Insert("anime_producers").
 		Prepared(true).
 		Rows(goqu.Record{
-			"anime_id": animeId,
+			"anime_id":      animeId,
 			"producer_slug": producerSlug,
 		})
 

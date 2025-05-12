@@ -32,6 +32,8 @@ CREATE TABLE producers (
 CREATE TABLE animes (
     id TEXT PRIMARY KEY,
 
+    mal_id TEXT NOT NULL UNIQUE CHECK(mal_id<>''),
+
 	title TEXT NOT NULL CHECK(title<>''),
 	title_english TEXT,
 
@@ -51,7 +53,7 @@ CREATE TABLE animes (
     ani_db_url TEXT,
     anime_news_network_url TEXT,
 
-	download_date TEXT NOT NULL, 
+	download_date TEXT NOT NULL,
 
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL
@@ -98,6 +100,15 @@ CREATE TABLE anime_producers (
 CREATE TABLE users_settings (
     id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     display_name TEXT
+);
+
+CREATE TABLE anime_data_fetch_requests (
+    id TEXT PRIMARY KEY,
+
+    anime_id TEXT REFERENCES animes(id) ON DELETE CASCADE,
+
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL
 );
 
 -- +goose Down
