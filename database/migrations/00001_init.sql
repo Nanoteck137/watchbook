@@ -53,7 +53,10 @@ CREATE TABLE animes (
     ani_db_url TEXT,
     anime_news_network_url TEXT,
 
-	download_date TEXT NOT NULL,
+    cover_filename TEXT,
+
+    should_fetch_data BOOLEAN NOT NULL,
+	last_data_fetch_date DATE NOT NULL,
 
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL
@@ -102,14 +105,14 @@ CREATE TABLE users_settings (
     display_name TEXT
 );
 
-CREATE TABLE anime_data_fetch_requests (
-    id TEXT PRIMARY KEY,
-
-    anime_id TEXT REFERENCES animes(id) ON DELETE CASCADE,
-
-    created INTEGER NOT NULL,
-    updated INTEGER NOT NULL
-);
+-- CREATE TABLE anime_data_fetch_requests (
+--     id TEXT PRIMARY KEY,
+--
+--     anime_id TEXT REFERENCES animes(id) ON DELETE CASCADE,
+--
+--     created INTEGER NOT NULL,
+--     updated INTEGER NOT NULL
+-- );
 
 -- +goose Down
 DROP TABLE users_settings; 

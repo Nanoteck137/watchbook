@@ -38,7 +38,10 @@ type Anime struct {
 	AniDBUrl            sql.NullString `db:"ani_db_url"`
 	AnimeNewsNetworkUrl sql.NullString `db:"anime_news_network_url"`
 
-	DownloadDate time.Time `db:"download_date"`
+	CoverFilename sql.NullString `db:"cover_filename"` 
+
+	ShouldFetchData   bool  `db:"should_fetch_data"`
+	LastDataFetchDate time.Time `db:"last_data_fetch_date"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -73,7 +76,10 @@ func AnimeQuery() *goqu.SelectDataset {
 			"animes.ani_db_url",
 			"animes.anime_news_network_url",
 
-			"animes.download_date",
+			"animes.cover_filename",
+
+			"animes.should_fetch_data",
+			"animes.last_data_fetch_date",
 
 			"animes.created",
 			"animes.updated",
@@ -83,10 +89,66 @@ func AnimeQuery() *goqu.SelectDataset {
 	return query
 }
 
+type FetchOptions struct {
+	PerPage int
+	Page    int
+}
+
+func (db *Database) GetPagedAnimes(ctx context.Context, opts FetchOptions) ([]Anime, types.Page, error) {
+	query := AnimeQuery()
+
+	var err error
+
+	countQuery := query.
+		Select(goqu.COUNT("animes.id"))
+
+	if opts.PerPage > 0 {
+		query = query.
+			Limit(uint(opts.PerPage)).
+			Offset(uint(opts.Page * opts.PerPage))
+	}
+
+	var totalItems int
+	err = db.Get(&totalItems, countQuery)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	totalPages := utils.TotalPages(opts.PerPage, totalItems)
+	page := types.Page{
+		Page:       opts.Page,
+		PerPage:    opts.PerPage,
+		TotalItems: totalItems,
+		TotalPages: totalPages,
+	}
+
+	var items []Anime
+	err = db.Select(&items, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
+}
+
 func (db *Database) GetAllAnimes(ctx context.Context) ([]Anime, error) {
 	query := AnimeQuery()
 
 	var items []Anime
+	err := db.Select(&items, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
+func (db *Database) GetAnimeIdsForFetching(ctx context.Context) ([]string, error) {
+	query := AnimeQuery().
+		Select("animes.id").
+		Where(goqu.I("animes.should_fetch_data").Eq(true))
+
+	var items []string
 	err := db.Select(&items, query)
 	if err != nil {
 		return nil, err
@@ -153,7 +215,10 @@ type CreateAnimeParams struct {
 	AniDBUrl            sql.NullString
 	AnimeNewsNetworkUrl sql.NullString
 
-	DownloadDate time.Time
+	CoverFilename sql.NullString
+
+	ShouldFetchData   bool
+	LastDataFetchDate time.Time
 
 	Created int64
 	Updated int64
@@ -210,7 +275,10 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 		"ani_db_url":             params.AniDBUrl,
 		"anime_news_network_url": params.AnimeNewsNetworkUrl,
 
-		"download_date": params.DownloadDate,
+		"should_fetch_data":    params.ShouldFetchData,
+		"last_data_fetch_date": params.LastDataFetchDate,
+
+		"cover_filename": params.CoverFilename,
 
 		"created": created,
 		"updated": updated,
@@ -249,7 +317,10 @@ type AnimeChanges struct {
 	AniDBUrl            Change[sql.NullString]
 	AnimeNewsNetworkUrl Change[sql.NullString]
 
-	DownloadDate Change[time.Time]
+	CoverFilename Change[sql.NullString]
+
+	ShouldFetchData   Change[bool]
+	LastDataFetchDate Change[time.Time]
 
 	Created Change[int64]
 }
@@ -278,7 +349,10 @@ func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeCha
 	addToRecord(record, "ani_db_url", changes.AniDBUrl)
 	addToRecord(record, "anime_news_network_url", changes.AnimeNewsNetworkUrl)
 
-	addToRecord(record, "download_date", changes.DownloadDate)
+	addToRecord(record, "cover_filename", changes.CoverFilename)
+
+	addToRecord(record, "should_fetch_data", changes.ShouldFetchData)
+	addToRecord(record, "last_data_fetch_date", changes.LastDataFetchDate)
 
 	addToRecord(record, "created", changes.Created)
 

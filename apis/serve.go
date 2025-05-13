@@ -11,6 +11,8 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 	InstallAuthHandlers(app, g)
 	InstallSystemHandlers(app, g)
 	InstallUserHandlers(app, g)
+
+	InstallAnimeHandlers(app, g)
 }
 
 func Server(app core.App) (*pyrin.Server, error) {

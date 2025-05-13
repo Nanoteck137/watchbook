@@ -15,7 +15,6 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/nanoteck137/watchbook/downloader"
-	"github.com/nanoteck137/watchbook/types"
 )
 
 var ErrCheckFailed = errors.New("entry check failed")
@@ -222,9 +221,7 @@ func process(id, p string) error {
 // 	return p, nil
 // }
 
-func FetchAnimeData(dl *downloader.Downloader, workDir types.WorkDir, id string) (*Anime, error) {
-	// p := path.Join(workDir.RawCurrentDir(), id)
-
+func FetchAnimeData(dl *downloader.Downloader, id string) (*Anime, error) {
 	p, err := os.MkdirTemp("", "anime*")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp dir: %w", err)

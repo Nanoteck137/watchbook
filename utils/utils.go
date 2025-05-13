@@ -92,3 +92,29 @@ func StringPtrToSqlNull(i *string) sql.NullString {
 		Valid:  true,
 	}
 }
+
+func NullToDefault[T any](p *T) T {
+	var res T
+
+	if p != nil {
+		res = *p
+	}
+
+	return res
+}
+
+func SqlNullToStringPtr(value sql.NullString) *string {
+	if value.Valid {
+		return &value.String
+	}
+
+	return nil
+}
+
+func SqlNullToInt64Ptr(value sql.NullInt64) *int64 {
+	if value.Valid {
+		return &value.Int64
+	}
+
+	return nil
+}
