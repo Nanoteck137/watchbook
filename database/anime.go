@@ -22,7 +22,7 @@ type Anime struct {
 	Title        string         `db:"title"`
 	TitleEnglish sql.NullString `db:"title_english"`
 
-	Description string `db:"description"`
+	Description sql.NullString `db:"description"`
 
 	Type         types.AnimeType   `db:"type"`
 	Status       types.AnimeStatus `db:"status"`
@@ -199,7 +199,7 @@ type CreateAnimeParams struct {
 	Title        string
 	TitleEnglish sql.NullString
 
-	Description string
+	Description sql.NullString
 
 	Type         types.AnimeType
 	Status       types.AnimeStatus
@@ -301,7 +301,7 @@ type AnimeChanges struct {
 	Title        Change[string]
 	TitleEnglish Change[sql.NullString]
 
-	Description Change[string]
+	Description Change[sql.NullString]
 
 	Type         Change[types.AnimeType]
 	Status       Change[types.AnimeStatus]

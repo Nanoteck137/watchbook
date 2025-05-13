@@ -80,8 +80,9 @@ type Episode struct {
 }
 
 // TODO(patrik):
-// Broadcast
-// Source
+//  - Broadcast
+//  - Source
+//  - Demographic
 func ExtractAnimeData(pagePath string) (Anime, error) {
 	f, err := os.Open(pagePath)
 	if err != nil {

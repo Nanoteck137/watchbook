@@ -3,6 +3,7 @@ package apis
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -15,8 +16,14 @@ import (
 )
 
 type Anime struct {
+	Id string `json:"id"`
+
 	Title        string  `json:"title"`
 	TitleEnglish *string `json:"titleEnglish"`
+
+	Description *string `json:"description"`
+
+	CoverUrl string `json:"coverUrl"`
 }
 
 type GetAnimes struct {
@@ -52,9 +59,17 @@ func getPageOptions(q url.Values) database.FetchOptions {
 }
 
 func ConvertDBAnime(c pyrin.Context, anime database.Anime) Anime {
+	coverUrl := ""
+	if anime.CoverFilename.Valid {
+		coverUrl = ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, anime.CoverFilename.String))
+	}
+
 	return Anime{
+		Id:           anime.Id,
 		Title:        anime.Title,
 		TitleEnglish: utils.SqlNullToStringPtr(anime.TitleEnglish),
+		Description:  utils.SqlNullToStringPtr(anime.Description),
+		CoverUrl:     coverUrl,
 	}
 }
 

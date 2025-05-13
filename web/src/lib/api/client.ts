@@ -31,4 +31,12 @@ export class ApiClient extends BaseApiClient {
   updateUserSettings(body: api.UpdateUserSettingsBody, options?: ExtraOptions) {
     return this.request("/api/v1/user/settings", "PATCH", z.undefined(), z.any(), body, options)
   }
+  
+  getAnimes(options?: ExtraOptions) {
+    return this.request("/api/v1/animes", "GET", api.GetAnimes, z.any(), undefined, options)
+  }
+  
+  getAnimeById(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/animes/${id}`, "GET", api.GetAnimeById, z.any(), undefined, options)
+  }
 }

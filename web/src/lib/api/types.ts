@@ -50,3 +50,29 @@ export const UpdateUserSettingsBody = z.object({
 });
 export type UpdateUserSettingsBody = z.infer<typeof UpdateUserSettingsBody>;
 
+export const Page = z.object({
+  page: z.number(),
+  perPage: z.number(),
+  totalItems: z.number(),
+  totalPages: z.number(),
+});
+export type Page = z.infer<typeof Page>;
+
+export const Anime = z.object({
+  id: z.string(),
+  title: z.string(),
+  titleEnglish: z.string().nullable(),
+  description: z.string().nullable(),
+  coverUrl: z.string(),
+});
+export type Anime = z.infer<typeof Anime>;
+
+export const GetAnimes = z.object({
+  page: Page,
+  animes: z.array(Anime),
+});
+export type GetAnimes = z.infer<typeof GetAnimes>;
+
+export const GetAnimeById = Anime;
+export type GetAnimeById = z.infer<typeof GetAnimeById>;
+

@@ -37,7 +37,7 @@ CREATE TABLE animes (
 	title TEXT NOT NULL CHECK(title<>''),
 	title_english TEXT,
 
-    description TEXT NOT NULL,
+    description TEXT,
 
 	type TEXT NOT NULL,
 	status TEXT NOT NULL,

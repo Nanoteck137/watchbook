@@ -143,6 +143,84 @@
           "omit": true
         }
       ]
+    },
+    {
+      "name": "Page",
+      "extend": "",
+      "fields": [
+        {
+          "name": "page",
+          "type": "int",
+          "omit": false
+        },
+        {
+          "name": "perPage",
+          "type": "int",
+          "omit": false
+        },
+        {
+          "name": "totalItems",
+          "type": "int",
+          "omit": false
+        },
+        {
+          "name": "totalPages",
+          "type": "int",
+          "omit": false
+        }
+      ]
+    },
+    {
+      "name": "Anime",
+      "extend": "",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omit": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "omit": false
+        },
+        {
+          "name": "titleEnglish",
+          "type": "*string",
+          "omit": false
+        },
+        {
+          "name": "description",
+          "type": "*string",
+          "omit": false
+        },
+        {
+          "name": "coverUrl",
+          "type": "string",
+          "omit": false
+        }
+      ]
+    },
+    {
+      "name": "GetAnimes",
+      "extend": "",
+      "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omit": false
+        },
+        {
+          "name": "animes",
+          "type": "[]Anime",
+          "omit": false
+        }
+      ]
+    },
+    {
+      "name": "GetAnimeById",
+      "extend": "Anime",
+      "fields": null
     }
   ],
   "apiEndpoints": [
@@ -187,8 +265,28 @@
       "path": "/api/v1/user/settings",
       "responseType": "",
       "bodyType": "UpdateUserSettingsBody"
+    },
+    {
+      "name": "GetAnimes",
+      "method": "GET",
+      "path": "/api/v1/animes",
+      "responseType": "GetAnimes",
+      "bodyType": ""
+    },
+    {
+      "name": "GetAnimeById",
+      "method": "GET",
+      "path": "/api/v1/animes/:id",
+      "responseType": "GetAnimeById",
+      "bodyType": ""
     }
   ],
   "formApiEndpoints": null,
-  "normalEndpoints": null
+  "normalEndpoints": [
+    {
+      "name": "GetAnimeImage",
+      "method": "GET",
+      "path": "/files/animes/:id/:image"
+    }
+  ]
 }

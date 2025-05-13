@@ -46,3 +46,18 @@ export function getPagedQueryOptions(searchParams: URLSearchParams) {
 
   return query;
 }
+
+export function pickTitle(entity: {
+  title: string;
+  titleEnglish: string | null;
+}) {
+  // return "Villainess Level 99: I May Be the Hidden Boss but I'm Not the Demon Lord's Lead Level Grinds to Success";
+  // return "The Strongest Tank's Labyrinth Raids -A Tank with a Rare 9999 Resistance Skill Got Kicked from the Hero's Party-";
+  // return "I've Somehow Gotten Stronger When I Improved My Farm-related Skills Is a Fantasy Parody Starring an OP Farm Boy";
+  // return "Trapped in a Dating Sim: The World of Otome Games is Tough for Mobs Somehow Combines Otome Games With Mecha";
+  // return "The Misfit Of Demon King Academy: History's Strongest Demon King Reincarnates and Goes To School With His Descendants Is an Amusing High School Power Trip The Misfit Of Demon King Academy: History's Strongest Demon King Reincarnates and Goes To School With His Descendants Is an Amusing High School Power Trip";
+
+  if (entity.titleEnglish) return entity.titleEnglish;
+
+  return entity.title;
+}

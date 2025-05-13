@@ -138,9 +138,12 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 			Changed: animeData.TitleEnglish != anime.TitleEnglish.String,
 		},
 
-		Description: database.Change[string]{
-			Value:   animeData.Description,
-			Changed: animeData.Description != anime.Description,
+		Description: database.Change[sql.NullString]{
+			Value: sql.NullString{
+				String: animeData.Description,
+				Valid:  animeData.Description != "",
+			},
+			Changed: animeData.Description != anime.Description.String,
 		},
 
 		Type: database.Change[types.AnimeType]{
