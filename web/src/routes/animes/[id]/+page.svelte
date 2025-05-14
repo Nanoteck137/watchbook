@@ -14,6 +14,15 @@
   const { data } = $props();
 
   let showMore = $state(false);
+
+  function formatAnimeType(ty: string) {
+    switch (ty) {
+      case "tv":
+        return "TV";
+    }
+
+    return ty;
+  }
 </script>
 
 <div class="py-2">
@@ -50,17 +59,11 @@
 <Spacer size="lg" />
 
 <div class="flex flex-col justify-around gap-2">
-  <div class="flex items-center justify-center rounded bg-gray-600 py-1">
-    <Star size={18} class="text-yellow-200" />
-    <Spacer horizontal size="sm" />
-    <p class="text-base">8.82</p>
-  </div>
-
   <DropdownMenu.Root>
     <DropdownMenu.Trigger
-      class="relative flex items-center justify-center rounded bg-gray-600 py-1"
+      class="relative flex items-center justify-center rounded bg-primary py-1 text-primary-foreground"
     >
-      <Star size={18} class="fill-yellow-200 text-yellow-200" />
+      <Star size={18} class="fill-primary-foreground" />
       <Spacer horizontal size="sm" />
       <p class="text-base">8</p>
       <ChevronDown class="absolute right-4" size={20} />
@@ -85,8 +88,10 @@
 
   <!-- <Separator orientation="vertical" /> -->
 
-  <div class="flex items-center justify-center rounded bg-gray-600 py-1">
-    <Eye size={18} class="" />
+  <div
+    class="flex items-center justify-center rounded bg-primary py-1 text-primary-foreground"
+  >
+    <Eye size={18} />
     <Spacer horizontal size="sm" />
     <p class="text-base">1000 / 1000</p>
   </div>
@@ -94,7 +99,7 @@
 
 <Spacer size="lg" />
 
-{#if data.anime.description}
+<!-- {#if data.anime.description}
   <div class="flex flex-col gap-1">
     <p
       class={`text-ellipsis whitespace-pre-line text-sm ${!showMore ? "line-clamp-2" : ""}`}
@@ -112,4 +117,77 @@
       Show More
     </Button>
   </div>
-{/if}
+{/if} -->
+
+<!-- <Spacer size="lg" /> -->
+
+<div
+  class="flex items-center justify-center rounded bg-primary py-1 text-primary-foreground"
+>
+  <Star size={18} />
+  <Spacer horizontal size="xs" />
+  <span>Score:</span>
+  <Spacer horizontal size="xs" />
+  <p class="text-base">{data.anime.score?.toFixed(2) ?? "N/A"}</p>
+</div>
+
+<Spacer size="lg" />
+
+<div
+  class="flex flex-col gap-1 rounded bg-primary p-2 text-primary-foreground"
+>
+  <p>Type: {formatAnimeType(data.anime.type)}</p>
+  <p>Episodes: {data.anime.episodeCount}</p>
+  <p>Status: {data.anime.status}</p>
+  <p>Start Date: {data.anime.startDate ?? "Unknown"}</p>
+  <p>End Date: {data.anime.endDate ?? "Unknown"}</p>
+  <p>
+    Studios:
+    {#each data.anime.studios as studio, i}
+      {#if i != 0}
+        <span>, </span>
+      {/if}
+      <a class="text-blue-500 hover:underline" href="/studios/{studio.slug}">
+        {studio.name}
+      </a>
+    {/each}
+  </p>
+  <p>
+    Producers:
+    {#each data.anime.producers as producer, i}
+      {#if i != 0}
+        <span>, </span>
+      {/if}
+      <a
+        class="text-blue-500 hover:underline"
+        href="/producers/{producer.slug}"
+      >
+        {producer.name}
+      </a>
+    {/each}
+  </p>
+  <p>
+    Genres:
+    {#each data.anime.genres as genre, i}
+      {#if i != 0}
+        <span>, </span>
+      {/if}
+      <a class="text-blue-500 hover:underline" href="/tags/{genre.slug}">
+        {genre.name}
+      </a>
+    {/each}
+  </p>
+  <p>
+    Themes:
+    {#each data.anime.themes as theme, i}
+      {#if i != 0}
+        <span>, </span>
+      {/if}
+      <a class="text-blue-500 hover:underline" href="/tags/{theme.slug}">
+        {theme.name}
+      </a>
+    {/each}
+  </p>
+  <p>Demographics: Shonen</p>
+  <p>Rating: {data.anime.rating}</p>
+</div>

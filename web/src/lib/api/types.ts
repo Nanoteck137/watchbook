@@ -58,11 +58,47 @@ export const Page = z.object({
 });
 export type Page = z.infer<typeof Page>;
 
+export const AnimeStudio = z.object({
+  slug: z.string(),
+  name: z.string(),
+});
+export type AnimeStudio = z.infer<typeof AnimeStudio>;
+
+export const AnimeProducer = z.object({
+  slug: z.string(),
+  name: z.string(),
+});
+export type AnimeProducer = z.infer<typeof AnimeProducer>;
+
+export const AnimeTheme = z.object({
+  slug: z.string(),
+  name: z.string(),
+});
+export type AnimeTheme = z.infer<typeof AnimeTheme>;
+
+export const AnimeGenre = z.object({
+  slug: z.string(),
+  name: z.string(),
+});
+export type AnimeGenre = z.infer<typeof AnimeGenre>;
+
 export const Anime = z.object({
   id: z.string(),
   title: z.string(),
   titleEnglish: z.string().nullable(),
   description: z.string().nullable(),
+  type: z.string(),
+  status: z.string(),
+  rating: z.string(),
+  airingSeason: z.string(),
+  episodeCount: z.number(),
+  score: z.number().nullable(),
+  startDate: z.string().nullable(),
+  endDate: z.string().nullable(),
+  studios: z.array(AnimeStudio),
+  producers: z.array(AnimeProducer),
+  themes: z.array(AnimeTheme),
+  genres: z.array(AnimeGenre),
   coverUrl: z.string(),
 });
 export type Anime = z.infer<typeof Anime>;

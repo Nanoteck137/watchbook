@@ -1,6 +1,7 @@
 package mal
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"strconv"
@@ -45,6 +46,8 @@ type Anime struct {
 	EpisodeCount *int64 `json:"episodeCount"`
 	Rating       string `json:"rating"`
 	Premiered    string `json:"premiered"`
+	Source       string `json:"source"`
+	Broadcast    string `json:"broadcast"`
 
 	StartDate *string `json:"startDate"`
 	EndDate   *string `json:"endDate"`
@@ -55,8 +58,9 @@ type Anime struct {
 	Studios   []string `json:"studios"`
 	Producers []string `json:"producers"`
 
-	Genres []string `json:"genres"`
-	Themes []string `json:"themes"`
+	Genres       []string `json:"genres"`
+	Themes       []string `json:"themes"`
+	Demographics []string `json:"demographics"`
 
 	ThemeSongs     []ThemeSong    `json:"themeSongs"`
 	RelatedEntries []RelatedEntry `json:"relatedEntries"`
@@ -80,9 +84,9 @@ type Episode struct {
 }
 
 // TODO(patrik):
-//  - Broadcast
-//  - Source
-//  - Demographic
+//   - Broadcast
+//   - Source
+//   - Demographic x
 func ExtractAnimeData(pagePath string) (Anime, error) {
 	f, err := os.Open(pagePath)
 	if err != nil {
@@ -224,6 +228,38 @@ func ExtractAnimeData(pagePath string) (Anime, error) {
 		}
 	})
 
+	var demographic []string
+	leftside.Find("span:contains(\"Demographic:\")").Parent().Find("a").Each(func(i int, s *goquery.Selection) {
+		t := s.Text()
+		t = strings.TrimSpace(t)
+
+		if t != "" {
+			demographic = append(demographic, s.Text())
+		}
+	})
+
+	leftside.Find("span:contains(\"Demographics:\")").Parent().Find("a").Each(func(i int, s *goquery.Selection) {
+		t := s.Text()
+		t = strings.TrimSpace(t)
+
+		if t != "" {
+			demographic = append(demographic, s.Text())
+		}
+	})
+
+	fmt.Printf("demographic: %v\n", demographic)
+
+	source := leftside.Find("span:contains(\"Source:\")").Parent().Children().Text() //Parent().Children().Remove().End().Text()
+	source = strings.TrimPrefix(source, "Source:")
+	source = strings.TrimSpace(source)
+
+	fmt.Printf("source: %v\n", source)
+
+	broadcast := leftside.Find("span:contains(\"Broadcast:\")").Parent().Children().Remove().End().Text()
+	broadcast = strings.TrimSpace(broadcast)
+
+	fmt.Printf("broadcast: %v\n", broadcast)
+
 	rating := leftside.Find("span:contains(\"Rating:\")").Parent().Children().Remove().End().Text()
 	rating = strings.TrimSpace(rating)
 
@@ -306,21 +342,24 @@ func ExtractAnimeData(pagePath string) (Anime, error) {
 		Title:               title,
 		TitleEnglish:        titleEnglish,
 		Description:         desc,
+		CoverImageUrl:       imageUrl,
 		Type:                typ,
 		Status:              status,
 		EpisodeCount:        episodeCount,
-		ScoreRaw:            scoreRaw,
-		Score:               score,
 		Rating:              rating,
 		Premiered:           premiered,
+		Source:              source,
+		Broadcast:           broadcast,
+		StartDate:           startDate,
+		EndDate:             endDate,
+		ScoreRaw:            scoreRaw,
+		Score:               score,
 		Studios:             studios,
 		Producers:           producers,
 		Genres:              genres,
 		Themes:              themes,
+		Demographics:        demographic,
 		ThemeSongs:          themeSongs,
-		StartDate:           startDate,
-		EndDate:             endDate,
-		CoverImageUrl:       imageUrl,
 		RelatedEntries:      relatedEntries,
 		AniDBUrl:            aniDbUrl,
 		AnimeNewsNetworkUrl: annUrl,

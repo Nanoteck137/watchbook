@@ -118,3 +118,11 @@ func SqlNullToInt64Ptr(value sql.NullInt64) *int64 {
 
 	return nil
 }
+
+func SqlNullToFloat64Ptr(value sql.NullFloat64) *float64 {
+	if value.Valid {
+		return &value.Float64
+	}
+
+	return nil
+}

@@ -356,7 +356,7 @@ func (app *BaseApp) Bootstrap() error {
 	// if err != nil {
 	// 	return err
 	// }
-
+	//
 	// for _, id := range ids[:4] {
 	// 	err := fetchAndUpdateAnime(ctx, db, workDir, id)
 	// 	if err != nil {

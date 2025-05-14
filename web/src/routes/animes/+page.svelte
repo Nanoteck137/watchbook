@@ -29,10 +29,10 @@
           </a>
         </div>
       </div>
-      <div class="flex items-center justify-center border-l px-4">
-        <Star size={18} class="fill-yellow-200 text-yellow-200" />
+      <div class="flex min-w-24 max-w-24 items-center justify-center border-l">
+        <Star size={18} class="fill-foreground" />
         <Spacer horizontal size="xs" />
-        <p class="text-xs">8.82</p>
+        <p class="font-mono text-xs">{anime.score?.toFixed(2) ?? "N/A"}</p>
       </div>
     </div>
   {/each}

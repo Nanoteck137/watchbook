@@ -171,6 +171,70 @@
       ]
     },
     {
+      "name": "AnimeStudio",
+      "extend": "",
+      "fields": [
+        {
+          "name": "slug",
+          "type": "string",
+          "omit": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omit": false
+        }
+      ]
+    },
+    {
+      "name": "AnimeProducer",
+      "extend": "",
+      "fields": [
+        {
+          "name": "slug",
+          "type": "string",
+          "omit": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omit": false
+        }
+      ]
+    },
+    {
+      "name": "AnimeTheme",
+      "extend": "",
+      "fields": [
+        {
+          "name": "slug",
+          "type": "string",
+          "omit": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omit": false
+        }
+      ]
+    },
+    {
+      "name": "AnimeGenre",
+      "extend": "",
+      "fields": [
+        {
+          "name": "slug",
+          "type": "string",
+          "omit": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omit": false
+        }
+      ]
+    },
+    {
       "name": "Anime",
       "extend": "",
       "fields": [
@@ -192,6 +256,66 @@
         {
           "name": "description",
           "type": "*string",
+          "omit": false
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "omit": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "omit": false
+        },
+        {
+          "name": "rating",
+          "type": "string",
+          "omit": false
+        },
+        {
+          "name": "airingSeason",
+          "type": "string",
+          "omit": false
+        },
+        {
+          "name": "episodeCount",
+          "type": "int",
+          "omit": false
+        },
+        {
+          "name": "score",
+          "type": "*int",
+          "omit": false
+        },
+        {
+          "name": "startDate",
+          "type": "*string",
+          "omit": false
+        },
+        {
+          "name": "endDate",
+          "type": "*string",
+          "omit": false
+        },
+        {
+          "name": "studios",
+          "type": "[]AnimeStudio",
+          "omit": false
+        },
+        {
+          "name": "producers",
+          "type": "[]AnimeProducer",
+          "omit": false
+        },
+        {
+          "name": "themes",
+          "type": "[]AnimeTheme",
+          "omit": false
+        },
+        {
+          "name": "genres",
+          "type": "[]AnimeGenre",
           "omit": false
         },
         {

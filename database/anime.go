@@ -3,7 +3,10 @@ package database
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
@@ -11,6 +14,72 @@ import (
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
+
+// TODO(patrik): Move
+type JsonColumn[T any] struct {
+	Has bool
+	Val T
+}
+
+func (j *JsonColumn[T]) Scan(src any) error {
+	var res T
+
+	if src == nil {
+		j.Val = res
+		j.Has = false
+		return nil
+	}
+
+	switch value := src.(type) {
+	case string:
+		err := json.Unmarshal([]byte(value), &j.Val)
+		if err != nil {
+			return err
+		}
+
+		j.Has = true
+	case []byte:
+		err := json.Unmarshal(value, &j.Val)
+		if err != nil {
+			return err
+		}
+
+		j.Has = true
+	default:
+		return fmt.Errorf("unsupported type %T", src)
+	}
+
+	return nil
+}
+
+func (j *JsonColumn[T]) Value() (driver.Value, error) {
+	raw, err := json.Marshal(j.Val)
+	return raw, err
+}
+
+// func (j *JsonColumn[T]) Get() *T {
+// 	return j.Val
+// }
+
+type AnimeStudio struct {
+	Slug string `json:"slug"`
+	Name string `json:"name"`
+}
+
+type AnimeProducer struct {
+	Slug string `json:"slug"`
+	Name string `json:"name"`
+}
+
+type AnimeTheme struct {
+	Slug string `json:"slug"`
+	Name string `json:"name"`
+}
+
+type AnimeGenre struct {
+	Slug string `json:"slug"`
+	Name string `json:"name"`
+}
 
 type Anime struct {
 	RowId int `db:"rowid"`
@@ -38,17 +107,127 @@ type Anime struct {
 	AniDBUrl            sql.NullString `db:"ani_db_url"`
 	AnimeNewsNetworkUrl sql.NullString `db:"anime_news_network_url"`
 
-	CoverFilename sql.NullString `db:"cover_filename"` 
+	CoverFilename sql.NullString `db:"cover_filename"`
 
-	ShouldFetchData   bool  `db:"should_fetch_data"`
+	ShouldFetchData   bool      `db:"should_fetch_data"`
 	LastDataFetchDate time.Time `db:"last_data_fetch_date"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
+
+	Studios   JsonColumn[[]AnimeStudio]   `db:"studios"`
+	Producers JsonColumn[[]AnimeProducer] `db:"producers"`
+	Themes    JsonColumn[[]AnimeTheme]    `db:"themes"`
+	Genres    JsonColumn[[]AnimeGenre]    `db:"genres"`
+}
+
+func AnimeStudioQuery() *goqu.SelectDataset {
+	tbl := goqu.T("anime_studios")
+
+	return dialect.From(tbl).
+		Select(
+			tbl.Col("anime_id").As("id"),
+			goqu.Func(
+				"json_group_array",
+				goqu.Func(
+					"json_object",
+
+					"slug",
+					goqu.I("studios.slug"),
+					"name",
+					goqu.I("studios.name"),
+				),
+			).As("studios"),
+		).
+		Join(
+			goqu.I("studios"),
+			goqu.On(tbl.Col("studio_slug").Eq(goqu.I("studios.slug"))),
+		).
+		GroupBy(tbl.Col("anime_id"))
+}
+
+func AnimeProducerQuery() *goqu.SelectDataset {
+	tbl := goqu.T("anime_producers")
+
+	return dialect.From(tbl).
+		Select(
+			tbl.Col("anime_id").As("id"),
+			goqu.Func(
+				"json_group_array",
+				goqu.Func(
+					"json_object",
+
+					"slug",
+					goqu.I("producers.slug"),
+					"name",
+					goqu.I("producers.name"),
+				),
+			).As("producers"),
+		).
+		Join(
+			goqu.I("producers"),
+			goqu.On(tbl.Col("producer_slug").Eq(goqu.I("producers.slug"))),
+		).
+		GroupBy(tbl.Col("anime_id"))
+}
+
+func AnimeThemeQuery() *goqu.SelectDataset {
+	tbl := goqu.T("anime_themes")
+
+	return dialect.From(tbl).
+		Select(
+			tbl.Col("anime_id").As("id"),
+			goqu.Func(
+				"json_group_array",
+				goqu.Func(
+					"json_object",
+
+					"slug",
+					goqu.I("themes.slug"),
+					"name",
+					goqu.I("themes.name"),
+				),
+			).As("themes"),
+		).
+		Join(
+			goqu.I("themes"),
+			goqu.On(tbl.Col("theme_slug").Eq(goqu.I("themes.slug"))),
+		).
+		GroupBy(tbl.Col("anime_id"))
+}
+
+func AnimeGenreQuery() *goqu.SelectDataset {
+	tbl := goqu.T("anime_genres")
+
+	return dialect.From(tbl).
+		Select(
+			tbl.Col("anime_id").As("id"),
+			goqu.Func(
+				"json_group_array",
+				goqu.Func(
+					"json_object",
+
+					"slug",
+					goqu.I("genres.slug"),
+					"name",
+					goqu.I("genres.name"),
+				),
+			).As("genres"),
+		).
+		Join(
+			goqu.I("genres"),
+			goqu.On(tbl.Col("genre_slug").Eq(goqu.I("genres.slug"))),
+		).
+		GroupBy(tbl.Col("anime_id"))
 }
 
 // TODO(patrik): Use goqu.T more
 func AnimeQuery() *goqu.SelectDataset {
+	studiosQuery := AnimeStudioQuery()
+	producersQuery := AnimeProducerQuery()
+	themesQuery := AnimeThemeQuery()
+	genresQuery := AnimeGenreQuery()
+
 	query := dialect.From("animes").
 		Select(
 			"animes.rowid",
@@ -83,8 +262,29 @@ func AnimeQuery() *goqu.SelectDataset {
 
 			"animes.created",
 			"animes.updated",
+
+			goqu.I("studios.studios").As("studios"),
+			goqu.I("producers.producers").As("producers"),
+			goqu.I("themes.themes").As("themes"),
+			goqu.I("genres.genres").As("genres"),
 		).
-		Prepared(true)
+		Prepared(true).
+		LeftJoin(
+			studiosQuery.As("studios"),
+			goqu.On(goqu.I("animes.id").Eq(goqu.I("studios.id"))),
+		).
+		LeftJoin(
+			producersQuery.As("producers"),
+			goqu.On(goqu.I("animes.id").Eq(goqu.I("producers.id"))),
+		).
+		LeftJoin(
+			themesQuery.As("themes"),
+			goqu.On(goqu.I("animes.id").Eq(goqu.I("themes.id"))),
+		).
+		LeftJoin(
+			genresQuery.As("genres"),
+			goqu.On(goqu.I("animes.id").Eq(goqu.I("genres.id"))),
+		)
 
 	return query
 }
