@@ -1,7 +1,6 @@
 package mal
 
 import (
-	"fmt"
 	"os"
 	"regexp"
 	"strconv"
@@ -247,18 +246,12 @@ func ExtractAnimeData(pagePath string) (Anime, error) {
 		}
 	})
 
-	fmt.Printf("demographic: %v\n", demographic)
-
 	source := leftside.Find("span:contains(\"Source:\")").Parent().Children().Text() //Parent().Children().Remove().End().Text()
 	source = strings.TrimPrefix(source, "Source:")
 	source = strings.TrimSpace(source)
 
-	fmt.Printf("source: %v\n", source)
-
 	broadcast := leftside.Find("span:contains(\"Broadcast:\")").Parent().Children().Remove().End().Text()
 	broadcast = strings.TrimSpace(broadcast)
-
-	fmt.Printf("broadcast: %v\n", broadcast)
 
 	rating := leftside.Find("span:contains(\"Rating:\")").Parent().Children().Remove().End().Text()
 	rating = strings.TrimSpace(rating)
