@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { invalidateAll } from "$app/navigation";
+  import { getApiClient, handleApiError } from "$lib";
   import { Anime } from "$lib/api/types.js";
   import Image from "$lib/components/Image.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
@@ -12,6 +14,7 @@
   import { ChevronDown, Eye, Star } from "lucide-svelte";
 
   const { data } = $props();
+  const apiClient = getApiClient();
 
   let showMore = $state(false);
 
@@ -22,6 +25,80 @@
     }
 
     return ty;
+  }
+
+  async function updateScore(score: number | null) {
+    if (score === null) {
+      const res = await apiClient.setAnimeUserData(data.anime.id, {
+        score: 0,
+      });
+      if (!res.success) {
+        return handleApiError(res.error);
+      }
+    } else {
+      const res = await apiClient.setAnimeUserData(data.anime.id, { score });
+      if (!res.success) {
+        return handleApiError(res.error);
+      }
+    }
+
+    await invalidateAll();
+  }
+
+  type List =
+    | "watching"
+    | "completed"
+    | "on-hold"
+    | "dropped"
+    | "plan-to-watch";
+
+  async function updateList(list: List | null) {
+    if (list === null) {
+      const res = await apiClient.setAnimeUserData(data.anime.id, {
+        list: "",
+      });
+      if (!res.success) {
+        return handleApiError(res.error);
+      }
+    } else {
+      const res = await apiClient.setAnimeUserData(data.anime.id, {
+        list,
+      });
+      if (!res.success) {
+        return handleApiError(res.error);
+      }
+    }
+
+    await invalidateAll();
+  }
+
+  function formatScore() {
+    const score = data.anime.user?.score;
+
+    if (score === null) return "-";
+
+    return score?.toString();
+  }
+
+  function formatList() {
+    const category = data.anime.user?.list;
+
+    if (!category) return "Not Added";
+
+    switch (category) {
+      case "watching":
+        return "Watching";
+      case "completed":
+        return "Completed";
+      case "on-hold":
+        return "On-Hold";
+      case "dropped":
+        return "Dropped";
+      case "plan-to-watch":
+        return "Plan to Watch";
+    }
+
+    return category;
   }
 </script>
 
@@ -65,23 +142,84 @@
     >
       <Star size={18} class="fill-primary-foreground" />
       <Spacer horizontal size="sm" />
-      <p class="text-base">8</p>
+      <p class="text-base">{formatList()}</p>
+      <ChevronDown class="absolute right-4" size={20} />
+    </DropdownMenu.Trigger>
+    <DropdownMenu.Content class="w-40">
+      <DropdownMenu.Group>
+        <DropdownMenu.GroupHeading>Select Category</DropdownMenu.GroupHeading>
+        <DropdownMenu.Separator />
+        <DropdownMenu.Item onclick={() => updateList("watching")}>
+          Watching
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => updateList("completed")}>
+          Completed
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => updateList("on-hold")}>
+          On-Hold
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => updateList("dropped")}>
+          Dropped
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => updateList("plan-to-watch")}>
+          Plan to Watch
+        </DropdownMenu.Item>
+        {#if !!data.anime.user?.list}
+          <DropdownMenu.Separator />
+          <DropdownMenu.Item onclick={() => updateList(null)}>
+            Remove
+          </DropdownMenu.Item>
+        {/if}
+      </DropdownMenu.Group>
+    </DropdownMenu.Content>
+  </DropdownMenu.Root>
+
+  <DropdownMenu.Root>
+    <DropdownMenu.Trigger
+      class="relative flex items-center justify-center rounded bg-primary py-1 text-primary-foreground"
+    >
+      <Star size={18} class="fill-primary-foreground" />
+      <Spacer horizontal size="sm" />
+      <p class="text-base">{formatScore()}</p>
       <ChevronDown class="absolute right-4" size={20} />
     </DropdownMenu.Trigger>
     <DropdownMenu.Content class="w-40">
       <DropdownMenu.Group>
         <DropdownMenu.GroupHeading>Select Rating</DropdownMenu.GroupHeading>
         <DropdownMenu.Separator />
-        <DropdownMenu.Item>(10) Masterpiece</DropdownMenu.Item>
-        <DropdownMenu.Item>(9) Great</DropdownMenu.Item>
-        <DropdownMenu.Item>(8) Very Good</DropdownMenu.Item>
-        <DropdownMenu.Item>(7) Good</DropdownMenu.Item>
-        <DropdownMenu.Item>(6) Fine</DropdownMenu.Item>
-        <DropdownMenu.Item>(5) Average</DropdownMenu.Item>
-        <DropdownMenu.Item>(4) Bad</DropdownMenu.Item>
-        <DropdownMenu.Item>(3) Very Bad</DropdownMenu.Item>
-        <DropdownMenu.Item>(2) Horrible</DropdownMenu.Item>
-        <DropdownMenu.Item>(1) Appalling</DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => updateScore(10)}>
+          (10) Masterpiece
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => updateScore(9)}>
+          (9) Great
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => updateScore(8)}>
+          (8) Very Good
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => updateScore(7)}>
+          (7) Good
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => updateScore(6)}>
+          (6) Fine
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => updateScore(5)}>
+          (5) Average
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => updateScore(4)}>
+          (4) Bad
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => updateScore(3)}>
+          (3) Very Bad
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => updateScore(2)}>
+          (2) Horrible
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => updateScore(1)}>
+          (1) Appalling
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => updateScore(null)}>
+          No Score
+        </DropdownMenu.Item>
       </DropdownMenu.Group>
     </DropdownMenu.Content>
   </DropdownMenu.Root>
@@ -93,7 +231,9 @@
   >
     <Eye size={18} />
     <Spacer horizontal size="sm" />
-    <p class="text-base">1000 / 1000</p>
+    <p class="text-base">
+      {data.anime.user?.episode ?? "??"} / {data.anime.episodeCount ?? "??"}
+    </p>
   </div>
 </div>
 
@@ -188,6 +328,17 @@
       </a>
     {/each}
   </p>
-  <p>Demographics: Shonen</p>
+  <p>
+    Demographics:
+
+    {#each data.anime.demographics as demographic, i}
+      {#if i != 0}
+        <span>, </span>
+      {/if}
+      <a class="text-blue-500 hover:underline" href="/tags/{demographic.slug}">
+        {demographic.name}
+      </a>
+    {/each}
+  </p>
   <p>Rating: {data.anime.rating}</p>
 </div>

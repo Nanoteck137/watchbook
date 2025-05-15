@@ -43,3 +43,13 @@ const (
 	AnimeRatingRMildNudity AnimeRating = "r-mild-nudity"
 	AnimeRatingRHentai     AnimeRating = "r-hentai"
 )
+
+type AnimeUserList string
+
+const (
+	AnimeUserListWatching    AnimeUserList = "watching"
+	AnimeUserListCompleted   AnimeUserList = "completed"
+	AnimeUserListOnHold      AnimeUserList = "on-hold"
+	AnimeUserListDropped     AnimeUserList = "dropped"
+	AnimeUserListPlanToWatch AnimeUserList = "plan-to-watch"
+)

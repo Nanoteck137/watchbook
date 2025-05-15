@@ -1,12 +1,14 @@
 package utils
 
 import (
+	"cmp"
 	"database/sql"
 	"log"
 	"math"
 	"strings"
 
 	"github.com/gosimple/slug"
+	"github.com/nanoteck137/watchbook/types"
 	"github.com/nrednav/cuid2"
 )
 
@@ -93,6 +95,17 @@ func StringPtrToSqlNull(i *string) sql.NullString {
 	}
 }
 
+func AnimeUserListPtrToSqlNull(i *types.AnimeUserList) sql.NullString {
+	if i == nil {
+		return sql.NullString{}
+	}
+
+	return sql.NullString{
+		String: string(*i),
+		Valid:  true,
+	}
+}
+
 func NullToDefault[T any](p *T) T {
 	var res T
 
@@ -125,4 +138,13 @@ func SqlNullToFloat64Ptr(value sql.NullFloat64) *float64 {
 	}
 
 	return nil
+}
+
+func Clamp[T cmp.Ordered](value T, min T, max T) T {
+	if value < min {
+		return min
+	} else if value > max {
+		return max
+	}
+	return value
 }

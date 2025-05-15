@@ -9,26 +9,26 @@ import (
 	"github.com/mattn/go-sqlite3"
 )
 
-type Genre struct {
+type Tag struct {
 	Slug string `db:"slug"`
 	Name string `db:"name"`
 }
 
-func GenreQuery() *goqu.SelectDataset {
-	query := dialect.From("genres").
+func TagQuery() *goqu.SelectDataset {
+	query := dialect.From("tags").
 		Select(
-			"genres.slug",
-			"genres.name",
+			"tags.slug",
+			"tags.name",
 		).
 		Prepared(true)
 
 	return query
 }
 
-func (db *Database) GetAllGenres(ctx context.Context) ([]Genre, error) {
-	query := GenreQuery()
+func (db *Database) GetAllTags(ctx context.Context) ([]Tag, error) {
+	query := TagQuery()
 
-	var items []Genre
+	var items []Tag
 	err := db.Select(&items, query)
 	if err != nil {
 		return nil, err
@@ -37,25 +37,25 @@ func (db *Database) GetAllGenres(ctx context.Context) ([]Genre, error) {
 	return items, nil
 }
 
-func (db *Database) GetGenreBySlug(ctx context.Context, slug string) (Genre, error) {
-	query := GenreQuery().
-		Where(goqu.I("genres.slug").Eq(slug))
+func (db *Database) GetTagBySlug(ctx context.Context, slug string) (Tag, error) {
+	query := TagQuery().
+		Where(goqu.I("tags.slug").Eq(slug))
 
-	var item Genre
+	var item Tag
 	err := db.Get(&item, query)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return Genre{}, ErrItemNotFound
+			return Tag{}, ErrItemNotFound
 		}
 
-		return Genre{}, err
+		return Tag{}, err
 	}
 
 	return item, nil
 }
 
-func (db *Database) CreateGenre(ctx context.Context, slug, name string) error {
-	query := dialect.Insert("genres").
+func (db *Database) CreateTag(ctx context.Context, slug, name string) error {
+	query := dialect.Insert("tags").
 		Rows(goqu.Record{
 			"slug": slug,
 			"name": name,

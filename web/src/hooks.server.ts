@@ -47,14 +47,14 @@ export const handle: Handle = async ({ event, resolve }) => {
     throw redirect(301, "/");
   }
 
-  if (
-    !event.locals.user &&
-    (url.pathname.startsWith("/taglists") ||
-      url.pathname.startsWith("/playlists") ||
-      url.pathname.startsWith("/account"))
-  ) {
-    throw redirect(301, "/");
-  }
+  // if (
+  //   !event.locals.user &&
+  //   (url.pathname.startsWith("/taglists") ||
+  //     url.pathname.startsWith("/playlists") ||
+  //     url.pathname.startsWith("/account"))
+  // ) {
+  //   throw redirect(301, "/");
+  // }
 
   const response = await resolve(event);
   return response;

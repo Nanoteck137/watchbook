@@ -203,7 +203,7 @@
       ]
     },
     {
-      "name": "AnimeTheme",
+      "name": "AnimeTag",
       "extend": "",
       "fields": [
         {
@@ -219,17 +219,27 @@
       ]
     },
     {
-      "name": "AnimeGenre",
+      "name": "AnimeUser",
       "extend": "",
       "fields": [
         {
-          "name": "slug",
-          "type": "string",
+          "name": "list",
+          "type": "*string",
           "omit": false
         },
         {
-          "name": "name",
-          "type": "string",
+          "name": "score",
+          "type": "*int",
+          "omit": false
+        },
+        {
+          "name": "episode",
+          "type": "*int",
+          "omit": false
+        },
+        {
+          "name": "isRewatching",
+          "type": "bool",
           "omit": false
         }
       ]
@@ -280,7 +290,7 @@
         },
         {
           "name": "episodeCount",
-          "type": "int",
+          "type": "*int",
           "omit": false
         },
         {
@@ -310,18 +320,28 @@
         },
         {
           "name": "themes",
-          "type": "[]AnimeTheme",
+          "type": "[]AnimeTag",
           "omit": false
         },
         {
           "name": "genres",
-          "type": "[]AnimeGenre",
+          "type": "[]AnimeTag",
+          "omit": false
+        },
+        {
+          "name": "demographics",
+          "type": "[]AnimeTag",
           "omit": false
         },
         {
           "name": "coverUrl",
           "type": "string",
           "omit": false
+        },
+        {
+          "name": "user",
+          "type": "*AnimeUser",
+          "omit": true
         }
       ]
     },
@@ -345,6 +365,32 @@
       "name": "GetAnimeById",
       "extend": "Anime",
       "fields": null
+    },
+    {
+      "name": "SetAnimeUserData",
+      "extend": "",
+      "fields": [
+        {
+          "name": "list",
+          "type": "*string",
+          "omit": true
+        },
+        {
+          "name": "score",
+          "type": "*int",
+          "omit": true
+        },
+        {
+          "name": "episode",
+          "type": "*int",
+          "omit": true
+        },
+        {
+          "name": "isRewatching",
+          "type": "*bool",
+          "omit": true
+        }
+      ]
     }
   ],
   "apiEndpoints": [
@@ -403,6 +449,13 @@
       "path": "/api/v1/animes/:id",
       "responseType": "GetAnimeById",
       "bodyType": ""
+    },
+    {
+      "name": "SetAnimeUserData",
+      "method": "POST",
+      "path": "/api/v1/animes/:id/user",
+      "responseType": "",
+      "bodyType": "SetAnimeUserData"
     }
   ],
   "formApiEndpoints": null,

@@ -29,7 +29,7 @@ var dl = downloader.NewDownloader(
 )
 
 func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir types.WorkDir, animeId string) error {
-	anime, err := db.GetAnimeById(ctx, animeId)
+	anime, err := db.GetAnimeById(ctx, nil, animeId)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 			return err
 		}
 
-		name := "cover"+ext
+		name := "cover" + ext
 		p := path.Join(dst, name)
 		f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
@@ -90,7 +90,7 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 
 	// TODO(patrik): Add some sanitization
 	for _, theme := range animeData.Themes {
-		err := db.CreateTheme(ctx, utils.Slug(theme), theme)
+		err := db.CreateTag(ctx, utils.Slug(theme), theme)
 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 			return err
 		}
@@ -98,7 +98,15 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 
 	// TODO(patrik): Add some sanitization
 	for _, genre := range animeData.Genres {
-		err := db.CreateGenre(ctx, utils.Slug(genre), genre)
+		err := db.CreateTag(ctx, utils.Slug(genre), genre)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+	}
+
+	// TODO(patrik): Add some sanitization
+	for _, demographic := range animeData.Demographics {
+		err := db.CreateTag(ctx, utils.Slug(demographic), demographic)
 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 			return err
 		}
@@ -215,7 +223,7 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 		},
 
 		CoverFilename: database.Change[sql.NullString]{
-			Value:   sql.NullString{
+			Value: sql.NullString{
 				String: coverFilename,
 				Valid:  coverFilename != "",
 			},
@@ -257,6 +265,13 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 
 	for _, genre := range animeData.Genres {
 		err := db.AddGenreToAnime(ctx, animeId, utils.Slug(genre))
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+	}
+
+	for _, demographic := range animeData.Demographics {
+		err := db.AddDemographicToAnime(ctx, animeId, utils.Slug(demographic))
 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 			return err
 		}
@@ -352,18 +367,18 @@ func (app *BaseApp) Bootstrap() error {
 		}
 	}
 
-	// ids, err := db.GetAnimeIdsForFetching(ctx)
-	// if err != nil {
-	// 	return err
-	// }
-	//
-	// for _, id := range ids[:4] {
-	// 	err := fetchAndUpdateAnime(ctx, db, workDir, id)
-	// 	if err != nil {
-	// 		fmt.Printf("err: %v\n", err)
-	// 		continue
-	// 	}
-	// }
+	ids, err := db.GetAnimeIdsForFetching(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, id := range ids[:4] {
+		err := fetchAndUpdateAnime(ctx, db, workDir, id)
+		if err != nil {
+			fmt.Printf("err: %v\n", err)
+			continue
+		}
+	}
 
 	_, err = os.Stat(workDir.SetupFile())
 	if errors.Is(err, os.ErrNotExist) && app.config.Username != "" {
@@ -385,6 +400,78 @@ func (app *BaseApp) Bootstrap() error {
 			return err
 		}
 		f.Close()
+	}
+
+	user, err := app.DB().GetUserByUsername(ctx, app.config.Username)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		malId := strconv.Itoa(entry.AnimeId)
+
+		anime, err := db.GetAnimeByMalId(ctx, malId)
+		if err != nil {
+			return err
+		}
+
+		noList := false
+		list := types.AnimeUserListWatching
+		switch entry.Status {
+		case mal.WatchlistStatusCurrentlyWatching:
+			list = types.AnimeUserListWatching
+		case mal.WatchlistStatusCompleted:
+			list = types.AnimeUserListCompleted
+		case mal.WatchlistStatusOnHold:
+			list = types.AnimeUserListOnHold
+		case mal.WatchlistStatusDropped:
+			list = types.AnimeUserListDropped
+		case mal.WatchlistStatusPlanToWatch:
+			list = types.AnimeUserListPlanToWatch
+		default:
+			noList = true
+		}
+
+		err = db.SetAnimeUserData(ctx, anime.Id, user.Id, database.SetAnimeUserData{
+			List: sql.NullString{
+				String: string(list),
+				Valid:  !noList,
+			},
+			Episode: sql.NullInt64{
+				Int64: int64(entry.NumWatchedEpisodes),
+				Valid: entry.NumWatchedEpisodes != 0,
+			},
+			IsRewatching: entry.IsRewatching > 0,
+			Score: sql.NullInt64{
+				Int64: int64(entry.Score),
+				Valid: entry.Score != 0,
+			},
+		})
+		if err != nil {
+			return err
+		}
+
+		// err = db.SetAnimeUserList(ctx, anime.Id, user.Id, list)
+		// if err != nil {
+		// 	return err
+		// }
+		//
+		// err = db.SetAnimeUserEpisode(ctx, anime.Id, user.Id, entry.NumWatchedEpisodes)
+		// if err != nil {
+		// 	return err
+		// }
+		//
+		// if entry.Score > 0 {
+		// 	err = db.SetAnimeUserScore(ctx, anime.Id, user.Id, entry.Score)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// } else {
+		// 	err = db.RemoveAnimeUserScore(ctx, anime.Id, user.Id)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// }
 	}
 
 	return nil

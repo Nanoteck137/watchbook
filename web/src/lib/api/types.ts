@@ -70,17 +70,19 @@ export const AnimeProducer = z.object({
 });
 export type AnimeProducer = z.infer<typeof AnimeProducer>;
 
-export const AnimeTheme = z.object({
+export const AnimeTag = z.object({
   slug: z.string(),
   name: z.string(),
 });
-export type AnimeTheme = z.infer<typeof AnimeTheme>;
+export type AnimeTag = z.infer<typeof AnimeTag>;
 
-export const AnimeGenre = z.object({
-  slug: z.string(),
-  name: z.string(),
+export const AnimeUser = z.object({
+  list: z.string().nullable(),
+  score: z.number().nullable(),
+  episode: z.number().nullable(),
+  isRewatching: z.boolean(),
 });
-export type AnimeGenre = z.infer<typeof AnimeGenre>;
+export type AnimeUser = z.infer<typeof AnimeUser>;
 
 export const Anime = z.object({
   id: z.string(),
@@ -91,15 +93,17 @@ export const Anime = z.object({
   status: z.string(),
   rating: z.string(),
   airingSeason: z.string(),
-  episodeCount: z.number(),
+  episodeCount: z.number().nullable(),
   score: z.number().nullable(),
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
   studios: z.array(AnimeStudio),
   producers: z.array(AnimeProducer),
-  themes: z.array(AnimeTheme),
-  genres: z.array(AnimeGenre),
+  themes: z.array(AnimeTag),
+  genres: z.array(AnimeTag),
+  demographics: z.array(AnimeTag),
   coverUrl: z.string(),
+  user: AnimeUser.nullable().optional(),
 });
 export type Anime = z.infer<typeof Anime>;
 
@@ -111,4 +115,12 @@ export type GetAnimes = z.infer<typeof GetAnimes>;
 
 export const GetAnimeById = Anime;
 export type GetAnimeById = z.infer<typeof GetAnimeById>;
+
+export const SetAnimeUserData = z.object({
+  list: z.string().nullable().optional(),
+  score: z.number().nullable().optional(),
+  episode: z.number().nullable().optional(),
+  isRewatching: z.boolean().nullable().optional(),
+});
+export type SetAnimeUserData = z.infer<typeof SetAnimeUserData>;
 
