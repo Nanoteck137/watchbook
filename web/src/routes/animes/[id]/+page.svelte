@@ -4,19 +4,27 @@
   import { Anime } from "$lib/api/types.js";
   import Image from "$lib/components/Image.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
-  import { pickTitle } from "$lib/utils.js";
+  import { cn, pickTitle } from "$lib/utils.js";
   import {
     Breadcrumb,
     Button,
+    buttonVariants,
+    Checkbox,
+    Dialog,
     DropdownMenu,
+    Input,
+    Label,
     Separator,
   } from "@nanoteck137/nano-ui";
   import { ChevronDown, Eye, Star } from "lucide-svelte";
+  import toast from "svelte-5-french-toast";
+  import { z } from "zod";
 
   const { data } = $props();
   const apiClient = getApiClient();
 
   let showMore = $state(false);
+  let episodeOpen = $state(false);
 
   function formatAnimeType(ty: string) {
     switch (ty) {
@@ -226,15 +234,75 @@
 
   <!-- <Separator orientation="vertical" /> -->
 
-  <div
-    class="flex items-center justify-center rounded bg-primary py-1 text-primary-foreground"
-  >
-    <Eye size={18} />
-    <Spacer horizontal size="sm" />
-    <p class="text-base">
-      {data.anime.user?.episode ?? "??"} / {data.anime.episodeCount ?? "??"}
-    </p>
-  </div>
+  <Dialog.Root bind:open={episodeOpen}>
+    <Dialog.Trigger class={cn(buttonVariants(), "w-full")}>
+      <div class="flex items-center justify-center rounded">
+        <Eye size={18} />
+        <Spacer horizontal size="sm" />
+        <p class="text-base">
+          {data.anime.user?.episode ?? "??"} / {data.anime.episodeCount ??
+            "??"}
+        </p>
+      </div>
+    </Dialog.Trigger>
+    <Dialog.Content class="sm:max-w-[425px]">
+      <form
+        class="w-full"
+        onsubmit={async (e) => {
+          e.preventDefault();
+
+          const formData = new FormData(e.target as HTMLFormElement);
+          console.log(formData);
+
+          const episode = formData.get("episode")?.toString() ?? "0";
+          const isRewatching = formData.get("isRewatching")?.toString() ?? "";
+
+          const res = await apiClient.setAnimeUserData(data.anime.id, {
+            episode: parseInt(episode === "" ? "0" : episode),
+            isRewatching: isRewatching === "on",
+          });
+
+          if (!res.success) {
+            return handleApiError(res.error);
+          }
+
+          toast.success("Successfully update episode");
+          invalidateAll();
+          episodeOpen = false;
+        }}
+      >
+        <Dialog.Header>
+          <Dialog.Title>Edit episode</Dialog.Title>
+          <!-- <Dialog.Description>
+          Make changes to your profile here. Click save when you're done.
+        </Dialog.Description> -->
+        </Dialog.Header>
+        <div class="grid gap-4 py-4">
+          <div class="flex flex-col gap-2">
+            <Label for="episode">Current episode</Label>
+            <Input
+              name="episode"
+              id="episode"
+              type="number"
+              value={data.anime.user?.episode ?? 0}
+            />
+          </div>
+          <div class="flex items-center gap-2">
+            <Checkbox
+              name="isRewatching"
+              id="isRewatching"
+              checked={data.anime.user?.isRewatching ?? false}
+            />
+            <Label for="isRewatching">Is Rewatching</Label>
+          </div>
+        </div>
+        <Dialog.Footer>
+          <Button type="submit">Save changes</Button>
+        </Dialog.Footer>
+      </form>
+    </Dialog.Content>
+  </Dialog.Root>
+  <!-- <Button class=""></Button> -->
 </div>
 
 <Spacer size="lg" />
@@ -271,7 +339,7 @@
   <p class="text-base">{data.anime.score?.toFixed(2) ?? "N/A"}</p>
 </div>
 
-<Spacer size="lg" />
+<Spacer size="xs" />
 
 <div
   class="flex flex-col gap-1 rounded bg-primary p-2 text-primary-foreground"
