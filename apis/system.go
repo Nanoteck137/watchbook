@@ -444,7 +444,9 @@ func (d *DownloadHandler) download(app core.App) error {
 	d.updateStatus(0, len(ids))
 	d.sendStatusEvent()
 
-	for i, id := range ids {
+	// TODO(patrik): This is temporary
+	for i, id := range ids[:4] {
+	// for i, id := range ids {
 		d.updateStatus(i + 1, len(ids))
 		d.sendStatusEvent()
 
