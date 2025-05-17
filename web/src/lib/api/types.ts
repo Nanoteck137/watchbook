@@ -99,9 +99,7 @@ export const Anime = z.object({
   endDate: z.string().nullable(),
   studios: z.array(AnimeStudio),
   producers: z.array(AnimeProducer),
-  themes: z.array(AnimeTag),
-  genres: z.array(AnimeTag),
-  demographics: z.array(AnimeTag),
+  tags: z.array(AnimeTag),
   coverUrl: z.string(),
   user: AnimeUser.nullable().optional(),
 });

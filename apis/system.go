@@ -261,21 +261,21 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 	}
 
 	for _, theme := range animeData.Themes {
-		err := db.AddThemeToAnime(ctx, animeId, utils.Slug(theme))
+		err := db.AddTagToAnime(ctx, animeId, utils.Slug(theme))
 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 			return err
 		}
 	}
 
 	for _, genre := range animeData.Genres {
-		err := db.AddGenreToAnime(ctx, animeId, utils.Slug(genre))
+		err := db.AddTagToAnime(ctx, animeId, utils.Slug(genre))
 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 			return err
 		}
 	}
 
 	for _, demographic := range animeData.Demographics {
-		err := db.AddDemographicToAnime(ctx, animeId, utils.Slug(demographic))
+		err := db.AddTagToAnime(ctx, animeId, utils.Slug(demographic))
 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 			return err
 		}
@@ -461,7 +461,7 @@ func (d *DownloadHandler) download(app core.App) error {
 
 	for i, id := range ids {
 		d.updateStatus(i + 1, len(ids))
-	d.sendStatusEvent()
+		d.sendStatusEvent()
 
 		err := fetchAndUpdateAnime(ctx, db, workDir, id)
 		if err != nil {

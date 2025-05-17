@@ -319,17 +319,7 @@
           "omit": false
         },
         {
-          "name": "themes",
-          "type": "[]AnimeTag",
-          "omit": false
-        },
-        {
-          "name": "genres",
-          "type": "[]AnimeTag",
-          "omit": false
-        },
-        {
-          "name": "demographics",
+          "name": "tags",
           "type": "[]AnimeTag",
           "omit": false
         },

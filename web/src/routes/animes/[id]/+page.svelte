@@ -376,35 +376,12 @@
   </p>
   <p>
     Genres:
-    {#each data.anime.genres as genre, i}
+    {#each data.anime.tags as tag, i}
       {#if i != 0}
         <span>, </span>
       {/if}
-      <a class="text-blue-500 hover:underline" href="/tags/{genre.slug}">
-        {genre.name}
-      </a>
-    {/each}
-  </p>
-  <p>
-    Themes:
-    {#each data.anime.themes as theme, i}
-      {#if i != 0}
-        <span>, </span>
-      {/if}
-      <a class="text-blue-500 hover:underline" href="/tags/{theme.slug}">
-        {theme.name}
-      </a>
-    {/each}
-  </p>
-  <p>
-    Demographics:
-
-    {#each data.anime.demographics as demographic, i}
-      {#if i != 0}
-        <span>, </span>
-      {/if}
-      <a class="text-blue-500 hover:underline" href="/tags/{demographic.slug}">
-        {demographic.name}
+      <a class="text-blue-500 hover:underline" href="/tags/{tag.slug}">
+        {tag.name}
       </a>
     {/each}
   </p>

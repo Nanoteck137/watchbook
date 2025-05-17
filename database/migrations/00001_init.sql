@@ -67,21 +67,7 @@ CREATE TABLE anime_theme_songs (
     PRIMARY KEY(anime_id, idx)
 );
 
-CREATE TABLE anime_themes (
-    anime_id TEXT REFERENCES animes(id) ON DELETE CASCADE,
-    tag_slug TEXT REFERENCES tags(slug) ON DELETE CASCADE,
-
-    PRIMARY KEY(anime_id, tag_slug)
-);
-
-CREATE TABLE anime_genres (
-    anime_id TEXT REFERENCES animes(id) ON DELETE CASCADE,
-    tag_slug TEXT REFERENCES tags(slug) ON DELETE CASCADE,
-
-    PRIMARY KEY(anime_id, tag_slug)
-);
-
-CREATE TABLE anime_demographics (
+CREATE TABLE anime_tags (
     anime_id TEXT REFERENCES animes(id) ON DELETE CASCADE,
     tag_slug TEXT REFERENCES tags(slug) ON DELETE CASCADE,
 

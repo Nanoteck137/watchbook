@@ -119,9 +119,7 @@ type Anime struct {
 
 	Studios      JsonColumn[[]AnimeStudio]   `db:"studios"`
 	Producers    JsonColumn[[]AnimeProducer] `db:"producers"`
-	Themes       JsonColumn[[]AnimeTag]      `db:"themes"`
-	Genres       JsonColumn[[]AnimeTag]      `db:"genres"`
-	Demographics JsonColumn[[]AnimeTag]      `db:"demographics"`
+	Tags       JsonColumn[[]AnimeTag]      `db:"tags"`
 
 	UserData JsonColumn[AnimeUserData] `db:"user_data"`
 }
@@ -176,58 +174,8 @@ func AnimeProducerQuery() *goqu.SelectDataset {
 		GroupBy(tbl.Col("anime_id"))
 }
 
-func AnimeThemeQuery() *goqu.SelectDataset {
-	tbl := goqu.T("anime_themes")
-
-	return dialect.From(tbl).
-		Select(
-			tbl.Col("anime_id").As("id"),
-			goqu.Func(
-				"json_group_array",
-				goqu.Func(
-					"json_object",
-
-					"slug",
-					goqu.I("tags.slug"),
-					"name",
-					goqu.I("tags.name"),
-				),
-			).As("data"),
-		).
-		Join(
-			goqu.I("tags"),
-			goqu.On(tbl.Col("tag_slug").Eq(goqu.I("tags.slug"))),
-		).
-		GroupBy(tbl.Col("anime_id"))
-}
-
-func AnimeGenreQuery() *goqu.SelectDataset {
-	tbl := goqu.T("anime_genres")
-
-	return dialect.From(tbl).
-		Select(
-			tbl.Col("anime_id").As("id"),
-			goqu.Func(
-				"json_group_array",
-				goqu.Func(
-					"json_object",
-
-					"slug",
-					goqu.I("tags.slug"),
-					"name",
-					goqu.I("tags.name"),
-				),
-			).As("data"),
-		).
-		Join(
-			goqu.I("tags"),
-			goqu.On(tbl.Col("tag_slug").Eq(goqu.I("tags.slug"))),
-		).
-		GroupBy(tbl.Col("anime_id"))
-}
-
-func AnimeDemographicQuery() *goqu.SelectDataset {
-	tbl := goqu.T("anime_demographics")
+func AnimeTagQuery() *goqu.SelectDataset {
+	tbl := goqu.T("anime_tags")
 
 	return dialect.From(tbl).
 		Select(
@@ -287,9 +235,7 @@ func AnimeUserDataQuery(userId *string) *goqu.SelectDataset {
 func AnimeQuery(userId *string) *goqu.SelectDataset {
 	studiosQuery := AnimeStudioQuery()
 	producersQuery := AnimeProducerQuery()
-	themesQuery := AnimeThemeQuery()
-	genresQuery := AnimeGenreQuery()
-	demographicsQuery := AnimeDemographicQuery()
+	tagsQuery := AnimeTagQuery()
 
 	userDataQuery := AnimeUserDataQuery(userId)
 
@@ -330,9 +276,7 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 
 			goqu.I("studios.studios").As("studios"),
 			goqu.I("producers.producers").As("producers"),
-			goqu.I("themes.data").As("themes"),
-			goqu.I("genres.data").As("genres"),
-			goqu.I("demographics.data").As("demographics"),
+			goqu.I("tags.data").As("tags"),
 
 			goqu.I("user_data.data").As("user_data"),
 		).
@@ -346,16 +290,8 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 			goqu.On(goqu.I("animes.id").Eq(goqu.I("producers.id"))),
 		).
 		LeftJoin(
-			themesQuery.As("themes"),
-			goqu.On(goqu.I("animes.id").Eq(goqu.I("themes.id"))),
-		).
-		LeftJoin(
-			genresQuery.As("genres"),
-			goqu.On(goqu.I("animes.id").Eq(goqu.I("genres.id"))),
-		).
-		LeftJoin(
-			demographicsQuery.As("demographics"),
-			goqu.On(goqu.I("animes.id").Eq(goqu.I("demographics.id"))),
+			tagsQuery.As("tags"),
+			goqu.On(goqu.I("animes.id").Eq(goqu.I("tags.id"))),
 		).
 		LeftJoin(
 			userDataQuery.As("user_data"),
@@ -651,44 +587,8 @@ func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeCha
 	return nil
 }
 
-func (db *Database) AddThemeToAnime(ctx context.Context, animeId, themeSlug string) error {
-	ds := dialect.Insert("anime_themes").
-		Prepared(true).
-		Rows(goqu.Record{
-			"anime_id": animeId,
-			"tag_slug": themeSlug,
-		})
-
-	_, err := db.Exec(ctx, ds)
-	if err != nil {
-		var e sqlite3.Error
-		if errors.As(err, &e) {
-			if e.ExtendedCode == sqlite3.ErrConstraintPrimaryKey {
-				return ErrItemAlreadyExists
-			}
-		}
-
-		return err
-	}
-
-	return nil
-}
-
-func (db *Database) RemoveAllThemesFromAnime(ctx context.Context, animeId string) error {
-	query := dialect.Delete("anime_themes").
-		Where(goqu.I("anime_themes.anime_id").Eq(animeId)).
-		Prepared(true)
-
-	_, err := db.Exec(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (db *Database) AddGenreToAnime(ctx context.Context, animeId, tagSlug string) error {
-	ds := dialect.Insert("anime_genres").
+func (db *Database) AddTagToAnime(ctx context.Context, animeId, tagSlug string) error {
+	ds := dialect.Insert("anime_tags").
 		Prepared(true).
 		Rows(goqu.Record{
 			"anime_id": animeId,
@@ -710,45 +610,9 @@ func (db *Database) AddGenreToAnime(ctx context.Context, animeId, tagSlug string
 	return nil
 }
 
-func (db *Database) RemoveAllGenresFromAnime(ctx context.Context, animeId string) error {
-	query := dialect.Delete("anime_genres").
-		Where(goqu.I("anime_genres.anime_id").Eq(animeId)).
-		Prepared(true)
-
-	_, err := db.Exec(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (db *Database) AddDemographicToAnime(ctx context.Context, animeId, tagSlug string) error {
-	ds := dialect.Insert("anime_demographics").
-		Prepared(true).
-		Rows(goqu.Record{
-			"anime_id": animeId,
-			"tag_slug": tagSlug,
-		})
-
-	_, err := db.Exec(ctx, ds)
-	if err != nil {
-		var e sqlite3.Error
-		if errors.As(err, &e) {
-			if e.ExtendedCode == sqlite3.ErrConstraintPrimaryKey {
-				return ErrItemAlreadyExists
-			}
-		}
-
-		return err
-	}
-
-	return nil
-}
-
-func (db *Database) RemoveAllDemographicsFromAnime(ctx context.Context, animeId string) error {
-	query := dialect.Delete("anime_demographics").
-		Where(goqu.I("anime_demographics.anime_id").Eq(animeId)).
+func (db *Database) RemoveAllTagsFromAnime(ctx context.Context, animeId string) error {
+	query := dialect.Delete("anime_tags").
+		Where(goqu.I("anime_tags.anime_id").Eq(animeId)).
 		Prepared(true)
 
 	_, err := db.Exec(ctx, query)

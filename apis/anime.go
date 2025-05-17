@@ -57,11 +57,9 @@ type Anime struct {
 	StartDate *string `json:"startDate"`
 	EndDate   *string `json:"endDate"`
 
-	Studios      []AnimeStudio   `json:"studios"`
-	Producers    []AnimeProducer `json:"producers"`
-	Themes       []AnimeTag      `json:"themes"`
-	Genres       []AnimeTag      `json:"genres"`
-	Demographics []AnimeTag      `json:"demographics"`
+	Studios   []AnimeStudio   `json:"studios"`
+	Producers []AnimeProducer `json:"producers"`
+	Tags      []AnimeTag      `json:"tags"`
 
 	CoverUrl string `json:"coverUrl"`
 
@@ -122,27 +120,11 @@ func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
 		}
 	}
 
-	themes := make([]AnimeTag, len(anime.Themes.Val))
-	for i, theme := range anime.Themes.Val {
-		themes[i] = AnimeTag{
-			Slug: theme.Slug,
-			Name: theme.Name,
-		}
-	}
-
-	genres := make([]AnimeTag, len(anime.Genres.Val))
-	for i, genre := range anime.Genres.Val {
-		genres[i] = AnimeTag{
-			Slug: genre.Slug,
-			Name: genre.Name,
-		}
-	}
-
-	demographics := make([]AnimeTag, len(anime.Demographics.Val))
-	for i, demographic := range anime.Demographics.Val {
-		demographics[i] = AnimeTag{
-			Slug: demographic.Slug,
-			Name: demographic.Name,
+	tags := make([]AnimeTag, len(anime.Tags.Val))
+	for i, tag := range anime.Tags.Val {
+		tags[i] = AnimeTag{
+			Slug: tag.Slug,
+			Name: tag.Name,
 		}
 	}
 
@@ -174,9 +156,7 @@ func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
 		EndDate:      utils.SqlNullToStringPtr(anime.EndDate),
 		Studios:      studios,
 		Producers:    producers,
-		Themes:       themes,
-		Genres:       genres,
-		Demographics: demographics,
+		Tags:         tags,
 		CoverUrl:     coverUrl,
 		User:         user,
 	}
