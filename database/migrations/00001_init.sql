@@ -19,11 +19,6 @@ CREATE TABLE studios (
     name TEXT NOT NULL CHECK(name<>'')
 );
 
-CREATE TABLE producers (
-    slug TEXT PRIMARY KEY CHECK(slug<>''),
-    name TEXT NOT NULL CHECK(name<>'')
-);
-
 CREATE TABLE animes (
     id TEXT PRIMARY KEY,
 
@@ -82,13 +77,6 @@ CREATE TABLE anime_studios (
     PRIMARY KEY(anime_id, studio_slug)
 );
 
-CREATE TABLE anime_producers (
-    anime_id TEXT REFERENCES animes(id) ON DELETE CASCADE,
-    producer_slug TEXT REFERENCES producers(slug) ON DELETE CASCADE,
-
-    PRIMARY KEY(anime_id, producer_slug)
-);
-
 CREATE TABLE anime_user_data (
     anime_id TEXT REFERENCES animes(id) ON DELETE CASCADE,
     user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
@@ -112,15 +100,11 @@ CREATE TABLE users_settings (
 DROP TABLE users_settings;
 
 DROP TABLE anime_user_data;
-DROP TABLE anime_producers;
 DROP TABLE anime_studios;
-DROP TABLE anime_demographics;
-DROP TABLE anime_genres;
-DROP TABLE anime_themes;
+DROP TABLE anime_tags;
 DROP TABLE anime_theme_songs;
 DROP TABLE animes;
 
-DROP TABLE producers;
 DROP TABLE studios;
 DROP TABLE tags;
 

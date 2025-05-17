@@ -66,11 +66,6 @@ type AnimeStudio struct {
 	Name string `json:"name"`
 }
 
-type AnimeProducer struct {
-	Slug string `json:"slug"`
-	Name string `json:"name"`
-}
-
 type AnimeTag struct {
 	Slug string `json:"slug"`
 	Name string `json:"name"`
@@ -119,7 +114,6 @@ type Anime struct {
 	Updated int64 `db:"updated"`
 
 	Studios   JsonColumn[[]AnimeStudio]   `db:"studios"`
-	Producers JsonColumn[[]AnimeProducer] `db:"producers"`
 	Tags      JsonColumn[[]AnimeTag]      `db:"tags"`
 
 	UserData JsonColumn[AnimeUserData] `db:"user_data"`
@@ -146,31 +140,6 @@ func AnimeStudioQuery() *goqu.SelectDataset {
 		Join(
 			goqu.I("studios"),
 			goqu.On(tbl.Col("studio_slug").Eq(goqu.I("studios.slug"))),
-		).
-		GroupBy(tbl.Col("anime_id"))
-}
-
-func AnimeProducerQuery() *goqu.SelectDataset {
-	tbl := goqu.T("anime_producers")
-
-	return dialect.From(tbl).
-		Select(
-			tbl.Col("anime_id").As("id"),
-			goqu.Func(
-				"json_group_array",
-				goqu.Func(
-					"json_object",
-
-					"slug",
-					goqu.I("producers.slug"),
-					"name",
-					goqu.I("producers.name"),
-				),
-			).As("producers"),
-		).
-		Join(
-			goqu.I("producers"),
-			goqu.On(tbl.Col("producer_slug").Eq(goqu.I("producers.slug"))),
 		).
 		GroupBy(tbl.Col("anime_id"))
 }
@@ -235,7 +204,6 @@ func AnimeUserDataQuery(userId *string) *goqu.SelectDataset {
 // TODO(patrik): Use goqu.T more
 func AnimeQuery(userId *string) *goqu.SelectDataset {
 	studiosQuery := AnimeStudioQuery()
-	producersQuery := AnimeProducerQuery()
 	tagsQuery := AnimeTagQuery()
 
 	userDataQuery := AnimeUserDataQuery(userId)
@@ -277,7 +245,6 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 			"animes.updated",
 
 			goqu.I("studios.studios").As("studios"),
-			goqu.I("producers.producers").As("producers"),
 			goqu.I("tags.data").As("tags"),
 
 			goqu.I("user_data.data").As("user_data"),
@@ -286,10 +253,6 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 		LeftJoin(
 			studiosQuery.As("studios"),
 			goqu.On(goqu.I("animes.id").Eq(goqu.I("studios.id"))),
-		).
-		LeftJoin(
-			producersQuery.As("producers"),
-			goqu.On(goqu.I("animes.id").Eq(goqu.I("producers.id"))),
 		).
 		LeftJoin(
 			tagsQuery.As("tags"),
@@ -654,42 +617,6 @@ func (db *Database) AddStudioToAnime(ctx context.Context, animeId, studioSlug st
 func (db *Database) RemoveAllStudiosFromAnime(ctx context.Context, animeId string) error {
 	query := dialect.Delete("anime_studios").
 		Where(goqu.I("anime_studios.anime_id").Eq(animeId)).
-		Prepared(true)
-
-	_, err := db.Exec(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (db *Database) AddProducerToAnime(ctx context.Context, animeId, producerSlug string) error {
-	ds := dialect.Insert("anime_producers").
-		Prepared(true).
-		Rows(goqu.Record{
-			"anime_id":      animeId,
-			"producer_slug": producerSlug,
-		})
-
-	_, err := db.Exec(ctx, ds)
-	if err != nil {
-		var e sqlite3.Error
-		if errors.As(err, &e) {
-			if e.ExtendedCode == sqlite3.ErrConstraintPrimaryKey {
-				return ErrItemAlreadyExists
-			}
-		}
-
-		return err
-	}
-
-	return nil
-}
-
-func (db *Database) RemoveAllProducersFromAnime(ctx context.Context, animeId string) error {
-	query := dialect.Delete("anime_producers").
-		Where(goqu.I("anime_producers.anime_id").Eq(animeId)).
 		Prepared(true)
 
 	_, err := db.Exec(ctx, query)

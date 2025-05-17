@@ -124,14 +124,6 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 		}
 	}
 
-	// TODO(patrik): Add some sanitization
-	for _, producer := range animeData.Producers {
-		err := db.CreateProducer(ctx, utils.Slug(producer), producer)
-		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-			return err
-		}
-	}
-
 	animeType := mal.ConvertAnimeType(animeData.Type)
 	animeStatus := mal.ConvertAnimeStatus(animeData.Status)
 	animeRating := mal.ConvertAnimeRating(animeData.Rating)
@@ -283,13 +275,6 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 
 	for _, studio := range animeData.Studios {
 		err := db.AddStudioToAnime(ctx, animeId, utils.Slug(studio))
-		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-			return err
-		}
-	}
-
-	for _, producer := range animeData.Producers {
-		err := db.AddProducerToAnime(ctx, animeId, utils.Slug(producer))
 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 			return err
 		}

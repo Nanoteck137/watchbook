@@ -64,12 +64,6 @@ export const AnimeStudio = z.object({
 });
 export type AnimeStudio = z.infer<typeof AnimeStudio>;
 
-export const AnimeProducer = z.object({
-  slug: z.string(),
-  name: z.string(),
-});
-export type AnimeProducer = z.infer<typeof AnimeProducer>;
-
 export const AnimeTag = z.object({
   slug: z.string(),
   name: z.string(),
@@ -99,7 +93,6 @@ export const Anime = z.object({
   endDate: z.string().nullable(),
   releaseDate: z.string().nullable(),
   studios: z.array(AnimeStudio),
-  producers: z.array(AnimeProducer),
   tags: z.array(AnimeTag),
   coverUrl: z.string(),
   user: AnimeUser.nullable().optional(),

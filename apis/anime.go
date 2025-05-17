@@ -21,11 +21,6 @@ type AnimeStudio struct {
 	Name string `json:"name"`
 }
 
-type AnimeProducer struct {
-	Slug string `json:"slug"`
-	Name string `json:"name"`
-}
-
 type AnimeTag struct {
 	Slug string `json:"slug"`
 	Name string `json:"name"`
@@ -59,7 +54,6 @@ type Anime struct {
 	ReleaseDate *string `json:"releaseDate"`
 
 	Studios   []AnimeStudio   `json:"studios"`
-	Producers []AnimeProducer `json:"producers"`
 	Tags      []AnimeTag      `json:"tags"`
 
 	CoverUrl string `json:"coverUrl"`
@@ -113,14 +107,6 @@ func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
 		}
 	}
 
-	producers := make([]AnimeProducer, len(anime.Producers.Val))
-	for i, producer := range anime.Producers.Val {
-		producers[i] = AnimeProducer{
-			Slug: producer.Slug,
-			Name: producer.Name,
-		}
-	}
-
 	tags := make([]AnimeTag, len(anime.Tags.Val))
 	for i, tag := range anime.Tags.Val {
 		tags[i] = AnimeTag{
@@ -157,7 +143,6 @@ func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
 		EndDate:      utils.SqlNullToStringPtr(anime.EndDate),
 		ReleaseDate:  utils.SqlNullToStringPtr(anime.ReleaseDate),
 		Studios:      studios,
-		Producers:    producers,
 		Tags:         tags,
 		CoverUrl:     coverUrl,
 		User:         user,

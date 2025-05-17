@@ -187,22 +187,6 @@
       ]
     },
     {
-      "name": "AnimeProducer",
-      "extend": "",
-      "fields": [
-        {
-          "name": "slug",
-          "type": "string",
-          "omit": false
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "omit": false
-        }
-      ]
-    },
-    {
       "name": "AnimeTag",
       "extend": "",
       "fields": [
@@ -316,11 +300,6 @@
         {
           "name": "studios",
           "type": "[]AnimeStudio",
-          "omit": false
-        },
-        {
-          "name": "producers",
-          "type": "[]AnimeProducer",
           "omit": false
         },
         {

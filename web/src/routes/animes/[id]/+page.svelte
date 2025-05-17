@@ -368,20 +368,6 @@
     {/each}
   </p>
   <p>
-    Producers:
-    {#each data.anime.producers as producer, i}
-      {#if i != 0}
-        <span>, </span>
-      {/if}
-      <a
-        class="text-blue-500 hover:underline"
-        href="/producers/{producer.slug}"
-      >
-        {producer.name}
-      </a>
-    {/each}
-  </p>
-  <p>
     Genres:
     {#each data.anime.tags as tag, i}
       {#if i != 0}
