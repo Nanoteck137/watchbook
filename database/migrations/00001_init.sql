@@ -42,6 +42,7 @@ CREATE TABLE animes (
 
 	start_date TEXT, 
     end_date TEXT,
+    release_date TEXT,
 
 	score FLOAT,
 

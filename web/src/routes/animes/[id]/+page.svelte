@@ -347,8 +347,15 @@
   <p>Type: {formatAnimeType(data.anime.type)}</p>
   <p>Episodes: {data.anime.episodeCount}</p>
   <p>Status: {data.anime.status}</p>
-  <p>Start Date: {data.anime.startDate ?? "Unknown"}</p>
-  <p>End Date: {data.anime.endDate ?? "Unknown"}</p>
+  {#if data.anime.startDate}
+    <p>Start Date: {data.anime.startDate}</p>
+  {/if}
+  {#if data.anime.endDate}
+    <p>End Date: {data.anime.endDate}</p>
+  {/if}
+  {#if data.anime.releaseDate}
+    <p>Release Date: {data.anime.releaseDate}</p>
+  {/if}
   <p>
     Studios:
     {#each data.anime.studios as studio, i}

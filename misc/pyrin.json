@@ -309,6 +309,11 @@
           "omit": false
         },
         {
+          "name": "releaseDate",
+          "type": "*string",
+          "omit": false
+        },
+        {
           "name": "studios",
           "type": "[]AnimeStudio",
           "omit": false

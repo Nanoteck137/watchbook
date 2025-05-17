@@ -54,8 +54,9 @@ type Anime struct {
 
 	Score *float64 `json:"score"`
 
-	StartDate *string `json:"startDate"`
-	EndDate   *string `json:"endDate"`
+	StartDate   *string `json:"startDate"`
+	EndDate     *string `json:"endDate"`
+	ReleaseDate *string `json:"releaseDate"`
 
 	Studios   []AnimeStudio   `json:"studios"`
 	Producers []AnimeProducer `json:"producers"`
@@ -154,6 +155,7 @@ func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
 		Score:        utils.SqlNullToFloat64Ptr(anime.Score),
 		StartDate:    utils.SqlNullToStringPtr(anime.StartDate),
 		EndDate:      utils.SqlNullToStringPtr(anime.EndDate),
+		ReleaseDate:  utils.SqlNullToStringPtr(anime.ReleaseDate),
 		Studios:      studios,
 		Producers:    producers,
 		Tags:         tags,

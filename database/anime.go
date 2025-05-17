@@ -101,8 +101,9 @@ type Anime struct {
 	AiringSeason string            `db:"airing_season"`
 	EpisodeCount sql.NullInt64     `db:"episode_count"`
 
-	StartDate sql.NullString `db:"start_date"`
-	EndDate   sql.NullString `db:"end_date"`
+	StartDate   sql.NullString `db:"start_date"`
+	EndDate     sql.NullString `db:"end_date"`
+	ReleaseDate sql.NullString `db:"release_date"`
 
 	Score sql.NullFloat64 `db:"score"`
 
@@ -117,9 +118,9 @@ type Anime struct {
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
 
-	Studios      JsonColumn[[]AnimeStudio]   `db:"studios"`
-	Producers    JsonColumn[[]AnimeProducer] `db:"producers"`
-	Tags       JsonColumn[[]AnimeTag]      `db:"tags"`
+	Studios   JsonColumn[[]AnimeStudio]   `db:"studios"`
+	Producers JsonColumn[[]AnimeProducer] `db:"producers"`
+	Tags      JsonColumn[[]AnimeTag]      `db:"tags"`
 
 	UserData JsonColumn[AnimeUserData] `db:"user_data"`
 }
@@ -260,6 +261,7 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 
 			"animes.start_date",
 			"animes.end_date",
+			"animes.release_date",
 
 			"animes.score",
 
@@ -419,8 +421,9 @@ type CreateAnimeParams struct {
 	AiringSeason string
 	EpisodeCount sql.NullInt64
 
-	StartDate sql.NullString
-	EndDate   sql.NullString
+	StartDate   sql.NullString
+	EndDate     sql.NullString
+	ReleaseDate sql.NullString
 
 	Score sql.NullFloat64
 
@@ -479,8 +482,9 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 		"airing_season": params.AiringSeason,
 		"episode_count": params.EpisodeCount,
 
-		"start_date": params.StartDate,
-		"end_date":   params.EndDate,
+		"start_date":   params.StartDate,
+		"end_date":     params.EndDate,
+		"release_date": params.ReleaseDate,
 
 		"score": params.Score,
 
@@ -521,8 +525,9 @@ type AnimeChanges struct {
 	AiringSeason Change[string]
 	EpisodeCount Change[sql.NullInt64]
 
-	StartDate Change[sql.NullString]
-	EndDate   Change[sql.NullString]
+	StartDate   Change[sql.NullString]
+	EndDate     Change[sql.NullString]
+	ReleaseDate Change[sql.NullString]
 
 	Score Change[sql.NullFloat64]
 
