@@ -28,6 +28,10 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/system/info", "GET", api.GetSystemInfo, z.any(), undefined, options)
   }
   
+  startDownload(options?: ExtraOptions) {
+    return this.request("/api/v1/system/download", "GET", z.undefined(), z.any(), undefined, options)
+  }
+  
   updateUserSettings(body: api.UpdateUserSettingsBody, options?: ExtraOptions) {
     return this.request("/api/v1/user/settings", "PATCH", z.undefined(), z.any(), body, options)
   }

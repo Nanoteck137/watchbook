@@ -430,6 +430,13 @@
       "bodyType": ""
     },
     {
+      "name": "StartDownload",
+      "method": "GET",
+      "path": "/api/v1/system/download",
+      "responseType": "",
+      "bodyType": ""
+    },
+    {
       "name": "UpdateUserSettings",
       "method": "PATCH",
       "path": "/api/v1/user/settings",
@@ -460,6 +467,11 @@
   ],
   "formApiEndpoints": null,
   "normalEndpoints": [
+    {
+      "name": "SseHandler",
+      "method": "GET",
+      "path": "/api/v1/system/sse"
+    },
     {
       "name": "GetAnimeImage",
       "method": "GET",
