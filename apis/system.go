@@ -35,6 +35,82 @@ var dl = downloader.NewDownloader(
 	mal.UserAgent,
 )
 
+func downloadImage(ctx context.Context, db *database.Database, workDir types.WorkDir, animeId, url string, isCover bool) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return fmt.Errorf("downloadImage: failed http get request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	contentType := resp.Header.Get("Content-Type")
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return fmt.Errorf("downloadImage: failed to parse Content-Type: %w", err)
+	}
+
+	ext := ""
+	switch mediaType {
+	case "image/png":
+		ext = ".png"
+	case "image/jpeg":
+		ext = ".jpeg"
+	default:
+		return fmt.Errorf("downloadImage: unsupported media type (%s): %w", mediaType, err)
+	}
+
+	buf := bytes.Buffer{}
+	_, err = io.Copy(&buf, resp.Body)
+	if err != nil {
+		return fmt.Errorf("downloadImage: failed io.Copy: %w", err)
+	}
+
+	dst := path.Join(workDir.ImagesEntriesDir(), animeId)
+	err = os.Mkdir(dst, 0755)
+	if err != nil && !os.IsExist(err) {
+		return fmt.Errorf("downloadImage: failed os.Mkdir: %w", err)
+	}
+
+	rawHash := sha256.Sum256(buf.Bytes())
+	hash := hex.EncodeToString(rawHash[:])
+
+	name := hash + ext
+
+	err = db.CreateAnimeImage(ctx, database.CreateAnimeImageParams{
+		AnimeId:   animeId,
+		Hash:      hash,
+		ImageType: mediaType,
+		Filename:  name,
+		IsCover:   true,
+	})
+	if err != nil {
+		if errors.Is(err, database.ErrItemAlreadyExists) && isCover {
+			err = db.RemoveAnimeCover(ctx, animeId)
+			if err != nil {
+				return fmt.Errorf("downloadImage: failed to remove old cover: %w", err)
+			}
+
+			err = db.UpdateAnimeImage(ctx, animeId, hash, database.AnimeImageChanges{
+				IsCover: database.Change[bool]{
+					Value:   true,
+					Changed: true,
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("downloadImage: failed to update anime image cover status: %w", err)
+			}
+		} else {
+			return fmt.Errorf("downloadImage: failed to create new anime image: %w", err)
+		}
+	}
+
+	err = os.WriteFile(path.Join(dst, name), buf.Bytes(), 0644)
+	if err != nil {
+		return fmt.Errorf("downloadImage: failed to write image to disk: %w", err)
+	}
+
+	return nil
+}
+
 func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir types.WorkDir, animeId string) error {
 	anime, err := db.GetAnimeById(ctx, nil, animeId)
 	if err != nil {
@@ -63,138 +139,17 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 	}
 
 	for _, url := range animeData.Pictures {
-		resp, err := http.Get(url)
+		err := downloadImage(ctx, db, workDir, anime.Id, url, false)
 		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-
-		contentType := resp.Header.Get("Content-Type")
-		mediaType, _, err := mime.ParseMediaType(contentType)
-		if err != nil {
-			return err
-		}
-
-		ext := ""
-		switch mediaType {
-		case "image/png":
-			ext = ".png"
-		case "image/jpeg":
-			ext = ".jpeg"
-		default:
-			return fmt.Errorf("Unsupported media type for picture: %s", mediaType)
-		}
-
-		buf := bytes.Buffer{}
-		_, err = io.Copy(&buf, resp.Body)
-		if err != nil {
-			return err
-		}
-
-		dst := path.Join(workDir.ImagesEntriesDir(), animeId)
-		err = os.Mkdir(dst, 0755)
-		if err != nil && !os.IsExist(err) {
-			return err
-		}
-
-		rawHash := sha256.Sum256(buf.Bytes())
-		hash := hex.EncodeToString(rawHash[:])
-
-		name := hash + ext
-
-		err = db.CreateAnimeImage(ctx, database.CreateAnimeImageParams{
-			AnimeId:   anime.Id,
-			Hash:      hash,
-			ImageType: mediaType,
-			Filename:  name,
-			IsCover:   false,
-		})
-		if err != nil {
-			if errors.Is(err, database.ErrItemAlreadyExists) {
-				continue
-			}
-
-			return err
-		}
-
-		err = os.WriteFile(path.Join(dst, name), buf.Bytes(), 0644)
-		if err != nil {
-			return err
+			log.Error("failed to download image", "err", err, "animeId", anime.Id)
+			continue
 		}
 	}
 
 	if !hasCover {
-		// dl.DownloadToFile()
-		resp, err := http.Get(animeData.CoverImageUrl)
+		err := downloadImage(ctx, db, workDir, anime.Id, animeData.CoverImageUrl, true)
 		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-
-		contentType := resp.Header.Get("Content-Type")
-		mediaType, _, err := mime.ParseMediaType(contentType)
-		if err != nil {
-			return err
-		}
-
-		ext := ""
-		switch mediaType {
-		case "image/png":
-			ext = ".png"
-		case "image/jpeg":
-			ext = ".jpeg"
-		default:
-			return fmt.Errorf("Unsupported media type for cover: %s", mediaType)
-		}
-
-		buf := bytes.Buffer{}
-		_, err = io.Copy(&buf, resp.Body)
-		if err != nil {
-			return err
-		}
-
-		dst := path.Join(workDir.ImagesEntriesDir(), animeId)
-		err = os.Mkdir(dst, 0755)
-		if err != nil && !os.IsExist(err) {
-			return err
-		}
-
-		rawHash := sha256.Sum256(buf.Bytes())
-		hash := hex.EncodeToString(rawHash[:])
-
-		name := hash + ext
-
-		err = db.CreateAnimeImage(ctx, database.CreateAnimeImageParams{
-			AnimeId:   anime.Id,
-			Hash:      hash,
-			ImageType: mediaType,
-			Filename:  name,
-			IsCover:   true,
-		})
-		if err != nil {
-			if errors.Is(err, database.ErrItemAlreadyExists) {
-				err = db.RemoveAnimeCover(ctx, anime.Id)
-				if err != nil {
-					return err
-				}
-
-				err = db.UpdateAnimeImage(ctx, anime.Id, hash, database.AnimeImageChanges{
-					IsCover: database.Change[bool]{
-						Value:   true,
-						Changed: true,
-					},
-				})
-				if err != nil {
-					return err
-				}
-			} else {
-				return err
-			}
-		}
-
-		err = os.WriteFile(path.Join(dst, name), buf.Bytes(), 0644)
-		if err != nil {
-			return err
+			log.Error("failed to download image", "err", err, "animeId", anime.Id)
 		}
 	}
 
