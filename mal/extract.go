@@ -84,10 +84,6 @@ type Episode struct {
 	AverageScore    float64 `json:"averageScore"`
 }
 
-// TODO(patrik):
-//   - Broadcast
-//   - Source
-//   - Demographic x
 func ExtractAnimeData(pagePath string) (Anime, error) {
 	f, err := os.Open(pagePath)
 	if err != nil {
