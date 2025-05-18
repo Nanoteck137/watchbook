@@ -78,6 +78,12 @@ type AnimeUserData struct {
 	IsRewatching int                  `json:"is_rewatching"`
 }
 
+type AnimeImageJson struct {
+	Hash     string `json:"hash"`
+	Filename string `json:"filename"`
+	IsCover  int    `json:"is_cover"`
+}
+
 type Anime struct {
 	RowId int `db:"rowid"`
 
@@ -113,8 +119,9 @@ type Anime struct {
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
 
-	Studios JsonColumn[[]AnimeStudio] `db:"studios"`
-	Tags    JsonColumn[[]AnimeTag]    `db:"tags"`
+	Studios JsonColumn[[]AnimeStudio]    `db:"studios"`
+	Tags    JsonColumn[[]AnimeTag]       `db:"tags"`
+	Images  JsonColumn[[]AnimeImageJson] `db:"images"`
 
 	UserData JsonColumn[AnimeUserData] `db:"user_data"`
 }
@@ -169,6 +176,29 @@ func AnimeTagQuery() *goqu.SelectDataset {
 		GroupBy(tbl.Col("anime_id"))
 }
 
+func AnimeImageJsonQuery() *goqu.SelectDataset {
+	tbl := goqu.T("anime_images")
+
+	return dialect.From(tbl).
+		Select(
+			tbl.Col("anime_id").As("id"),
+			goqu.Func(
+				"json_group_array",
+				goqu.Func(
+					"json_object",
+
+					"hash",
+					goqu.I("anime_images.hash"),
+					"filename",
+					goqu.I("anime_images.filename"),
+					"is_cover",
+					goqu.I("anime_images.is_cover"),
+				),
+			).As("data"),
+		).
+		GroupBy(tbl.Col("anime_id"))
+}
+
 func AnimeUserDataQuery(userId *string) *goqu.SelectDataset {
 	tbl := goqu.T("anime_user_data")
 
@@ -205,6 +235,7 @@ func AnimeUserDataQuery(userId *string) *goqu.SelectDataset {
 func AnimeQuery(userId *string) *goqu.SelectDataset {
 	studiosQuery := AnimeStudioQuery()
 	tagsQuery := AnimeTagQuery()
+	imagesQuery := AnimeImageJsonQuery()
 
 	userDataQuery := AnimeUserDataQuery(userId)
 
@@ -236,8 +267,6 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 
 			"animes.score",
 
-			"animes.cover_filename",
-
 			"animes.should_fetch_data",
 			"animes.last_data_fetch_date",
 
@@ -246,6 +275,7 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 
 			goqu.I("studios.studios").As("studios"),
 			goqu.I("tags.data").As("tags"),
+			goqu.I("images.data").As("images"),
 
 			goqu.I("user_data.data").As("user_data"),
 		).
@@ -257,6 +287,10 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 		LeftJoin(
 			tagsQuery.As("tags"),
 			goqu.On(goqu.I("animes.id").Eq(goqu.I("tags.id"))),
+		).
+		LeftJoin(
+			imagesQuery.As("images"),
+			goqu.On(goqu.I("animes.id").Eq(goqu.I("images.id"))),
 		).
 		LeftJoin(
 			userDataQuery.As("user_data"),
@@ -393,8 +427,6 @@ type CreateAnimeParams struct {
 
 	Score sql.NullFloat64
 
-	CoverFilename sql.NullString
-
 	ShouldFetchData   bool
 	LastDataFetchDate time.Time
 
@@ -457,8 +489,6 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 		"should_fetch_data":    params.ShouldFetchData,
 		"last_data_fetch_date": params.LastDataFetchDate,
 
-		"cover_filename": params.CoverFilename,
-
 		"created": created,
 		"updated": updated,
 	}).
@@ -497,8 +527,6 @@ type AnimeChanges struct {
 
 	Score Change[sql.NullFloat64]
 
-	CoverFilename Change[sql.NullString]
-
 	ShouldFetchData   Change[bool]
 	LastDataFetchDate Change[time.Time]
 
@@ -528,8 +556,6 @@ func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeCha
 	addToRecord(record, "end_date", changes.EndDate)
 
 	addToRecord(record, "score", changes.Score)
-
-	addToRecord(record, "cover_filename", changes.CoverFilename)
 
 	addToRecord(record, "should_fetch_data", changes.ShouldFetchData)
 	addToRecord(record, "last_data_fetch_date", changes.LastDataFetchDate)

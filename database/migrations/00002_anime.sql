@@ -24,8 +24,6 @@ CREATE TABLE animes (
 
 	score FLOAT,
 
-    cover_filename TEXT,
-
     should_fetch_data BOOLEAN NOT NULL,
 	last_data_fetch_date DATE NOT NULL,
 
@@ -41,6 +39,17 @@ CREATE TABLE anime_theme_songs (
     raw TEXT NOT NULL,
 
     PRIMARY KEY(anime_id, idx)
+);
+
+CREATE TABLE anime_images (
+    anime_id TEXT NOT NULL REFERENCES animes(id) ON DELETE CASCADE,
+    hash TEXT NOT NULL, 
+
+    image_type TEXT NOT NULL,
+    filename TEXT NOT NULL,
+    is_cover BOOLEAN NOT NULL,
+
+    PRIMARY KEY(anime_id, hash)
 );
 
 CREATE TABLE anime_tags (

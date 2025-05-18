@@ -1,8 +1,11 @@
 package apis
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -51,8 +54,15 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 		return err
 	}
 
-	coverFilename := ""
-	if animeData.CoverImageUrl != "" && !anime.CoverFilename.Valid {
+	hasCover := false
+	for _, image := range anime.Images.Data {
+		if image.IsCover > 0 {
+			hasCover = true
+			break
+		}
+	}
+
+	if !hasCover {
 		// dl.DownloadToFile()
 		resp, err := http.Get(animeData.CoverImageUrl)
 		if err != nil {
@@ -76,26 +86,38 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 			return fmt.Errorf("Unsupported media type for cover: %s", mediaType)
 		}
 
+		buf := bytes.Buffer{}
+		_, err = io.Copy(&buf, resp.Body)
+		if err != nil {
+			return err
+		}
+
 		dst := path.Join(workDir.ImagesEntriesDir(), animeId)
 		err = os.Mkdir(dst, 0755)
 		if err != nil && !os.IsExist(err) {
 			return err
 		}
 
-		name := "cover" + ext
-		p := path.Join(dst, name)
-		f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		rawHash := sha256.Sum256(buf.Bytes())
+		hash := hex.EncodeToString(rawHash[:])
+
+		name := hash + ext
+
+		err = db.CreateAnimeImage(ctx, database.CreateAnimeImageParams{
+			AnimeId:   anime.Id,
+			Hash:      hash,
+			ImageType: mediaType,
+			Filename:  name,
+			IsCover:   true,
+		})
 		if err != nil {
 			return err
 		}
-		defer f.Close()
 
-		_, err = io.Copy(f, resp.Body)
+		err = os.WriteFile(path.Join(dst, name), buf.Bytes(), 0644)
 		if err != nil {
 			return err
 		}
-
-		coverFilename = name
 	}
 
 	// TODO(patrik): Add some sanitization
@@ -223,14 +245,6 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 		// 	},
 		// 	Changed: animeData.AnimeNewsNetworkUrl != anime.AnimeNewsNetworkUrl.String,
 		// },
-
-		CoverFilename: database.Change[sql.NullString]{
-			Value: sql.NullString{
-				String: coverFilename,
-				Valid:  coverFilename != "",
-			},
-			Changed: coverFilename != anime.CoverFilename.String,
-		},
 
 		ShouldFetchData: database.Change[bool]{
 			Value:   false,

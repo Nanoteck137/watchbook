@@ -94,9 +94,13 @@ func getPageOptions(q url.Values) database.FetchOptions {
 }
 
 func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
+	// TODO(patrik): Add default cover for animes without covers
 	coverUrl := ""
-	if anime.CoverFilename.Valid {
-		coverUrl = ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, anime.CoverFilename.String))
+	for _, image := range anime.Images.Data {
+		if image.IsCover > 0 {
+			coverUrl = ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, image.Filename))
+			break
+		}
 	}
 
 	studios := make([]AnimeStudio, len(anime.Studios.Data))
