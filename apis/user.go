@@ -144,7 +144,10 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 					_, err := app.DB().GetAnimeByMalId(ctx, malId)
 					if err != nil && errors.Is(err, database.ErrItemNotFound) {
 						_, err := app.DB().CreateAnime(ctx, database.CreateAnimeParams{
-							MalId:           malId,
+							MalId:           sql.NullString{
+								String: malId,
+								Valid:  true,
+							},
 							Title:           string(entry.AnimeTitle),
 							ShouldFetchData: true,
 						})

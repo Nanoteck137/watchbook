@@ -2,7 +2,10 @@
 CREATE TABLE animes (
     id TEXT PRIMARY KEY,
 
-    mal_id TEXT NOT NULL UNIQUE CHECK(mal_id<>''),
+    mal_id TEXT,
+    ani_db_id TEXT,
+    anilist_id TEXT,
+    anime_news_network_id TEXT,
 
 	title TEXT NOT NULL CHECK(title<>''),
 	title_english TEXT,
@@ -20,9 +23,6 @@ CREATE TABLE animes (
     release_date TEXT,
 
 	score FLOAT,
-
-    ani_db_url TEXT,
-    anime_news_network_url TEXT,
 
     cover_filename TEXT,
 

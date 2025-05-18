@@ -17,34 +17,34 @@ import (
 
 // TODO(patrik): Move
 type JsonColumn[T any] struct {
-	Has bool
-	Val T
+	Data  T
+	Valid bool
 }
 
 func (j *JsonColumn[T]) Scan(src any) error {
 	var res T
 
 	if src == nil {
-		j.Val = res
-		j.Has = false
+		j.Data = res
+		j.Valid = false
 		return nil
 	}
 
 	switch value := src.(type) {
 	case string:
-		err := json.Unmarshal([]byte(value), &j.Val)
+		err := json.Unmarshal([]byte(value), &j.Data)
 		if err != nil {
 			return err
 		}
 
-		j.Has = true
+		j.Valid = true
 	case []byte:
-		err := json.Unmarshal(value, &j.Val)
+		err := json.Unmarshal(value, &j.Data)
 		if err != nil {
 			return err
 		}
 
-		j.Has = true
+		j.Valid = true
 	default:
 		return fmt.Errorf("unsupported type %T", src)
 	}
@@ -53,7 +53,7 @@ func (j *JsonColumn[T]) Scan(src any) error {
 }
 
 func (j *JsonColumn[T]) Value() (driver.Value, error) {
-	raw, err := json.Marshal(j.Val)
+	raw, err := json.Marshal(j.Data)
 	return raw, err
 }
 
@@ -83,7 +83,10 @@ type Anime struct {
 
 	Id string `db:"id"`
 
-	MalId string `db:"mal_id"`
+	MalId              sql.NullString `db:"mal_id"`
+	AniDbId            sql.NullString `db:"ani_db_id"`
+	AnilistId          sql.NullString `db:"anilist_id"`
+	AnimeNewsNetworkId sql.NullString `db:"anime_news_network_id"`
 
 	Title        string         `db:"title"`
 	TitleEnglish sql.NullString `db:"title_english"`
@@ -102,9 +105,6 @@ type Anime struct {
 
 	Score sql.NullFloat64 `db:"score"`
 
-	AniDBUrl            sql.NullString `db:"ani_db_url"`
-	AnimeNewsNetworkUrl sql.NullString `db:"anime_news_network_url"`
-
 	CoverFilename sql.NullString `db:"cover_filename"`
 
 	ShouldFetchData   bool      `db:"should_fetch_data"`
@@ -113,8 +113,8 @@ type Anime struct {
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
 
-	Studios   JsonColumn[[]AnimeStudio]   `db:"studios"`
-	Tags      JsonColumn[[]AnimeTag]      `db:"tags"`
+	Studios JsonColumn[[]AnimeStudio] `db:"studios"`
+	Tags    JsonColumn[[]AnimeTag]    `db:"tags"`
 
 	UserData JsonColumn[AnimeUserData] `db:"user_data"`
 }
@@ -215,6 +215,9 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 			"animes.id",
 
 			"animes.mal_id",
+			"animes.ani_db_id",
+			"animes.anilist_id",
+			"animes.anime_news_network_id",
 
 			"animes.title",
 			"animes.title_english",
@@ -232,9 +235,6 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 			"animes.release_date",
 
 			"animes.score",
-
-			"animes.ani_db_url",
-			"animes.anime_news_network_url",
 
 			"animes.cover_filename",
 
@@ -371,7 +371,10 @@ func (db *Database) GetAnimeByMalId(ctx context.Context, malId string) (Anime, e
 type CreateAnimeParams struct {
 	Id string
 
-	MalId string
+	MalId              sql.NullString
+	AniDbId            sql.NullString
+	AnilistId          sql.NullString
+	AnimeNewsNetworkId sql.NullString
 
 	Title        string
 	TitleEnglish sql.NullString
@@ -389,9 +392,6 @@ type CreateAnimeParams struct {
 	ReleaseDate sql.NullString
 
 	Score sql.NullFloat64
-
-	AniDBUrl            sql.NullString
-	AnimeNewsNetworkUrl sql.NullString
 
 	CoverFilename sql.NullString
 
@@ -432,7 +432,10 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 	query := dialect.Insert("animes").Rows(goqu.Record{
 		"id": id,
 
-		"mal_id": params.MalId,
+		"mal_id":                params.MalId,
+		"ani_db_id":             params.AniDbId,
+		"anilist_id":            params.AnilistId,
+		"anime_news_network_id": params.AnimeNewsNetworkId,
 
 		"title":         params.Title,
 		"title_english": params.TitleEnglish,
@@ -450,9 +453,6 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 		"release_date": params.ReleaseDate,
 
 		"score": params.Score,
-
-		"ani_db_url":             params.AniDBUrl,
-		"anime_news_network_url": params.AnimeNewsNetworkUrl,
 
 		"should_fetch_data":    params.ShouldFetchData,
 		"last_data_fetch_date": params.LastDataFetchDate,
@@ -475,7 +475,10 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 }
 
 type AnimeChanges struct {
-	MalId Change[string]
+	MalId              Change[sql.NullString]
+	AniDbId            Change[sql.NullString]
+	AnilistId          Change[sql.NullString]
+	AnimeNewsNetworkId Change[sql.NullString]
 
 	Title        Change[string]
 	TitleEnglish Change[sql.NullString]
@@ -494,9 +497,6 @@ type AnimeChanges struct {
 
 	Score Change[sql.NullFloat64]
 
-	AniDBUrl            Change[sql.NullString]
-	AnimeNewsNetworkUrl Change[sql.NullString]
-
 	CoverFilename Change[sql.NullString]
 
 	ShouldFetchData   Change[bool]
@@ -509,6 +509,9 @@ func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeCha
 	record := goqu.Record{}
 
 	addToRecord(record, "mal_id", changes.MalId)
+	addToRecord(record, "ani_db_id", changes.AniDbId)
+	addToRecord(record, "anilist_id", changes.AnilistId)
+	addToRecord(record, "anime_news_network_id", changes.AnimeNewsNetworkId)
 
 	addToRecord(record, "title", changes.Title)
 	addToRecord(record, "title_english", changes.TitleEnglish)
@@ -525,9 +528,6 @@ func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeCha
 	addToRecord(record, "end_date", changes.EndDate)
 
 	addToRecord(record, "score", changes.Score)
-
-	addToRecord(record, "ani_db_url", changes.AniDBUrl)
-	addToRecord(record, "anime_news_network_url", changes.AnimeNewsNetworkUrl)
 
 	addToRecord(record, "cover_filename", changes.CoverFilename)
 

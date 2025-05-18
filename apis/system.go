@@ -38,9 +38,15 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 		return err
 	}
 
-	fmt.Printf("Updating %s (%s) - %s\n", anime.Title, anime.MalId, anime.Id)
+	if !anime.MalId.Valid {
+		return nil
+	}
 
-	animeData, err := mal.FetchAnimeData(dl, anime.MalId)
+	malId := anime.MalId.String
+
+	fmt.Printf("Updating %s (%s) - %s\n", anime.Title, malId, anime.Id)
+
+	animeData, err := mal.FetchAnimeData(dl, malId)
 	if err != nil {
 		return err
 	}
@@ -202,21 +208,21 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 			Changed: true,
 		},
 
-		AniDBUrl: database.Change[sql.NullString]{
-			Value: sql.NullString{
-				String: animeData.AniDBUrl,
-				Valid:  animeData.AniDBUrl != "",
-			},
-			Changed: animeData.AniDBUrl != anime.AniDBUrl.String,
-		},
-
-		AnimeNewsNetworkUrl: database.Change[sql.NullString]{
-			Value: sql.NullString{
-				String: animeData.AnimeNewsNetworkUrl,
-				Valid:  animeData.AnimeNewsNetworkUrl != "",
-			},
-			Changed: animeData.AnimeNewsNetworkUrl != anime.AnimeNewsNetworkUrl.String,
-		},
+		// AniDBUrl: database.Change[sql.NullString]{
+		// 	Value: sql.NullString{
+		// 		String: animeData.AniDBUrl,
+		// 		Valid:  animeData.AniDBUrl != "",
+		// 	},
+		// 	Changed: animeData.AniDBUrl != anime.AniDBUrl.String,
+		// },
+		//
+		// AnimeNewsNetworkUrl: database.Change[sql.NullString]{
+		// 	Value: sql.NullString{
+		// 		String: animeData.AnimeNewsNetworkUrl,
+		// 		Valid:  animeData.AnimeNewsNetworkUrl != "",
+		// 	},
+		// 	Changed: animeData.AnimeNewsNetworkUrl != anime.AnimeNewsNetworkUrl.String,
+		// },
 
 		CoverFilename: database.Change[sql.NullString]{
 			Value: sql.NullString{

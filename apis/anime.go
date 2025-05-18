@@ -99,16 +99,16 @@ func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
 		coverUrl = ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, anime.CoverFilename.String))
 	}
 
-	studios := make([]AnimeStudio, len(anime.Studios.Val))
-	for i, studio := range anime.Studios.Val {
+	studios := make([]AnimeStudio, len(anime.Studios.Data))
+	for i, studio := range anime.Studios.Data {
 		studios[i] = AnimeStudio{
 			Slug: studio.Slug,
 			Name: studio.Name,
 		}
 	}
 
-	tags := make([]AnimeTag, len(anime.Tags.Val))
-	for i, tag := range anime.Tags.Val {
+	tags := make([]AnimeTag, len(anime.Tags.Data))
+	for i, tag := range anime.Tags.Data {
 		tags[i] = AnimeTag{
 			Slug: tag.Slug,
 			Name: tag.Name,
@@ -119,8 +119,8 @@ func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
 	if hasUser {
 		user = &AnimeUser{}
 
-		if anime.UserData.Has {
-			val := anime.UserData.Val
+		if anime.UserData.Valid {
+			val := anime.UserData.Data
 			user.List = val.List
 			user.Episode = val.Episode
 			user.Score = val.Score
@@ -256,7 +256,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				val := anime.UserData.Val
+				val := anime.UserData.Data
 
 				data := database.SetAnimeUserData{
 					List:         utils.AnimeUserListPtrToSqlNull(val.List),
