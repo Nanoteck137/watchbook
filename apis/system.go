@@ -179,7 +179,7 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 				}
 
 				err = db.UpdateAnimeImage(ctx, anime.Id, hash, database.AnimeImageChanges{
-					IsCover:   database.Change[bool]{
+					IsCover: database.Change[bool]{
 						Value:   true,
 						Changed: true,
 					},
@@ -187,9 +187,9 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 				if err != nil {
 					return err
 				}
+			} else {
+				return err
 			}
-
-			return err
 		}
 
 		err = os.WriteFile(path.Join(dst, name), buf.Bytes(), 0644)
@@ -544,8 +544,8 @@ func (d *DownloadHandler) download(app core.App) error {
 
 	// TODO(patrik): This is temporary
 	for i, id := range ids[:4] {
-	// for i, id := range ids {
-		d.updateStatus(i + 1, len(ids))
+		// for i, id := range ids {
+		d.updateStatus(i+1, len(ids))
 		d.sendStatusEvent()
 
 		err := fetchAndUpdateAnime(ctx, db, workDir, id)
