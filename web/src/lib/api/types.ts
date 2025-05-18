@@ -50,6 +50,11 @@ export const UpdateUserSettingsBody = z.object({
 });
 export type UpdateUserSettingsBody = z.infer<typeof UpdateUserSettingsBody>;
 
+export const ImportMalListBody = z.object({
+  username: z.string(),
+});
+export type ImportMalListBody = z.infer<typeof ImportMalListBody>;
+
 export const Page = z.object({
   page: z.number(),
   perPage: z.number(),
@@ -69,6 +74,13 @@ export const AnimeTag = z.object({
   name: z.string(),
 });
 export type AnimeTag = z.infer<typeof AnimeTag>;
+
+export const AnimeImage = z.object({
+  hash: z.string(),
+  url: z.string(),
+  isCover: z.boolean(),
+});
+export type AnimeImage = z.infer<typeof AnimeImage>;
 
 export const AnimeUser = z.object({
   list: z.string().nullable(),
@@ -95,6 +107,7 @@ export const Anime = z.object({
   studios: z.array(AnimeStudio),
   tags: z.array(AnimeTag),
   coverUrl: z.string(),
+  images: z.array(AnimeImage),
   user: AnimeUser.nullable().optional(),
 });
 export type Anime = z.infer<typeof Anime>;

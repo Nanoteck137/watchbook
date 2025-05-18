@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/mattn/go-sqlite3"
@@ -132,8 +131,6 @@ func (db *Database) UpdateAnimeImage(ctx context.Context, animeId, hash string, 
 		return nil
 	}
 
-	record["updated"] = time.Now().UnixMilli()
-
 	ds := dialect.Update("anime_images").
 		Prepared(true).
 		Set(record).
@@ -143,6 +140,22 @@ func (db *Database) UpdateAnimeImage(ctx context.Context, animeId, hash string, 
 		)
 
 	_, err := db.Exec(ctx, ds)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *Database) RemoveAnimeCover(ctx context.Context, animeId string) error {
+	query := dialect.Update("anime_images").
+		Prepared(true).
+		Set(goqu.Record{
+			"is_cover": false,
+		}).
+		Where(goqu.I("anime_images.anime_id").Eq(animeId))
+
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

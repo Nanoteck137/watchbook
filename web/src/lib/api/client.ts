@@ -36,6 +36,10 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/user/settings", "PATCH", z.undefined(), z.any(), body, options)
   }
   
+  importMalList(body: api.ImportMalListBody, options?: ExtraOptions) {
+    return this.request("/api/v1/user/import/mal", "POST", z.undefined(), z.any(), body, options)
+  }
+  
   getAnimes(options?: ExtraOptions) {
     return this.request("/api/v1/animes", "GET", api.GetAnimes, z.any(), undefined, options)
   }

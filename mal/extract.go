@@ -66,6 +66,8 @@ type Anime struct {
 
 	AniDBUrl            string `json:"aniDBUrl"`
 	AnimeNewsNetworkUrl string `json:"animeNewsNetworkUrl"`
+
+	Pictures []string `json:"pictures"`
 }
 
 type EpisodeExtraInfo struct {

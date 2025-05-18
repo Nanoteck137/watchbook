@@ -33,6 +33,12 @@ type AnimeUser struct {
 	IsRewatching bool                 `json:"isRewatching"`
 }
 
+type AnimeImage struct {
+	Hash    string `json:"hash"`
+	Url     string `json:"url"`
+	IsCover bool   `json:"isCover"`
+}
+
 type Anime struct {
 	Id string `json:"id"`
 
@@ -53,10 +59,11 @@ type Anime struct {
 	EndDate     *string `json:"endDate"`
 	ReleaseDate *string `json:"releaseDate"`
 
-	Studios   []AnimeStudio   `json:"studios"`
-	Tags      []AnimeTag      `json:"tags"`
+	Studios []AnimeStudio `json:"studios"`
+	Tags    []AnimeTag    `json:"tags"`
 
-	CoverUrl string `json:"coverUrl"`
+	CoverUrl string       `json:"coverUrl"`
+	Images   []AnimeImage `json:"images"`
 
 	User *AnimeUser `json:"user,omitempty"`
 }
@@ -101,6 +108,17 @@ func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
 			coverUrl = ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, image.Filename))
 			break
 		}
+	}
+
+	images := []AnimeImage{}
+	for _, image := range anime.Images.Data {
+		url := ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, image.Filename))
+
+		images = append(images, AnimeImage{
+			Hash:    image.Hash,
+			Url:     url,
+			IsCover: image.IsCover > 0,
+		})
 	}
 
 	studios := make([]AnimeStudio, len(anime.Studios.Data))
@@ -149,6 +167,7 @@ func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
 		Studios:      studios,
 		Tags:         tags,
 		CoverUrl:     coverUrl,
+		Images:       images,
 		User:         user,
 	}
 }

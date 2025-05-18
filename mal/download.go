@@ -221,7 +221,7 @@ func process(id, p string) error {
 // 	return p, nil
 // }
 
-func FetchAnimeData(dl *downloader.Downloader, id string) (*Anime, error) {
+func FetchAnimeData(dl *downloader.Downloader, id string, fetchPictures bool) (*Anime, error) {
 	p, err := os.MkdirTemp("", "anime*")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp dir: %w", err)
@@ -249,6 +249,23 @@ func FetchAnimeData(dl *downloader.Downloader, id string) (*Anime, error) {
 	anime, err := ExtractAnimeData(path.Join(p, "root.html"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract anime data: %w", err)
+	}
+
+	if fetchPictures {
+		baseUrl := fmt.Sprintf("https://myanimelist.net/anime/%s/random", id)
+
+		picturesDst := path.Join(p, "pictures.html")
+		err = dl.DownloadToFile(baseUrl+"/pics", picturesDst)
+		if err != nil {
+			return nil, fmt.Errorf("failed to download entry pictures page: %w", err)
+		}
+
+		pictures, err := ExtractPictures(picturesDst)
+		if err != nil {
+			return nil, err
+		}
+
+		anime.Pictures = pictures
 	}
 
 	return &anime, nil

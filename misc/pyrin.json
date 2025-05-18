@@ -145,6 +145,17 @@
       ]
     },
     {
+      "name": "ImportMalListBody",
+      "extend": "",
+      "fields": [
+        {
+          "name": "username",
+          "type": "string",
+          "omit": false
+        }
+      ]
+    },
+    {
       "name": "Page",
       "extend": "",
       "fields": [
@@ -198,6 +209,27 @@
         {
           "name": "name",
           "type": "string",
+          "omit": false
+        }
+      ]
+    },
+    {
+      "name": "AnimeImage",
+      "extend": "",
+      "fields": [
+        {
+          "name": "hash",
+          "type": "string",
+          "omit": false
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "omit": false
+        },
+        {
+          "name": "isCover",
+          "type": "bool",
           "omit": false
         }
       ]
@@ -313,6 +345,11 @@
           "omit": false
         },
         {
+          "name": "images",
+          "type": "[]AnimeImage",
+          "omit": false
+        },
+        {
           "name": "user",
           "type": "*AnimeUser",
           "omit": true
@@ -416,6 +453,13 @@
       "path": "/api/v1/user/settings",
       "responseType": "",
       "bodyType": "UpdateUserSettingsBody"
+    },
+    {
+      "name": "ImportMalList",
+      "method": "POST",
+      "path": "/api/v1/user/import/mal",
+      "responseType": "",
+      "bodyType": "ImportMalListBody"
     },
     {
       "name": "GetAnimes",

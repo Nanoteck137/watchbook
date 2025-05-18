@@ -49,7 +49,7 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 
 	fmt.Printf("Updating %s (%s) - %s\n", anime.Title, malId, anime.Id)
 
-	animeData, err := mal.FetchAnimeData(dl, malId)
+	animeData, err := mal.FetchAnimeData(dl, malId, true)
 	if err != nil {
 		return err
 	}
@@ -59,6 +59,67 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 		if image.IsCover > 0 {
 			hasCover = true
 			break
+		}
+	}
+
+	for _, url := range animeData.Pictures {
+		resp, err := http.Get(url)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		contentType := resp.Header.Get("Content-Type")
+		mediaType, _, err := mime.ParseMediaType(contentType)
+		if err != nil {
+			return err
+		}
+
+		ext := ""
+		switch mediaType {
+		case "image/png":
+			ext = ".png"
+		case "image/jpeg":
+			ext = ".jpeg"
+		default:
+			return fmt.Errorf("Unsupported media type for picture: %s", mediaType)
+		}
+
+		buf := bytes.Buffer{}
+		_, err = io.Copy(&buf, resp.Body)
+		if err != nil {
+			return err
+		}
+
+		dst := path.Join(workDir.ImagesEntriesDir(), animeId)
+		err = os.Mkdir(dst, 0755)
+		if err != nil && !os.IsExist(err) {
+			return err
+		}
+
+		rawHash := sha256.Sum256(buf.Bytes())
+		hash := hex.EncodeToString(rawHash[:])
+
+		name := hash + ext
+
+		err = db.CreateAnimeImage(ctx, database.CreateAnimeImageParams{
+			AnimeId:   anime.Id,
+			Hash:      hash,
+			ImageType: mediaType,
+			Filename:  name,
+			IsCover:   false,
+		})
+		if err != nil {
+			if errors.Is(err, database.ErrItemAlreadyExists) {
+				continue
+			}
+
+			return err
+		}
+
+		err = os.WriteFile(path.Join(dst, name), buf.Bytes(), 0644)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -111,6 +172,23 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 			IsCover:   true,
 		})
 		if err != nil {
+			if errors.Is(err, database.ErrItemAlreadyExists) {
+				err = db.RemoveAnimeCover(ctx, anime.Id)
+				if err != nil {
+					return err
+				}
+
+				err = db.UpdateAnimeImage(ctx, anime.Id, hash, database.AnimeImageChanges{
+					IsCover:   database.Change[bool]{
+						Value:   true,
+						Changed: true,
+					},
+				})
+				if err != nil {
+					return err
+				}
+			}
+
 			return err
 		}
 

@@ -380,3 +380,9 @@
   </p>
   <p>Rating: {data.anime.rating}</p>
 </div>
+
+<div class="flex flex-col">
+  {#each data.anime.images as image}
+    <Image class="min-h-80 w-56" src={image.url} alt="cover" />
+  {/each}
+</div>
