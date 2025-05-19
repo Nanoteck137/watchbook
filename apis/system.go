@@ -284,8 +284,8 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 			Changed: true,
 		},
 
-		LastDataFetchDate: database.Change[time.Time]{
-			Value:   time.Now(),
+		LastDataFetch: database.Change[int64]{
+			Value:   time.Now().UnixMilli(),
 			Changed: true,
 		},
 	})

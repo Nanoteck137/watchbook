@@ -115,8 +115,8 @@ type Anime struct {
 
 	CoverFilename sql.NullString `db:"cover_filename"`
 
-	ShouldFetchData   bool      `db:"should_fetch_data"`
-	LastDataFetchDate time.Time `db:"last_data_fetch_date"`
+	ShouldFetchData bool  `db:"should_fetch_data"`
+	LastDataFetch   int64 `db:"last_data_fetch"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -272,7 +272,7 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 			"animes.score",
 
 			"animes.should_fetch_data",
-			"animes.last_data_fetch_date",
+			"animes.last_data_fetch",
 
 			"animes.created",
 			"animes.updated",
@@ -443,8 +443,8 @@ type CreateAnimeParams struct {
 
 	Score sql.NullFloat64
 
-	ShouldFetchData   bool
-	LastDataFetchDate time.Time
+	ShouldFetchData bool
+	LastDataFetch   int64
 
 	Created int64
 	Updated int64
@@ -501,8 +501,8 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 
 		"score": params.Score,
 
-		"should_fetch_data":    params.ShouldFetchData,
-		"last_data_fetch_date": params.LastDataFetchDate,
+		"should_fetch_data": params.ShouldFetchData,
+		"last_data_fetch":   params.LastDataFetch,
 
 		"created": created,
 		"updated": updated,
@@ -541,8 +541,8 @@ type AnimeChanges struct {
 
 	Score Change[sql.NullFloat64]
 
-	ShouldFetchData   Change[bool]
-	LastDataFetchDate Change[time.Time]
+	ShouldFetchData Change[bool]
+	LastDataFetch   Change[int64]
 
 	Created Change[int64]
 }
@@ -572,7 +572,7 @@ func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeCha
 	addToRecord(record, "score", changes.Score)
 
 	addToRecord(record, "should_fetch_data", changes.ShouldFetchData)
-	addToRecord(record, "last_data_fetch_date", changes.LastDataFetchDate)
+	addToRecord(record, "last_data_fetch", changes.LastDataFetch)
 
 	addToRecord(record, "created", changes.Created)
 

@@ -24,7 +24,7 @@ CREATE TABLE animes (
 	score FLOAT,
 
     should_fetch_data BOOLEAN NOT NULL,
-	last_data_fetch_date DATE NOT NULL,
+	last_data_fetch INTEGER NOT NULL,
 
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL
