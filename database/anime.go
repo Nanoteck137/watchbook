@@ -152,6 +152,26 @@ func AnimeStudioQuery() *goqu.SelectDataset {
 		GroupBy(tbl.Col("anime_id"))
 }
 
+func AnimeAiringSeasonQuery() *goqu.SelectDataset {
+	tbl := goqu.T("tags")
+
+	return dialect.From(tbl).
+		Select(
+			tbl.Col("slug").As("slug"),
+			goqu.Func(
+				"json_group_array",
+				goqu.Func(
+					"json_object",
+
+					"slug",
+					tbl.Col("slug"),
+					"name",
+					tbl.Col("name"),
+				),
+			).As("data"),
+		)
+}
+
 func AnimeTagQuery() *goqu.SelectDataset {
 	tbl := goqu.T("anime_tags")
 
@@ -240,6 +260,7 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 	studiosQuery := AnimeStudioQuery()
 	tagsQuery := AnimeTagQuery()
 	imagesQuery := AnimeImageJsonQuery()
+	airingSeasonQuery := AnimeAiringSeasonQuery()
 
 	userDataQuery := AnimeUserDataQuery(userId)
 
@@ -264,15 +285,7 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 			"animes.status",
 			"animes.rating",
 			"animes.episode_count",
-
-			goqu.Func(
-				"json_object",
-
-				"slug",
-				goqu.I("airing_season_tag.slug"),
-				"name",
-				goqu.I("airing_season_tag.name"),
-			).As("airing_season"),
+			goqu.I("airing_season_tag.data").As("airing_season"),
 
 			"animes.start_date",
 			"animes.end_date",
@@ -299,7 +312,7 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 			goqu.On(goqu.I("animes.id").Eq(goqu.I("tags.id"))),
 		).
 		LeftJoin(
-			goqu.I("tags").As("airing_season_tag"),
+			airingSeasonQuery.As("airing_season_tag"),
 			goqu.On(goqu.I("animes.airing_season").Eq(goqu.I("airing_season_tag.slug"))),
 		).
 		LeftJoin(
