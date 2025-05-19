@@ -30,6 +30,7 @@ type AnimeUser struct {
 	List         *types.AnimeUserList `json:"list"`
 	Score        *int64               `json:"score"`
 	Episode      *int64               `json:"episode"`
+	RewatchCount *int64               `json:"rewatchCount"`
 	IsRewatching bool                 `json:"isRewatching"`
 }
 
@@ -55,8 +56,8 @@ type Anime struct {
 
 	Score *float64 `json:"score"`
 
-	StartDate   *string `json:"startDate"`
-	EndDate     *string `json:"endDate"`
+	StartDate *string `json:"startDate"`
+	EndDate   *string `json:"endDate"`
 
 	Studios []AnimeStudio `json:"studios"`
 	Tags    []AnimeTag    `json:"tags"`
@@ -144,6 +145,7 @@ func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
 			val := anime.UserData.Data
 			user.List = val.List
 			user.Episode = val.Episode
+			user.RewatchCount = val.RewatchCount
 			user.Score = val.Score
 			user.IsRewatching = val.IsRewatching > 0
 		}
@@ -174,6 +176,7 @@ type SetAnimeUserData struct {
 	List         *types.AnimeUserList `json:"list,omitempty"`
 	Score        *int64               `json:"score,omitempty"`
 	Episode      *int64               `json:"episode,omitempty"`
+	RewatchCount *int64               `json:"rewatchCount,omitempty"`
 	IsRewatching *bool                `json:"isRewatching,omitempty"`
 }
 
@@ -297,6 +300,13 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					data.Episode = sql.NullInt64{
 						Int64: *body.Episode,
 						Valid: *body.Episode != 0,
+					}
+				}
+
+				if body.RewatchCount != nil {
+					data.RewatchCount = sql.NullInt64{
+						Int64: *body.RewatchCount,
+						Valid: *body.RewatchCount != 0,
 					}
 				}
 

@@ -281,6 +281,11 @@
           "omit": false
         },
         {
+          "name": "rewatchCount",
+          "type": "*int",
+          "omit": false
+        },
+        {
           "name": "isRewatching",
           "type": "bool",
           "omit": false
@@ -415,6 +420,11 @@
         },
         {
           "name": "episode",
+          "type": "*int",
+          "omit": true
+        },
+        {
+          "name": "rewatchCount",
           "type": "*int",
           "omit": true
         },

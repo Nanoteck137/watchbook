@@ -19,7 +19,6 @@
   } from "@nanoteck137/nano-ui";
   import { ChevronDown, Eye, Star } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
-  import { z } from "zod";
 
   const { data } = $props();
   const apiClient = getApiClient();
@@ -249,10 +248,12 @@
           console.log(formData);
 
           const episode = formData.get("episode")?.toString() ?? "0";
+          const rewatchCount = formData.get("rewatchCount")?.toString() ?? "0";
           const isRewatching = formData.get("isRewatching")?.toString() ?? "";
 
           const res = await apiClient.setAnimeUserData(data.anime.id, {
             episode: parseInt(episode === "" ? "0" : episode),
+            rewatchCount: parseInt(rewatchCount === "" ? "0" : rewatchCount),
             isRewatching: isRewatching === "on",
           });
 
@@ -279,6 +280,15 @@
               id="episode"
               type="number"
               value={data.anime.user?.episode ?? 0}
+            />
+          </div>
+          <div class="flex flex-col gap-2">
+            <Label for="rewatchCount">Rewatch Count</Label>
+            <Input
+              name="rewatchCount"
+              id="rewatchCount"
+              type="number"
+              value={data.anime.user?.rewatchCount ?? 0}
             />
           </div>
           <div class="flex items-center gap-2">

@@ -97,6 +97,7 @@ export const AnimeUser = z.object({
   list: z.string().nullable(),
   score: z.number().nullable(),
   episode: z.number().nullable(),
+  rewatchCount: z.number().nullable(),
   isRewatching: z.boolean(),
 });
 export type AnimeUser = z.infer<typeof AnimeUser>;
@@ -135,6 +136,7 @@ export const SetAnimeUserData = z.object({
   list: z.string().nullable().optional(),
   score: z.number().nullable().optional(),
   episode: z.number().nullable().optional(),
+  rewatchCount: z.number().nullable().optional(),
   isRewatching: z.boolean().nullable().optional(),
 });
 export type SetAnimeUserData = z.infer<typeof SetAnimeUserData>;

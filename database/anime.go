@@ -74,6 +74,7 @@ type AnimeTag struct {
 type AnimeUserData struct {
 	List         *types.AnimeUserList `json:"list"`
 	Score        *int64               `json:"score"`
+	RewatchCount *int64               `json:"rewatch_count"`
 	Episode      *int64               `json:"episode"`
 	IsRewatching int                  `json:"is_rewatching"`
 }
@@ -212,6 +213,9 @@ func AnimeUserDataQuery(userId *string) *goqu.SelectDataset {
 
 				"episode",
 				tbl.Col("episode"),
+
+				"rewatch_count",
+				tbl.Col("rewatch_count"),
 
 				"is_rewatching",
 				tbl.Col("is_rewatching"),
@@ -686,6 +690,7 @@ const (
 type SetAnimeUserData struct {
 	List         sql.NullString
 	Episode      sql.NullInt64
+	RewatchCount sql.NullInt64
 	IsRewatching bool
 	Score        sql.NullInt64
 }
@@ -715,6 +720,7 @@ func (db *Database) SetAnimeUserData(ctx context.Context, animeId, userId string
 
 			"list":          data.List,
 			"episode":       data.Episode,
+			"rewatch_count": data.RewatchCount,
 			"is_rewatching": data.IsRewatching,
 			"score":         data.Score,
 		}).
@@ -722,6 +728,7 @@ func (db *Database) SetAnimeUserData(ctx context.Context, animeId, userId string
 			goqu.DoUpdate("anime_id, user_id", goqu.Record{
 				"list":          data.List,
 				"episode":       data.Episode,
+				"rewatch_count": data.RewatchCount,
 				"is_rewatching": data.IsRewatching,
 				"score":         data.Score,
 			}),

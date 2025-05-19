@@ -72,6 +72,7 @@ CREATE TABLE anime_user_data (
     list TEXT,
 
     episode INTEGER,
+    rewatch_count INTEGER,
     is_rewatching BOOLEAN NOT NULL,
 
     score INTEGER,
