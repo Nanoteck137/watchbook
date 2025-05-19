@@ -385,8 +385,8 @@ func (db *Database) GetAnimeById(ctx context.Context, userId *string, id string)
 	return item, nil
 }
 
-func (db *Database) GetAnimeByMalId(ctx context.Context, malId string) (Anime, error) {
-	query := AnimeQuery(nil).
+func (db *Database) GetAnimeByMalId(ctx context.Context, userId *string, malId string) (Anime, error) {
+	query := AnimeQuery(userId).
 		Where(goqu.I("animes.mal_id").Eq(malId))
 
 	var item Anime

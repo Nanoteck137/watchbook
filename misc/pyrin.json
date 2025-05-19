@@ -152,6 +152,11 @@
           "name": "username",
           "type": "string",
           "omit": false
+        },
+        {
+          "name": "overrideExistingEntries",
+          "type": "bool",
+          "omit": true
         }
       ]
     },

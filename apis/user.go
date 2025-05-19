@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/tools/transform"
 	"github.com/nanoteck137/validate"
@@ -61,7 +61,8 @@ type GetAllApiTokens struct {
 }
 
 type ImportMalListBody struct {
-	Username string `json:"username"`
+	Username                string `json:"username"`
+	OverrideExistingEntries bool   `json:"overrideExistingEntries,omitempty"`
 }
 
 func (b *ImportMalListBody) Transform() {
@@ -91,9 +92,6 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				if err != nil {
 					return nil, err
 				}
-
-				pretty.Println(user)
-				pretty.Println(body)
 
 				settings := user.ToUserSettings()
 
@@ -141,10 +139,10 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				for _, entry := range entries {
 					malId := strconv.Itoa(entry.AnimeId)
 
-					_, err := app.DB().GetAnimeByMalId(ctx, malId)
+					_, err := app.DB().GetAnimeByMalId(ctx, &user.Id, malId)
 					if err != nil && errors.Is(err, database.ErrItemNotFound) {
 						_, err := app.DB().CreateAnime(ctx, database.CreateAnimeParams{
-							MalId:           sql.NullString{
+							MalId: sql.NullString{
 								String: malId,
 								Valid:  true,
 							},
@@ -160,9 +158,19 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				for _, entry := range entries {
 					malId := strconv.Itoa(entry.AnimeId)
 
-					anime, err := app.DB().GetAnimeByMalId(ctx, malId)
+					anime, err := app.DB().GetAnimeByMalId(ctx, &user.Id, malId)
 					if err != nil {
 						return nil, err
+					}
+
+					if anime.Id == "c57icqr7" {
+						fmt.Printf("body.OverrideExistingEntries: %v\n", body.OverrideExistingEntries)
+						fmt.Printf("anime.UserData.Valid: %v\n", anime.UserData.Valid)
+						fmt.Printf("(anime.UserData.Valid && !body.OverrideExistingEntries): %v\n", (anime.UserData.Valid && !body.OverrideExistingEntries))
+					}
+
+					if anime.UserData.Valid && !body.OverrideExistingEntries {
+						continue
 					}
 
 					noList := false

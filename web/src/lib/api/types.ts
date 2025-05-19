@@ -52,6 +52,7 @@ export type UpdateUserSettingsBody = z.infer<typeof UpdateUserSettingsBody>;
 
 export const ImportMalListBody = z.object({
   username: z.string(),
+  overrideExistingEntries: z.boolean().optional(),
 });
 export type ImportMalListBody = z.infer<typeof ImportMalListBody>;
 
