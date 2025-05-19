@@ -369,7 +369,7 @@
     {/each}
   </p>
   <p>
-    Genres:
+    Tags:
     {#each data.anime.tags as tag, i}
       {#if i != 0}
         <span>, </span>
