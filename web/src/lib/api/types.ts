@@ -114,7 +114,6 @@ export const Anime = z.object({
   score: z.number().nullable(),
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
-  releaseDate: z.string().nullable(),
   studios: z.array(AnimeStudio),
   tags: z.array(AnimeTag),
   coverUrl: z.string(),

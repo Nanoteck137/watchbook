@@ -347,9 +347,6 @@
   {#if data.anime.endDate}
     <p>End Date: {data.anime.endDate}</p>
   {/if}
-  {#if data.anime.releaseDate}
-    <p>Release Date: {data.anime.releaseDate}</p>
-  {/if}
   <p>
     Studios:
     {#each data.anime.studios as studio, i}
