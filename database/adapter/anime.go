@@ -12,7 +12,7 @@ var _ filter.ResolverAdapter = (*TrackResolverAdapter)(nil)
 type TrackResolverAdapter struct{}
 
 func (a *TrackResolverAdapter) DefaultSort() (string, filter.SortType) {
-	return "animes.rowid", filter.SortTypeAsc
+	return "animes.title", filter.SortTypeAsc
 }
 
 func (a *TrackResolverAdapter) ResolveVariableName(name string) (filter.Name, bool) {
