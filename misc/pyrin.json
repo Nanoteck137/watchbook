@@ -161,6 +161,28 @@
       ]
     },
     {
+      "name": "ImportMalAnime",
+      "extend": "",
+      "fields": [
+        {
+          "name": "animeId",
+          "type": "string",
+          "omit": false
+        }
+      ]
+    },
+    {
+      "name": "ImportMalAnimeBody",
+      "extend": "",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omit": false
+        }
+      ]
+    },
+    {
       "name": "Page",
       "extend": "",
       "fields": [
@@ -465,6 +487,13 @@
       "path": "/api/v1/user/import/mal",
       "responseType": "",
       "bodyType": "ImportMalListBody"
+    },
+    {
+      "name": "ImportMalAnime",
+      "method": "POST",
+      "path": "/api/v1/user/import/mal/anime",
+      "responseType": "ImportMalAnime",
+      "bodyType": "ImportMalAnimeBody"
     },
     {
       "name": "GetAnimes",

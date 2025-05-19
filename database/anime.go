@@ -581,6 +581,19 @@ func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeCha
 	return nil
 }
 
+func (db *Database) RemoveAnime(ctx context.Context, id string) error {
+	query := dialect.Delete("animes").
+		Prepared(true).
+		Where(goqu.I("animes.id").Eq(id))
+
+	_, err := db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (db *Database) AddTagToAnime(ctx context.Context, animeId, tagSlug string) error {
 	ds := dialect.Insert("anime_tags").
 		Prepared(true).

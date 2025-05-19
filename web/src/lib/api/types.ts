@@ -56,6 +56,16 @@ export const ImportMalListBody = z.object({
 });
 export type ImportMalListBody = z.infer<typeof ImportMalListBody>;
 
+export const ImportMalAnime = z.object({
+  animeId: z.string(),
+});
+export type ImportMalAnime = z.infer<typeof ImportMalAnime>;
+
+export const ImportMalAnimeBody = z.object({
+  id: z.string(),
+});
+export type ImportMalAnimeBody = z.infer<typeof ImportMalAnimeBody>;
+
 export const Page = z.object({
   page: z.number(),
   perPage: z.number(),

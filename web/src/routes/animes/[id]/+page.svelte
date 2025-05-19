@@ -4,6 +4,7 @@
   import { Anime } from "$lib/api/types.js";
   import Image from "$lib/components/Image.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
+  import type { UserList } from "$lib/types.js";
   import { cn, pickTitle } from "$lib/utils.js";
   import {
     Breadcrumb,
@@ -53,14 +54,7 @@
     await invalidateAll();
   }
 
-  type List =
-    | "watching"
-    | "completed"
-    | "on-hold"
-    | "dropped"
-    | "plan-to-watch";
-
-  async function updateList(list: List | null) {
+  async function updateList(list: UserList | null) {
     if (list === null) {
       const res = await apiClient.setAnimeUserData(data.anime.id, {
         list: "",

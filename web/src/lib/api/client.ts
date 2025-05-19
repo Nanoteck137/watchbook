@@ -40,6 +40,10 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/user/import/mal", "POST", z.undefined(), z.any(), body, options)
   }
   
+  importMalAnime(body: api.ImportMalAnimeBody, options?: ExtraOptions) {
+    return this.request("/api/v1/user/import/mal/anime", "POST", api.ImportMalAnime, z.any(), body, options)
+  }
+  
   getAnimes(options?: ExtraOptions) {
     return this.request("/api/v1/animes", "GET", api.GetAnimes, z.any(), undefined, options)
   }

@@ -13,6 +13,7 @@ import (
 	"github.com/nanoteck137/validate"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
+	"github.com/nanoteck137/watchbook/downloader"
 	"github.com/nanoteck137/watchbook/mal"
 	"github.com/nanoteck137/watchbook/types"
 )
@@ -72,6 +73,24 @@ func (b *ImportMalListBody) Transform() {
 func (b ImportMalListBody) Validate() error {
 	return validate.ValidateStruct(&b,
 		validate.Field(&b.Username, validate.Required),
+	)
+}
+
+type ImportMalAnime struct {
+	AnimeId string `json:"animeId"`
+}
+
+type ImportMalAnimeBody struct {
+	Id string `json:"id"`
+}
+
+func (b *ImportMalAnimeBody) Transform() {
+	b.Id = transform.String(b.Id)
+}
+
+func (b ImportMalAnimeBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.Id, validate.Required),
 	)
 }
 
@@ -211,6 +230,67 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "ImportMalAnime",
+			Method:       http.MethodPost,
+			Path:         "/user/import/mal/anime",
+			ResponseType: ImportMalAnime{},
+			BodyType:     ImportMalAnimeBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				body, err := pyrin.Body[ImportMalAnimeBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				_, err = User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.TODO()
+				anime, err := app.DB().GetAnimeByMalId(ctx, nil, body.Id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						animeId, err := app.DB().CreateAnime(ctx, database.CreateAnimeParams{
+							MalId: sql.NullString{
+								String: body.Id,
+								Valid:  true,
+							},
+							Title:           "UNKNOWN ANIME: " + body.Id,
+							ShouldFetchData: false,
+						})
+						if err != nil {
+							return nil, err
+						}
+
+						err = fetchAndUpdateAnime(ctx, app.DB(), app.WorkDir(), animeId)
+						if err != nil {
+							if errors.Is(err, downloader.NotFound) {
+								err = app.DB().RemoveAnime(ctx, animeId)
+								if err != nil {
+									return nil, err
+								}
+
+								return nil, AnimeNotFound()
+							}
+
+							return nil, err
+						}
+
+						return ImportMalAnime{
+							AnimeId: animeId,
+						}, nil
+					}
+
+					return nil, err
+				}
+
+				return ImportMalAnime{
+					AnimeId: anime.Id,
+				}, nil
 			},
 		},
 
