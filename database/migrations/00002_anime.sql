@@ -83,5 +83,6 @@ CREATE TABLE anime_user_data (
 DROP TABLE anime_user_data;
 DROP TABLE anime_studios;
 DROP TABLE anime_tags;
+DROP TABLE anime_images;
 DROP TABLE anime_theme_songs;
 DROP TABLE animes;
