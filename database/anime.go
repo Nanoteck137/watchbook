@@ -11,6 +11,8 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/mattn/go-sqlite3"
+	"github.com/nanoteck137/watchbook/database/adapter"
+	"github.com/nanoteck137/watchbook/filter"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
@@ -307,10 +309,23 @@ type FetchOptions struct {
 	Page    int
 }
 
-func (db *Database) GetPagedAnimes(ctx context.Context, userId *string, opts FetchOptions) ([]Anime, types.Page, error) {
+func (db *Database) GetPagedAnimes(ctx context.Context, userId *string, filterStr, sortStr string, opts FetchOptions) ([]Anime, types.Page, error) {
 	query := AnimeQuery(userId)
 
 	var err error
+
+	a := adapter.TrackResolverAdapter{}
+	resolver := filter.New(&a)
+
+	query, err = applyFilter(query, resolver, filterStr)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query, err = applySort(query, resolver, sortStr)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
 
 	countQuery := query.
 		Select(goqu.COUNT("animes.id"))

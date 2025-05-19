@@ -204,7 +204,9 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					userId = &user.Id
 				}
 
-				animes, p, err := app.DB().GetPagedAnimes(ctx, userId, opts)
+				filterStr := q.Get("filter")
+				sortStr := q.Get("sort")
+				animes, p, err := app.DB().GetPagedAnimes(ctx, userId, filterStr, sortStr, opts)
 				if err != nil {
 					return nil, err
 				}
