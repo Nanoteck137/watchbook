@@ -351,6 +351,17 @@
   <p>Type: {formatAnimeType(data.anime.type)}</p>
   <p>Episodes: {data.anime.episodeCount}</p>
   <p>Status: {data.anime.status}</p>
+  {#if data.anime.airingSeason}
+    <p>
+      Airing Season:
+      <a
+        class="text-blue-500 hover:underline"
+        href="/airing/{data.anime.airingSeason.slug}"
+      >
+        {data.anime.airingSeason.name}
+      </a>
+    </p>
+  {/if}
   {#if data.anime.startDate}
     <p>Start Date: {data.anime.startDate}</p>
   {/if}

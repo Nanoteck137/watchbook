@@ -74,17 +74,17 @@ export const Page = z.object({
 });
 export type Page = z.infer<typeof Page>;
 
-export const AnimeStudio = z.object({
-  slug: z.string(),
-  name: z.string(),
-});
-export type AnimeStudio = z.infer<typeof AnimeStudio>;
-
 export const AnimeTag = z.object({
   slug: z.string(),
   name: z.string(),
 });
 export type AnimeTag = z.infer<typeof AnimeTag>;
+
+export const AnimeStudio = z.object({
+  slug: z.string(),
+  name: z.string(),
+});
+export type AnimeStudio = z.infer<typeof AnimeStudio>;
 
 export const AnimeImage = z.object({
   hash: z.string(),
@@ -108,11 +108,11 @@ export const Anime = z.object({
   titleEnglish: z.string().nullable(),
   description: z.string().nullable(),
   type: z.string(),
+  score: z.number().nullable(),
   status: z.string(),
   rating: z.string(),
-  airingSeason: z.string(),
   episodeCount: z.number().nullable(),
-  score: z.number().nullable(),
+  airingSeason: AnimeTag.nullable(),
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
   studios: z.array(AnimeStudio),

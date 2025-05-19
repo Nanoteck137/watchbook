@@ -13,15 +13,14 @@ CREATE TABLE animes (
     description TEXT,
 
 	type TEXT NOT NULL,
+	score FLOAT,
 	status TEXT NOT NULL,
     rating TEXT NOT NULL,
-    airing_season TEXT NOT NULL,
 	episode_count INTEGER,
+    airing_season TEXT REFERENCES tags(slug) ON DELETE SET NULL,
 
 	start_date TEXT, 
     end_date TEXT,
-
-	score FLOAT,
 
     should_fetch_data BOOLEAN NOT NULL,
 	last_data_fetch INTEGER NOT NULL,

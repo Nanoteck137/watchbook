@@ -185,6 +185,14 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 		}
 	}
 
+	airingSeasonSlug := utils.Slug(animeData.Premiered)
+	if airingSeasonSlug != "" {
+		err = db.CreateTag(ctx, airingSeasonSlug, animeData.Premiered)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+	}
+
 	animeType := mal.ConvertAnimeType(animeData.Type)
 	animeStatus := mal.ConvertAnimeStatus(animeData.Status)
 	animeRating := mal.ConvertAnimeRating(animeData.Rating)
@@ -226,9 +234,12 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 			Changed: animeRating != anime.Rating,
 		},
 
-		AiringSeason: database.Change[string]{
-			Value:   animeData.Premiered,
-			Changed: animeData.Premiered != anime.AiringSeason,
+		AiringSeason: database.Change[sql.NullString]{
+			Value:   sql.NullString{
+				String: airingSeasonSlug,
+				Valid:  airingSeasonSlug != "",
+			},
+			Changed: true,
 		},
 
 		EpisodeCount: database.Change[sql.NullInt64]{

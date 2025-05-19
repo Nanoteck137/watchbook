@@ -209,7 +209,7 @@
       ]
     },
     {
-      "name": "AnimeStudio",
+      "name": "AnimeTag",
       "extend": "",
       "fields": [
         {
@@ -225,7 +225,7 @@
       ]
     },
     {
-      "name": "AnimeTag",
+      "name": "AnimeStudio",
       "extend": "",
       "fields": [
         {
@@ -322,6 +322,11 @@
           "omit": false
         },
         {
+          "name": "score",
+          "type": "*int",
+          "omit": false
+        },
+        {
           "name": "status",
           "type": "string",
           "omit": false
@@ -332,18 +337,13 @@
           "omit": false
         },
         {
-          "name": "airingSeason",
-          "type": "string",
-          "omit": false
-        },
-        {
           "name": "episodeCount",
           "type": "*int",
           "omit": false
         },
         {
-          "name": "score",
-          "type": "*int",
+          "name": "airingSeason",
+          "type": "*AnimeTag",
           "omit": false
         },
         {

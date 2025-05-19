@@ -49,12 +49,11 @@ type Anime struct {
 	Description *string `json:"description"`
 
 	Type         types.AnimeType   `json:"type"`
+	Score        *float64          `json:"score"`
 	Status       types.AnimeStatus `json:"status"`
 	Rating       types.AnimeRating `json:"rating"`
-	AiringSeason string            `json:"airingSeason"`
 	EpisodeCount *int64            `json:"episodeCount"`
-
-	Score *float64 `json:"score"`
+	AiringSeason *AnimeTag         `json:"airingSeason"`
 
 	StartDate *string `json:"startDate"`
 	EndDate   *string `json:"endDate"`
@@ -151,6 +150,14 @@ func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
 		}
 	}
 
+	var airingSeason *AnimeTag
+	if anime.AiringSeason.Valid {
+		airingSeason = &AnimeTag{
+			Slug: anime.AiringSeason.Data.Slug,
+			Name: anime.AiringSeason.Data.Name,
+		}
+	}
+
 	return Anime{
 		Id:           anime.Id,
 		Title:        anime.Title,
@@ -159,7 +166,7 @@ func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
 		Type:         anime.Type,
 		Status:       anime.Status,
 		Rating:       anime.Rating,
-		AiringSeason: anime.AiringSeason,
+		AiringSeason: airingSeason,
 		EpisodeCount: utils.SqlNullToInt64Ptr(anime.EpisodeCount),
 		Score:        utils.SqlNullToFloat64Ptr(anime.Score),
 		StartDate:    utils.SqlNullToStringPtr(anime.StartDate),

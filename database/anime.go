@@ -102,16 +102,15 @@ type Anime struct {
 
 	Description sql.NullString `db:"description"`
 
-	Type         types.AnimeType   `db:"type"`
-	Status       types.AnimeStatus `db:"status"`
-	Rating       types.AnimeRating `db:"rating"`
-	AiringSeason string            `db:"airing_season"`
-	EpisodeCount sql.NullInt64     `db:"episode_count"`
+	Type         types.AnimeType      `db:"type"`
+	Score        sql.NullFloat64      `db:"score"`
+	Status       types.AnimeStatus    `db:"status"`
+	Rating       types.AnimeRating    `db:"rating"`
+	EpisodeCount sql.NullInt64        `db:"episode_count"`
+	AiringSeason JsonColumn[AnimeTag] `db:"airing_season"`
 
 	StartDate sql.NullString `db:"start_date"`
 	EndDate   sql.NullString `db:"end_date"`
-
-	Score sql.NullFloat64 `db:"score"`
 
 	CoverFilename sql.NullString `db:"cover_filename"`
 
@@ -261,15 +260,22 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 			"animes.description",
 
 			"animes.type",
+			"animes.score",
 			"animes.status",
 			"animes.rating",
-			"animes.airing_season",
 			"animes.episode_count",
+
+			goqu.Func(
+				"json_object",
+
+				"slug",
+				goqu.I("airing_season_tag.slug"),
+				"name",
+				goqu.I("airing_season_tag.name"),
+			).As("airing_season"),
 
 			"animes.start_date",
 			"animes.end_date",
-
-			"animes.score",
 
 			"animes.should_fetch_data",
 			"animes.last_data_fetch",
@@ -291,6 +297,10 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 		LeftJoin(
 			tagsQuery.As("tags"),
 			goqu.On(goqu.I("animes.id").Eq(goqu.I("tags.id"))),
+		).
+		LeftJoin(
+			goqu.I("tags").As("airing_season_tag"),
+			goqu.On(goqu.I("animes.airing_season").Eq(goqu.I("airing_season_tag.slug"))),
 		).
 		LeftJoin(
 			imagesQuery.As("images"),
@@ -433,15 +443,14 @@ type CreateAnimeParams struct {
 	Description sql.NullString
 
 	Type         types.AnimeType
+	Score        sql.NullFloat64
 	Status       types.AnimeStatus
 	Rating       types.AnimeRating
-	AiringSeason string
 	EpisodeCount sql.NullInt64
+	AiringSeason sql.NullString
 
 	StartDate sql.NullString
 	EndDate   sql.NullString
-
-	Score sql.NullFloat64
 
 	ShouldFetchData bool
 	LastDataFetch   int64
@@ -491,15 +500,14 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 		"description": params.Description,
 
 		"type":          params.Type,
+		"score":         params.Score,
 		"status":        params.Status,
 		"rating":        params.Rating,
-		"airing_season": params.AiringSeason,
 		"episode_count": params.EpisodeCount,
+		"airing_season": params.AiringSeason,
 
 		"start_date": params.StartDate,
 		"end_date":   params.EndDate,
-
-		"score": params.Score,
 
 		"should_fetch_data": params.ShouldFetchData,
 		"last_data_fetch":   params.LastDataFetch,
@@ -531,15 +539,14 @@ type AnimeChanges struct {
 	Description Change[sql.NullString]
 
 	Type         Change[types.AnimeType]
+	Score        Change[sql.NullFloat64]
 	Status       Change[types.AnimeStatus]
 	Rating       Change[types.AnimeRating]
-	AiringSeason Change[string]
 	EpisodeCount Change[sql.NullInt64]
+	AiringSeason Change[sql.NullString]
 
 	StartDate Change[sql.NullString]
 	EndDate   Change[sql.NullString]
-
-	Score Change[sql.NullFloat64]
 
 	ShouldFetchData Change[bool]
 	LastDataFetch   Change[int64]
@@ -561,15 +568,14 @@ func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeCha
 	addToRecord(record, "description", changes.Description)
 
 	addToRecord(record, "type", changes.Type)
+	addToRecord(record, "score", changes.Score)
 	addToRecord(record, "status", changes.Status)
 	addToRecord(record, "rating", changes.Rating)
-	addToRecord(record, "airing_season", changes.AiringSeason)
 	addToRecord(record, "episode_count", changes.EpisodeCount)
+	addToRecord(record, "airing_season", changes.AiringSeason)
 
 	addToRecord(record, "start_date", changes.StartDate)
 	addToRecord(record, "end_date", changes.EndDate)
-
-	addToRecord(record, "score", changes.Score)
 
 	addToRecord(record, "should_fetch_data", changes.ShouldFetchData)
 	addToRecord(record, "last_data_fetch", changes.LastDataFetch)
