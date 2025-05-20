@@ -22,6 +22,12 @@ func (a *TrackResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 			Kind: filter.NameKindString,
 			Name: "animes.id",
 		}, true
+	case "userList":
+		return filter.Name{
+			Kind: filter.NameKindString,
+			Name: "user_data.list",
+			Nullable: true,
+		}, true
 
 		// mal_id TEXT,
 		// ani_db_id TEXT,

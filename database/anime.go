@@ -226,6 +226,13 @@ func AnimeUserDataQuery(userId *string) *goqu.SelectDataset {
 	query := dialect.From(tbl).
 		Select(
 			tbl.Col("anime_id").As("id"),
+
+			tbl.Col("list"),
+			tbl.Col("episode"),
+			tbl.Col("rewatch_count"),
+			tbl.Col("is_rewatching"),
+			tbl.Col("score"),
+
 			goqu.Func(
 				"json_object",
 
@@ -349,6 +356,10 @@ func (db *Database) GetPagedAnimes(ctx context.Context, userId *string, filterSt
 	if err != nil {
 		return nil, types.Page{}, err
 	}
+
+	query = query.Where(
+		goqu.I("user_data.list").IsNotNull(),
+	)
 
 	countQuery := query.
 		Select(goqu.COUNT("animes.id"))
