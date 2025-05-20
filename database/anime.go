@@ -357,10 +357,6 @@ func (db *Database) GetPagedAnimes(ctx context.Context, userId *string, filterSt
 		return nil, types.Page{}, err
 	}
 
-	query = query.Where(
-		goqu.I("user_data.list").IsNotNull(),
-	)
-
 	countQuery := query.
 		Select(goqu.COUNT("animes.id"))
 
