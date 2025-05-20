@@ -338,5 +338,47 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 				return nil, nil
 			},
 		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserAnimeList",
+			Method:       http.MethodGet,
+			Path:         "/animes/user/list/:id",
+			ResponseType: GetAnimes{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				q := c.Request().URL.Query()
+				opts := getPageOptions(q)
+
+				ctx := context.TODO()
+
+				user, err := app.DB().GetUserById(ctx, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, UserNotFound()
+					}
+
+					return nil, err
+				}
+
+				filterStr := q.Get("filter")
+				sortStr := q.Get("sort")
+				animes, p, err := app.DB().GetPagedAnimes(ctx, &user.Id, filterStr, sortStr, opts)
+				if err != nil {
+					return nil, err
+				}
+
+				res := GetAnimes{
+					Page:   p,
+					Animes: make([]Anime, len(animes)),
+				}
+
+				for i, anime := range animes {
+					res.Animes[i] = ConvertDBAnime(c, true, anime)
+				}
+
+				return res, nil
+			},
+		},
 	)
 }

@@ -135,7 +135,7 @@
       {#if data.user}
         <Link
           title={data.user.username}
-          href="/account"
+          href="/users/{data.user.id}"
           icon={User}
           onClick={close}
         />

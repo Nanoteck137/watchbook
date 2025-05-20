@@ -55,4 +55,8 @@ export class ApiClient extends BaseApiClient {
   setAnimeUserData(id: string, body: api.SetAnimeUserData, options?: ExtraOptions) {
     return this.request(`/api/v1/animes/${id}/user`, "POST", z.undefined(), z.any(), body, options)
   }
+  
+  getUserAnimeList(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/animes/user/list/${id}`, "GET", api.GetAnimes, z.any(), undefined, options)
+  }
 }

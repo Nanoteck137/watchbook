@@ -520,6 +520,13 @@
       "path": "/api/v1/animes/:id/user",
       "responseType": "",
       "bodyType": "SetAnimeUserData"
+    },
+    {
+      "name": "GetUserAnimeList",
+      "method": "GET",
+      "path": "/api/v1/animes/user/list/:id",
+      "responseType": "GetAnimes",
+      "bodyType": ""
     }
   ],
   "formApiEndpoints": null,
