@@ -13,7 +13,7 @@
 </script>
 
 <ScrollArea orientation="horizontal">
-  <div class="flex gap-2">
+  <div class="flex gap-2 py-2">
     {#each buttons as button}
       <Button variant="link" data-sveltekit-replacestate href="?list={button}">
         {button}
