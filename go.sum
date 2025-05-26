@@ -191,6 +191,8 @@ github.com/mattn/go-runewidth v0.0.16/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh
 github.com/mattn/go-sqlite3 v1.14.7/go.mod h1:NyWgC/yNuGj7Q9rpYnZvas74GogHl5/Z4A/KQRfk6bU=
 github.com/mattn/go-sqlite3 v1.14.22 h1:2gZY6PC6kBnID23Tichd1K+Z0oS6nE/XwU+Vz/5o4kU=
 github.com/mattn/go-sqlite3 v1.14.22/go.mod h1:Uh1q+B4BYcTPb+yiD3kU8Ct7aC0hY9fxUwlHK0RXw+Y=
+github.com/mattn/go-sqlite3 v1.14.28 h1:ThEiQrnbtumT+QMknw63Befp/ce/nUPgBPMlRFEum7A=
+github.com/mattn/go-sqlite3 v1.14.28/go.mod h1:Uh1q+B4BYcTPb+yiD3kU8Ct7aC0hY9fxUwlHK0RXw+Y=
 github.com/mitchellh/hashstructure/v2 v2.0.2 h1:vGKWl0YJqUNxE8d+h8f6NJLcCJrgbhC4NcD46KavDd4=
 github.com/mitchellh/hashstructure/v2 v2.0.2/go.mod h1:MG3aRVU/N29oo/V/IhBX8GR/zz4kQkprJgF2EVszyDE=
 github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyuac5Z2hdY=
@@ -227,6 +229,14 @@ github.com/nanoteck137/pyrin v0.14.2 h1:1/CdH3SyHIw/fNf5xHXuHUcGS2jNZ5/9OtH9eF/m
 github.com/nanoteck137/pyrin v0.14.2/go.mod h1:Gv1WtAFNgVdahUC0anFVEv1VqbtCeaSAz+tkkTHBfcU=
 github.com/nanoteck137/pyrin v0.15.2 h1:bPnMp4HjnJ1WQoDZnGXIjmukjpeI864cNt4ptEhGJcI=
 github.com/nanoteck137/pyrin v0.15.2/go.mod h1:Gv1WtAFNgVdahUC0anFVEv1VqbtCeaSAz+tkkTHBfcU=
+github.com/nanoteck137/pyrin v0.15.3-0.20250525191422-766deea7fc0d h1:C7QP9Kr7vHeeI4gvUK15c3QAtdo1Ru82rJ4cAFkWfCU=
+github.com/nanoteck137/pyrin v0.15.3-0.20250525191422-766deea7fc0d/go.mod h1:9ectNfLPy1vnvTVydPhc4SeKRLSWAA2n/xEhfGAWGgw=
+github.com/nanoteck137/pyrin v0.15.3-0.20250525203433-d089b8f5ab19 h1:zUOwuFIHMLb2yUEiKcIFZDEA8IGWWBPMZMcHAai+al8=
+github.com/nanoteck137/pyrin v0.15.3-0.20250525203433-d089b8f5ab19/go.mod h1:9ectNfLPy1vnvTVydPhc4SeKRLSWAA2n/xEhfGAWGgw=
+github.com/nanoteck137/pyrin v0.15.3-0.20250526130643-0fba923cbfd6 h1:ZbZJOXnuEWT3ZFTjCfUEIne5NSiTMgVNj6P+4VJAgEE=
+github.com/nanoteck137/pyrin v0.15.3-0.20250526130643-0fba923cbfd6/go.mod h1:9ectNfLPy1vnvTVydPhc4SeKRLSWAA2n/xEhfGAWGgw=
+github.com/nanoteck137/pyrin v0.15.3-0.20250526191231-5d26de2cd927 h1:GRKwDfxzSXlX96EWuj/1qu7zMfB/JCcRsTbUB2cCfuQ=
+github.com/nanoteck137/pyrin v0.15.3-0.20250526191231-5d26de2cd927/go.mod h1:9ectNfLPy1vnvTVydPhc4SeKRLSWAA2n/xEhfGAWGgw=
 github.com/nanoteck137/validate v0.0.0-20241129211421-90ceb11de343 h1:EjWdC/+BXfC4YTKxdslWV8rFZXlZ48VAKpDTQs4Lo2U=
 github.com/nanoteck137/validate v0.0.0-20241129211421-90ceb11de343/go.mod h1:+21LcVRcjVhpx5vU3qJZpsJwV4NzAk2MH87WMvhG/sk=
 github.com/nrednav/cuid2 v1.0.0 h1:27dn1oGiG+23Wa8XJ2DHeMoMa18Zs9u1+UHI9IlcGKM=

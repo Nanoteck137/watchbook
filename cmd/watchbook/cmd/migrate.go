@@ -24,10 +24,10 @@ var upCmd = &cobra.Command{
 			log.Fatal("Failed to bootstrap app", "err", err)
 		}
 
-		err = app.DB().RunMigrateUp()
-		if err != nil {
-			log.Fatal("Failed to run migrate up", "err", err)
-		}
+		// err = app.DB().RunMigrateUp()
+		// if err != nil {
+		// 	log.Fatal("Failed to run migrate up", "err", err)
+		// }
 	},
 }
 
@@ -43,10 +43,10 @@ var downCmd = &cobra.Command{
 			log.Fatal("Failed to bootstrap app", "err", err)
 		}
 
-		err = app.DB().RunMigrateDown()
-		if err != nil {
-			log.Fatal("Failed to run migrate down", "err", err)
-		}
+		// err = app.DB().RunMigrateDown()
+		// if err != nil {
+		// 	log.Fatal("Failed to run migrate down", "err", err)
+		// }
 	},
 }
 

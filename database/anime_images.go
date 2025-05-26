@@ -2,10 +2,8 @@ package database
 
 import (
 	"context"
-	"errors"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/mattn/go-sqlite3"
 )
 
 type AnimeImage struct {
@@ -31,8 +29,7 @@ func AnimeImageQuery() *goqu.SelectDataset {
 			"anime_images.image_type",
 			"anime_images.filename",
 			"anime_images.is_cover",
-		).
-		Prepared(true)
+		)
 
 	return query
 }
@@ -68,10 +65,9 @@ func AnimeImageQuery() *goqu.SelectDataset {
 
 func (db *Database) RemoveAllImagesFromAnime(ctx context.Context, animeId string) error {
 	query := goqu.Delete("anime_images").
-		Where(goqu.I("anime_images.anime_id").Eq(animeId)).
-		Prepared(true)
+		Where(goqu.I("anime_images.anime_id").Eq(animeId))
 
-	_, err := db.Exec(ctx, query)
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -96,18 +92,10 @@ func (db *Database) CreateAnimeImage(ctx context.Context, params CreateAnimeImag
 		"image_type": params.ImageType,
 		"filename":   params.Filename,
 		"is_cover":   params.IsCover,
-	}).
-		Prepared(true)
+	})
 
-	_, err := db.Exec(ctx, query)
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
-		var e sqlite3.Error
-		if errors.As(err, &e) {
-			if e.ExtendedCode == sqlite3.ErrConstraintPrimaryKey {
-				return ErrItemAlreadyExists
-			}
-		}
-
 		return err
 	}
 
@@ -131,15 +119,14 @@ func (db *Database) UpdateAnimeImage(ctx context.Context, animeId, hash string, 
 		return nil
 	}
 
-	ds := dialect.Update("anime_images").
-		Prepared(true).
+	query := dialect.Update("anime_images").
 		Set(record).
 		Where(
 			goqu.I("anime_images.anime_id").Eq(animeId),
 			goqu.I("anime_images.hash").Eq(hash),
 		)
 
-	_, err := db.Exec(ctx, ds)
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -149,13 +136,12 @@ func (db *Database) UpdateAnimeImage(ctx context.Context, animeId, hash string, 
 
 func (db *Database) RemoveAnimeCover(ctx context.Context, animeId string) error {
 	query := dialect.Update("anime_images").
-		Prepared(true).
 		Set(goqu.Record{
 			"is_cover": false,
 		}).
 		Where(goqu.I("anime_images.anime_id").Eq(animeId))
 
-	_, err := db.Exec(ctx, query)
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

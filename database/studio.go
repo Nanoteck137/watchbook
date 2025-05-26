@@ -2,11 +2,9 @@ package database
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/mattn/go-sqlite3"
+	"github.com/nanoteck137/pyrin/ember"
 )
 
 type Studio struct {
@@ -28,30 +26,14 @@ func StudioQuery() *goqu.SelectDataset {
 func (db *Database) GetAllStudios(ctx context.Context) ([]Studio, error) {
 	query := StudioQuery()
 
-	var items []Studio
-	err := db.Select(&items, query)
-	if err != nil {
-		return nil, err
-	}
-
-	return items, nil
+	return ember.Multiple[Studio](db.db, ctx, query)
 }
 
 func (db *Database) GetStudioBySlug(ctx context.Context, slug string) (Studio, error) {
 	query := StudioQuery().
 		Where(goqu.I("studios.slug").Eq(slug))
 
-	var item Studio
-	err := db.Get(&item, query)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return Studio{}, ErrItemNotFound
-		}
-
-		return Studio{}, err
-	}
-
-	return item, nil
+	return ember.Single[Studio](db.db, ctx, query)
 }
 
 func (db *Database) CreateStudio(ctx context.Context, slug, name string) error {
@@ -62,15 +44,8 @@ func (db *Database) CreateStudio(ctx context.Context, slug, name string) error {
 		}).
 		Prepared(true)
 
-	_, err := db.Exec(ctx, query)
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
-		var e sqlite3.Error
-		if errors.As(err, &e) {
-			if e.ExtendedCode == sqlite3.ErrConstraintPrimaryKey {
-				return ErrItemAlreadyExists
-			}
-		}
-
 		return err
 	}
 

@@ -5,12 +5,11 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/mattn/go-sqlite3"
+	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/watchbook/database/adapter"
 	"github.com/nanoteck137/watchbook/filter"
 	"github.com/nanoteck137/watchbook/types"
@@ -309,7 +308,6 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 
 			goqu.I("user_data.data").As("user_data"),
 		).
-		Prepared(true).
 		LeftJoin(
 			studiosQuery.As("studios"),
 			goqu.On(goqu.I("animes.id").Eq(goqu.I("studios.id"))),
@@ -366,8 +364,7 @@ func (db *Database) GetPagedAnimes(ctx context.Context, userId *string, filterSt
 			Offset(uint(opts.Page * opts.PerPage))
 	}
 
-	var totalItems int
-	err = db.Get(&totalItems, countQuery)
+	totalItems, err := ember.Single[int](db.db, ctx, countQuery)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -380,8 +377,7 @@ func (db *Database) GetPagedAnimes(ctx context.Context, userId *string, filterSt
 		TotalPages: totalPages,
 	}
 
-	var items []Anime
-	err = db.Select(&items, query)
+	items, err := ember.Multiple[Anime](db.db, ctx, query)
 	if err != nil {
 		return nil, types.Page{}, err
 	}
@@ -391,14 +387,7 @@ func (db *Database) GetPagedAnimes(ctx context.Context, userId *string, filterSt
 
 func (db *Database) GetAllAnimes(ctx context.Context) ([]Anime, error) {
 	query := AnimeQuery(nil)
-
-	var items []Anime
-	err := db.Select(&items, query)
-	if err != nil {
-		return nil, err
-	}
-
-	return items, nil
+	return ember.Multiple[Anime](db.db, ctx, query)
 }
 
 func (db *Database) GetAnimeIdsForFetching(ctx context.Context) ([]string, error) {
@@ -406,47 +395,21 @@ func (db *Database) GetAnimeIdsForFetching(ctx context.Context) ([]string, error
 		Select("animes.id").
 		Where(goqu.I("animes.should_fetch_data").Eq(true))
 
-	var items []string
-	err := db.Select(&items, query)
-	if err != nil {
-		return nil, err
-	}
-
-	return items, nil
+	return ember.Multiple[string](db.db, ctx, query)
 }
 
 func (db *Database) GetAnimeById(ctx context.Context, userId *string, id string) (Anime, error) {
 	query := AnimeQuery(userId).
 		Where(goqu.I("animes.id").Eq(id))
 
-	var item Anime
-	err := db.Get(&item, query)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return Anime{}, ErrItemNotFound
-		}
-
-		return Anime{}, err
-	}
-
-	return item, nil
+	return ember.Single[Anime](db.db, ctx, query)
 }
 
 func (db *Database) GetAnimeByMalId(ctx context.Context, userId *string, malId string) (Anime, error) {
 	query := AnimeQuery(userId).
 		Where(goqu.I("animes.mal_id").Eq(malId))
 
-	var item Anime
-	err := db.Get(&item, query)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return Anime{}, ErrItemNotFound
-		}
-
-		return Anime{}, err
-	}
-
-	return item, nil
+	return ember.Single[Anime](db.db, ctx, query)
 }
 
 type CreateAnimeParams struct {
@@ -535,16 +498,9 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 		"created": created,
 		"updated": updated,
 	}).
-		Prepared(true).
 		Returning("id")
 
-	var item string
-	err := db.Get(&item, query)
-	if err != nil {
-		return "", err
-	}
-
-	return item, nil
+	return ember.Single[string](db.db, ctx, query)
 }
 
 type AnimeChanges struct {
@@ -608,12 +564,11 @@ func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeCha
 
 	record["updated"] = time.Now().UnixMilli()
 
-	ds := dialect.Update("animes").
-		Prepared(true).
+	query := dialect.Update("animes").
 		Set(record).
 		Where(goqu.I("animes.id").Eq(id))
 
-	_, err := db.Exec(ctx, ds)
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -623,10 +578,9 @@ func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeCha
 
 func (db *Database) RemoveAnime(ctx context.Context, id string) error {
 	query := dialect.Delete("animes").
-		Prepared(true).
 		Where(goqu.I("animes.id").Eq(id))
 
-	_, err := db.Exec(ctx, query)
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -635,22 +589,14 @@ func (db *Database) RemoveAnime(ctx context.Context, id string) error {
 }
 
 func (db *Database) AddTagToAnime(ctx context.Context, animeId, tagSlug string) error {
-	ds := dialect.Insert("anime_tags").
-		Prepared(true).
+	query := dialect.Insert("anime_tags").
 		Rows(goqu.Record{
 			"anime_id": animeId,
 			"tag_slug": tagSlug,
 		})
 
-	_, err := db.Exec(ctx, ds)
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
-		var e sqlite3.Error
-		if errors.As(err, &e) {
-			if e.ExtendedCode == sqlite3.ErrConstraintPrimaryKey {
-				return ErrItemAlreadyExists
-			}
-		}
-
 		return err
 	}
 
@@ -659,10 +605,9 @@ func (db *Database) AddTagToAnime(ctx context.Context, animeId, tagSlug string) 
 
 func (db *Database) RemoveAllTagsFromAnime(ctx context.Context, animeId string) error {
 	query := dialect.Delete("anime_tags").
-		Where(goqu.I("anime_tags.anime_id").Eq(animeId)).
-		Prepared(true)
+		Where(goqu.I("anime_tags.anime_id").Eq(animeId))
 
-	_, err := db.Exec(ctx, query)
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -671,22 +616,14 @@ func (db *Database) RemoveAllTagsFromAnime(ctx context.Context, animeId string) 
 }
 
 func (db *Database) AddStudioToAnime(ctx context.Context, animeId, studioSlug string) error {
-	ds := dialect.Insert("anime_studios").
-		Prepared(true).
+	query := dialect.Insert("anime_studios").
 		Rows(goqu.Record{
 			"anime_id":    animeId,
 			"studio_slug": studioSlug,
 		})
 
-	_, err := db.Exec(ctx, ds)
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
-		var e sqlite3.Error
-		if errors.As(err, &e) {
-			if e.ExtendedCode == sqlite3.ErrConstraintPrimaryKey {
-				return ErrItemAlreadyExists
-			}
-		}
-
 		return err
 	}
 
@@ -695,10 +632,9 @@ func (db *Database) AddStudioToAnime(ctx context.Context, animeId, studioSlug st
 
 func (db *Database) RemoveAllStudiosFromAnime(ctx context.Context, animeId string) error {
 	query := dialect.Delete("anime_studios").
-		Where(goqu.I("anime_studios.anime_id").Eq(animeId)).
-		Prepared(true)
+		Where(goqu.I("anime_studios.anime_id").Eq(animeId))
 
-	_, err := db.Exec(ctx, query)
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -713,7 +649,7 @@ func (db *Database) RemoveAnimeUserList(ctx context.Context, animeId, userId str
 			goqu.I("anime_user_list.user_id").Eq(userId),
 		)
 
-	_, err := db.Exec(ctx, query)
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -775,7 +711,7 @@ func (db *Database) SetAnimeUserData(ctx context.Context, animeId, userId string
 			}),
 		)
 
-	_, err := db.Exec(ctx, query)
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}

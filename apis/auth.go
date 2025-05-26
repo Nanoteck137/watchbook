@@ -125,10 +125,15 @@ func InstallAuthHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				user, err := app.DB().CreateUser(ctx, database.CreateUserParams{
+				userId, err := app.DB().CreateUser(ctx, database.CreateUserParams{
 					Username: body.Username,
 					Password: body.Password,
 				})
+				if err != nil {
+					return nil, err
+				}
+
+				user, err := app.DB().GetUserById(ctx, userId)
 				if err != nil {
 					return nil, err
 				}

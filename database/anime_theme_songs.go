@@ -68,7 +68,7 @@ func (db *Database) RemoveAllThemeSongsFromAnime(ctx context.Context, animeId st
 		Where(goqu.I("anime_theme_songs.anime_id").Eq(animeId)).
 		Prepared(true)
 
-	_, err := db.Exec(ctx, query)
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func (db *Database) CreateAnimeThemeSong(ctx context.Context, params CreateAnime
 	}).
 		Prepared(true)
 
-	_, err := db.Exec(ctx, query)
+	_, err := db.db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
