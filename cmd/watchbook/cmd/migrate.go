@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"github.com/nanoteck137/watchbook"
 	"github.com/nanoteck137/watchbook/config"
 	"github.com/nanoteck137/watchbook/core"
-	"github.com/nanoteck137/watchbook/core/log"
 	"github.com/pressly/goose/v3"
 	"github.com/spf13/cobra"
 )
@@ -21,7 +21,7 @@ var upCmd = &cobra.Command{
 
 		err := app.Bootstrap()
 		if err != nil {
-			log.Fatal("Failed to bootstrap app", "err", err)
+			app.Logger().Fatal("Failed to bootstrap app", "err", err)
 		}
 
 		// err = app.DB().RunMigrateUp()
@@ -40,7 +40,7 @@ var downCmd = &cobra.Command{
 
 		err := app.Bootstrap()
 		if err != nil {
-			log.Fatal("Failed to bootstrap app", "err", err)
+			app.Logger().Fatal("Failed to bootstrap app", "err", err)
 		}
 
 		// err = app.DB().RunMigrateDown()
@@ -57,9 +57,11 @@ var createCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
 
+		logger := watchbook.DefaultLogger()
+
 		err := goose.Create(nil, "./migrations", name, "sql")
 		if err != nil {
-			log.Fatal("Failed to create migration", "err", err)
+			logger.Fatal("Failed to create migration", "err", err)
 		}
 	},
 }
@@ -68,9 +70,11 @@ var createCmd = &cobra.Command{
 var fixCmd = &cobra.Command{
 	Use: "fix",
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := watchbook.DefaultLogger()
+
 		err := goose.Fix("./migrations")
 		if err != nil {
-			log.Fatal("Failed to fix migrations", "err", err)
+			logger.Fatal("Failed to fix migrations", "err", err)
 		}
 	},
 }

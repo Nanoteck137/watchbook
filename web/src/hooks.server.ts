@@ -1,4 +1,5 @@
 import { env } from "$env/dynamic/private";
+import { setApiClientAuth } from "$lib";
 import { ApiClient } from "$lib/api/client";
 import { error, redirect, type Handle } from "@sveltejs/kit";
 
@@ -17,7 +18,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   const auth = event.cookies.get("auth");
   if (auth) {
     const obj = JSON.parse(auth);
-    client.setToken(obj.token);
+    setApiClientAuth(client, obj.token);
     event.locals.token = obj.token;
 
     let failed = false;

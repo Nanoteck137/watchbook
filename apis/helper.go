@@ -5,11 +5,15 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/nanoteck137/pyrin"
+	"github.com/nanoteck137/watchbook"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
+
+// TODO(patrik): Remove
+var logger = watchbook.DefaultLogger()
 
 type UserCheckFunc func(user *database.User) error
 

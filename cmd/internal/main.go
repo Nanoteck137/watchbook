@@ -1,16 +1,16 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
-
-	"github.com/nanoteck137/pyrin/spec"
-	"github.com/nanoteck137/pyrin/tools/gen"
+	"github.com/nanoteck137/pyrin/spark"
+	"github.com/nanoteck137/pyrin/spark/typescript"
+	"github.com/nanoteck137/pyrin/trail"
 	"github.com/nanoteck137/watchbook/apis"
-	"github.com/nanoteck137/watchbook/core/log"
 	"github.com/spf13/cobra"
 )
+
+var logger = trail.NewLogger(&trail.Options{
+	Debug: true,
+})
 
 var rootCmd = &cobra.Command{
 	Use: "internal",
@@ -19,35 +19,33 @@ var rootCmd = &cobra.Command{
 var genCmd = &cobra.Command{
 	Use: "gen",
 	Run: func(cmd *cobra.Command, args []string) {
-		router := spec.Router{}
-
+		router := spark.Router{}
 		apis.RegisterHandlers(nil, &router)
 
-		s, err := spec.GenerateSpec(router.Routes)
+		serverDef, err := spark.CreateServerDef(&router)
 		if err != nil {
-			log.Fatal("Failed to generate spec", "err", err)
+			logger.Fatal("failed to create server def", "err", err)
 		}
 
-		d, err := json.MarshalIndent(s, "", "  ")
+		err = serverDef.SaveToFile("misc/pyrin.json")
 		if err != nil {
-			log.Fatal("Failed to marshal server", "err", err)
+			logger.Fatal("failed save server def", "err", err)
 		}
 
-		err = os.WriteFile("misc/pyrin.json", d, 0644)
+		logger.Info("Wrote 'misc/pyrin.json'")
+
+		resolver, err := spark.CreateResolverFromServerDef(&serverDef)
 		if err != nil {
-			log.Fatal("Failed to write pyrin.json", "err", err)
+			logger.Fatal("failed to create resolver", "err", err)
 		}
 
-		fmt.Println("Wrote 'misc/pyrin.json'")
+		{
+			gen := typescript.TypescriptGenerator{}
 
-		// err = gen.GenerateGolang(s, "cmd/watchbook-cli/api")
-		// if err != nil {
-		// 	log.Fatal("Failed to generate golang code", "err", err)
-		// }
-
-		err = gen.GenerateTypescript(s, "web/src/lib/api")
-		if err != nil {
-			log.Fatal("Failed to generate golang code", "err", err)
+			err = gen.Generate(&serverDef, resolver, "web/src/lib/api")
+			if err != nil {
+				logger.Fatal("failed to generate typescript client", "err", err)
+			}
 		}
 	},
 }
@@ -59,6 +57,6 @@ func init() {
 func main() {
 	err := rootCmd.Execute()
 	if err != nil {
-		log.Fatal("Failed to execute", "err", err)
+		logger.Fatal("failed to execute", "err", err)
 	}
 }

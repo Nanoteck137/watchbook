@@ -20,7 +20,7 @@
   import { fade, fly } from "svelte/transition";
   import { Button } from "@nanoteck137/nano-ui";
   import { Toaster } from "svelte-5-french-toast";
-  import { setApiClient } from "$lib";
+  import { setApiClient, setApiClientAuth } from "$lib";
 
   let { children, data } = $props();
 
@@ -28,7 +28,7 @@
 
   $effect(() => {
     if (!browser) return;
-    apiClient.setToken(data.userToken);
+    setApiClientAuth(apiClient, data.userToken);
   });
 
   let showSideMenu = $state(false);

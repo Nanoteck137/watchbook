@@ -1,542 +1,599 @@
 {
-  "errorTypes": [
-    "BAD_CONTENT_TYPE_ERROR",
-    "EMPTY_BODY_ERROR",
-    "FORM_VALIDATION_ERROR",
-    "INVALID_CREDENTIALS",
-    "ROUTE_NOT_FOUND",
-    "UNKNOWN_ERROR",
-    "USER_ALREADY_EXISTS",
-    "USER_NOT_FOUND",
-    "VALIDATION_ERROR"
-  ],
-  "types": [
+  "version": 1,
+  "structures": [
     {
-      "name": "Signup",
-      "extend": "",
+      "name": "SetAnimeUserData",
       "fields": [
         {
-          "name": "id",
-          "type": "string",
-          "omit": false
+          "name": "list",
+          "type": "*string",
+          "omitEmpty": true
         },
         {
-          "name": "username",
-          "type": "string",
-          "omit": false
-        }
-      ]
-    },
-    {
-      "name": "SignupBody",
-      "extend": "",
-      "fields": [
-        {
-          "name": "username",
-          "type": "string",
-          "omit": false
+          "name": "score",
+          "type": "*int",
+          "omitEmpty": true
         },
         {
-          "name": "password",
-          "type": "string",
-          "omit": false
+          "name": "episode",
+          "type": "*int",
+          "omitEmpty": true
         },
         {
-          "name": "passwordConfirm",
-          "type": "string",
-          "omit": false
-        }
-      ]
-    },
-    {
-      "name": "Signin",
-      "extend": "",
-      "fields": [
+          "name": "rewatchCount",
+          "type": "*int",
+          "omitEmpty": true
+        },
         {
-          "name": "token",
-          "type": "string",
-          "omit": false
+          "name": "isRewatching",
+          "type": "*bool",
+          "omitEmpty": true
         }
       ]
     },
     {
       "name": "SigninBody",
-      "extend": "",
       "fields": [
         {
           "name": "username",
           "type": "string",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "password",
           "type": "string",
-          "omit": false
-        }
-      ]
-    },
-    {
-      "name": "ChangePasswordBody",
-      "extend": "",
-      "fields": [
-        {
-          "name": "currentPassword",
-          "type": "string",
-          "omit": false
-        },
-        {
-          "name": "newPassword",
-          "type": "string",
-          "omit": false
-        },
-        {
-          "name": "newPasswordConfirm",
-          "type": "string",
-          "omit": false
-        }
-      ]
-    },
-    {
-      "name": "GetMe",
-      "extend": "",
-      "fields": [
-        {
-          "name": "id",
-          "type": "string",
-          "omit": false
-        },
-        {
-          "name": "username",
-          "type": "string",
-          "omit": false
-        },
-        {
-          "name": "role",
-          "type": "string",
-          "omit": false
-        },
-        {
-          "name": "displayName",
-          "type": "string",
-          "omit": false
-        }
-      ]
-    },
-    {
-      "name": "GetSystemInfo",
-      "extend": "",
-      "fields": [
-        {
-          "name": "version",
-          "type": "string",
-          "omit": false
+          "omitEmpty": false
         }
       ]
     },
     {
       "name": "UpdateUserSettingsBody",
-      "extend": "",
       "fields": [
         {
           "name": "displayName",
           "type": "*string",
-          "omit": true
-        }
-      ]
-    },
-    {
-      "name": "ImportMalListBody",
-      "extend": "",
-      "fields": [
-        {
-          "name": "username",
-          "type": "string",
-          "omit": false
-        },
-        {
-          "name": "overrideExistingEntries",
-          "type": "bool",
-          "omit": true
-        }
-      ]
-    },
-    {
-      "name": "ImportMalAnime",
-      "extend": "",
-      "fields": [
-        {
-          "name": "animeId",
-          "type": "string",
-          "omit": false
-        }
-      ]
-    },
-    {
-      "name": "ImportMalAnimeBody",
-      "extend": "",
-      "fields": [
-        {
-          "name": "id",
-          "type": "string",
-          "omit": false
-        }
-      ]
-    },
-    {
-      "name": "Page",
-      "extend": "",
-      "fields": [
-        {
-          "name": "page",
-          "type": "int",
-          "omit": false
-        },
-        {
-          "name": "perPage",
-          "type": "int",
-          "omit": false
-        },
-        {
-          "name": "totalItems",
-          "type": "int",
-          "omit": false
-        },
-        {
-          "name": "totalPages",
-          "type": "int",
-          "omit": false
+          "omitEmpty": true
         }
       ]
     },
     {
       "name": "AnimeTag",
-      "extend": "",
       "fields": [
         {
           "name": "slug",
           "type": "string",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "name",
           "type": "string",
-          "omit": false
-        }
-      ]
-    },
-    {
-      "name": "AnimeStudio",
-      "extend": "",
-      "fields": [
-        {
-          "name": "slug",
-          "type": "string",
-          "omit": false
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "omit": false
+          "omitEmpty": false
         }
       ]
     },
     {
       "name": "AnimeImage",
-      "extend": "",
       "fields": [
         {
           "name": "hash",
           "type": "string",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "url",
           "type": "string",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "isCover",
           "type": "bool",
-          "omit": false
+          "omitEmpty": false
         }
       ]
     },
     {
       "name": "AnimeUser",
-      "extend": "",
       "fields": [
         {
           "name": "list",
           "type": "*string",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "score",
           "type": "*int",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "episode",
           "type": "*int",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "rewatchCount",
           "type": "*int",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "isRewatching",
           "type": "bool",
-          "omit": false
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetAnimeById",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "titleEnglish",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "description",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "score",
+          "type": "*float",
+          "omitEmpty": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "rating",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "episodeCount",
+          "type": "*int",
+          "omitEmpty": false
+        },
+        {
+          "name": "airingSeason",
+          "type": "*AnimeTag",
+          "omitEmpty": false
+        },
+        {
+          "name": "startDate",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "endDate",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "studios",
+          "type": "[]AnimeStudio",
+          "omitEmpty": false
+        },
+        {
+          "name": "tags",
+          "type": "[]AnimeTag",
+          "omitEmpty": false
+        },
+        {
+          "name": "coverUrl",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "images",
+          "type": "[]AnimeImage",
+          "omitEmpty": false
+        },
+        {
+          "name": "user",
+          "type": "*AnimeUser",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "Signup",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "username",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ImportMalListBody",
+      "fields": [
+        {
+          "name": "username",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "overrideExistingEntries",
+          "type": "bool",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "Page",
+      "fields": [
+        {
+          "name": "page",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "perPage",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "totalItems",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "totalPages",
+          "type": "int",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "Signin",
+      "fields": [
+        {
+          "name": "token",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetMe",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "username",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "displayName",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetSystemInfo",
+      "fields": [
+        {
+          "name": "version",
+          "type": "string",
+          "omitEmpty": false
         }
       ]
     },
     {
       "name": "Anime",
-      "extend": "",
       "fields": [
         {
           "name": "id",
           "type": "string",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "title",
           "type": "string",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "titleEnglish",
           "type": "*string",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "description",
           "type": "*string",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "type",
           "type": "string",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "score",
-          "type": "*int",
-          "omit": false
+          "type": "*float",
+          "omitEmpty": false
         },
         {
           "name": "status",
           "type": "string",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "rating",
           "type": "string",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "episodeCount",
           "type": "*int",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "airingSeason",
           "type": "*AnimeTag",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "startDate",
           "type": "*string",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "endDate",
           "type": "*string",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "studios",
           "type": "[]AnimeStudio",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "tags",
           "type": "[]AnimeTag",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "coverUrl",
           "type": "string",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "images",
           "type": "[]AnimeImage",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "user",
           "type": "*AnimeUser",
-          "omit": true
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "AnimeStudio",
+      "fields": [
+        {
+          "name": "slug",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "SignupBody",
+      "fields": [
+        {
+          "name": "username",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "password",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "passwordConfirm",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ChangePasswordBody",
+      "fields": [
+        {
+          "name": "currentPassword",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "newPassword",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "newPasswordConfirm",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ImportMalAnime",
+      "fields": [
+        {
+          "name": "animeId",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ImportMalAnimeBody",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
         }
       ]
     },
     {
       "name": "GetAnimes",
-      "extend": "",
       "fields": [
         {
           "name": "page",
           "type": "Page",
-          "omit": false
+          "omitEmpty": false
         },
         {
           "name": "animes",
           "type": "[]Anime",
-          "omit": false
-        }
-      ]
-    },
-    {
-      "name": "GetAnimeById",
-      "extend": "Anime",
-      "fields": null
-    },
-    {
-      "name": "SetAnimeUserData",
-      "extend": "",
-      "fields": [
-        {
-          "name": "list",
-          "type": "*string",
-          "omit": true
-        },
-        {
-          "name": "score",
-          "type": "*int",
-          "omit": true
-        },
-        {
-          "name": "episode",
-          "type": "*int",
-          "omit": true
-        },
-        {
-          "name": "rewatchCount",
-          "type": "*int",
-          "omit": true
-        },
-        {
-          "name": "isRewatching",
-          "type": "*bool",
-          "omit": true
+          "omitEmpty": false
         }
       ]
     }
   ],
-  "apiEndpoints": [
+  "endpoints": [
     {
+      "type": "api",
       "name": "Signup",
       "method": "POST",
       "path": "/api/v1/auth/signup",
-      "responseType": "Signup",
-      "bodyType": "SignupBody"
+      "response": "Signup",
+      "body": "SignupBody"
     },
     {
+      "type": "api",
       "name": "Signin",
       "method": "POST",
       "path": "/api/v1/auth/signin",
-      "responseType": "Signin",
-      "bodyType": "SigninBody"
+      "response": "Signin",
+      "body": "SigninBody"
     },
     {
+      "type": "api",
       "name": "ChangePassword",
       "method": "PATCH",
       "path": "/api/v1/auth/password",
-      "responseType": "",
-      "bodyType": "ChangePasswordBody"
+      "body": "ChangePasswordBody"
     },
     {
+      "type": "api",
       "name": "GetMe",
       "method": "GET",
       "path": "/api/v1/auth/me",
-      "responseType": "GetMe",
-      "bodyType": ""
+      "response": "GetMe"
     },
     {
+      "type": "api",
       "name": "GetSystemInfo",
       "method": "GET",
       "path": "/api/v1/system/info",
-      "responseType": "GetSystemInfo",
-      "bodyType": ""
+      "response": "GetSystemInfo"
     },
     {
+      "type": "api",
       "name": "StartDownload",
       "method": "GET",
-      "path": "/api/v1/system/download",
-      "responseType": "",
-      "bodyType": ""
+      "path": "/api/v1/system/download"
     },
     {
-      "name": "UpdateUserSettings",
-      "method": "PATCH",
-      "path": "/api/v1/user/settings",
-      "responseType": "",
-      "bodyType": "UpdateUserSettingsBody"
-    },
-    {
-      "name": "ImportMalList",
-      "method": "POST",
-      "path": "/api/v1/user/import/mal",
-      "responseType": "",
-      "bodyType": "ImportMalListBody"
-    },
-    {
-      "name": "ImportMalAnime",
-      "method": "POST",
-      "path": "/api/v1/user/import/mal/anime",
-      "responseType": "ImportMalAnime",
-      "bodyType": "ImportMalAnimeBody"
-    },
-    {
-      "name": "GetAnimes",
-      "method": "GET",
-      "path": "/api/v1/animes",
-      "responseType": "GetAnimes",
-      "bodyType": ""
-    },
-    {
-      "name": "GetAnimeById",
-      "method": "GET",
-      "path": "/api/v1/animes/:id",
-      "responseType": "GetAnimeById",
-      "bodyType": ""
-    },
-    {
-      "name": "SetAnimeUserData",
-      "method": "POST",
-      "path": "/api/v1/animes/:id/user",
-      "responseType": "",
-      "bodyType": "SetAnimeUserData"
-    },
-    {
-      "name": "GetUserAnimeList",
-      "method": "GET",
-      "path": "/api/v1/animes/user/list/:id",
-      "responseType": "GetAnimes",
-      "bodyType": ""
-    }
-  ],
-  "formApiEndpoints": null,
-  "normalEndpoints": [
-    {
+      "type": "normal",
       "name": "SseHandler",
       "method": "GET",
       "path": "/api/v1/system/sse"
     },
     {
+      "type": "api",
+      "name": "UpdateUserSettings",
+      "method": "PATCH",
+      "path": "/api/v1/user/settings",
+      "body": "UpdateUserSettingsBody"
+    },
+    {
+      "type": "api",
+      "name": "ImportMalList",
+      "method": "POST",
+      "path": "/api/v1/user/import/mal",
+      "body": "ImportMalListBody"
+    },
+    {
+      "type": "api",
+      "name": "ImportMalAnime",
+      "method": "POST",
+      "path": "/api/v1/user/import/mal/anime",
+      "response": "ImportMalAnime",
+      "body": "ImportMalAnimeBody"
+    },
+    {
+      "type": "api",
+      "name": "GetAnimes",
+      "method": "GET",
+      "path": "/api/v1/animes",
+      "response": "GetAnimes"
+    },
+    {
+      "type": "api",
+      "name": "GetAnimeById",
+      "method": "GET",
+      "path": "/api/v1/animes/:id",
+      "response": "GetAnimeById"
+    },
+    {
+      "type": "api",
+      "name": "SetAnimeUserData",
+      "method": "POST",
+      "path": "/api/v1/animes/:id/user",
+      "body": "SetAnimeUserData"
+    },
+    {
+      "type": "api",
+      "name": "GetUserAnimeList",
+      "method": "GET",
+      "path": "/api/v1/animes/user/list/:id",
+      "response": "GetAnimes"
+    },
+    {
+      "type": "normal",
       "name": "GetAnimeImage",
       "method": "GET",
       "path": "/files/animes/:id/:image"

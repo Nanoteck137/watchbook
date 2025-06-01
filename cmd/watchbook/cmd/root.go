@@ -3,7 +3,6 @@ package cmd
 import (
 	"github.com/nanoteck137/watchbook"
 	"github.com/nanoteck137/watchbook/config"
-	"github.com/nanoteck137/watchbook/core/log"
 	"github.com/spf13/cobra"
 )
 
@@ -13,8 +12,10 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
+	logger := watchbook.DefaultLogger()
+
 	if err := rootCmd.Execute(); err != nil {
-		log.Fatal("Failed to run root command", "err", err)
+		logger.Fatal("Failed to run root command", "err", err)
 	}
 }
 

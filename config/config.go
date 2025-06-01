@@ -4,10 +4,11 @@ import (
 	"os"
 
 	"github.com/nanoteck137/watchbook"
-	"github.com/nanoteck137/watchbook/core/log"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/spf13/viper"
 )
+
+var logger = watchbook.DefaultLogger()
 
 type Config struct {
 	RunMigrations   bool   `mapstructure:"run_migrations"`
@@ -36,7 +37,7 @@ func validateConfig(config *Config) {
 
 	validate := func(expr bool, msg string) {
 		if expr {
-			log.Error("Config Validation", "err", msg)
+			logger.Error("Config Validation", "err", msg)
 			hasError = true
 		}
 	}
@@ -50,7 +51,7 @@ func validateConfig(config *Config) {
 	validate(config.JwtSecret == "", "jwt_secret needs to be set")
 
 	if hasError {
-		log.Fatal("Config not valid")
+		os.Exit(1)
 	}
 }
 
@@ -72,13 +73,12 @@ func InitConfig() {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Warn("Failed to load config", "err", err)
+		logger.Warn("failed to load config", "err", err)
 	}
 
 	err = viper.Unmarshal(&LoadedConfig)
 	if err != nil {
-		log.Error("Failed to unmarshal config: ", err)
-		os.Exit(-1)
+		logger.Fatal("failed to unmarshal config", "err", err)
 	}
 
 	hide := func(s string) string {
@@ -94,7 +94,7 @@ func InitConfig() {
 	configCopy.JwtSecret = hide(configCopy.JwtSecret)
 	configCopy.InitialPassword = hide(configCopy.InitialPassword)
 
-	log.Debug("Current Config", "config", configCopy)
+	logger.Debug("Current Config", "config", configCopy)
 
 	validateConfig(&LoadedConfig)
 }

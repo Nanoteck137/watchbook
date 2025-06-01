@@ -5,8 +5,9 @@ import (
 	"errors"
 	"os"
 
+	"github.com/nanoteck137/pyrin/trail"
+	"github.com/nanoteck137/watchbook"
 	"github.com/nanoteck137/watchbook/config"
-	"github.com/nanoteck137/watchbook/core/log"
 	"github.com/nanoteck137/watchbook/database"
 	"github.com/nanoteck137/watchbook/types"
 )
@@ -14,8 +15,13 @@ import (
 var _ App = (*BaseApp)(nil)
 
 type BaseApp struct {
+	logger *trail.Logger
 	db     *database.Database
 	config *config.Config
+}
+
+func (app *BaseApp) Logger() *trail.Logger {
+	return app.logger
 }
 
 func (app *BaseApp) DB() *database.Database {
@@ -61,7 +67,7 @@ func (app *BaseApp) Bootstrap() error {
 
 	_, err = os.Stat(workDir.SetupFile())
 	if errors.Is(err, os.ErrNotExist) && app.config.Username != "" {
-		log.Info("Server not setup, creating the initial user")
+		app.logger.Info("server not setup, creating the initial user")
 
 		ctx := context.Background()
 
@@ -86,6 +92,7 @@ func (app *BaseApp) Bootstrap() error {
 
 func NewBaseApp(config *config.Config) *BaseApp {
 	return &BaseApp{
+		logger: watchbook.DefaultLogger(),
 		config: config,
 	}
 }

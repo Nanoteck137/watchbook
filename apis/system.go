@@ -21,7 +21,6 @@ import (
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/watchbook"
 	"github.com/nanoteck137/watchbook/core"
-	"github.com/nanoteck137/watchbook/core/log"
 	"github.com/nanoteck137/watchbook/database"
 	"github.com/nanoteck137/watchbook/downloader"
 	"github.com/nanoteck137/watchbook/mal"
@@ -141,7 +140,7 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 	for _, url := range animeData.Pictures {
 		err := downloadImage(ctx, db, workDir, anime.Id, url, false)
 		if err != nil {
-			log.Error("failed to download image", "err", err, "animeId", anime.Id)
+			logger.Error("failed to download image", "err", err, "animeId", anime.Id)
 			continue
 		}
 	}
@@ -149,7 +148,7 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 	if !hasCover {
 		err := downloadImage(ctx, db, workDir, anime.Id, animeData.CoverImageUrl, true)
 		if err != nil {
-			log.Error("failed to download image", "err", err, "animeId", anime.Id)
+			logger.Error("failed to download image", "err", err, "animeId", anime.Id)
 		}
 	}
 
@@ -385,10 +384,10 @@ func (broker *Broker) listen() {
 		select {
 		case s := <-broker.newClients:
 			broker.clients[s] = true
-			log.Debug("Client added", "numClients", len(broker.clients))
+			logger.Debug("Client added", "numClients", len(broker.clients))
 		case s := <-broker.closingClients:
 			delete(broker.clients, s)
-			log.Debug("Removed client", "numClients", len(broker.clients))
+			logger.Debug("Removed client", "numClients", len(broker.clients))
 		case event := <-broker.Notifier:
 			for clientMessageChan := range broker.clients {
 				clientMessageChan <- event
@@ -642,7 +641,7 @@ func InstallSystemHandlers(app core.App, group pyrin.Group) {
 				go func() {
 					err := downloadHandler.startDownload(app)
 					if err != nil {
-						log.Error("failed to start downloader", "err", err)
+						logger.Error("failed to start downloader", "err", err)
 					}
 				}()
 
