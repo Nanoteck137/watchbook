@@ -31,8 +31,12 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/system/info", "GET", api.GetSystemInfo, z.any(), undefined, options)
   }
   
-  startDownload(options?: ExtraOptions) {
-    return this.request("/api/v1/system/download", "GET", z.undefined(), z.any(), undefined, options)
+  startDownload(body: api.StartDownloadBody, options?: ExtraOptions) {
+    return this.request("/api/v1/system/download", "POST", z.undefined(), z.any(), body, options)
+  }
+  
+  cancelDownload(options?: ExtraOptions) {
+    return this.request("/api/v1/system/download", "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
   
@@ -94,6 +98,10 @@ export class ClientUrls {
   }
   
   startDownload() {
+    return createUrl(this.baseUrl, "/api/v1/system/download")
+  }
+  
+  cancelDownload() {
     return createUrl(this.baseUrl, "/api/v1/system/download")
   }
   

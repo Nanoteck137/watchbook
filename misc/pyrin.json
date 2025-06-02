@@ -2,311 +2,36 @@
   "version": 1,
   "structures": [
     {
-      "name": "SetAnimeUserData",
-      "fields": [
-        {
-          "name": "list",
-          "type": "*string",
-          "omitEmpty": true
-        },
-        {
-          "name": "score",
-          "type": "*int",
-          "omitEmpty": true
-        },
-        {
-          "name": "episode",
-          "type": "*int",
-          "omitEmpty": true
-        },
-        {
-          "name": "rewatchCount",
-          "type": "*int",
-          "omitEmpty": true
-        },
-        {
-          "name": "isRewatching",
-          "type": "*bool",
-          "omitEmpty": true
-        }
-      ]
-    },
-    {
-      "name": "SigninBody",
-      "fields": [
-        {
-          "name": "username",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "password",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "UpdateUserSettingsBody",
-      "fields": [
-        {
-          "name": "displayName",
-          "type": "*string",
-          "omitEmpty": true
-        }
-      ]
-    },
-    {
-      "name": "AnimeTag",
-      "fields": [
-        {
-          "name": "slug",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "AnimeImage",
-      "fields": [
-        {
-          "name": "hash",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "url",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "isCover",
-          "type": "bool",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "AnimeUser",
-      "fields": [
-        {
-          "name": "list",
-          "type": "*string",
-          "omitEmpty": false
-        },
-        {
-          "name": "score",
-          "type": "*int",
-          "omitEmpty": false
-        },
-        {
-          "name": "episode",
-          "type": "*int",
-          "omitEmpty": false
-        },
-        {
-          "name": "rewatchCount",
-          "type": "*int",
-          "omitEmpty": false
-        },
-        {
-          "name": "isRewatching",
-          "type": "bool",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "GetAnimeById",
-      "fields": [
-        {
-          "name": "id",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "title",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "titleEnglish",
-          "type": "*string",
-          "omitEmpty": false
-        },
-        {
-          "name": "description",
-          "type": "*string",
-          "omitEmpty": false
-        },
-        {
-          "name": "type",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "score",
-          "type": "*float",
-          "omitEmpty": false
-        },
-        {
-          "name": "status",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "rating",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "episodeCount",
-          "type": "*int",
-          "omitEmpty": false
-        },
-        {
-          "name": "airingSeason",
-          "type": "*AnimeTag",
-          "omitEmpty": false
-        },
-        {
-          "name": "startDate",
-          "type": "*string",
-          "omitEmpty": false
-        },
-        {
-          "name": "endDate",
-          "type": "*string",
-          "omitEmpty": false
-        },
-        {
-          "name": "studios",
-          "type": "[]AnimeStudio",
-          "omitEmpty": false
-        },
-        {
-          "name": "tags",
-          "type": "[]AnimeTag",
-          "omitEmpty": false
-        },
-        {
-          "name": "coverUrl",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "images",
-          "type": "[]AnimeImage",
-          "omitEmpty": false
-        },
-        {
-          "name": "user",
-          "type": "*AnimeUser",
-          "omitEmpty": true
-        }
-      ]
-    },
-    {
-      "name": "Signup",
-      "fields": [
-        {
-          "name": "id",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "username",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "ImportMalListBody",
-      "fields": [
-        {
-          "name": "username",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "overrideExistingEntries",
-          "type": "bool",
-          "omitEmpty": true
-        }
-      ]
-    },
-    {
-      "name": "Page",
-      "fields": [
-        {
-          "name": "page",
-          "type": "int",
-          "omitEmpty": false
-        },
-        {
-          "name": "perPage",
-          "type": "int",
-          "omitEmpty": false
-        },
-        {
-          "name": "totalItems",
-          "type": "int",
-          "omitEmpty": false
-        },
-        {
-          "name": "totalPages",
-          "type": "int",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "Signin",
-      "fields": [
-        {
-          "name": "token",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "GetMe",
-      "fields": [
-        {
-          "name": "id",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "username",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "role",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "displayName",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
       "name": "GetSystemInfo",
       "fields": [
         {
           "name": "version",
           "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ImportMalAnime",
+      "fields": [
+        {
+          "name": "animeId",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetAnimes",
+      "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
+          "name": "animes",
+          "type": "[]Anime",
           "omitEmpty": false
         }
       ]
@@ -402,22 +127,7 @@
       ]
     },
     {
-      "name": "AnimeStudio",
-      "fields": [
-        {
-          "name": "slug",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "SignupBody",
+      "name": "SigninBody",
       "fields": [
         {
           "name": "username",
@@ -428,9 +138,14 @@
           "name": "password",
           "type": "string",
           "omitEmpty": false
-        },
+        }
+      ]
+    },
+    {
+      "name": "Signin",
+      "fields": [
         {
-          "name": "passwordConfirm",
+          "name": "token",
           "type": "string",
           "omitEmpty": false
         }
@@ -457,12 +172,27 @@
       ]
     },
     {
-      "name": "ImportMalAnime",
+      "name": "StartDownloadBody",
       "fields": [
         {
-          "name": "animeId",
+          "name": "ids",
+          "type": "[]string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ImportMalListBody",
+      "fields": [
+        {
+          "name": "username",
           "type": "string",
           "omitEmpty": false
+        },
+        {
+          "name": "overrideExistingEntries",
+          "type": "bool",
+          "omitEmpty": true
         }
       ]
     },
@@ -477,16 +207,296 @@
       ]
     },
     {
-      "name": "GetAnimes",
+      "name": "AnimeUser",
       "fields": [
         {
-          "name": "page",
-          "type": "Page",
+          "name": "list",
+          "type": "*string",
           "omitEmpty": false
         },
         {
-          "name": "animes",
-          "type": "[]Anime",
+          "name": "score",
+          "type": "*int",
+          "omitEmpty": false
+        },
+        {
+          "name": "episode",
+          "type": "*int",
+          "omitEmpty": false
+        },
+        {
+          "name": "rewatchCount",
+          "type": "*int",
+          "omitEmpty": false
+        },
+        {
+          "name": "isRewatching",
+          "type": "bool",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "SignupBody",
+      "fields": [
+        {
+          "name": "username",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "password",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "passwordConfirm",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "UpdateUserSettingsBody",
+      "fields": [
+        {
+          "name": "displayName",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "AnimeTag",
+      "fields": [
+        {
+          "name": "slug",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AnimeImage",
+      "fields": [
+        {
+          "name": "hash",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "isCover",
+          "type": "bool",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "SetAnimeUserData",
+      "fields": [
+        {
+          "name": "list",
+          "type": "*string",
+          "omitEmpty": true
+        },
+        {
+          "name": "score",
+          "type": "*int",
+          "omitEmpty": true
+        },
+        {
+          "name": "episode",
+          "type": "*int",
+          "omitEmpty": true
+        },
+        {
+          "name": "rewatchCount",
+          "type": "*int",
+          "omitEmpty": true
+        },
+        {
+          "name": "isRewatching",
+          "type": "*bool",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "Signup",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "username",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "Page",
+      "fields": [
+        {
+          "name": "page",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "perPage",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "totalItems",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "totalPages",
+          "type": "int",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AnimeStudio",
+      "fields": [
+        {
+          "name": "slug",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetAnimeById",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "titleEnglish",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "description",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "score",
+          "type": "*float",
+          "omitEmpty": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "rating",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "episodeCount",
+          "type": "*int",
+          "omitEmpty": false
+        },
+        {
+          "name": "airingSeason",
+          "type": "*AnimeTag",
+          "omitEmpty": false
+        },
+        {
+          "name": "startDate",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "endDate",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "studios",
+          "type": "[]AnimeStudio",
+          "omitEmpty": false
+        },
+        {
+          "name": "tags",
+          "type": "[]AnimeTag",
+          "omitEmpty": false
+        },
+        {
+          "name": "coverUrl",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "images",
+          "type": "[]AnimeImage",
+          "omitEmpty": false
+        },
+        {
+          "name": "user",
+          "type": "*AnimeUser",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "GetMe",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "username",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "displayName",
+          "type": "string",
           "omitEmpty": false
         }
       ]
@@ -533,7 +543,14 @@
     {
       "type": "api",
       "name": "StartDownload",
-      "method": "GET",
+      "method": "POST",
+      "path": "/api/v1/system/download",
+      "body": "StartDownloadBody"
+    },
+    {
+      "type": "api",
+      "name": "CancelDownload",
+      "method": "DELETE",
       "path": "/api/v1/system/download"
     },
     {

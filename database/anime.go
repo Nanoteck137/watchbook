@@ -91,10 +91,11 @@ type Anime struct {
 
 	Id string `db:"id"`
 
-	MalId              sql.NullString `db:"mal_id"`
-	AniDbId            sql.NullString `db:"ani_db_id"`
-	AnilistId          sql.NullString `db:"anilist_id"`
-	AnimeNewsNetworkId sql.NullString `db:"anime_news_network_id"`
+	DownloadType       types.AnimeDownloadType `db:"download_type"`
+	MalId              sql.NullString          `db:"mal_id"`
+	AniDbId            sql.NullString          `db:"ani_db_id"`
+	AnilistId          sql.NullString          `db:"anilist_id"`
+	AnimeNewsNetworkId sql.NullString          `db:"anime_news_network_id"`
 
 	Title        string         `db:"title"`
 	TitleEnglish sql.NullString `db:"title_english"`
@@ -113,8 +114,7 @@ type Anime struct {
 
 	CoverFilename sql.NullString `db:"cover_filename"`
 
-	ShouldFetchData bool  `db:"should_fetch_data"`
-	LastDataFetch   int64 `db:"last_data_fetch"`
+	LastDataFetch sql.NullInt64 `db:"last_data_fetch"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -276,6 +276,7 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 
 			"animes.id",
 
+			"animes.download_type",
 			"animes.mal_id",
 			"animes.ani_db_id",
 			"animes.anilist_id",
@@ -296,7 +297,6 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 			"animes.start_date",
 			"animes.end_date",
 
-			"animes.should_fetch_data",
 			"animes.last_data_fetch",
 
 			"animes.created",
@@ -390,14 +390,6 @@ func (db *Database) GetAllAnimes(ctx context.Context) ([]Anime, error) {
 	return ember.Multiple[Anime](db.db, ctx, query)
 }
 
-func (db *Database) GetAnimeIdsForFetching(ctx context.Context) ([]string, error) {
-	query := AnimeQuery(nil).
-		Select("animes.id").
-		Where(goqu.I("animes.should_fetch_data").Eq(true))
-
-	return ember.Multiple[string](db.db, ctx, query)
-}
-
 func (db *Database) GetAnimeById(ctx context.Context, userId *string, id string) (Anime, error) {
 	query := AnimeQuery(userId).
 		Where(goqu.I("animes.id").Eq(id))
@@ -415,6 +407,7 @@ func (db *Database) GetAnimeByMalId(ctx context.Context, userId *string, malId s
 type CreateAnimeParams struct {
 	Id string
 
+	DownloadType       types.AnimeDownloadType
 	MalId              sql.NullString
 	AniDbId            sql.NullString
 	AnilistId          sql.NullString
@@ -435,8 +428,7 @@ type CreateAnimeParams struct {
 	StartDate sql.NullString
 	EndDate   sql.NullString
 
-	ShouldFetchData bool
-	LastDataFetch   int64
+	LastDataFetch sql.NullInt64
 
 	Created int64
 	Updated int64
@@ -457,6 +449,10 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 		id = utils.CreateAnimeId()
 	}
 
+	if params.DownloadType == "" {
+		params.DownloadType = types.AnimeDownloadTypeNone
+	}
+
 	if params.Type == "" {
 		params.Type = types.AnimeTypeUnknown
 	}
@@ -472,6 +468,7 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 	query := dialect.Insert("animes").Rows(goqu.Record{
 		"id": id,
 
+		"download_type":         params.DownloadType,
 		"mal_id":                params.MalId,
 		"ani_db_id":             params.AniDbId,
 		"anilist_id":            params.AnilistId,
@@ -492,8 +489,7 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 		"start_date": params.StartDate,
 		"end_date":   params.EndDate,
 
-		"should_fetch_data": params.ShouldFetchData,
-		"last_data_fetch":   params.LastDataFetch,
+		"last_data_fetch": params.LastDataFetch,
 
 		"created": created,
 		"updated": updated,
@@ -504,6 +500,7 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 }
 
 type AnimeChanges struct {
+	DownloadType       Change[types.AnimeDownloadType]
 	MalId              Change[sql.NullString]
 	AniDbId            Change[sql.NullString]
 	AnilistId          Change[sql.NullString]
@@ -524,8 +521,7 @@ type AnimeChanges struct {
 	StartDate Change[sql.NullString]
 	EndDate   Change[sql.NullString]
 
-	ShouldFetchData Change[bool]
-	LastDataFetch   Change[int64]
+	LastDataFetch Change[sql.NullInt64]
 
 	Created Change[int64]
 }
@@ -533,6 +529,7 @@ type AnimeChanges struct {
 func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeChanges) error {
 	record := goqu.Record{}
 
+	addToRecord(record, "download_type", changes.DownloadType)
 	addToRecord(record, "mal_id", changes.MalId)
 	addToRecord(record, "ani_db_id", changes.AniDbId)
 	addToRecord(record, "anilist_id", changes.AnilistId)
@@ -553,7 +550,6 @@ func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeCha
 	addToRecord(record, "start_date", changes.StartDate)
 	addToRecord(record, "end_date", changes.EndDate)
 
-	addToRecord(record, "should_fetch_data", changes.ShouldFetchData)
 	addToRecord(record, "last_data_fetch", changes.LastDataFetch)
 
 	addToRecord(record, "created", changes.Created)

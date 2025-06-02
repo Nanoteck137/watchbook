@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -161,12 +160,16 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 					_, err := app.DB().GetAnimeByMalId(ctx, &user.Id, malId)
 					if err != nil && errors.Is(err, database.ErrItemNotFound) {
 						_, err := app.DB().CreateAnime(ctx, database.CreateAnimeParams{
+							DownloadType: types.AnimeDownloadTypeMal,
 							MalId: sql.NullString{
 								String: malId,
 								Valid:  true,
 							},
-							Title:           string(entry.AnimeTitle),
-							ShouldFetchData: true,
+							Title: string(entry.AnimeTitle),
+							TitleEnglish: sql.NullString{
+								String: string(entry.AnimeTitleEnglish),
+								Valid:  string(entry.AnimeTitleEnglish) != "",
+							},
 						})
 						if err != nil {
 							return nil, err
@@ -180,12 +183,6 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 					anime, err := app.DB().GetAnimeByMalId(ctx, &user.Id, malId)
 					if err != nil {
 						return nil, err
-					}
-
-					if anime.Id == "c57icqr7" {
-						fmt.Printf("body.OverrideExistingEntries: %v\n", body.OverrideExistingEntries)
-						fmt.Printf("anime.UserData.Valid: %v\n", anime.UserData.Valid)
-						fmt.Printf("(anime.UserData.Valid && !body.OverrideExistingEntries): %v\n", (anime.UserData.Valid && !body.OverrideExistingEntries))
 					}
 
 					if anime.UserData.Valid && !body.OverrideExistingEntries {
@@ -255,12 +252,12 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
 						animeId, err := app.DB().CreateAnime(ctx, database.CreateAnimeParams{
+							DownloadType: types.AnimeDownloadTypeMal,
 							MalId: sql.NullString{
 								String: body.Id,
 								Valid:  true,
 							},
-							Title:           "UNKNOWN ANIME: " + body.Id,
-							ShouldFetchData: false,
+							Title: "UNKNOWN ANIME: " + body.Id,
 						})
 						if err != nil {
 							return nil, err

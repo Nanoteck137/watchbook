@@ -1,11 +1,19 @@
 package types
 
-type ThemeSongType string
+type AnimeDownloadType string
 
 const (
-	ThemeSongTypeUnknown ThemeSongType = "unknown"
-	ThemeSongTypeOpening ThemeSongType = "opening"
-	ThemeSongTypeEnding  ThemeSongType = "ending"
+	AnimeDownloadTypeNone AnimeDownloadType = "none"
+	AnimeDownloadTypeMal AnimeDownloadType = "myanimelist"
+	AnimeDownloadTypeAnilist AnimeDownloadType = "anilist"
+)
+
+type AnimeThemeSongType string
+
+const (
+	AnimeThemeSongTypeUnknown AnimeThemeSongType = "unknown"
+	AnimeThemeSongTypeOpening AnimeThemeSongType = "opening"
+	AnimeThemeSongTypeEnding  AnimeThemeSongType = "ending"
 )
 
 type AnimeType string

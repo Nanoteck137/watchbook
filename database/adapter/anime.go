@@ -28,6 +28,23 @@ func (a *TrackResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 			Name: "user_data.list",
 			Nullable: true,
 		}, true
+	case "lastDataFetch":
+		return filter.Name{
+			Kind: filter.NameKindNumber,
+			Name: "animes.last_data_fetch",
+			Nullable: true,
+		}, true
+	case "airingSeason":
+		return filter.Name{
+			Kind: filter.NameKindString,
+			Name: "animes.airing_season",
+			Nullable: true,
+		}, true
+	case "status":
+		return filter.Name{
+			Kind: filter.NameKindString,
+			Name: "animes.status",
+		}, true
 
 		// mal_id TEXT,
 		// ani_db_id TEXT,
@@ -50,8 +67,7 @@ func (a *TrackResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 		//
 		// score FLOAT,
 		//
-		// should_fetch_data BOOLEAN NOT NULL,
-		// last_data_fetch_date DATE NOT NULL,
+		// last_data_fetch_date INTEGER,
 		//
 		// created INTEGER NOT NULL,
 		// updated INTEGER NOT NULL

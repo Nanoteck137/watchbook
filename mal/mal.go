@@ -75,16 +75,16 @@ func ConvertAnimeRating(rating string) types.AnimeRating {
 	return types.AnimeRatingUnknown
 }
 
-func ConvertThemeSongType(typ ThemeSongType) types.ThemeSongType {
+func ConvertThemeSongType(typ ThemeSongType) types.AnimeThemeSongType {
 	switch(typ) {
 	case ThemeSongOpening:
-		return types.ThemeSongTypeOpening
+		return types.AnimeThemeSongTypeOpening
 	case ThemeSongEnding:
-		return types.ThemeSongTypeEnding
+		return types.AnimeThemeSongTypeEnding
 	default:
 		// TODO(patrik): Better logging
 		fmt.Printf("WARN: Unknown theme song type \"%s\"\n", typ)
 	}
 
-	return types.ThemeSongTypeUnknown
+	return types.AnimeThemeSongTypeUnknown
 }

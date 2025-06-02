@@ -2,6 +2,7 @@
 CREATE TABLE animes (
     id TEXT PRIMARY KEY,
 
+    download_type TEXT NOT NULL CHECK(download_type<>''),
     mal_id TEXT,
     ani_db_id TEXT,
     anilist_id TEXT,
@@ -22,8 +23,7 @@ CREATE TABLE animes (
 	start_date TEXT, 
     end_date TEXT,
 
-    should_fetch_data BOOLEAN NOT NULL,
-	last_data_fetch INTEGER NOT NULL,
+	last_data_fetch INTEGER,
 
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL

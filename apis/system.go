@@ -12,6 +12,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"sync"
@@ -82,20 +83,24 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 		IsCover:   true,
 	})
 	if err != nil {
-		if errors.Is(err, database.ErrItemAlreadyExists) && isCover {
-			err = db.RemoveAnimeCover(ctx, animeId)
-			if err != nil {
-				return fmt.Errorf("downloadImage: failed to remove old cover: %w", err)
-			}
+		if errors.Is(err, database.ErrItemAlreadyExists) {
+			if isCover {
+				err = db.RemoveAnimeCover(ctx, animeId)
+				if err != nil {
+					return fmt.Errorf("downloadImage: failed to remove old cover: %w", err)
+				}
 
-			err = db.UpdateAnimeImage(ctx, animeId, hash, database.AnimeImageChanges{
-				IsCover: database.Change[bool]{
-					Value:   true,
-					Changed: true,
-				},
-			})
-			if err != nil {
-				return fmt.Errorf("downloadImage: failed to update anime image cover status: %w", err)
+				err = db.UpdateAnimeImage(ctx, animeId, hash, database.AnimeImageChanges{
+					IsCover: database.Change[bool]{
+						Value:   true,
+						Changed: true,
+					},
+				})
+				if err != nil {
+					return fmt.Errorf("downloadImage: failed to update anime image cover status: %w", err)
+				}
+			} else {
+				return nil
 			}
 		} else {
 			return fmt.Errorf("downloadImage: failed to create new anime image: %w", err)
@@ -196,7 +201,34 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 	animeStatus := mal.ConvertAnimeStatus(animeData.Status)
 	animeRating := mal.ConvertAnimeRating(animeData.Rating)
 
+	aniDbId := ""
+	animeNewsNetworkId := ""
+
+	if u, err := url.Parse(animeData.AniDBUrl); err == nil {
+		aniDbId = u.Query().Get("aid")
+	}
+
+	if u, err := url.Parse(animeData.AnimeNewsNetworkUrl); err == nil {
+		animeNewsNetworkId = u.Query().Get("id")
+	}
+
 	err = db.UpdateAnime(ctx, animeId, database.AnimeChanges{
+		AniDbId: database.Change[sql.NullString]{
+			Value: sql.NullString{
+				String: aniDbId,
+				Valid:  aniDbId != "",
+			},
+			Changed: aniDbId != anime.AniDbId.String,
+		},
+
+		AnimeNewsNetworkId: database.Change[sql.NullString]{
+			Value: sql.NullString{
+				String: animeNewsNetworkId,
+				Valid:  animeNewsNetworkId != "",
+			},
+			Changed: animeNewsNetworkId != anime.AnimeNewsNetworkId.String,
+		},
+
 		Title: database.Change[string]{
 			Value:   animeData.Title,
 			Changed: animeData.Title != anime.Title,
@@ -234,7 +266,7 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 		},
 
 		AiringSeason: database.Change[sql.NullString]{
-			Value:   sql.NullString{
+			Value: sql.NullString{
 				String: airingSeasonSlug,
 				Valid:  airingSeasonSlug != "",
 			},
@@ -273,32 +305,19 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 			Changed: true,
 		},
 
-		// AniDBUrl: database.Change[sql.NullString]{
-		// 	Value: sql.NullString{
-		// 		String: animeData.AniDBUrl,
-		// 		Valid:  animeData.AniDBUrl != "",
-		// 	},
-		// 	Changed: animeData.AniDBUrl != anime.AniDBUrl.String,
-		// },
-		//
-		// AnimeNewsNetworkUrl: database.Change[sql.NullString]{
-		// 	Value: sql.NullString{
-		// 		String: animeData.AnimeNewsNetworkUrl,
-		// 		Valid:  animeData.AnimeNewsNetworkUrl != "",
-		// 	},
-		// 	Changed: animeData.AnimeNewsNetworkUrl != anime.AnimeNewsNetworkUrl.String,
-		// },
-
-		ShouldFetchData: database.Change[bool]{
-			Value:   false,
-			Changed: true,
-		},
-
-		LastDataFetch: database.Change[int64]{
-			Value:   time.Now().UnixMilli(),
+		LastDataFetch: database.Change[sql.NullInt64]{
+			Value: sql.NullInt64{
+				Int64: time.Now().UnixMilli(),
+				Valid: true,
+			},
 			Changed: true,
 		},
 	})
+	if err != nil {
+		return err
+	}
+
+	err = db.DeleteAllAnimeThemeSongs(ctx, anime.Id)
 	if err != nil {
 		return err
 	}
@@ -320,6 +339,16 @@ func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir typ
 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 			return err
 		}
+	}
+
+	err = db.RemoveAllTagsFromAnime(ctx, animeId)
+	if err != nil {
+		return err
+	}
+
+	err = db.RemoveAllStudiosFromAnime(ctx, animeId)
+	if err != nil {
+		return err
 	}
 
 	for _, genre := range animeData.Genres {
@@ -412,7 +441,8 @@ type DownloadHandlerStatus struct {
 }
 
 type DownloadHandler struct {
-	isDownloading atomic.Bool
+	isDownloading    atomic.Bool
+	downloadCanceled atomic.Bool
 
 	mutex           sync.Mutex
 	currentDownload int
@@ -467,67 +497,47 @@ func (d *DownloadHandler) updateStatus(current, total int) {
 	d.totalDownloads = total
 }
 
-func (d *DownloadHandler) download(app core.App) error {
+func (d *DownloadHandler) download(app core.App, animeIds []string) error {
 	d.isDownloading.Store(true)
 	defer d.isDownloading.Store(false)
-
-	// entries, err := mal.GetUserWatchlist(dl, "Nanoteck137")
-	// if err != nil {
-	// 	return err
-	// }
-	//
-	// ctx := context.TODO()
-	//
-	// for _, entry := range entries {
-	// 	malId := strconv.Itoa(entry.AnimeId)
-	//
-	// 	_, err := db.GetAnimeByMalId(ctx, malId)
-	// 	if err != nil && errors.Is(err, database.ErrItemNotFound) {
-	// 		_, err := db.CreateAnime(ctx, database.CreateAnimeParams{
-	// 			MalId:           malId,
-	// 			Title:           string(entry.AnimeTitle),
-	// 			ShouldFetchData: true,
-	// 		})
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	// }
 
 	ctx := context.TODO()
 
 	db := app.DB()
 	workDir := app.WorkDir()
 
-	ids, err := db.GetAnimeIdsForFetching(ctx)
-	if err != nil {
-		return err
-	}
-
-	d.updateStatus(0, len(ids))
+	d.updateStatus(0, len(animeIds))
 	d.sendStatusEvent()
 
-	// TODO(patrik): This is temporary
-	for i, id := range ids[:4] {
-		// for i, id := range ids {
-		d.updateStatus(i+1, len(ids))
+	for i, id := range animeIds {
+		if d.downloadCanceled.Load() {
+			return fmt.Errorf("download canceled")
+		}
+
+		d.updateStatus(i+1, len(animeIds))
 		d.sendStatusEvent()
 
 		err := fetchAndUpdateAnime(ctx, db, workDir, id)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to download anime (%s): %w", id, err)
 		}
 	}
 
 	return nil
 }
 
-func (d *DownloadHandler) startDownload(app core.App) error {
+func (d *DownloadHandler) cancelDownload() {
+	d.downloadCanceled.Store(true)
+}
+
+func (d *DownloadHandler) startDownload(app core.App, animeIds []string) error {
 	if d.isDownloading.Load() {
 		return errors.New("already downloading")
 	}
 
-	err := d.download(app)
+	d.downloadCanceled.Store(false)
+
+	err := d.download(app, animeIds)
 	d.lastError = err
 
 	d.sendStatusEvent()
@@ -543,6 +553,10 @@ type StatusEvent struct {
 
 func (e StatusEvent) GetEventType() string {
 	return "status"
+}
+
+type StartDownloadBody struct {
+	Ids []string `json:"ids"`
 }
 
 var downloadHandler = NewDownloadHandler()
@@ -561,89 +575,44 @@ func InstallSystemHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
-		// user, err := app.DB().GetUserByUsername(ctx, app.config.Username)
-		// if err != nil {
-		// 	return err
-		// }
-		//
-		// for _, entry := range entries {
-		// 	malId := strconv.Itoa(entry.AnimeId)
-		//
-		// 	anime, err := db.GetAnimeByMalId(ctx, malId)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		//
-		// 	noList := false
-		// 	list := types.AnimeUserListWatching
-		// 	switch entry.Status {
-		// 	case mal.WatchlistStatusCurrentlyWatching:
-		// 		list = types.AnimeUserListWatching
-		// 	case mal.WatchlistStatusCompleted:
-		// 		list = types.AnimeUserListCompleted
-		// 	case mal.WatchlistStatusOnHold:
-		// 		list = types.AnimeUserListOnHold
-		// 	case mal.WatchlistStatusDropped:
-		// 		list = types.AnimeUserListDropped
-		// 	case mal.WatchlistStatusPlanToWatch:
-		// 		list = types.AnimeUserListPlanToWatch
-		// 	default:
-		// 		noList = true
-		// 	}
-		//
-		// 	err = db.SetAnimeUserData(ctx, anime.Id, user.Id, database.SetAnimeUserData{
-		// 		List: sql.NullString{
-		// 			String: string(list),
-		// 			Valid:  !noList,
-		// 		},
-		// 		Episode: sql.NullInt64{
-		// 			Int64: int64(entry.NumWatchedEpisodes),
-		// 			Valid: entry.NumWatchedEpisodes != 0,
-		// 		},
-		// 		IsRewatching: entry.IsRewatching > 0,
-		// 		Score: sql.NullInt64{
-		// 			Int64: int64(entry.Score),
-		// 			Valid: entry.Score != 0,
-		// 		},
-		// 	})
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		//
-		// 	// err = db.SetAnimeUserList(ctx, anime.Id, user.Id, list)
-		// 	// if err != nil {
-		// 	// 	return err
-		// 	// }
-		// 	//
-		// 	// err = db.SetAnimeUserEpisode(ctx, anime.Id, user.Id, entry.NumWatchedEpisodes)
-		// 	// if err != nil {
-		// 	// 	return err
-		// 	// }
-		// 	//
-		// 	// if entry.Score > 0 {
-		// 	// 	err = db.SetAnimeUserScore(ctx, anime.Id, user.Id, entry.Score)
-		// 	// 	if err != nil {
-		// 	// 		return err
-		// 	// 	}
-		// 	// } else {
-		// 	// 	err = db.RemoveAnimeUserScore(ctx, anime.Id, user.Id)
-		// 	// 	if err != nil {
-		// 	// 		return err
-		// 	// 	}
-		// 	// }
-		// }
-
 		pyrin.ApiHandler{
-			Name:   "StartDownload",
-			Path:   "/system/download",
-			Method: http.MethodGet,
+			Name:     "StartDownload",
+			Path:     "/system/download",
+			Method:   http.MethodPost,
+			BodyType: StartDownloadBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
+				body, err := pyrin.Body[StartDownloadBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				if downloadHandler.isDownloading.Load() {
+					// TODO(patrik): Better error
+					return nil, errors.New("already downloading")
+				}
+
 				go func() {
-					err := downloadHandler.startDownload(app)
+					err := downloadHandler.startDownload(app, body.Ids)
 					if err != nil {
 						logger.Error("failed to start downloader", "err", err)
 					}
 				}()
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:   "CancelDownload",
+			Path:   "/system/download",
+			Method: http.MethodDelete,
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				if !downloadHandler.isDownloading.Load() {
+					// TODO(patrik): Better error
+					return nil, errors.New("not downloading")
+				}
+
+				downloadHandler.cancelDownload()
 
 				return nil, nil
 			},

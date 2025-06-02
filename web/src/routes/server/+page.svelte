@@ -60,12 +60,49 @@
 
 <Button
   onclick={async () => {
-    const res = await apiClient.startDownload();
+    // const filter = "lastDataFetch == null";
+    const filter = 'status != "finished" || lastDataFetch == null';
+
+    const getAnime = async function (page: number) {
+      const animes = await apiClient.getAnimes({
+        query: { filter, page: page.toString() },
+      });
+      if (!animes.success) {
+        handleApiError(animes.error);
+        throw "Failed";
+      }
+
+      return animes.data;
+    };
+
+    const firstPage = await getAnime(0);
+    let ids = firstPage.animes.map((a) => a.id);
+
+    for (let i = 1; i < firstPage.page.totalPages; i++) {
+      const anime = await getAnime(i);
+      anime.animes.forEach((a) => {
+        ids.push(a.id);
+      });
+    }
+
+    const res = await apiClient.startDownload({ ids });
     if (!res.success) {
       return handleApiError(res.error);
     }
 
     toast.success("Starting download");
+  }}
+>
+  Download Not Fetched Animes
+</Button>
+
+<Button
+  onclick={async () => {
+    // const res = await apiClient.startDownload();
+    // if (!res.success) {
+    //   return handleApiError(res.error);
+    // }
+    // toast.success("Starting download");
   }}>Start Download</Button
 >
 
@@ -79,4 +116,15 @@
       (currentDownload / totalDownloads) * 100,
     )}%)
   </p>
+  <Button
+    onclick={async () => {
+      const res = await apiClient.cancelDownload();
+      if (!res.success) {
+        return handleApiError(res.error);
+      }
+      toast.success("Canceled download");
+    }}
+  >
+    Cancel Download
+  </Button>
 {/if}

@@ -13,7 +13,7 @@ type AnimeThemeSong struct {
 	AnimeId string `db:"anime_id"`
 	Index   int    `db:"idx"`
 
-	Type types.ThemeSongType `db:"type"`
+	Type types.AnimeThemeSongType `db:"type"`
 	Raw  string              `db:"raw"`
 }
 
@@ -80,7 +80,7 @@ type CreateAnimeThemeSongParams struct {
 	AnimeId string
 	Idx     int
 
-	Type types.ThemeSongType
+	Type types.AnimeThemeSongType
 	Raw  string
 }
 
@@ -91,8 +91,19 @@ func (db *Database) CreateAnimeThemeSong(ctx context.Context, params CreateAnime
 
 		"type": params.Type,
 		"raw":  params.Raw,
-	}).
-		Prepared(true)
+	})
+
+	_, err := db.db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *Database) DeleteAllAnimeThemeSongs(ctx context.Context, animeId string) error {
+	query := dialect.Delete("anime_theme_songs").
+		Where(goqu.I("anime_theme_songs.anime_id").Eq(animeId))
 
 	_, err := db.db.Exec(ctx, query)
 	if err != nil {
