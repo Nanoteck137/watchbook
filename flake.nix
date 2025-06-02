@@ -10,12 +10,9 @@
 
     devtools.url     = "github:nanoteck137/devtools";
     devtools.inputs.nixpkgs.follows = "nixpkgs";
-
-    tagopus.url      = "github:nanoteck137/tagopus/v0.1.1";
-    tagopus.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, flake-utils, gitignore, devtools, tagopus, ... }:
+  outputs = { self, nixpkgs, flake-utils, gitignore, devtools, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [];
@@ -37,15 +34,7 @@
             "-X github.com/nanoteck137/watchbook.Commit=${self.dirtyRev or self.rev or "no-commit"}"
           ];
 
-          tags = [];
-
           vendorHash = "";
-
-          nativeBuildInputs = [ pkgs.makeWrapper ];
-
-          postFixup = ''
-            wrapProgram $out/bin/watchbook --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.ffmpeg pkgs.imagemagick ]}
-          '';
         };
 
         frontend = pkgs.buildNpmPackage {
@@ -85,10 +74,7 @@
             go
             gopls
             nodejs
-            imagemagick
-            ffmpeg
 
-            tagopus.packages.${system}.default
             tools.publishVersion
           ];
         };
