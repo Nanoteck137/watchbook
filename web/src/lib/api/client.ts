@@ -52,6 +52,18 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/user/import/mal/anime", "POST", api.ImportMalAnime, z.any(), body, options)
   }
   
+  createApiToken(body: api.CreateApiTokenBody, options?: ExtraOptions) {
+    return this.request("/api/v1/user/apitoken", "POST", api.CreateApiToken, z.any(), body, options)
+  }
+  
+  getAllApiTokens(options?: ExtraOptions) {
+    return this.request("/api/v1/user/apitoken", "GET", api.GetAllApiTokens, z.any(), undefined, options)
+  }
+  
+  deleteApiToken(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/user/apitoken/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  }
+  
   getAnimes(options?: ExtraOptions) {
     return this.request("/api/v1/animes", "GET", api.GetAnimes, z.any(), undefined, options)
   }
@@ -119,6 +131,18 @@ export class ClientUrls {
   
   importMalAnime() {
     return createUrl(this.baseUrl, "/api/v1/user/import/mal/anime")
+  }
+  
+  createApiToken() {
+    return createUrl(this.baseUrl, "/api/v1/user/apitoken")
+  }
+  
+  getAllApiTokens() {
+    return createUrl(this.baseUrl, "/api/v1/user/apitoken")
+  }
+  
+  deleteApiToken(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/user/apitoken/${id}`)
   }
   
   getAnimes() {
