@@ -10,6 +10,7 @@ const (
 	ErrTypeInvalidAuth        pyrin.ErrorType = "INVALID_AUTH"
 	ErrTypeUserAlreadyExists  pyrin.ErrorType = "USER_ALREADY_EXISTS"
 	ErrTypeUserNotFound       pyrin.ErrorType = "USER_NOT_FOUND"
+	ErrTypeApiTokenNotFound   pyrin.ErrorType = "API_TOKEN_NOT_FOUND"
 	ErrTypeInvalidCredentials pyrin.ErrorType = "INVALID_CREDENTIALS"
 
 	ErrTypeAnimeNotFound pyrin.ErrorType = "ANIME_NOT_FOUND"
@@ -36,6 +37,14 @@ func UserAlreadyExists() *pyrin.Error {
 		Code:    http.StatusBadRequest,
 		Type:    ErrTypeUserAlreadyExists,
 		Message: "User already exists",
+	}
+}
+
+func ApiTokenNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeApiTokenNotFound,
+		Message: "Api Token not found",
 	}
 }
 

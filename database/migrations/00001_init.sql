@@ -9,6 +9,16 @@ CREATE TABLE users (
     updated INTEGER NOT NULL
 );
 
+CREATE TABLE api_tokens (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+    name TEXT NOT NULL CHECK(name<>''),
+
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL
+);
+
 CREATE TABLE tags (
     slug TEXT PRIMARY KEY CHECK(slug<>''),
     name TEXT NOT NULL CHECK(name<>'')
@@ -30,4 +40,5 @@ DROP TABLE users_settings;
 DROP TABLE studios;
 DROP TABLE tags;
 
+DROP TABLE api_tokens;
 DROP TABLE users;

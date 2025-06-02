@@ -291,108 +291,107 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
-		// TODO(patrik): Add back api tokens
-		// pyrin.ApiHandler{
-		// 	Name:         "CreateApiToken",
-		// 	Method:       http.MethodPost,
-		// 	Path:         "/user/apitoken",
-		// 	ResponseType: CreateApiToken{},
-		// 	BodyType:     CreateApiTokenBody{},
-		// 	HandlerFunc: func(c pyrin.Context) (any, error) {
-		// 		user, err := User(app, c)
-		// 		if err != nil {
-		// 			return nil, err
-		// 		}
-		//
-		// 		body, err := pyrin.Body[CreateApiTokenBody](c)
-		// 		if err != nil {
-		// 			return nil, err
-		// 		}
-		//
-		// 		ctx := context.TODO()
-		//
-		// 		token, err := app.DB().CreateApiToken(ctx, database.CreateApiTokenParams{
-		// 			UserId: user.Id,
-		// 			Name:   body.Name,
-		// 		})
-		// 		if err != nil {
-		// 			return nil, err
-		// 		}
-		//
-		// 		return CreateApiToken{
-		// 			Token: token.Id,
-		// 		}, nil
-		// 	},
-		// },
-		//
-		// pyrin.ApiHandler{
-		// 	Name:         "GetAllApiTokens",
-		// 	Method:       http.MethodGet,
-		// 	Path:         "/user/apitoken",
-		// 	ResponseType: GetAllApiTokens{},
-		// 	HandlerFunc: func(c pyrin.Context) (any, error) {
-		// 		user, err := User(app, c)
-		// 		if err != nil {
-		// 			return nil, err
-		// 		}
-		//
-		// 		ctx := context.TODO()
-		//
-		// 		tokens, err := app.DB().GetAllApiTokensForUser(ctx, user.Id)
-		// 		if err != nil {
-		// 			return nil, err
-		// 		}
-		//
-		// 		res := GetAllApiTokens{
-		// 			Tokens: make([]ApiToken, len(tokens)),
-		// 		}
-		//
-		// 		for i, token := range tokens {
-		// 			res.Tokens[i] = ApiToken{
-		// 				Id:   token.Id,
-		// 				Name: token.Name,
-		// 			}
-		// 		}
-		//
-		// 		return res, nil
-		// 	},
-		// },
-		//
-		// pyrin.ApiHandler{
-		// 	Name:   "DeleteApiToken",
-		// 	Method: http.MethodDelete,
-		// 	Path:   "/user/apitoken/:id",
-		// 	Errors: []pyrin.ErrorType{ErrTypeApiTokenNotFound},
-		// 	HandlerFunc: func(c pyrin.Context) (any, error) {
-		// 		tokenId := c.Param("id")
-		//
-		// 		user, err := User(app, c)
-		// 		if err != nil {
-		// 			return nil, err
-		// 		}
-		//
-		// 		ctx := context.TODO()
-		//
-		// 		token, err := app.DB().GetApiTokenById(ctx, tokenId)
-		// 		if err != nil {
-		// 			if errors.Is(err, database.ErrItemNotFound) {
-		// 				return nil, ApiTokenNotFound()
-		// 			}
-		//
-		// 			return nil, err
-		// 		}
-		//
-		// 		if token.UserId != user.Id {
-		// 			return nil, ApiTokenNotFound()
-		// 		}
-		//
-		// 		err = app.DB().DeleteApiToken(ctx, tokenId)
-		// 		if err != nil {
-		// 			return nil, err
-		// 		}
-		//
-		// 		return nil, nil
-		// 	},
-		// },
+		pyrin.ApiHandler{
+			Name:         "CreateApiToken",
+			Method:       http.MethodPost,
+			Path:         "/user/apitoken",
+			ResponseType: CreateApiToken{},
+			BodyType:     CreateApiTokenBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				body, err := pyrin.Body[CreateApiTokenBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.TODO()
+
+				tokenId, err := app.DB().CreateApiToken(ctx, database.CreateApiTokenParams{
+					UserId: user.Id,
+					Name:   body.Name,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				return CreateApiToken{
+					Token: tokenId,
+				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetAllApiTokens",
+			Method:       http.MethodGet,
+			Path:         "/user/apitoken",
+			ResponseType: GetAllApiTokens{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.TODO()
+
+				tokens, err := app.DB().GetAllApiTokensForUser(ctx, user.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				res := GetAllApiTokens{
+					Tokens: make([]ApiToken, len(tokens)),
+				}
+
+				for i, token := range tokens {
+					res.Tokens[i] = ApiToken{
+						Id:   token.Id,
+						Name: token.Name,
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:   "DeleteApiToken",
+			Method: http.MethodDelete,
+			Path:   "/user/apitoken/:id",
+			Errors: []pyrin.ErrorType{ErrTypeApiTokenNotFound},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				tokenId := c.Param("id")
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.TODO()
+
+				token, err := app.DB().GetApiTokenById(ctx, tokenId)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, ApiTokenNotFound()
+					}
+
+					return nil, err
+				}
+
+				if token.UserId != user.Id {
+					return nil, ApiTokenNotFound()
+				}
+
+				err = app.DB().DeleteApiToken(ctx, tokenId)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
 	)
 }
