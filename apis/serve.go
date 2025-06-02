@@ -3,7 +3,6 @@ package apis
 import (
 	"net/http"
 	"os"
-	"path"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/watchbook"
@@ -28,7 +27,8 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 				id := c.Param("id")
 				image := c.Param("image")
 
-				p := path.Join(app.WorkDir().ImagesEntriesDir(), id)
+				animeDir := app.WorkDir().AnimesDir()
+				p := animeDir.AnimeImageDir(id)
 
 				f := os.DirFS(p)
 				return pyrin.ServeFile(c, f, image)

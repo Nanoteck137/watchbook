@@ -64,7 +64,8 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 		return fmt.Errorf("downloadImage: failed io.Copy: %w", err)
 	}
 
-	dst := path.Join(workDir.ImagesEntriesDir(), animeId)
+	animeDir := workDir.AnimesDir()
+	dst := animeDir.AnimeImageDir(animeId)
 	err = os.Mkdir(dst, 0755)
 	if err != nil && !os.IsExist(err) {
 		return fmt.Errorf("downloadImage: failed os.Mkdir: %w", err)
