@@ -5,16 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/tools/transform"
 	"github.com/nanoteck137/validate"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
-	"github.com/nanoteck137/watchbook/downloader"
-	"github.com/nanoteck137/watchbook/mal"
-	"github.com/nanoteck137/watchbook/types"
 )
 
 type UpdateUserSettingsBody struct {
@@ -60,39 +56,6 @@ type GetAllApiTokens struct {
 	Tokens []ApiToken `json:"tokens"`
 }
 
-type ImportMalListBody struct {
-	Username                string `json:"username"`
-	OverrideExistingEntries bool   `json:"overrideExistingEntries,omitempty"`
-}
-
-func (b *ImportMalListBody) Transform() {
-	b.Username = transform.String(b.Username)
-}
-
-func (b ImportMalListBody) Validate() error {
-	return validate.ValidateStruct(&b,
-		validate.Field(&b.Username, validate.Required),
-	)
-}
-
-type ImportMalAnime struct {
-	AnimeId string `json:"animeId"`
-}
-
-type ImportMalAnimeBody struct {
-	Id string `json:"id"`
-}
-
-func (b *ImportMalAnimeBody) Transform() {
-	b.Id = transform.String(b.Id)
-}
-
-func (b ImportMalAnimeBody) Validate() error {
-	return validate.ValidateStruct(&b,
-		validate.Field(&b.Id, validate.Required),
-	)
-}
-
 func InstallUserHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -127,167 +90,6 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return nil, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "ImportMalList",
-			Method:       http.MethodPost,
-			Path:         "/user/import/mal",
-			ResponseType: nil,
-			BodyType:     ImportMalListBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				body, err := pyrin.Body[ImportMalListBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				entries, err := mal.GetUserWatchlist(dl, body.Username)
-				if err != nil {
-					return nil, err
-				}
-
-				ctx := context.TODO()
-
-				for _, entry := range entries {
-					malId := strconv.Itoa(entry.AnimeId)
-
-					_, err := app.DB().GetAnimeByMalId(ctx, &user.Id, malId)
-					if err != nil && errors.Is(err, database.ErrItemNotFound) {
-						_, err := app.DB().CreateAnime(ctx, database.CreateAnimeParams{
-							DownloadType: types.AnimeDownloadTypeMal,
-							MalId: sql.NullString{
-								String: malId,
-								Valid:  true,
-							},
-							Title: string(entry.AnimeTitle),
-							TitleEnglish: sql.NullString{
-								String: string(entry.AnimeTitleEnglish),
-								Valid:  string(entry.AnimeTitleEnglish) != "",
-							},
-						})
-						if err != nil {
-							return nil, err
-						}
-					}
-				}
-
-				for _, entry := range entries {
-					malId := strconv.Itoa(entry.AnimeId)
-
-					anime, err := app.DB().GetAnimeByMalId(ctx, &user.Id, malId)
-					if err != nil {
-						return nil, err
-					}
-
-					if anime.UserData.Valid && !body.OverrideExistingEntries {
-						continue
-					}
-
-					noList := false
-					list := types.AnimeUserListWatching
-					switch entry.Status {
-					case mal.WatchlistStatusCurrentlyWatching:
-						list = types.AnimeUserListWatching
-					case mal.WatchlistStatusCompleted:
-						list = types.AnimeUserListCompleted
-					case mal.WatchlistStatusOnHold:
-						list = types.AnimeUserListOnHold
-					case mal.WatchlistStatusDropped:
-						list = types.AnimeUserListDropped
-					case mal.WatchlistStatusPlanToWatch:
-						list = types.AnimeUserListPlanToWatch
-					default:
-						noList = true
-					}
-
-					err = app.DB().SetAnimeUserData(ctx, anime.Id, user.Id, database.SetAnimeUserData{
-						List: sql.NullString{
-							String: string(list),
-							Valid:  !noList,
-						},
-						Episode: sql.NullInt64{
-							Int64: int64(entry.NumWatchedEpisodes),
-							Valid: entry.NumWatchedEpisodes != 0,
-						},
-						IsRewatching: entry.IsRewatching > 0,
-						Score: sql.NullInt64{
-							Int64: int64(entry.Score),
-							Valid: entry.Score != 0,
-						},
-					})
-					if err != nil {
-						return nil, err
-					}
-				}
-
-				return nil, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "ImportMalAnime",
-			Method:       http.MethodPost,
-			Path:         "/user/import/mal/anime",
-			ResponseType: ImportMalAnime{},
-			BodyType:     ImportMalAnimeBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				body, err := pyrin.Body[ImportMalAnimeBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				_, err = User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				ctx := context.TODO()
-				anime, err := app.DB().GetAnimeByMalId(ctx, nil, body.Id)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						animeId, err := app.DB().CreateAnime(ctx, database.CreateAnimeParams{
-							DownloadType: types.AnimeDownloadTypeMal,
-							MalId: sql.NullString{
-								String: body.Id,
-								Valid:  true,
-							},
-							Title: "UNKNOWN ANIME: " + body.Id,
-						})
-						if err != nil {
-							return nil, err
-						}
-
-						err = fetchAndUpdateAnime(ctx, app.DB(), app.WorkDir(), animeId)
-						if err != nil {
-							if errors.Is(err, downloader.NotFound) {
-								err = app.DB().RemoveAnime(ctx, animeId)
-								if err != nil {
-									return nil, err
-								}
-
-								return nil, AnimeNotFound()
-							}
-
-							return nil, err
-						}
-
-						return ImportMalAnime{
-							AnimeId: animeId,
-						}, nil
-					}
-
-					return nil, err
-				}
-
-				return ImportMalAnime{
-					AnimeId: anime.Id,
-				}, nil
 			},
 		},
 

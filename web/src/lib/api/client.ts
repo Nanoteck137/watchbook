@@ -44,14 +44,6 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/user/settings", "PATCH", z.undefined(), z.any(), body, options)
   }
   
-  importMalList(body: api.ImportMalListBody, options?: ExtraOptions) {
-    return this.request("/api/v1/user/import/mal", "POST", z.undefined(), z.any(), body, options)
-  }
-  
-  importMalAnime(body: api.ImportMalAnimeBody, options?: ExtraOptions) {
-    return this.request("/api/v1/user/import/mal/anime", "POST", api.ImportMalAnime, z.any(), body, options)
-  }
-  
   createApiToken(body: api.CreateApiTokenBody, options?: ExtraOptions) {
     return this.request("/api/v1/user/apitoken", "POST", api.CreateApiToken, z.any(), body, options)
   }
@@ -70,6 +62,10 @@ export class ApiClient extends BaseApiClient {
   
   getAnimeById(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/animes/${id}`, "GET", api.GetAnimeById, z.any(), undefined, options)
+  }
+  
+  createAnime(body: api.CreateAnimeBody, options?: ExtraOptions) {
+    return this.request("/api/v1/animes", "POST", api.CreateAnime, z.any(), body, options)
   }
   
   setAnimeUserData(id: string, body: api.SetAnimeUserData, options?: ExtraOptions) {
@@ -125,14 +121,6 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/user/settings")
   }
   
-  importMalList() {
-    return createUrl(this.baseUrl, "/api/v1/user/import/mal")
-  }
-  
-  importMalAnime() {
-    return createUrl(this.baseUrl, "/api/v1/user/import/mal/anime")
-  }
-  
   createApiToken() {
     return createUrl(this.baseUrl, "/api/v1/user/apitoken")
   }
@@ -151,6 +139,10 @@ export class ClientUrls {
   
   getAnimeById(id: string) {
     return createUrl(this.baseUrl, `/api/v1/animes/${id}`)
+  }
+  
+  createAnime() {
+    return createUrl(this.baseUrl, "/api/v1/animes")
   }
   
   setAnimeUserData(id: string) {

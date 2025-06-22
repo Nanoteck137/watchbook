@@ -16,6 +16,7 @@ var CreateId = createIdGenerator(32)
 var CreateSmallId = createIdGenerator(8)
 
 var CreateAnimeId = createIdGenerator(8)
+var CreateAnimeEpisodeId = createIdGenerator(20)
 
 var CreateApiTokenId = createIdGenerator(32)
 
@@ -138,6 +139,14 @@ func SqlNullToFloat64Ptr(value sql.NullFloat64) *float64 {
 	}
 
 	return nil
+}
+
+func Min[T cmp.Ordered](value T, min T) T {
+	if value < min {
+		return min
+	} 
+
+	return value
 }
 
 func Clamp[T cmp.Ordered](value T, min T, max T) T {

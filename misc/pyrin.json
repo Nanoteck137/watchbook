@@ -2,6 +2,56 @@
   "version": 1,
   "structures": [
     {
+      "name": "CreateAnimeBody",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "tmdbId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "malId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "anilistId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "score",
+          "type": "float",
+          "omitEmpty": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "rating",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "SigninBody",
       "fields": [
         {
@@ -17,36 +67,46 @@
       ]
     },
     {
-      "name": "ImportMalListBody",
+      "name": "ChangePasswordBody",
       "fields": [
+        {
+          "name": "currentPassword",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "newPassword",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "newPasswordConfirm",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetMe",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
         {
           "name": "username",
           "type": "string",
           "omitEmpty": false
         },
         {
-          "name": "overrideExistingEntries",
-          "type": "bool",
-          "omitEmpty": true
-        }
-      ]
-    },
-    {
-      "name": "CreateApiTokenBody",
-      "fields": [
-        {
-          "name": "name",
+          "name": "role",
           "type": "string",
           "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "GetAllApiTokens",
-      "fields": [
+        },
         {
-          "name": "tokens",
-          "type": "[]ApiToken",
+          "name": "displayName",
+          "type": "string",
           "omitEmpty": false
         }
       ]
@@ -97,26 +157,6 @@
       ]
     },
     {
-      "name": "ChangePasswordBody",
-      "fields": [
-        {
-          "name": "currentPassword",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "newPassword",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "newPasswordConfirm",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
       "name": "GetSystemInfo",
       "fields": [
         {
@@ -133,81 +173,6 @@
           "name": "displayName",
           "type": "*string",
           "omitEmpty": true
-        }
-      ]
-    },
-    {
-      "name": "ImportMalAnime",
-      "fields": [
-        {
-          "name": "animeId",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "CreateApiToken",
-      "fields": [
-        {
-          "name": "token",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "AnimeTag",
-      "fields": [
-        {
-          "name": "slug",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "SignupBody",
-      "fields": [
-        {
-          "name": "username",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "password",
-          "type": "string",
-          "omitEmpty": false
-        },
-        {
-          "name": "passwordConfirm",
-          "type": "string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "StartDownloadBody",
-      "fields": [
-        {
-          "name": "ids",
-          "type": "[]string",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "ImportMalAnimeBody",
-      "fields": [
-        {
-          "name": "id",
-          "type": "string",
-          "omitEmpty": false
         }
       ]
     },
@@ -237,6 +202,21 @@
       ]
     },
     {
+      "name": "AnimeStudio",
+      "fields": [
+        {
+          "name": "slug",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "AnimeImage",
       "fields": [
         {
@@ -251,6 +231,36 @@
         },
         {
           "name": "isCover",
+          "type": "bool",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AnimeUser",
+      "fields": [
+        {
+          "name": "list",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "score",
+          "type": "*int",
+          "omitEmpty": false
+        },
+        {
+          "name": "episode",
+          "type": "*int",
+          "omitEmpty": false
+        },
+        {
+          "name": "rewatchCount",
+          "type": "*int",
+          "omitEmpty": false
+        },
+        {
+          "name": "isRewatching",
           "type": "bool",
           "omitEmpty": false
         }
@@ -347,37 +357,27 @@
       ]
     },
     {
-      "name": "SetAnimeUserData",
+      "name": "SignupBody",
       "fields": [
         {
-          "name": "list",
-          "type": "*string",
-          "omitEmpty": true
+          "name": "username",
+          "type": "string",
+          "omitEmpty": false
         },
         {
-          "name": "score",
-          "type": "*int",
-          "omitEmpty": true
+          "name": "password",
+          "type": "string",
+          "omitEmpty": false
         },
         {
-          "name": "episode",
-          "type": "*int",
-          "omitEmpty": true
-        },
-        {
-          "name": "rewatchCount",
-          "type": "*int",
-          "omitEmpty": true
-        },
-        {
-          "name": "isRewatching",
-          "type": "*bool",
-          "omitEmpty": true
+          "name": "passwordConfirm",
+          "type": "string",
+          "omitEmpty": false
         }
       ]
     },
     {
-      "name": "Signin",
+      "name": "CreateApiToken",
       "fields": [
         {
           "name": "token",
@@ -477,7 +477,7 @@
       ]
     },
     {
-      "name": "AnimeStudio",
+      "name": "AnimeTag",
       "fields": [
         {
           "name": "slug",
@@ -492,56 +492,81 @@
       ]
     },
     {
-      "name": "AnimeUser",
-      "fields": [
-        {
-          "name": "list",
-          "type": "*string",
-          "omitEmpty": false
-        },
-        {
-          "name": "score",
-          "type": "*int",
-          "omitEmpty": false
-        },
-        {
-          "name": "episode",
-          "type": "*int",
-          "omitEmpty": false
-        },
-        {
-          "name": "rewatchCount",
-          "type": "*int",
-          "omitEmpty": false
-        },
-        {
-          "name": "isRewatching",
-          "type": "bool",
-          "omitEmpty": false
-        }
-      ]
-    },
-    {
-      "name": "GetMe",
+      "name": "CreateAnime",
       "fields": [
         {
           "name": "id",
           "type": "string",
           "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "SetAnimeUserData",
+      "fields": [
+        {
+          "name": "list",
+          "type": "*string",
+          "omitEmpty": true
         },
         {
-          "name": "username",
+          "name": "score",
+          "type": "*int",
+          "omitEmpty": true
+        },
+        {
+          "name": "episode",
+          "type": "*int",
+          "omitEmpty": true
+        },
+        {
+          "name": "rewatchCount",
+          "type": "*int",
+          "omitEmpty": true
+        },
+        {
+          "name": "isRewatching",
+          "type": "*bool",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "Signin",
+      "fields": [
+        {
+          "name": "token",
           "type": "string",
           "omitEmpty": false
-        },
+        }
+      ]
+    },
+    {
+      "name": "StartDownloadBody",
+      "fields": [
         {
-          "name": "role",
+          "name": "ids",
+          "type": "[]string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "CreateApiTokenBody",
+      "fields": [
+        {
+          "name": "name",
           "type": "string",
           "omitEmpty": false
-        },
+        }
+      ]
+    },
+    {
+      "name": "GetAllApiTokens",
+      "fields": [
         {
-          "name": "displayName",
-          "type": "string",
+          "name": "tokens",
+          "type": "[]ApiToken",
           "omitEmpty": false
         }
       ]
@@ -613,21 +638,6 @@
     },
     {
       "type": "api",
-      "name": "ImportMalList",
-      "method": "POST",
-      "path": "/api/v1/user/import/mal",
-      "body": "ImportMalListBody"
-    },
-    {
-      "type": "api",
-      "name": "ImportMalAnime",
-      "method": "POST",
-      "path": "/api/v1/user/import/mal/anime",
-      "response": "ImportMalAnime",
-      "body": "ImportMalAnimeBody"
-    },
-    {
-      "type": "api",
       "name": "CreateApiToken",
       "method": "POST",
       "path": "/api/v1/user/apitoken",
@@ -660,6 +670,14 @@
       "method": "GET",
       "path": "/api/v1/animes/:id",
       "response": "GetAnimeById"
+    },
+    {
+      "type": "api",
+      "name": "CreateAnime",
+      "method": "POST",
+      "path": "/api/v1/animes",
+      "response": "CreateAnime",
+      "body": "CreateAnimeBody"
     },
     {
       "type": "api",

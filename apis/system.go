@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
-	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -12,7 +11,6 @@ import (
 	"io"
 	"mime"
 	"net/http"
-	"net/url"
 	"os"
 	"path"
 	"sync"
@@ -26,7 +24,6 @@ import (
 	"github.com/nanoteck137/watchbook/downloader"
 	"github.com/nanoteck137/watchbook/mal"
 	"github.com/nanoteck137/watchbook/types"
-	"github.com/nanoteck137/watchbook/utils"
 	"golang.org/x/time/rate"
 )
 
@@ -116,265 +113,265 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 	return nil
 }
 
-func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir types.WorkDir, animeId string) error {
-	anime, err := db.GetAnimeById(ctx, nil, animeId)
-	if err != nil {
-		return err
-	}
-
-	if !anime.MalId.Valid {
-		return nil
-	}
-
-	malId := anime.MalId.String
-
-	fmt.Printf("Updating %s (%s) - %s\n", anime.Title, malId, anime.Id)
-
-	animeData, err := mal.FetchAnimeData(dl, malId, true)
-	if err != nil {
-		return err
-	}
-
-	hasCover := false
-	for _, image := range anime.Images.Data {
-		if image.IsCover > 0 {
-			hasCover = true
-			break
-		}
-	}
-
-	for _, url := range animeData.Pictures {
-		err := downloadImage(ctx, db, workDir, anime.Id, url, false)
-		if err != nil {
-			logger.Error("failed to download image", "err", err, "animeId", anime.Id)
-			continue
-		}
-	}
-
-	if !hasCover {
-		err := downloadImage(ctx, db, workDir, anime.Id, animeData.CoverImageUrl, true)
-		if err != nil {
-			logger.Error("failed to download image", "err", err, "animeId", anime.Id)
-		}
-	}
-
-	// TODO(patrik): Add some sanitization
-	for _, theme := range animeData.Themes {
-		err := db.CreateTag(ctx, utils.Slug(theme), theme)
-		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-			return err
-		}
-	}
-
-	// TODO(patrik): Add some sanitization
-	for _, genre := range animeData.Genres {
-		err := db.CreateTag(ctx, utils.Slug(genre), genre)
-		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-			return err
-		}
-	}
-
-	// TODO(patrik): Add some sanitization
-	for _, demographic := range animeData.Demographics {
-		err := db.CreateTag(ctx, utils.Slug(demographic), demographic)
-		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-			return err
-		}
-	}
-
-	// TODO(patrik): Add some sanitization
-	for _, studio := range animeData.Studios {
-		err := db.CreateStudio(ctx, utils.Slug(studio), studio)
-		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-			return err
-		}
-	}
-
-	airingSeasonSlug := utils.Slug(animeData.Premiered)
-	if airingSeasonSlug != "" {
-		err = db.CreateTag(ctx, airingSeasonSlug, animeData.Premiered)
-		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-			return err
-		}
-	}
-
-	animeType := mal.ConvertAnimeType(animeData.Type)
-	animeStatus := mal.ConvertAnimeStatus(animeData.Status)
-	animeRating := mal.ConvertAnimeRating(animeData.Rating)
-
-	aniDbId := ""
-	animeNewsNetworkId := ""
-
-	if u, err := url.Parse(animeData.AniDBUrl); err == nil {
-		aniDbId = u.Query().Get("aid")
-	}
-
-	if u, err := url.Parse(animeData.AnimeNewsNetworkUrl); err == nil {
-		animeNewsNetworkId = u.Query().Get("id")
-	}
-
-	err = db.UpdateAnime(ctx, animeId, database.AnimeChanges{
-		AniDbId: database.Change[sql.NullString]{
-			Value: sql.NullString{
-				String: aniDbId,
-				Valid:  aniDbId != "",
-			},
-			Changed: aniDbId != anime.AniDbId.String,
-		},
-
-		AnimeNewsNetworkId: database.Change[sql.NullString]{
-			Value: sql.NullString{
-				String: animeNewsNetworkId,
-				Valid:  animeNewsNetworkId != "",
-			},
-			Changed: animeNewsNetworkId != anime.AnimeNewsNetworkId.String,
-		},
-
-		Title: database.Change[string]{
-			Value:   animeData.Title,
-			Changed: animeData.Title != anime.Title,
-		},
-
-		TitleEnglish: database.Change[sql.NullString]{
-			Value: sql.NullString{
-				String: animeData.TitleEnglish,
-				Valid:  animeData.TitleEnglish != "",
-			},
-			Changed: animeData.TitleEnglish != anime.TitleEnglish.String,
-		},
-
-		Description: database.Change[sql.NullString]{
-			Value: sql.NullString{
-				String: animeData.Description,
-				Valid:  animeData.Description != "",
-			},
-			Changed: animeData.Description != anime.Description.String,
-		},
-
-		Type: database.Change[types.AnimeType]{
-			Value:   animeType,
-			Changed: animeType != anime.Type,
-		},
-
-		Status: database.Change[types.AnimeStatus]{
-			Value:   animeStatus,
-			Changed: animeStatus != anime.Status,
-		},
-
-		Rating: database.Change[types.AnimeRating]{
-			Value:   animeRating,
-			Changed: animeRating != anime.Rating,
-		},
-
-		AiringSeason: database.Change[sql.NullString]{
-			Value: sql.NullString{
-				String: airingSeasonSlug,
-				Valid:  airingSeasonSlug != "",
-			},
-			Changed: true,
-		},
-
-		EpisodeCount: database.Change[sql.NullInt64]{
-			Value: sql.NullInt64{
-				Int64: utils.NullToDefault(animeData.EpisodeCount),
-				Valid: animeData.EpisodeCount != nil,
-			},
-			Changed: true,
-		},
-
-		StartDate: database.Change[sql.NullString]{
-			Value: sql.NullString{
-				String: utils.NullToDefault(animeData.StartDate),
-				Valid:  animeData.StartDate != nil,
-			},
-			Changed: true,
-		},
-
-		EndDate: database.Change[sql.NullString]{
-			Value: sql.NullString{
-				String: utils.NullToDefault(animeData.EndDate),
-				Valid:  animeData.EndDate != nil,
-			},
-			Changed: true,
-		},
-
-		Score: database.Change[sql.NullFloat64]{
-			Value: sql.NullFloat64{
-				Float64: utils.NullToDefault(animeData.Score),
-				Valid:   animeData.Score != nil,
-			},
-			Changed: true,
-		},
-
-		LastDataFetch: database.Change[sql.NullInt64]{
-			Value: sql.NullInt64{
-				Int64: time.Now().UnixMilli(),
-				Valid: true,
-			},
-			Changed: true,
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	err = db.DeleteAllAnimeThemeSongs(ctx, anime.Id)
-	if err != nil {
-		return err
-	}
-
-	for i, themeSong := range animeData.ThemeSongs {
-		err := db.CreateAnimeThemeSong(ctx, database.CreateAnimeThemeSongParams{
-			AnimeId: animeId,
-			Idx:     i,
-			Raw:     themeSong.Raw,
-			Type:    mal.ConvertThemeSongType(themeSong.Type),
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, theme := range animeData.Themes {
-		err := db.AddTagToAnime(ctx, animeId, utils.Slug(theme))
-		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-			return err
-		}
-	}
-
-	err = db.RemoveAllTagsFromAnime(ctx, animeId)
-	if err != nil {
-		return err
-	}
-
-	err = db.RemoveAllStudiosFromAnime(ctx, animeId)
-	if err != nil {
-		return err
-	}
-
-	for _, genre := range animeData.Genres {
-		err := db.AddTagToAnime(ctx, animeId, utils.Slug(genre))
-		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-			return err
-		}
-	}
-
-	for _, demographic := range animeData.Demographics {
-		err := db.AddTagToAnime(ctx, animeId, utils.Slug(demographic))
-		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-			return err
-		}
-	}
-
-	for _, studio := range animeData.Studios {
-		err := db.AddStudioToAnime(ctx, animeId, utils.Slug(studio))
-		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-			return err
-		}
-	}
-
-	return nil
-}
+// func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir types.WorkDir, animeId string) error {
+// 	anime, err := db.GetAnimeById(ctx, nil, animeId)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	if !anime.MalId.Valid {
+// 		return nil
+// 	}
+//
+// 	malId := anime.MalId.String
+//
+// 	fmt.Printf("Updating %s (%s) - %s\n", anime.Title, malId, anime.Id)
+//
+// 	animeData, err := mal.FetchAnimeData(dl, malId, true)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	hasCover := false
+// 	for _, image := range anime.Images.Data {
+// 		if image.IsCover > 0 {
+// 			hasCover = true
+// 			break
+// 		}
+// 	}
+//
+// 	for _, url := range animeData.Pictures {
+// 		err := downloadImage(ctx, db, workDir, anime.Id, url, false)
+// 		if err != nil {
+// 			logger.Error("failed to download image", "err", err, "animeId", anime.Id)
+// 			continue
+// 		}
+// 	}
+//
+// 	if !hasCover {
+// 		err := downloadImage(ctx, db, workDir, anime.Id, animeData.CoverImageUrl, true)
+// 		if err != nil {
+// 			logger.Error("failed to download image", "err", err, "animeId", anime.Id)
+// 		}
+// 	}
+//
+// 	// TODO(patrik): Add some sanitization
+// 	for _, theme := range animeData.Themes {
+// 		err := db.CreateTag(ctx, utils.Slug(theme), theme)
+// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+// 			return err
+// 		}
+// 	}
+//
+// 	// TODO(patrik): Add some sanitization
+// 	for _, genre := range animeData.Genres {
+// 		err := db.CreateTag(ctx, utils.Slug(genre), genre)
+// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+// 			return err
+// 		}
+// 	}
+//
+// 	// TODO(patrik): Add some sanitization
+// 	for _, demographic := range animeData.Demographics {
+// 		err := db.CreateTag(ctx, utils.Slug(demographic), demographic)
+// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+// 			return err
+// 		}
+// 	}
+//
+// 	// TODO(patrik): Add some sanitization
+// 	for _, studio := range animeData.Studios {
+// 		err := db.CreateStudio(ctx, utils.Slug(studio), studio)
+// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+// 			return err
+// 		}
+// 	}
+//
+// 	airingSeasonSlug := utils.Slug(animeData.Premiered)
+// 	if airingSeasonSlug != "" {
+// 		err = db.CreateTag(ctx, airingSeasonSlug, animeData.Premiered)
+// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+// 			return err
+// 		}
+// 	}
+//
+// 	animeType := mal.ConvertAnimeType(animeData.Type)
+// 	animeStatus := mal.ConvertAnimeStatus(animeData.Status)
+// 	animeRating := mal.ConvertAnimeRating(animeData.Rating)
+//
+// 	aniDbId := ""
+// 	animeNewsNetworkId := ""
+//
+// 	if u, err := url.Parse(animeData.AniDBUrl); err == nil {
+// 		aniDbId = u.Query().Get("aid")
+// 	}
+//
+// 	if u, err := url.Parse(animeData.AnimeNewsNetworkUrl); err == nil {
+// 		animeNewsNetworkId = u.Query().Get("id")
+// 	}
+//
+// 	err = db.UpdateAnime(ctx, animeId, database.AnimeChanges{
+// 		AniDbId: database.Change[sql.NullString]{
+// 			Value: sql.NullString{
+// 				String: aniDbId,
+// 				Valid:  aniDbId != "",
+// 			},
+// 			Changed: aniDbId != anime.AniDbId.String,
+// 		},
+//
+// 		AnimeNewsNetworkId: database.Change[sql.NullString]{
+// 			Value: sql.NullString{
+// 				String: animeNewsNetworkId,
+// 				Valid:  animeNewsNetworkId != "",
+// 			},
+// 			Changed: animeNewsNetworkId != anime.AnimeNewsNetworkId.String,
+// 		},
+//
+// 		Title: database.Change[string]{
+// 			Value:   animeData.Title,
+// 			Changed: animeData.Title != anime.Title,
+// 		},
+//
+// 		TitleEnglish: database.Change[sql.NullString]{
+// 			Value: sql.NullString{
+// 				String: animeData.TitleEnglish,
+// 				Valid:  animeData.TitleEnglish != "",
+// 			},
+// 			Changed: animeData.TitleEnglish != anime.TitleEnglish.String,
+// 		},
+//
+// 		Description: database.Change[sql.NullString]{
+// 			Value: sql.NullString{
+// 				String: animeData.Description,
+// 				Valid:  animeData.Description != "",
+// 			},
+// 			Changed: animeData.Description != anime.Description.String,
+// 		},
+//
+// 		Type: database.Change[types.AnimeType]{
+// 			Value:   animeType,
+// 			Changed: animeType != anime.Type,
+// 		},
+//
+// 		Status: database.Change[types.AnimeStatus]{
+// 			Value:   animeStatus,
+// 			Changed: animeStatus != anime.Status,
+// 		},
+//
+// 		Rating: database.Change[types.AnimeRating]{
+// 			Value:   animeRating,
+// 			Changed: animeRating != anime.Rating,
+// 		},
+//
+// 		AiringSeason: database.Change[sql.NullString]{
+// 			Value: sql.NullString{
+// 				String: airingSeasonSlug,
+// 				Valid:  airingSeasonSlug != "",
+// 			},
+// 			Changed: true,
+// 		},
+//
+// 		EpisodeCount: database.Change[sql.NullInt64]{
+// 			Value: sql.NullInt64{
+// 				Int64: utils.NullToDefault(animeData.EpisodeCount),
+// 				Valid: animeData.EpisodeCount != nil,
+// 			},
+// 			Changed: true,
+// 		},
+//
+// 		StartDate: database.Change[sql.NullString]{
+// 			Value: sql.NullString{
+// 				String: utils.NullToDefault(animeData.StartDate),
+// 				Valid:  animeData.StartDate != nil,
+// 			},
+// 			Changed: true,
+// 		},
+//
+// 		EndDate: database.Change[sql.NullString]{
+// 			Value: sql.NullString{
+// 				String: utils.NullToDefault(animeData.EndDate),
+// 				Valid:  animeData.EndDate != nil,
+// 			},
+// 			Changed: true,
+// 		},
+//
+// 		Score: database.Change[sql.NullFloat64]{
+// 			Value: sql.NullFloat64{
+// 				Float64: utils.NullToDefault(animeData.Score),
+// 				Valid:   animeData.Score != nil,
+// 			},
+// 			Changed: true,
+// 		},
+//
+// 		LastDataFetch: database.Change[sql.NullInt64]{
+// 			Value: sql.NullInt64{
+// 				Int64: time.Now().UnixMilli(),
+// 				Valid: true,
+// 			},
+// 			Changed: true,
+// 		},
+// 	})
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	err = db.DeleteAllAnimeThemeSongs(ctx, anime.Id)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	for i, themeSong := range animeData.ThemeSongs {
+// 		err := db.CreateAnimeThemeSong(ctx, database.CreateAnimeThemeSongParams{
+// 			AnimeId: animeId,
+// 			Idx:     i,
+// 			Raw:     themeSong.Raw,
+// 			Type:    mal.ConvertThemeSongType(themeSong.Type),
+// 		})
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+//
+// 	for _, theme := range animeData.Themes {
+// 		err := db.AddTagToAnime(ctx, animeId, utils.Slug(theme))
+// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+// 			return err
+// 		}
+// 	}
+//
+// 	err = db.RemoveAllTagsFromAnime(ctx, animeId)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	err = db.RemoveAllStudiosFromAnime(ctx, animeId)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	for _, genre := range animeData.Genres {
+// 		err := db.AddTagToAnime(ctx, animeId, utils.Slug(genre))
+// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+// 			return err
+// 		}
+// 	}
+//
+// 	for _, demographic := range animeData.Demographics {
+// 		err := db.AddTagToAnime(ctx, animeId, utils.Slug(demographic))
+// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+// 			return err
+// 		}
+// 	}
+//
+// 	for _, studio := range animeData.Studios {
+// 		err := db.AddStudioToAnime(ctx, animeId, utils.Slug(studio))
+// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+// 			return err
+// 		}
+// 	}
+//
+// 	return nil
+// }
 
 type Event struct {
 	Type string `json:"type"`
@@ -502,15 +499,17 @@ func (d *DownloadHandler) download(app core.App, animeIds []string) error {
 	d.isDownloading.Store(true)
 	defer d.isDownloading.Store(false)
 
-	ctx := context.TODO()
-
-	db := app.DB()
-	workDir := app.WorkDir()
+	// ctx := context.TODO()
+	//
+	// db := app.DB()
+	// workDir := app.WorkDir()
 
 	d.updateStatus(0, len(animeIds))
 	d.sendStatusEvent()
 
 	for i, id := range animeIds {
+		_ = id
+
 		if d.downloadCanceled.Load() {
 			return fmt.Errorf("download canceled")
 		}
@@ -518,10 +517,10 @@ func (d *DownloadHandler) download(app core.App, animeIds []string) error {
 		d.updateStatus(i+1, len(animeIds))
 		d.sendStatusEvent()
 
-		err := fetchAndUpdateAnime(ctx, db, workDir, id)
-		if err != nil {
-			return fmt.Errorf("failed to download anime (%s): %w", id, err)
-		}
+		// err := fetchAndUpdateAnime(ctx, db, workDir, id)
+		// if err != nil {
+		// 	return fmt.Errorf("failed to download anime (%s): %w", id, err)
+		// }
 	}
 
 	return nil

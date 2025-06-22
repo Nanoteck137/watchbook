@@ -1,29 +1,23 @@
 -- +goose Up
 CREATE TABLE animes (
     id TEXT PRIMARY KEY,
+    type TEXT NOT NULL,
 
-    download_type TEXT NOT NULL CHECK(download_type<>''),
+    tmdb_id TEXT,
     mal_id TEXT,
-    ani_db_id TEXT,
     anilist_id TEXT,
-    anime_news_network_id TEXT,
 
 	title TEXT NOT NULL CHECK(title<>''),
-	title_english TEXT,
-
     description TEXT,
 
-	type TEXT NOT NULL,
 	score FLOAT,
 	status TEXT NOT NULL,
     rating TEXT NOT NULL,
-	episode_count INTEGER,
-    airing_season TEXT REFERENCES tags(slug) ON DELETE SET NULL,
+	-- episode_count INTEGER,
+    -- airing_season TEXT REFERENCES tags(slug) ON DELETE SET NULL,
 
 	start_date TEXT, 
     end_date TEXT,
-
-	last_data_fetch INTEGER,
 
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL
@@ -79,7 +73,19 @@ CREATE TABLE anime_user_data (
     PRIMARY KEY(anime_id, user_id)
 );
 
+CREATE TABLE anime_episodes (
+    id TEXT PRIMARY KEY,
+    anime_id TEXT NOT NULL REFERENCES animes(id) ON DELETE CASCADE,
+
+    name TEXT NOT NULL,
+    idx INTEGER NOT NULL,
+
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL
+);
+
 -- +goose Down
+DROP TABLE anime_episodes;
 DROP TABLE anime_user_data;
 DROP TABLE anime_studios;
 DROP TABLE anime_tags;

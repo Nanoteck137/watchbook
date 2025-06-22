@@ -7,30 +7,30 @@ import (
 )
 
 func ConvertAnimeType(typ string) types.AnimeType {
-	switch typ {
-	case "TV":
-		return types.AnimeTypeTV
-	case "OVA":
-		return types.AnimeTypeOVA
-	case "Movie":
-		return types.AnimeTypeMovie
-	case "Special":
-		return types.AnimeTypeSpecial
-	case "ONA":
-		return types.AnimeTypeONA
-	case "Music":
-		return types.AnimeTypeMusic
-	case "CM":
-		return types.AnimeTypeCM
-	case "PV":
-		return types.AnimeTypePV
-	case "TV Special":
-		return types.AnimeTypeTVSpecial
-	case "":
-	default:
-		// TODO(patrik): Better logging
-		fmt.Printf("WARN: Unknown anime type \"%s\"\n", typ)
-	}
+	// switch typ {
+	// case "TV":
+	// 	return types.AnimeTypeTV
+	// case "OVA":
+	// 	return types.AnimeTypeOVA
+	// case "Movie":
+	// 	return types.AnimeTypeMovie
+	// case "Special":
+	// 	return types.AnimeTypeSpecial
+	// case "ONA":
+	// 	return types.AnimeTypeONA
+	// case "Music":
+	// 	return types.AnimeTypeMusic
+	// case "CM":
+	// 	return types.AnimeTypeCM
+	// case "PV":
+	// 	return types.AnimeTypePV
+	// case "TV Special":
+	// 	return types.AnimeTypeTVSpecial
+	// case "":
+	// default:
+	// 	// TODO(patrik): Better logging
+	// 	fmt.Printf("WARN: Unknown anime type \"%s\"\n", typ)
+	// }
 
 	return types.AnimeTypeUnknown
 }

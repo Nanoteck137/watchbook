@@ -10,6 +10,8 @@ import (
 	"strconv"
 
 	"github.com/nanoteck137/pyrin"
+	"github.com/nanoteck137/pyrin/tools/transform"
+	"github.com/nanoteck137/validate"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
 	"github.com/nanoteck137/watchbook/types"
@@ -102,80 +104,80 @@ func getPageOptions(q url.Values) database.FetchOptions {
 func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
 	// TODO(patrik): Add default cover for animes without covers
 	coverUrl := ""
-	for _, image := range anime.Images.Data {
-		if image.IsCover > 0 {
-			coverUrl = ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, image.Filename))
-			break
-		}
-	}
+	// for _, image := range anime.Images.Data {
+	// 	if image.IsCover > 0 {
+	// 		coverUrl = ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, image.Filename))
+	// 		break
+	// 	}
+	// }
 
-	images := []AnimeImage{}
-	for _, image := range anime.Images.Data {
-		url := ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, image.Filename))
+	// images := []AnimeImage{}
+	// for _, image := range anime.Images.Data {
+	// 	url := ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, image.Filename))
+	//
+	// 	images = append(images, AnimeImage{
+	// 		Hash:    image.Hash,
+	// 		Url:     url,
+	// 		IsCover: image.IsCover > 0,
+	// 	})
+	// }
 
-		images = append(images, AnimeImage{
-			Hash:    image.Hash,
-			Url:     url,
-			IsCover: image.IsCover > 0,
-		})
-	}
+	// studios := make([]AnimeStudio, len(anime.Studios.Data))
+	// for i, studio := range anime.Studios.Data {
+	// 	studios[i] = AnimeStudio{
+	// 		Slug: studio.Slug,
+	// 		Name: studio.Name,
+	// 	}
+	// }
 
-	studios := make([]AnimeStudio, len(anime.Studios.Data))
-	for i, studio := range anime.Studios.Data {
-		studios[i] = AnimeStudio{
-			Slug: studio.Slug,
-			Name: studio.Name,
-		}
-	}
+	// tags := make([]AnimeTag, len(anime.Tags.Data))
+	// for i, tag := range anime.Tags.Data {
+	// 	tags[i] = AnimeTag{
+	// 		Slug: tag.Slug,
+	// 		Name: tag.Name,
+	// 	}
+	// }
 
-	tags := make([]AnimeTag, len(anime.Tags.Data))
-	for i, tag := range anime.Tags.Data {
-		tags[i] = AnimeTag{
-			Slug: tag.Slug,
-			Name: tag.Name,
-		}
-	}
+	// var user *AnimeUser
+	// if hasUser {
+	// 	user = &AnimeUser{}
+	//
+	// 	if anime.UserData.Valid {
+	// 		val := anime.UserData.Data
+	// 		user.List = val.List
+	// 		user.Episode = val.Episode
+	// 		user.RewatchCount = val.RewatchCount
+	// 		user.Score = val.Score
+	// 		user.IsRewatching = val.IsRewatching > 0
+	// 	}
+	// }
 
-	var user *AnimeUser
-	if hasUser {
-		user = &AnimeUser{}
-
-		if anime.UserData.Valid {
-			val := anime.UserData.Data
-			user.List = val.List
-			user.Episode = val.Episode
-			user.RewatchCount = val.RewatchCount
-			user.Score = val.Score
-			user.IsRewatching = val.IsRewatching > 0
-		}
-	}
-
-	var airingSeason *AnimeTag
-	if anime.AiringSeason.Valid {
-		airingSeason = &AnimeTag{
-			Slug: anime.AiringSeason.Data.Slug,
-			Name: anime.AiringSeason.Data.Name,
-		}
-	}
+	// var airingSeason *AnimeTag
+	// if anime.AiringSeason.Valid {
+	// 	airingSeason = &AnimeTag{
+	// 		Slug: anime.AiringSeason.Data.Slug,
+	// 		Name: anime.AiringSeason.Data.Name,
+	// 	}
+	// }
 
 	return Anime{
 		Id:           anime.Id,
 		Title:        anime.Title,
 		TitleEnglish: utils.SqlNullToStringPtr(anime.TitleEnglish),
 		Description:  utils.SqlNullToStringPtr(anime.Description),
-		Type:         anime.Type,
-		Status:       anime.Status,
-		Rating:       anime.Rating,
-		AiringSeason: airingSeason,
-		EpisodeCount: utils.SqlNullToInt64Ptr(anime.EpisodeCount),
-		Score:        utils.SqlNullToFloat64Ptr(anime.Score),
-		StartDate:    utils.SqlNullToStringPtr(anime.StartDate),
-		EndDate:      utils.SqlNullToStringPtr(anime.EndDate),
-		Studios:      studios,
-		Tags:         tags,
-		CoverUrl:     coverUrl,
-		Images:       images,
-		User:         user,
+		// Type:         anime.Type,
+		Status: anime.Status,
+		Rating: anime.Rating,
+		// AiringSeason: airingSeason,
+		// EpisodeCount: utils.SqlNullToInt64Ptr(anime.EpisodeCount),
+		Score:     utils.SqlNullToFloat64Ptr(anime.Score),
+		StartDate: utils.SqlNullToStringPtr(anime.StartDate),
+		EndDate:   utils.SqlNullToStringPtr(anime.EndDate),
+		// Studios:      studios,
+		// Tags:         tags,
+		CoverUrl: coverUrl,
+		// Images:       images,
+		// User:         user,
 	}
 }
 
@@ -191,6 +193,86 @@ func (b *SetAnimeUserData) Transform() {
 	if b.Score != nil {
 		*b.Score = utils.Clamp(*b.Score, 0, 10)
 	}
+}
+
+type CreateAnime struct {
+	Id string `json:"id"`
+}
+
+type CreateAnimeBody struct {
+	Type string `json:"type"`
+
+	TmdbId    string `json:"tmdbId"`
+	MalId     string `json:"malId"`
+	AnilistId string `json:"anilistId"`
+
+	Title       string `json:"title"`
+	Description string `json:"description"`
+
+	Score  float64 `json:"score"`
+	Status string  `json:"status"`
+	Rating string  `json:"rating"`
+
+	EpisodeCount int `json:"episodeCount"`
+}
+
+func (b *CreateAnimeBody) Transform() {
+	b.TmdbId = transform.String(b.TmdbId)
+	b.MalId = transform.String(b.MalId)
+	b.AnilistId = transform.String(b.AnilistId)
+
+	b.Title = transform.String(b.Title)
+	b.Description = transform.String(b.Description)
+
+	b.Score = utils.Clamp(b.Score, 0.0, 10.0)
+
+	b.EpisodeCount = utils.Min(b.EpisodeCount, 0)
+}
+
+func (b CreateAnimeBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.Type, validate.Required, validate.By(types.ValidateAnimeType)),
+
+		validate.Field(&b.Status, validate.By(types.ValidateAnimeStatus)),
+		validate.Field(&b.Rating, validate.By(types.ValidateAnimeRating)),
+	)
+}
+
+type EditAnimeBody struct {
+	Type *string `json:"type,omitempty"`
+
+	TmdbId    *string `json:"tmdbId,omitempty"`
+	MalId     *string `json:"malId,omitempty"`
+	AnilistId *string `json:"anilistId,omitempty"`
+
+	Title       *string `json:"title,omitempty"`
+	Description *string `json:"description,omitempty"`
+
+	Score  *float64 `json:"score,omitempty"`
+	Status *string  `json:"status,omitempty"`
+	Rating *string  `json:"rating,omitempty"`
+}
+
+func (b *EditAnimeBody) Transform() {
+	b.TmdbId = transform.StringPtr(b.TmdbId)
+	b.MalId = transform.StringPtr(b.MalId)
+	b.AnilistId = transform.StringPtr(b.AnilistId)
+
+	b.Title = transform.StringPtr(b.Title)
+	b.Description = transform.StringPtr(b.Description)
+
+	if b.Score != nil {
+		*b.Score = utils.Clamp(*b.Score, 0.0, 10.0)
+	}
+}
+
+func (b EditAnimeBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.Type, validate.Required.When(b.Type != nil), validate.By(types.ValidateAnimeType)),
+
+		validate.Field(&b.Status, validate.Required.When(b.Status != nil), validate.By(types.ValidateAnimeStatus)),
+		validate.Field(&b.Rating, validate.Required.When(b.Rating != nil), validate.By(types.ValidateAnimeRating)),
+	)
 }
 
 func InstallAnimeHandlers(app core.App, group pyrin.Group) {
@@ -256,6 +338,200 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 				return GetAnimeById{
 					Anime: ConvertDBAnime(c, userId != nil, anime),
 				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "CreateAnime",
+			Method:       http.MethodPost,
+			Path:         "/animes",
+			ResponseType: CreateAnime{},
+			BodyType:     CreateAnimeBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				body, err := pyrin.Body[CreateAnimeBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				ty := types.AnimeType(body.Type)
+
+				id, err := app.DB().CreateAnime(ctx, database.CreateAnimeParams{
+					Type: ty,
+					TmdbId: sql.NullString{
+						String: body.TmdbId,
+						Valid:  body.TmdbId != "",
+					},
+					MalId: sql.NullString{
+						String: body.MalId,
+						Valid:  body.MalId != "",
+					},
+					AnilistId: sql.NullString{
+						String: body.AnilistId,
+						Valid:  body.AnilistId != "",
+					},
+					Title: body.Title,
+					Description: sql.NullString{
+						String: body.Description,
+						Valid:  body.Description != "",
+					},
+					Score: sql.NullFloat64{
+						Float64: body.Score,
+						Valid:   body.Score != 0.0,
+					},
+					Status: types.AnimeStatus(body.Status),
+					Rating: types.AnimeRating(body.Rating),
+					// StartDate: sql.NullString{},
+					// EndDate:   sql.NullString{},
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				if ty.IsMovie() {
+					_, err := app.DB().CreateAnimeEpisode(ctx, database.CreateAnimeEpisodeParams{
+						AnimeId: id,
+						Name:    body.Title,
+						Index:   1,
+					})
+					if err != nil {
+						return nil, err
+					}
+				} else {
+					for i := range body.EpisodeCount {
+						_, err := app.DB().CreateAnimeEpisode(ctx, database.CreateAnimeEpisodeParams{
+							AnimeId: id,
+							Name:    fmt.Sprintf("Episode %d", i+1),
+							Index:   int64(i + 1),
+						})
+						if err != nil {
+							return nil, err
+						}
+					}
+				}
+
+				return CreateAnime{
+					Id: id,
+				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "EditAnime",
+			Method:       http.MethodPatch,
+			Path:         "/animes/:id",
+			ResponseType: nil,
+			BodyType:     EditAnimeBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				body, err := pyrin.Body[EditAnimeBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, AnimeNotFound()
+					}
+
+					return nil, err
+				}
+
+				changes := database.AnimeChanges{}
+
+				if body.Type != nil {
+					t := types.AnimeType(*body.Type)
+
+					changes.Type = database.Change[types.AnimeType]{
+						Value:   t,
+						Changed: t != dbAnime.Type,
+					}
+				}
+
+				if body.TmdbId != nil {
+					changes.TmdbId = database.Change[sql.NullString]{
+						Value:   sql.NullString{
+							String: *body.TmdbId,
+							Valid:  *body.TmdbId != "",
+						},
+						Changed: *body.TmdbId != dbAnime.TmdbId.String,
+					}
+				}
+
+				if body.MalId != nil {
+					changes.MalId = database.Change[sql.NullString]{
+						Value:   sql.NullString{
+							String: *body.MalId,
+							Valid:  *body.MalId != "",
+						},
+						Changed: *body.MalId != dbAnime.MalId.String,
+					}
+				}
+
+				if body.AnilistId != nil {
+					changes.AnilistId = database.Change[sql.NullString]{
+						Value:   sql.NullString{
+							String: *body.AnilistId,
+							Valid:  *body.AnilistId != "",
+						},
+						Changed: *body.AnilistId != dbAnime.AnilistId.String,
+					}
+				}
+
+				if body.Title != nil {
+					changes.Title = database.Change[string]{
+						Value:   *body.Title,
+						Changed: *body.Title != dbAnime.Title,
+					}
+				}
+
+				if body.Description != nil {
+					changes.Description = database.Change[sql.NullString]{
+						Value:   sql.NullString{
+							String: *body.Description,
+							Valid:  *body.Description != "",
+						},
+						Changed: *body.Description != dbAnime.Description.String,
+					} 
+				}
+
+				if body.Score != nil {
+					changes.Score = database.Change[sql.NullFloat64]{
+						Value:   sql.NullFloat64{
+							Float64: *body.Score,
+							Valid:   *body.Score != 0.0,
+						},
+						Changed: *body.Score != dbAnime.Score.Float64,
+					} 
+				}
+
+				if body.Status != nil {
+					s := types.AnimeStatus(*body.Status)
+					changes.Status = database.Change[types.AnimeStatus]{
+						Value:   s,
+						Changed: s != dbAnime.Status,
+					} 
+				}
+
+				if body.Rating != nil {
+					r := types.AnimeRating(*body.Rating)
+					changes.Rating = database.Change[types.AnimeRating]{
+						Value:   r,
+						Changed: r != dbAnime.Rating,
+					} 
+				}
+
+				err = app.DB().UpdateAnime(ctx, dbAnime.Id, changes)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
 			},
 		},
 

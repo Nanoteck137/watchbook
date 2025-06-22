@@ -89,32 +89,24 @@ type AnimeImageJson struct {
 type Anime struct {
 	RowId int `db:"rowid"`
 
-	Id string `db:"id"`
+	Id   string          `db:"id"`
+	Type types.AnimeType `db:"type"`
 
-	DownloadType       types.AnimeDownloadType `db:"download_type"`
-	MalId              sql.NullString          `db:"mal_id"`
-	AniDbId            sql.NullString          `db:"ani_db_id"`
-	AnilistId          sql.NullString          `db:"anilist_id"`
-	AnimeNewsNetworkId sql.NullString          `db:"anime_news_network_id"`
+	TmdbId    sql.NullString `db:"tmdb_id"`
+	MalId     sql.NullString `db:"mal_id"`
+	AnilistId sql.NullString `db:"anilist_id"`
 
 	Title        string         `db:"title"`
 	TitleEnglish sql.NullString `db:"title_english"`
 
 	Description sql.NullString `db:"description"`
 
-	Type         types.AnimeType      `db:"type"`
-	Score        sql.NullFloat64      `db:"score"`
-	Status       types.AnimeStatus    `db:"status"`
-	Rating       types.AnimeRating    `db:"rating"`
-	EpisodeCount sql.NullInt64        `db:"episode_count"`
-	AiringSeason JsonColumn[AnimeTag] `db:"airing_season"`
+	Score  sql.NullFloat64   `db:"score"`
+	Status types.AnimeStatus `db:"status"`
+	Rating types.AnimeRating `db:"rating"`
 
 	StartDate sql.NullString `db:"start_date"`
 	EndDate   sql.NullString `db:"end_date"`
-
-	CoverFilename sql.NullString `db:"cover_filename"`
-
-	LastDataFetch sql.NullInt64 `db:"last_data_fetch"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -263,71 +255,63 @@ func AnimeUserDataQuery(userId *string) *goqu.SelectDataset {
 
 // TODO(patrik): Use goqu.T more
 func AnimeQuery(userId *string) *goqu.SelectDataset {
-	studiosQuery := AnimeStudioQuery()
-	tagsQuery := AnimeTagQuery()
-	imagesQuery := AnimeImageJsonQuery()
-	airingSeasonQuery := AnimeAiringSeasonQuery()
-
-	userDataQuery := AnimeUserDataQuery(userId)
+	// studiosQuery := AnimeStudioQuery()
+	// tagsQuery := AnimeTagQuery()
+	// imagesQuery := AnimeImageJsonQuery()
+	// airingSeasonQuery := AnimeAiringSeasonQuery()
+	//
+	// userDataQuery := AnimeUserDataQuery(userId)
 
 	query := dialect.From("animes").
 		Select(
 			"animes.rowid",
 
 			"animes.id",
+			"animes.type",
 
-			"animes.download_type",
+			"animes.tmdb_id",
 			"animes.mal_id",
-			"animes.ani_db_id",
 			"animes.anilist_id",
-			"animes.anime_news_network_id",
 
 			"animes.title",
-			"animes.title_english",
-
 			"animes.description",
 
-			"animes.type",
 			"animes.score",
 			"animes.status",
 			"animes.rating",
-			"animes.episode_count",
-			goqu.I("airing_season_tag.data").As("airing_season"),
 
 			"animes.start_date",
 			"animes.end_date",
 
-			"animes.last_data_fetch",
-
 			"animes.created",
 			"animes.updated",
 
-			goqu.I("studios.studios").As("studios"),
-			goqu.I("tags.data").As("tags"),
-			goqu.I("images.data").As("images"),
-
-			goqu.I("user_data.data").As("user_data"),
-		).
-		LeftJoin(
-			studiosQuery.As("studios"),
-			goqu.On(goqu.I("animes.id").Eq(goqu.I("studios.id"))),
-		).
-		LeftJoin(
-			tagsQuery.As("tags"),
-			goqu.On(goqu.I("animes.id").Eq(goqu.I("tags.id"))),
-		).
-		LeftJoin(
-			airingSeasonQuery.As("airing_season_tag"),
-			goqu.On(goqu.I("animes.airing_season").Eq(goqu.I("airing_season_tag.slug"))),
-		).
-		LeftJoin(
-			imagesQuery.As("images"),
-			goqu.On(goqu.I("animes.id").Eq(goqu.I("images.id"))),
-		).
-		LeftJoin(
-			userDataQuery.As("user_data"),
-			goqu.On(goqu.I("animes.id").Eq(goqu.I("user_data.id"))),
+			// goqu.I("studios.studios").As("studios"),
+			// goqu.I("tags.data").As("tags"),
+			// goqu.I("images.data").As("images"),
+			//
+			// goqu.I("user_data.data").As("user_data"),
 		)
+		// LeftJoin(
+		// 	studiosQuery.As("studios"),
+		// 	goqu.On(goqu.I("animes.id").Eq(goqu.I("studios.id"))),
+		// ).
+		// LeftJoin(
+		// 	tagsQuery.As("tags"),
+		// 	goqu.On(goqu.I("animes.id").Eq(goqu.I("tags.id"))),
+		// ).
+		// LeftJoin(
+		// 	airingSeasonQuery.As("airing_season_tag"),
+		// 	goqu.On(goqu.I("animes.airing_season").Eq(goqu.I("airing_season_tag.slug"))),
+		// ).
+		// LeftJoin(
+		// 	imagesQuery.As("images"),
+		// 	goqu.On(goqu.I("animes.id").Eq(goqu.I("images.id"))),
+		// ).
+		// LeftJoin(
+		// 	userDataQuery.As("user_data"),
+		// 	goqu.On(goqu.I("animes.id").Eq(goqu.I("user_data.id"))),
+		// )
 
 	return query
 }
@@ -405,30 +389,23 @@ func (db *Database) GetAnimeByMalId(ctx context.Context, userId *string, malId s
 }
 
 type CreateAnimeParams struct {
-	Id string
+	Id   string
+	Type types.AnimeType
 
-	DownloadType       types.AnimeDownloadType
-	MalId              sql.NullString
-	AniDbId            sql.NullString
-	AnilistId          sql.NullString
-	AnimeNewsNetworkId sql.NullString
+	TmdbId    sql.NullString
+	MalId     sql.NullString
+	AnilistId sql.NullString
 
-	Title        string
-	TitleEnglish sql.NullString
+	Title string
 
 	Description sql.NullString
 
-	Type         types.AnimeType
-	Score        sql.NullFloat64
-	Status       types.AnimeStatus
-	Rating       types.AnimeRating
-	EpisodeCount sql.NullInt64
-	AiringSeason sql.NullString
+	Score  sql.NullFloat64
+	Status types.AnimeStatus
+	Rating types.AnimeRating
 
 	StartDate sql.NullString
 	EndDate   sql.NullString
-
-	LastDataFetch sql.NullInt64
 
 	Created int64
 	Updated int64
@@ -449,10 +426,6 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 		id = utils.CreateAnimeId()
 	}
 
-	if params.DownloadType == "" {
-		params.DownloadType = types.AnimeDownloadTypeNone
-	}
-
 	if params.Type == "" {
 		params.Type = types.AnimeTypeUnknown
 	}
@@ -466,30 +439,23 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 	}
 
 	query := dialect.Insert("animes").Rows(goqu.Record{
-		"id": id,
+		"id":   id,
+		"type": params.Type,
 
-		"download_type":         params.DownloadType,
-		"mal_id":                params.MalId,
-		"ani_db_id":             params.AniDbId,
-		"anilist_id":            params.AnilistId,
-		"anime_news_network_id": params.AnimeNewsNetworkId,
+		"tmdb_id":    params.TmdbId,
+		"mal_id":     params.MalId,
+		"anilist_id": params.AnilistId,
 
-		"title":         params.Title,
-		"title_english": params.TitleEnglish,
+		"title": params.Title,
 
 		"description": params.Description,
 
-		"type":          params.Type,
-		"score":         params.Score,
-		"status":        params.Status,
-		"rating":        params.Rating,
-		"episode_count": params.EpisodeCount,
-		"airing_season": params.AiringSeason,
+		"score":  params.Score,
+		"status": params.Status,
+		"rating": params.Rating,
 
 		"start_date": params.StartDate,
 		"end_date":   params.EndDate,
-
-		"last_data_fetch": params.LastDataFetch,
 
 		"created": created,
 		"updated": updated,
@@ -500,28 +466,22 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 }
 
 type AnimeChanges struct {
-	DownloadType       Change[types.AnimeDownloadType]
-	MalId              Change[sql.NullString]
-	AniDbId            Change[sql.NullString]
-	AnilistId          Change[sql.NullString]
-	AnimeNewsNetworkId Change[sql.NullString]
+	Type Change[types.AnimeType]
 
-	Title        Change[string]
-	TitleEnglish Change[sql.NullString]
+	TmdbId    Change[sql.NullString]
+	MalId     Change[sql.NullString]
+	AnilistId Change[sql.NullString]
+
+	Title Change[string]
 
 	Description Change[sql.NullString]
 
-	Type         Change[types.AnimeType]
-	Score        Change[sql.NullFloat64]
-	Status       Change[types.AnimeStatus]
-	Rating       Change[types.AnimeRating]
-	EpisodeCount Change[sql.NullInt64]
-	AiringSeason Change[sql.NullString]
+	Score  Change[sql.NullFloat64]
+	Status Change[types.AnimeStatus]
+	Rating Change[types.AnimeRating]
 
 	StartDate Change[sql.NullString]
 	EndDate   Change[sql.NullString]
-
-	LastDataFetch Change[sql.NullInt64]
 
 	Created Change[int64]
 }
@@ -529,28 +489,22 @@ type AnimeChanges struct {
 func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeChanges) error {
 	record := goqu.Record{}
 
-	addToRecord(record, "download_type", changes.DownloadType)
+	addToRecord(record, "type", changes.Type)
+
+	addToRecord(record, "tmdb_id", changes.TmdbId)
 	addToRecord(record, "mal_id", changes.MalId)
-	addToRecord(record, "ani_db_id", changes.AniDbId)
 	addToRecord(record, "anilist_id", changes.AnilistId)
-	addToRecord(record, "anime_news_network_id", changes.AnimeNewsNetworkId)
 
 	addToRecord(record, "title", changes.Title)
-	addToRecord(record, "title_english", changes.TitleEnglish)
 
 	addToRecord(record, "description", changes.Description)
 
-	addToRecord(record, "type", changes.Type)
 	addToRecord(record, "score", changes.Score)
 	addToRecord(record, "status", changes.Status)
 	addToRecord(record, "rating", changes.Rating)
-	addToRecord(record, "episode_count", changes.EpisodeCount)
-	addToRecord(record, "airing_season", changes.AiringSeason)
 
 	addToRecord(record, "start_date", changes.StartDate)
 	addToRecord(record, "end_date", changes.EndDate)
-
-	addToRecord(record, "last_data_fetch", changes.LastDataFetch)
 
 	addToRecord(record, "created", changes.Created)
 
