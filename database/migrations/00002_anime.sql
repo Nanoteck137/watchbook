@@ -39,9 +39,13 @@ CREATE TABLE anime_images (
     anime_id TEXT NOT NULL REFERENCES animes(id) ON DELETE CASCADE,
     hash TEXT NOT NULL, 
 
-    image_type TEXT NOT NULL,
+    type TEXT NOT NULL,
+    mime_type TEXT NOT NULL,
     filename TEXT NOT NULL,
-    is_cover BOOLEAN NOT NULL,
+    is_primary BOOL NOT NULL,
+
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
 
     PRIMARY KEY(anime_id, hash)
 );

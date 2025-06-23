@@ -13,8 +13,9 @@ const (
 	ErrTypeApiTokenNotFound   pyrin.ErrorType = "API_TOKEN_NOT_FOUND"
 	ErrTypeInvalidCredentials pyrin.ErrorType = "INVALID_CREDENTIALS"
 
-	ErrTypeAnimeNotFound pyrin.ErrorType = "ANIME_NOT_FOUND"
+	ErrTypeAnimeNotFound   pyrin.ErrorType = "ANIME_NOT_FOUND"
 	ErrTypeEpisodeNotFound pyrin.ErrorType = "EPISODE_NOT_FOUND"
+	ErrTypeImageNotFound   pyrin.ErrorType = "IMAGE_NOT_FOUND"
 )
 
 func InvalidAuth(message string) *pyrin.Error {
@@ -38,6 +39,14 @@ func EpisodeNotFound() *pyrin.Error {
 		Code:    http.StatusNotFound,
 		Type:    ErrTypeEpisodeNotFound,
 		Message: "Episode not found",
+	}
+}
+
+func ImageNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeImageNotFound,
+		Message: "Image not found",
 	}
 }
 

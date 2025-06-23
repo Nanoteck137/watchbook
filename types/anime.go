@@ -271,3 +271,55 @@ func ValidateEntryAdminStatus(val any) error {
 
 	return nil
 }
+
+type EntryImageType string
+
+const (
+	EntryImageTypeUnknown EntryImageType = "unknown"
+	EntryImageTypeCover   EntryImageType = "cover"
+	EntryImageTypeBanner  EntryImageType = "banner"
+	EntryImageTypeLogo    EntryImageType = "logo"
+)
+
+func IsValidEntryImageType(l EntryImageType) bool {
+	switch l {
+	case EntryImageTypeUnknown, 
+		EntryImageTypeCover, 
+		EntryImageTypeBanner, 
+		EntryImageTypeLogo:
+		return true
+	}
+
+	return false
+}
+
+func ValidateEntryImageType(val any) error {
+	if s, ok := val.(string); ok {
+		if s == "" {
+			return nil
+		}
+
+		t := EntryImageType(s)
+		if !IsValidEntryImageType(t) {
+			return errors.New("invalid entry image type")
+		}
+	} else if p, ok := val.(*string); ok {
+		if p == nil {
+			return nil
+		}
+
+		s := *p
+		if s == "" {
+			return nil
+		}
+
+		t := EntryImageType(s)
+		if !IsValidEntryImageType(t) {
+			return errors.New("invalid entry image type")
+		}
+	} else {
+		return errors.New("expected string")
+	}
+
+	return nil
+}

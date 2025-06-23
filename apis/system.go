@@ -32,7 +32,7 @@ var dl = downloader.NewDownloader(
 	mal.UserAgent,
 )
 
-func downloadImage(ctx context.Context, db *database.Database, workDir types.WorkDir, animeId, url string, isCover bool) error {
+func downloadImage(ctx context.Context, db *database.Database, workDir types.WorkDir, animeId, url string, typ types.EntryImageType, isPrimary bool) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return fmt.Errorf("downloadImage: failed http get request: %w", err)
@@ -76,33 +76,13 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 	err = db.CreateAnimeImage(ctx, database.CreateAnimeImageParams{
 		AnimeId:   animeId,
 		Hash:      hash,
-		ImageType: mediaType,
+		Type:      typ,
+		MimeType:  mediaType,
 		Filename:  name,
-		IsCover:   true,
+		IsPrimary: isPrimary,
 	})
 	if err != nil {
-		if errors.Is(err, database.ErrItemAlreadyExists) {
-			if isCover {
-				err = db.RemoveAnimeCover(ctx, animeId)
-				if err != nil {
-					return fmt.Errorf("downloadImage: failed to remove old cover: %w", err)
-				}
-
-				err = db.UpdateAnimeImage(ctx, animeId, hash, database.AnimeImageChanges{
-					IsCover: database.Change[bool]{
-						Value:   true,
-						Changed: true,
-					},
-				})
-				if err != nil {
-					return fmt.Errorf("downloadImage: failed to update anime image cover status: %w", err)
-				}
-			} else {
-				return nil
-			}
-		} else {
-			return fmt.Errorf("downloadImage: failed to create new anime image: %w", err)
-		}
+		return fmt.Errorf("downloadImage: failed to create anime image: %w", err)
 	}
 
 	err = os.WriteFile(path.Join(dst, name), buf.Bytes(), 0644)

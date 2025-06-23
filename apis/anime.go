@@ -214,6 +214,10 @@ type CreateAnimeBody struct {
 	Rating string  `json:"rating"`
 
 	EpisodeCount int `json:"episodeCount"`
+
+	CoverUrl  string `json:"coverUrl"`
+	BannerUrl string `json:"bannerUrl"`
+	LogoUrl   string `json:"logoUrl"`
 }
 
 func (b *CreateAnimeBody) Transform() {
@@ -307,8 +311,20 @@ func (b *EditEpisodeBody) Transform() {
 }
 
 func (b EditEpisodeBody) Validate() error {
-	return validate.ValidateStruct(&b, 
+	return validate.ValidateStruct(&b,
 		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
+	)
+}
+
+type EditImageBody struct {
+	Type *string `json:"type"`
+
+	IsPriamry *bool `json:"isPrimary"`
+}
+
+func (b EditImageBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.Type, validate.Required.When(b.Type != nil), validate.By(types.ValidateEntryImageType)),
 	)
 }
 
@@ -447,6 +463,13 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 						if err != nil {
 							return nil, err
 						}
+					}
+				}
+
+				if body.CoverUrl != "" {
+					err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.CoverUrl, types.EntryImageTypeCover, true)
+					if err != nil {
+						logger.Error("failed to download cover image for anime", "animeId", id, "err", err)
 					}
 				}
 
@@ -732,6 +755,69 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 				}
 
 				err = app.DB().UpdateAnimeEpisode(ctx, dbEpisode.Index, dbEpisode.AnimeId, changes)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "EditImage",
+			Method:       http.MethodPatch,
+			Path:         "/animes/:id/images/:hash",
+			ResponseType: nil,
+			BodyType:     EditImageBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				// TODO(patrik): Add admin check
+
+				id := c.Param("id")
+				hash := c.Param("hash")
+
+				body, err := pyrin.Body[EditImageBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, AnimeNotFound()
+					}
+
+					return nil, err
+				}
+
+				dbImage, err := app.DB().GetAnimeImagesByHashAnimeId(ctx, dbAnime.Id, hash)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, ImageNotFound()
+					}
+
+					return nil, err
+				}
+
+				changes := database.AnimeImageChanges{}
+
+				if body.Type != nil {
+					t := types.EntryImageType(*body.Type)
+					changes.Type = database.Change[types.EntryImageType]{
+						Value:   t,
+						Changed: t != dbImage.Type,
+					}
+				}
+
+				if body.IsPriamry != nil {
+					changes.IsPrimary = database.Change[bool]{
+						Value:   *body.IsPriamry,
+						Changed: *body.IsPriamry != (dbImage.IsPrimary > 0),
+					}
+				}
+
+				err = app.DB().UpdateAnimeImage(ctx, dbImage.AnimeId, dbImage.Hash, changes)
 				if err != nil {
 					return nil, err
 				}

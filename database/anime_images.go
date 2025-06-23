@@ -2,8 +2,11 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/doug-martin/goqu/v9"
+	"github.com/nanoteck137/pyrin/ember"
+	"github.com/nanoteck137/watchbook/types"
 )
 
 type AnimeImage struct {
@@ -12,9 +15,13 @@ type AnimeImage struct {
 	AnimeId string `db:"anime_id"`
 	Hash    string `db:"hash"`
 
-	ImageType string `db:"image_type"`
-	Filename  string `db:"filename"`
-	IsCover   int    `db:"is_cover"`
+	Type      types.EntryImageType `db:"type"`
+	MimeType  string               `db:"mime_type"`
+	Filename  string               `db:"filename"`
+	IsPrimary int                  `db:"is_primary"`
+
+	Created int64 `db:"created"`
+	Updated int64 `db:"updated"`
 }
 
 // TODO(patrik): Use goqu.T more
@@ -26,42 +33,27 @@ func AnimeImageQuery() *goqu.SelectDataset {
 			"anime_images.anime_id",
 			"anime_images.hash",
 
-			"anime_images.image_type",
+			"anime_images.type",
+			"anime_images.mime_type",
 			"anime_images.filename",
-			"anime_images.is_cover",
+			"anime_images.is_primary",
+
+			"anime_images.created",
+			"anime_images.updated",
 		)
 
 	return query
 }
 
-// func (db *Database) GetAllAnimes(ctx context.Context) ([]Anime, error) {
-// 	query := AnimeQuery()
-//
-// 	var items []Anime
-// 	err := db.Select(&items, query)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-//
-// 	return items, nil
-// }
+func (db *Database) GetAnimeImagesByHashAnimeId(ctx context.Context, animeId, hash string) (AnimeImage, error) {
+	query := AnimeImageQuery().
+		Where(
+			goqu.I("anime_images.anime_id").Eq(animeId),
+			goqu.I("anime_images.hash").Eq(hash),
+		)
 
-// func (db *Database) GetAnimeById(ctx context.Context, id string) (Anime, error) {
-// 	query := AnimeQuery().
-// 		Where(goqu.I("animes.id").Eq(id))
-//
-// 	var item Anime
-// 	err := db.Get(&item, query)
-// 	if err != nil {
-// 		if errors.Is(err, sql.ErrNoRows) {
-// 			return Anime{}, ErrItemNotFound
-// 		}
-//
-// 		return Anime{}, err
-// 	}
-//
-// 	return item, nil
-// }
+	return ember.Single[AnimeImage](db.db, ctx, query)
+}
 
 func (db *Database) RemoveAllImagesFromAnime(ctx context.Context, animeId string) error {
 	query := goqu.Delete("anime_images").
@@ -79,19 +71,37 @@ type CreateAnimeImageParams struct {
 	AnimeId string
 	Hash    string
 
-	ImageType string
+	Type      types.EntryImageType
+	MimeType  string
 	Filename  string
-	IsCover   bool
+	IsPrimary bool
+
+	Created int64
+	Updated int64
 }
 
 func (db *Database) CreateAnimeImage(ctx context.Context, params CreateAnimeImageParams) error {
+	t := time.Now().UnixMilli()
+	if params.Created == 0 && params.Updated == 0 {
+		params.Created = t
+		params.Updated = t
+	}
+
+	if params.Type == "" {
+		params.Type = types.EntryImageTypeUnknown
+	}
+
 	query := dialect.Insert("anime_images").Rows(goqu.Record{
 		"anime_id": params.AnimeId,
 		"hash":     params.Hash,
 
-		"image_type": params.ImageType,
+		"type":       params.Type,
+		"mime_type":  params.MimeType,
 		"filename":   params.Filename,
-		"is_cover":   params.IsCover,
+		"is_primary": params.IsPrimary,
+
+		"created": params.Created,
+		"updated": params.Updated,
 	})
 
 	_, err := db.db.Exec(ctx, query)
@@ -103,17 +113,23 @@ func (db *Database) CreateAnimeImage(ctx context.Context, params CreateAnimeImag
 }
 
 type AnimeImageChanges struct {
-	ImageType Change[string]
+	Type      Change[types.EntryImageType]
+	MimeType  Change[string]
 	Filename  Change[string]
-	IsCover   Change[bool]
+	IsPrimary Change[bool]
+
+	Created Change[int64]
 }
 
 func (db *Database) UpdateAnimeImage(ctx context.Context, animeId, hash string, changes AnimeImageChanges) error {
 	record := goqu.Record{}
 
-	addToRecord(record, "image_type", changes.ImageType)
+	addToRecord(record, "type", changes.Type)
+	addToRecord(record, "mime_type", changes.MimeType)
 	addToRecord(record, "filename", changes.Filename)
-	addToRecord(record, "is_cover", changes.IsCover)
+	addToRecord(record, "is_primary", changes.IsPrimary)
+
+	addToRecord(record, "created", changes.Created)
 
 	if len(record) == 0 {
 		return nil
@@ -125,21 +141,6 @@ func (db *Database) UpdateAnimeImage(ctx context.Context, animeId, hash string, 
 			goqu.I("anime_images.anime_id").Eq(animeId),
 			goqu.I("anime_images.hash").Eq(hash),
 		)
-
-	_, err := db.db.Exec(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (db *Database) RemoveAnimeCover(ctx context.Context, animeId string) error {
-	query := dialect.Update("anime_images").
-		Set(goqu.Record{
-			"is_cover": false,
-		}).
-		Where(goqu.I("anime_images.anime_id").Eq(animeId))
 
 	_, err := db.db.Exec(ctx, query)
 	if err != nil {
