@@ -328,6 +328,26 @@ func (b EditImageBody) Validate() error {
 	)
 }
 
+type AddImage struct {
+	Hash string `json:"hash"`
+}
+
+type AddImageBody struct {
+	ImageUrl string `json:"imageUrl"`
+	Type     string `json:"type"`
+}
+
+func (b *AddImageBody) Transform() {
+	b.ImageUrl = transform.String(b.ImageUrl)
+}
+
+func (b AddImageBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.ImageUrl, validate.Required),
+		validate.Field(&b.Type, validate.Required, validate.By(types.ValidateEntryImageType)),
+	)
+}
+
 func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -467,9 +487,23 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 				}
 
 				if body.CoverUrl != "" {
-					err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.CoverUrl, types.EntryImageTypeCover, true)
+					_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.CoverUrl, types.EntryImageTypeCover, true)
 					if err != nil {
 						logger.Error("failed to download cover image for anime", "animeId", id, "err", err)
+					}
+				}
+
+				if body.BannerUrl != "" {
+					_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.BannerUrl, types.EntryImageTypeBanner, true)
+					if err != nil {
+						logger.Error("failed to download banner image for anime", "animeId", id, "err", err)
+					}
+				}
+
+				if body.LogoUrl != "" {
+					_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.LogoUrl, types.EntryImageTypeLogo, true)
+					if err != nil {
+						logger.Error("failed to download logo image for anime", "animeId", id, "err", err)
 					}
 				}
 
@@ -760,6 +794,46 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "AddImage",
+			Method:       http.MethodPost,
+			Path:         "/animes/:id/images",
+			ResponseType: AddImage{},
+			BodyType:     AddImageBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				// TODO(patrik): Add admin check
+
+				id := c.Param("id")
+
+				body, err := pyrin.Body[AddImageBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, AnimeNotFound()
+					}
+
+					return nil, err
+				}
+
+				t := types.EntryImageType(body.Type)
+				hash, err := downloadImage(ctx, app.DB(), app.WorkDir(), dbAnime.Id, body.ImageUrl, t, false)
+				if err != nil {
+					logger.Error("failed to download image for anime", "animeId", dbAnime.Id, "err", err)
+					return nil, err
+				}
+
+				return AddImage{
+					Hash: hash,
+				}, nil
 			},
 		},
 

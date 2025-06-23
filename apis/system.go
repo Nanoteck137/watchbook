@@ -32,17 +32,17 @@ var dl = downloader.NewDownloader(
 	mal.UserAgent,
 )
 
-func downloadImage(ctx context.Context, db *database.Database, workDir types.WorkDir, animeId, url string, typ types.EntryImageType, isPrimary bool) error {
+func downloadImage(ctx context.Context, db *database.Database, workDir types.WorkDir, animeId, url string, typ types.EntryImageType, isPrimary bool) (string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
-		return fmt.Errorf("downloadImage: failed http get request: %w", err)
+		return "", fmt.Errorf("downloadImage: failed http get request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	contentType := resp.Header.Get("Content-Type")
 	mediaType, _, err := mime.ParseMediaType(contentType)
 	if err != nil {
-		return fmt.Errorf("downloadImage: failed to parse Content-Type: %w", err)
+		return "", fmt.Errorf("downloadImage: failed to parse Content-Type: %w", err)
 	}
 
 	ext := ""
@@ -52,20 +52,20 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 	case "image/jpeg":
 		ext = ".jpeg"
 	default:
-		return fmt.Errorf("downloadImage: unsupported media type (%s): %w", mediaType, err)
+		return "", fmt.Errorf("downloadImage: unsupported media type (%s): %w", mediaType, err)
 	}
 
 	buf := bytes.Buffer{}
 	_, err = io.Copy(&buf, resp.Body)
 	if err != nil {
-		return fmt.Errorf("downloadImage: failed io.Copy: %w", err)
+		return "", fmt.Errorf("downloadImage: failed io.Copy: %w", err)
 	}
 
 	animeDir := workDir.AnimesDir()
 	dst := animeDir.AnimeImageDir(animeId)
 	err = os.Mkdir(dst, 0755)
 	if err != nil && !os.IsExist(err) {
-		return fmt.Errorf("downloadImage: failed os.Mkdir: %w", err)
+		return "", fmt.Errorf("downloadImage: failed os.Mkdir: %w", err)
 	}
 
 	rawHash := sha256.Sum256(buf.Bytes())
@@ -82,15 +82,19 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 		IsPrimary: isPrimary,
 	})
 	if err != nil {
-		return fmt.Errorf("downloadImage: failed to create anime image: %w", err)
+		if errors.Is(err, database.ErrItemAlreadyExists) {
+			return hash, nil
+		}
+
+		return "", fmt.Errorf("downloadImage: failed to create anime image: %w", err)
 	}
 
 	err = os.WriteFile(path.Join(dst, name), buf.Bytes(), 0644)
 	if err != nil {
-		return fmt.Errorf("downloadImage: failed to write image to disk: %w", err)
+		return "", fmt.Errorf("downloadImage: failed to write image to disk: %w", err)
 	}
 
-	return nil
+	return hash, nil
 }
 
 // func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir types.WorkDir, animeId string) error {
