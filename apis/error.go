@@ -14,6 +14,7 @@ const (
 	ErrTypeInvalidCredentials pyrin.ErrorType = "INVALID_CREDENTIALS"
 
 	ErrTypeAnimeNotFound pyrin.ErrorType = "ANIME_NOT_FOUND"
+	ErrTypeEpisodeNotFound pyrin.ErrorType = "EPISODE_NOT_FOUND"
 )
 
 func InvalidAuth(message string) *pyrin.Error {
@@ -29,6 +30,14 @@ func AnimeNotFound() *pyrin.Error {
 		Code:    http.StatusNotFound,
 		Type:    ErrTypeAnimeNotFound,
 		Message: "Anime not found",
+	}
+}
+
+func EpisodeNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeEpisodeNotFound,
+		Message: "Episode not found",
 	}
 }
 

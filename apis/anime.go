@@ -279,14 +279,6 @@ func (b EditAnimeBody) Validate() error {
 	)
 }
 
-type AddEpisodesBody struct {
-	Count int `json:"count"`
-}
-
-func (b *AddEpisodesBody) Transform() {
-	b.Count = utils.Min(b.Count, 0)
-}
-
 type AnimeEpisode struct {
 	Index   int64  `json:"index"`
 	AnimeId string `json:"animeId"`
@@ -296,6 +288,28 @@ type AnimeEpisode struct {
 
 type GetAnimeEpisodes struct {
 	Episodes []AnimeEpisode `json:"episodes"`
+}
+
+type AddEpisodesBody struct {
+	Count int `json:"count"`
+}
+
+func (b *AddEpisodesBody) Transform() {
+	b.Count = utils.Min(b.Count, 0)
+}
+
+type EditEpisodeBody struct {
+	Name *string `json:"name"`
+}
+
+func (b *EditEpisodeBody) Transform() {
+	b.Name = transform.StringPtr(b.Name)
+}
+
+func (b EditEpisodeBody) Validate() error {
+	return validate.ValidateStruct(&b, 
+		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
+	)
 }
 
 func InstallAnimeHandlers(app core.App, group pyrin.Group) {
@@ -661,6 +675,65 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					if err != nil {
 						return nil, err
 					}
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "EditEpisode",
+			Method:       http.MethodPatch,
+			Path:         "/animes/:id/episodes/:index",
+			ResponseType: nil,
+			BodyType:     EditEpisodeBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				// TODO(patrik): Add admin check
+
+				id := c.Param("id")
+				index, err := strconv.ParseInt(c.Param("index"), 10, 64)
+				if err != nil {
+					// TODO(patrik): Handle error better
+					return nil, errors.New("failed to parse 'index' path param as integer")
+				}
+
+				body, err := pyrin.Body[EditEpisodeBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, AnimeNotFound()
+					}
+
+					return nil, err
+				}
+
+				dbEpisode, err := app.DB().GetAnimeEpisodeByIndexAnimeId(ctx, index, dbAnime.Id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, EpisodeNotFound()
+					}
+
+					return nil, err
+				}
+
+				changes := database.AnimeEpisodeChanges{}
+
+				if body.Name != nil {
+					changes.Name = database.Change[string]{
+						Value:   *body.Name,
+						Changed: *body.Name != dbEpisode.Name,
+					}
+				}
+
+				err = app.DB().UpdateAnimeEpisode(ctx, dbEpisode.Index, dbEpisode.AnimeId, changes)
+				if err != nil {
+					return nil, err
 				}
 
 				return nil, nil

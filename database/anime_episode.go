@@ -43,6 +43,16 @@ func (db *Database) GetAllAnimeEpisodes(ctx context.Context) ([]AnimeEpisode, er
 	return ember.Multiple[AnimeEpisode](db.db, ctx, query)
 }
 
+func (db *Database) GetAnimeEpisodeByIndexAnimeId(ctx context.Context, index int64, animeId string) (AnimeEpisode, error) {
+	query := AnimeEpisodeQuery().
+		Where(
+			goqu.I("anime_episodes.idx").Eq(index),
+			goqu.I("anime_episodes.anime_id").Eq(animeId),
+		)
+
+	return ember.Single[AnimeEpisode](db.db, ctx, query)
+}
+
 func (db *Database) GetAnimeEpisodesByAnimeId(ctx context.Context, animeId string) ([]AnimeEpisode, error) {
 	query := AnimeEpisodeQuery().
 		Where(goqu.I("anime_episodes.anime_id").Eq(animeId)).
@@ -95,7 +105,7 @@ type AnimeEpisodeChanges struct {
 	Created Change[int64]
 }
 
-func (db *Database) UpdateAnimeEpisode(ctx context.Context, id string, changes AnimeEpisodeChanges) error {
+func (db *Database) UpdateAnimeEpisode(ctx context.Context, index int64, animeId string, changes AnimeEpisodeChanges) error {
 	record := goqu.Record{}
 
 	addToRecord(record, "name", changes.Name)
@@ -110,7 +120,10 @@ func (db *Database) UpdateAnimeEpisode(ctx context.Context, id string, changes A
 
 	query := dialect.Update("anime_episodes").
 		Set(record).
-		Where(goqu.I("animes.id").Eq(id))
+		Where(
+			goqu.I("anime_episodes.idx").Eq(index),
+			goqu.I("anime_episodes.anime_id").Eq(animeId),
+		)
 
 	_, err := db.db.Exec(ctx, query)
 	if err != nil {
