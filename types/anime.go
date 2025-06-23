@@ -223,3 +223,51 @@ func IsValidAnimeUserList(l AnimeUserList) bool {
 
 	return false
 }
+
+type EntryAdminStatus string
+
+const (
+	EntryAdminStatusNotFixed EntryAdminStatus = "not-fixed"
+	EntryAdminStatusFixed    EntryAdminStatus = "fixed"
+)
+
+func IsValidEntryAdminStatus(l EntryAdminStatus) bool {
+	switch l {
+	case EntryAdminStatusNotFixed,
+		EntryAdminStatusFixed:
+		return true
+	}
+
+	return false
+}
+
+func ValidateEntryAdminStatus(val any) error {
+	if s, ok := val.(string); ok {
+		if s == "" {
+			return nil
+		}
+
+		t := EntryAdminStatus(s)
+		if !IsValidEntryAdminStatus(t) {
+			return errors.New("invalid admin status")
+		}
+	} else if p, ok := val.(*string); ok {
+		if p == nil {
+			return nil
+		}
+
+		s := *p
+		if s == "" {
+			return nil
+		}
+
+		t := EntryAdminStatus(s)
+		if !IsValidEntryAdminStatus(t) {
+			return errors.New("invalid admin status")
+		}
+	} else {
+		return errors.New("expected string")
+	}
+
+	return nil
+}

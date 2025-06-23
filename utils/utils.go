@@ -16,7 +16,6 @@ var CreateId = createIdGenerator(32)
 var CreateSmallId = createIdGenerator(8)
 
 var CreateAnimeId = createIdGenerator(8)
-var CreateAnimeEpisodeId = createIdGenerator(20)
 
 var CreateApiTokenId = createIdGenerator(32)
 

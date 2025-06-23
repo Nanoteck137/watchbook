@@ -6,14 +6,15 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/nanoteck137/pyrin/ember"
-	"github.com/nanoteck137/watchbook/utils"
 )
 
 type AnimeEpisode struct {
 	RowId int `db:"rowid"`
 
-	Id      string `db:"id"`
+	Index   int64  `db:"idx"`
 	AnimeId string `db:"anime_id"`
+
+	Name string `db:"name"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -23,10 +24,15 @@ type AnimeEpisode struct {
 func AnimeEpisodeQuery() *goqu.SelectDataset {
 	query := dialect.From("anime_episodes").
 		Select(
-			"animes.rowid",
+			"anime_episodes.rowid",
 
-			"animes.created",
-			"animes.updated",
+			"anime_episodes.idx",
+			"anime_episodes.anime_id",
+
+			"anime_episodes.name",
+
+			"anime_episodes.created",
+			"anime_episodes.updated",
 		)
 
 	return query
@@ -37,32 +43,25 @@ func (db *Database) GetAllAnimeEpisodes(ctx context.Context) ([]AnimeEpisode, er
 	return ember.Multiple[AnimeEpisode](db.db, ctx, query)
 }
 
-func (db *Database) GetAnimeEpisodeById(ctx context.Context, id string) (AnimeEpisode, error) {
-	query := AnimeEpisodeQuery().
-		Where(goqu.I("anime_episodes.id").Eq(id))
-
-	return ember.Single[AnimeEpisode](db.db, ctx, query)
-}
-
 func (db *Database) GetAnimeEpisodesByAnimeId(ctx context.Context, animeId string) ([]AnimeEpisode, error) {
 	query := AnimeEpisodeQuery().
-		Where(goqu.I("anime_episodes.anime_id").Eq(animeId))
+		Where(goqu.I("anime_episodes.anime_id").Eq(animeId)).
+		Order(goqu.I("anime_episodes.idx").Asc())
 
 	return ember.Multiple[AnimeEpisode](db.db, ctx, query)
 }
 
 type CreateAnimeEpisodeParams struct {
-	Id      string
+	Index int64
 	AnimeId string
 
 	Name  string
-	Index int64
 
 	Created int64
 	Updated int64
 }
 
-func (db *Database) CreateAnimeEpisode(ctx context.Context, params CreateAnimeEpisodeParams) (string, error) {
+func (db *Database) CreateAnimeEpisode(ctx context.Context, params CreateAnimeEpisodeParams) error {
 	t := time.Now().UnixMilli()
 	created := params.Created
 	updated := params.Updated
@@ -72,31 +71,26 @@ func (db *Database) CreateAnimeEpisode(ctx context.Context, params CreateAnimeEp
 		updated = t
 	}
 
-	id := params.Id
-	if id == "" {
-		id = utils.CreateAnimeEpisodeId()
-	}
-
 	query := dialect.Insert("anime_episodes").Rows(goqu.Record{
-		"id":       id,
+		"idx":  params.Index,
 		"anime_id": params.AnimeId,
 
 		"name": params.Name,
-		"idx":  params.Index,
 
 		"created": created,
 		"updated": updated,
-	}).
-		Returning("id")
+	})
 
-	return ember.Single[string](db.db, ctx, query)
+	_, err := db.db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type AnimeEpisodeChanges struct {
-	AnimeId Change[string]
-
 	Name  Change[string]
-	Index Change[int64]
 
 	Created Change[int64]
 }
@@ -104,10 +98,7 @@ type AnimeEpisodeChanges struct {
 func (db *Database) UpdateAnimeEpisode(ctx context.Context, id string, changes AnimeEpisodeChanges) error {
 	record := goqu.Record{}
 
-	addToRecord(record, "anime_id", changes.AnimeId)
-
-	addToRecord(record, "name", changes.AnimeId)
-	addToRecord(record, "index", changes.Index)
+	addToRecord(record, "name", changes.Name)
 
 	addToRecord(record, "created", changes.Created)
 
@@ -129,9 +120,12 @@ func (db *Database) UpdateAnimeEpisode(ctx context.Context, id string, changes A
 	return nil
 }
 
-func (db *Database) RemoveAnimeEpisode(ctx context.Context, id string) error {
+func (db *Database) RemoveAnimeEpisode(ctx context.Context, idx int64, animeId string) error {
 	query := dialect.Delete("anime_episodes").
-		Where(goqu.I("anime_episodes.id").Eq(id))
+		Where(
+			goqu.I("anime_episodes.idx").Eq(idx),
+			goqu.I("anime_episodes.anime_id").Eq(animeId),
+		)
 
 	_, err := db.db.Exec(ctx, query)
 	if err != nil {

@@ -19,6 +19,8 @@ CREATE TABLE animes (
 	start_date TEXT, 
     end_date TEXT,
 
+    admin_status TEXT NOT NULL,
+
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL
 );
@@ -74,14 +76,15 @@ CREATE TABLE anime_user_data (
 );
 
 CREATE TABLE anime_episodes (
-    id TEXT PRIMARY KEY,
+    idx INTEGER NOT NULL,
     anime_id TEXT NOT NULL REFERENCES animes(id) ON DELETE CASCADE,
 
     name TEXT NOT NULL,
-    idx INTEGER NOT NULL,
 
     created INTEGER NOT NULL,
-    updated INTEGER NOT NULL
+    updated INTEGER NOT NULL,
+
+    PRIMARY KEY(idx, anime_id)
 );
 
 -- +goose Down

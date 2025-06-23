@@ -251,6 +251,8 @@ type EditAnimeBody struct {
 	Score  *float64 `json:"score,omitempty"`
 	Status *string  `json:"status,omitempty"`
 	Rating *string  `json:"rating,omitempty"`
+
+	AdminStatus *string `json:"adminStatus,omitempty"`
 }
 
 func (b *EditAnimeBody) Transform() {
@@ -272,7 +274,28 @@ func (b EditAnimeBody) Validate() error {
 
 		validate.Field(&b.Status, validate.Required.When(b.Status != nil), validate.By(types.ValidateAnimeStatus)),
 		validate.Field(&b.Rating, validate.Required.When(b.Rating != nil), validate.By(types.ValidateAnimeRating)),
+
+		validate.Field(&b.AdminStatus, validate.Required.When(b.AdminStatus != nil), validate.By(types.ValidateEntryAdminStatus)),
 	)
+}
+
+type AddEpisodesBody struct {
+	Count int `json:"count"`
+}
+
+func (b *AddEpisodesBody) Transform() {
+	b.Count = utils.Min(b.Count, 0)
+}
+
+type AnimeEpisode struct {
+	Index   int64  `json:"index"`
+	AnimeId string `json:"animeId"`
+
+	Name string `json:"name"`
+}
+
+type GetAnimeEpisodes struct {
+	Episodes []AnimeEpisode `json:"episodes"`
 }
 
 func InstallAnimeHandlers(app core.App, group pyrin.Group) {
@@ -348,6 +371,8 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 			ResponseType: CreateAnime{},
 			BodyType:     CreateAnimeBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
+				// TODO(patrik): Add admin check
+
 				body, err := pyrin.Body[CreateAnimeBody](c)
 				if err != nil {
 					return nil, err
@@ -390,7 +415,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 				}
 
 				if ty.IsMovie() {
-					_, err := app.DB().CreateAnimeEpisode(ctx, database.CreateAnimeEpisodeParams{
+					err := app.DB().CreateAnimeEpisode(ctx, database.CreateAnimeEpisodeParams{
 						AnimeId: id,
 						Name:    body.Title,
 						Index:   1,
@@ -400,7 +425,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					}
 				} else {
 					for i := range body.EpisodeCount {
-						_, err := app.DB().CreateAnimeEpisode(ctx, database.CreateAnimeEpisodeParams{
+						err := app.DB().CreateAnimeEpisode(ctx, database.CreateAnimeEpisodeParams{
 							AnimeId: id,
 							Name:    fmt.Sprintf("Episode %d", i+1),
 							Index:   int64(i + 1),
@@ -425,6 +450,8 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 			BodyType:     EditAnimeBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
+
+				// TODO(patrik): Add admin check
 
 				body, err := pyrin.Body[EditAnimeBody](c)
 				if err != nil {
@@ -455,7 +482,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 
 				if body.TmdbId != nil {
 					changes.TmdbId = database.Change[sql.NullString]{
-						Value:   sql.NullString{
+						Value: sql.NullString{
 							String: *body.TmdbId,
 							Valid:  *body.TmdbId != "",
 						},
@@ -465,7 +492,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 
 				if body.MalId != nil {
 					changes.MalId = database.Change[sql.NullString]{
-						Value:   sql.NullString{
+						Value: sql.NullString{
 							String: *body.MalId,
 							Valid:  *body.MalId != "",
 						},
@@ -475,7 +502,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 
 				if body.AnilistId != nil {
 					changes.AnilistId = database.Change[sql.NullString]{
-						Value:   sql.NullString{
+						Value: sql.NullString{
 							String: *body.AnilistId,
 							Valid:  *body.AnilistId != "",
 						},
@@ -492,22 +519,22 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 
 				if body.Description != nil {
 					changes.Description = database.Change[sql.NullString]{
-						Value:   sql.NullString{
+						Value: sql.NullString{
 							String: *body.Description,
 							Valid:  *body.Description != "",
 						},
 						Changed: *body.Description != dbAnime.Description.String,
-					} 
+					}
 				}
 
 				if body.Score != nil {
 					changes.Score = database.Change[sql.NullFloat64]{
-						Value:   sql.NullFloat64{
+						Value: sql.NullFloat64{
 							Float64: *body.Score,
 							Valid:   *body.Score != 0.0,
 						},
 						Changed: *body.Score != dbAnime.Score.Float64,
-					} 
+					}
 				}
 
 				if body.Status != nil {
@@ -515,7 +542,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					changes.Status = database.Change[types.AnimeStatus]{
 						Value:   s,
 						Changed: s != dbAnime.Status,
-					} 
+					}
 				}
 
 				if body.Rating != nil {
@@ -523,12 +550,117 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					changes.Rating = database.Change[types.AnimeRating]{
 						Value:   r,
 						Changed: r != dbAnime.Rating,
-					} 
+					}
+				}
+
+				if body.AdminStatus != nil {
+					s := types.EntryAdminStatus(*body.AdminStatus)
+					changes.AdminStatus = database.Change[types.EntryAdminStatus]{
+						Value:   s,
+						Changed: s != dbAnime.AdminStatus,
+					}
 				}
 
 				err = app.DB().UpdateAnime(ctx, dbAnime.Id, changes)
 				if err != nil {
 					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetAnimeEpisodes",
+			Method:       http.MethodGet,
+			Path:         "/animes/:id/episodes",
+			ResponseType: GetAnimeEpisodes{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				ctx := context.Background()
+
+				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, AnimeNotFound()
+					}
+
+					return nil, err
+				}
+
+				episodes, err := app.DB().GetAnimeEpisodesByAnimeId(ctx, dbAnime.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				res := make([]AnimeEpisode, len(episodes))
+
+				for i, episode := range episodes {
+					res[i] = AnimeEpisode{
+						Index:   episode.Index,
+						AnimeId: episode.AnimeId,
+						Name:    episode.Name,
+					}
+				}
+
+				return GetAnimeEpisodes{
+					Episodes: res,
+				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "AddEpisodes",
+			Method:       http.MethodPost,
+			Path:         "/animes/:id/episodes",
+			ResponseType: nil,
+			BodyType:     AddEpisodesBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				// TODO(patrik): Add admin check
+
+				id := c.Param("id")
+
+				body, err := pyrin.Body[AddEpisodesBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, AnimeNotFound()
+					}
+
+					return nil, err
+				}
+
+				// TODO(patrik): A better implementation would be getting
+				// the last episode from the database
+				episodes, err := app.DB().GetAnimeEpisodesByAnimeId(ctx, dbAnime.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				lastIndex := int64(0)
+				if len(episodes) > 0 {
+					episode := episodes[len(episodes)-1]
+					lastIndex = episode.Index
+				}
+
+				for i := range body.Count {
+					idx := lastIndex + int64(i) + 1
+
+					err := app.DB().CreateAnimeEpisode(ctx, database.CreateAnimeEpisodeParams{
+						Index:   idx,
+						AnimeId: dbAnime.Id,
+						Name:    fmt.Sprintf("Episode %d", idx),
+					})
+					if err != nil {
+						return nil, err
+					}
 				}
 
 				return nil, nil

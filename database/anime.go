@@ -108,6 +108,8 @@ type Anime struct {
 	StartDate sql.NullString `db:"start_date"`
 	EndDate   sql.NullString `db:"end_date"`
 
+	AdminStatus types.EntryAdminStatus `db:"admin_status"`
+
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
 
@@ -283,6 +285,8 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 			"animes.start_date",
 			"animes.end_date",
 
+			"animes.admin_status",
+
 			"animes.created",
 			"animes.updated",
 
@@ -407,6 +411,8 @@ type CreateAnimeParams struct {
 	StartDate sql.NullString
 	EndDate   sql.NullString
 
+	AdminStatus types.EntryAdminStatus
+
 	Created int64
 	Updated int64
 }
@@ -438,6 +444,10 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 		params.Rating = types.AnimeRatingUnknown
 	}
 
+	if params.AdminStatus == "" {
+		params.AdminStatus = types.EntryAdminStatusNotFixed
+	}
+
 	query := dialect.Insert("animes").Rows(goqu.Record{
 		"id":   id,
 		"type": params.Type,
@@ -456,6 +466,8 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 
 		"start_date": params.StartDate,
 		"end_date":   params.EndDate,
+
+		"admin_status": params.AdminStatus,
 
 		"created": created,
 		"updated": updated,
@@ -483,6 +495,8 @@ type AnimeChanges struct {
 	StartDate Change[sql.NullString]
 	EndDate   Change[sql.NullString]
 
+	AdminStatus Change[types.EntryAdminStatus]
+
 	Created Change[int64]
 }
 
@@ -505,6 +519,8 @@ func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeCha
 
 	addToRecord(record, "start_date", changes.StartDate)
 	addToRecord(record, "end_date", changes.EndDate)
+
+	addToRecord(record, "admin_status", changes.AdminStatus)
 
 	addToRecord(record, "created", changes.Created)
 
