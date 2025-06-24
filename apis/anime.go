@@ -231,6 +231,9 @@ type EditAnimeBody struct {
 	Rating *string  `json:"rating,omitempty"`
 
 	AdminStatus *string `json:"adminStatus,omitempty"`
+
+	Tags    *[]string `json:"tags,omitempty"`
+	Studios *[]string `json:"studios,omitempty"`
 }
 
 func (b *EditAnimeBody) Transform() {
@@ -243,6 +246,14 @@ func (b *EditAnimeBody) Transform() {
 
 	if b.Score != nil {
 		*b.Score = utils.Clamp(*b.Score, 0.0, 10.0)
+	}
+
+	if b.Tags != nil {
+		*b.Tags = utils.TransformSlugArray(*b.Tags)
+	}
+
+	if b.Studios != nil {
+		*b.Studios = utils.TransformSlugArray(*b.Studios)
 	}
 }
 
@@ -502,15 +513,15 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				for _, tag := range body.Studios {
-					err := app.DB().CreateTag(ctx, tag, tag)
+				for _, tag := range body.Tags {
+					err := app.DB().AddTagToAnime(ctx, id, tag)
 					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 						return nil, err
 					}
 				}
 
-				for _, tag := range body.Tags {
-					err := app.DB().AddTagToAnime(ctx, id, tag)
+				for _, tag := range body.Studios {
+					err := app.DB().CreateTag(ctx, tag, tag)
 					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 						return nil, err
 					}
@@ -651,6 +662,52 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 				err = app.DB().UpdateAnime(ctx, dbAnime.Id, changes)
 				if err != nil {
 					return nil, err
+				}
+
+				if body.Tags != nil {
+					err := app.DB().RemoveAllTagsFromAnime(ctx, dbAnime.Id)
+					if err != nil {
+						return nil, err
+					}
+
+					tags := *body.Tags
+
+					for _, tag := range tags {
+						err := app.DB().CreateTag(ctx, tag, tag)
+						if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+							return nil, err
+						}
+					}
+
+					for _, tag := range tags {
+						err := app.DB().AddTagToAnime(ctx, id, tag)
+						if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+							return nil, err
+						}
+					}
+				}
+
+				if body.Studios != nil {
+					err := app.DB().RemoveAllStudiosFromAnime(ctx, dbAnime.Id)
+					if err != nil {
+						return nil, err
+					}
+
+					studios := *body.Studios
+
+					for _, tag := range studios {
+						err := app.DB().CreateTag(ctx, tag, tag)
+						if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+							return nil, err
+						}
+					}
+
+					for _, tag := range studios {
+						err := app.DB().AddStudioToAnime(ctx, id, tag)
+						if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+							return nil, err
+						}
+					}
 				}
 
 				return nil, nil
