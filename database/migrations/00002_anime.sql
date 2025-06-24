@@ -13,8 +13,7 @@ CREATE TABLE animes (
 	score FLOAT,
 	status TEXT NOT NULL,
     rating TEXT NOT NULL,
-	-- episode_count INTEGER,
-    -- airing_season TEXT REFERENCES tags(slug) ON DELETE SET NULL,
+    airing_season TEXT REFERENCES tags(slug) ON DELETE SET NULL,
 
 	start_date TEXT, 
     end_date TEXT,

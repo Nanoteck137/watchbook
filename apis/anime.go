@@ -177,9 +177,10 @@ type CreateAnimeBody struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 
-	Score  float64 `json:"score"`
-	Status string  `json:"status"`
-	Rating string  `json:"rating"`
+	Score        float64 `json:"score"`
+	Status       string  `json:"status"`
+	Rating       string  `json:"rating"`
+	AiringSeason string  `json:"airingSeason"`
 
 	EpisodeCount int `json:"episodeCount"`
 
@@ -200,6 +201,7 @@ func (b *CreateAnimeBody) Transform() {
 	b.Description = transform.String(b.Description)
 
 	b.Score = utils.Clamp(b.Score, 0.0, 10.0)
+	b.AiringSeason = utils.TransformStringSlug(b.AiringSeason)
 
 	b.EpisodeCount = utils.Min(b.EpisodeCount, 0)
 
@@ -226,9 +228,10 @@ type EditAnimeBody struct {
 	Title       *string `json:"title,omitempty"`
 	Description *string `json:"description,omitempty"`
 
-	Score  *float64 `json:"score,omitempty"`
-	Status *string  `json:"status,omitempty"`
-	Rating *string  `json:"rating,omitempty"`
+	Score        *float64 `json:"score,omitempty"`
+	Status       *string  `json:"status,omitempty"`
+	Rating       *string  `json:"rating,omitempty"`
+	AiringSeason *string  `json:"airingSeason,omitempty"`
 
 	AdminStatus *string `json:"adminStatus,omitempty"`
 
@@ -246,6 +249,10 @@ func (b *EditAnimeBody) Transform() {
 
 	if b.Score != nil {
 		*b.Score = utils.Clamp(*b.Score, 0.0, 10.0)
+	}
+
+	if b.AiringSeason != nil {
+		*b.AiringSeason = utils.TransformStringSlug(*b.AiringSeason)
 	}
 
 	if b.Tags != nil {
@@ -429,6 +436,13 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.Background()
 
+				if body.AiringSeason != "" {
+					err := app.DB().CreateTag(ctx, body.AiringSeason, body.AiringSeason)
+					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+						return nil, err
+					}
+				}
+
 				ty := types.AnimeType(body.Type)
 
 				id, err := app.DB().CreateAnime(ctx, database.CreateAnimeParams{
@@ -456,6 +470,10 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					},
 					Status: types.AnimeStatus(body.Status),
 					Rating: types.AnimeRating(body.Rating),
+					AiringSeason: sql.NullString{
+						String: body.AiringSeason,
+						Valid:  body.AiringSeason != "",
+					},
 					// StartDate: sql.NullString{},
 					// EndDate:   sql.NullString{},
 				})
@@ -648,6 +666,24 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					changes.Rating = database.Change[types.AnimeRating]{
 						Value:   r,
 						Changed: r != dbAnime.Rating,
+					}
+				}
+
+				if body.AiringSeason != nil {
+					airingSeason := *body.AiringSeason
+					if airingSeason != "" {
+						err := app.DB().CreateTag(ctx, airingSeason, airingSeason)
+						if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+							return nil, err
+						}
+					}
+
+					changes.AiringSeason = database.Change[sql.NullString]{
+						Value:   sql.NullString{
+							String: airingSeason,
+							Valid:  airingSeason != "",
+						},
+						Changed: airingSeason != dbAnime.AiringSeason.String,
 					}
 				}
 

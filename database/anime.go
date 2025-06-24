@@ -90,9 +90,10 @@ type Anime struct {
 
 	Description sql.NullString `db:"description"`
 
-	Score  sql.NullFloat64   `db:"score"`
-	Status types.AnimeStatus `db:"status"`
-	Rating types.AnimeRating `db:"rating"`
+	Score        sql.NullFloat64   `db:"score"`
+	Status       types.AnimeStatus `db:"status"`
+	Rating       types.AnimeRating `db:"rating"`
+	AiringSeason sql.NullString    `db:"airing_season"`
 
 	StartDate sql.NullString `db:"start_date"`
 	EndDate   sql.NullString `db:"end_date"`
@@ -261,6 +262,7 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 			"animes.score",
 			"animes.status",
 			"animes.rating",
+			"animes.airing_season",
 
 			"animes.start_date",
 			"animes.end_date",
@@ -386,9 +388,10 @@ type CreateAnimeParams struct {
 
 	Description sql.NullString
 
-	Score  sql.NullFloat64
-	Status types.AnimeStatus
-	Rating types.AnimeRating
+	Score        sql.NullFloat64
+	Status       types.AnimeStatus
+	Rating       types.AnimeRating
+	AiringSeason sql.NullString
 
 	StartDate sql.NullString
 	EndDate   sql.NullString
@@ -442,9 +445,10 @@ func (db *Database) CreateAnime(ctx context.Context, params CreateAnimeParams) (
 
 		"description": params.Description,
 
-		"score":  params.Score,
-		"status": params.Status,
-		"rating": params.Rating,
+		"score":         params.Score,
+		"status":        params.Status,
+		"rating":        params.Rating,
+		"airing_season": params.AiringSeason,
 
 		"start_date": params.StartDate,
 		"end_date":   params.EndDate,
@@ -470,9 +474,10 @@ type AnimeChanges struct {
 
 	Description Change[sql.NullString]
 
-	Score  Change[sql.NullFloat64]
-	Status Change[types.AnimeStatus]
-	Rating Change[types.AnimeRating]
+	Score        Change[sql.NullFloat64]
+	Status       Change[types.AnimeStatus]
+	Rating       Change[types.AnimeRating]
+	AiringSeason Change[sql.NullString]
 
 	StartDate Change[sql.NullString]
 	EndDate   Change[sql.NullString]
@@ -498,6 +503,7 @@ func (db *Database) UpdateAnime(ctx context.Context, id string, changes AnimeCha
 	addToRecord(record, "score", changes.Score)
 	addToRecord(record, "status", changes.Status)
 	addToRecord(record, "rating", changes.Rating)
+	addToRecord(record, "airing_season", changes.AiringSeason)
 
 	addToRecord(record, "start_date", changes.StartDate)
 	addToRecord(record, "end_date", changes.EndDate)

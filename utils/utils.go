@@ -157,6 +157,11 @@ func Clamp[T cmp.Ordered](value T, min T, max T) T {
 	return value
 }
 
+func TransformStringSlug(s string) string {
+	s = strings.TrimSpace(s)
+	return Slug(s)
+}
+
 func TransformSlugArray(arr []string) []string {
 	res := make([]string, 0, len(arr))
 
