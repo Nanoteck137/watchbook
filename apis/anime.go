@@ -18,6 +18,9 @@ import (
 	"github.com/nanoteck137/watchbook/utils"
 )
 
+// TODO(patrik):
+//  - Add missing in-between episodes
+
 type AnimeStudio struct {
 	Slug string `json:"slug"`
 	Name string `json:"name"`
@@ -294,12 +297,26 @@ type GetAnimeEpisodes struct {
 	Episodes []AnimeEpisode `json:"episodes"`
 }
 
-type AddEpisodesBody struct {
+type AddMultipleEpisodesBody struct {
 	Count int `json:"count"`
 }
 
-func (b *AddEpisodesBody) Transform() {
+func (b *AddMultipleEpisodesBody) Transform() {
 	b.Count = utils.Min(b.Count, 0)
+}
+
+type AddEpisode struct {
+	Index int64 `json:"index"`
+}
+
+type AddEpisodeBody struct {
+	Index int64  `json:"index"`
+	Name  string `json:"name"`
+}
+
+func (b *AddEpisodeBody) Transform() {
+	b.Name = transform.String(b.Name)
+	b.Index = utils.Min(b.Index, 0)
 }
 
 type EditEpisodeBody struct {
@@ -682,17 +699,84 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "AddEpisodes",
+			Name:         "AddEpisode",
 			Method:       http.MethodPost,
-			Path:         "/animes/:id/episodes",
-			ResponseType: nil,
-			BodyType:     AddEpisodesBody{},
+			Path:         "/animes/:id/single/episodes",
+			ResponseType: AddEpisode{},
+			BodyType:     AddEpisodeBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				// TODO(patrik): Add admin check
 
 				id := c.Param("id")
 
-				body, err := pyrin.Body[AddEpisodesBody](c)
+				body, err := pyrin.Body[AddEpisodeBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, AnimeNotFound()
+					}
+
+					return nil, err
+				}
+
+				index := body.Index
+
+				if index == 0 {
+					// TODO(patrik): A better implementation would be getting
+					// the last episode from the database
+					episodes, err := app.DB().GetAnimeEpisodesByAnimeId(ctx, dbAnime.Id)
+					if err != nil {
+						return nil, err
+					}
+
+					if len(episodes) > 0 {
+						episode := episodes[len(episodes)-1]
+						index = episode.Index + 1
+					}
+				}
+
+				name := body.Name
+				if name == "" {
+					name = fmt.Sprintf("Episode %d", index)
+				}
+
+				err = app.DB().CreateAnimeEpisode(ctx, database.CreateAnimeEpisodeParams{
+					Index:   index,
+					AnimeId: dbAnime.Id,
+					Name:    name,
+				})
+				if err != nil {
+					if errors.Is(err, database.ErrItemAlreadyExists) {
+						return nil, EpisodeAlreadyExists()
+					}
+
+					return nil, err
+				}
+
+				return AddEpisode{
+					Index: index,
+				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "AddMultipleEpisodes",
+			Method:       http.MethodPost,
+			Path:         "/animes/:id/multiple/episodes",
+			ResponseType: nil,
+			BodyType:     AddMultipleEpisodesBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				// TODO(patrik): Add admin check
+
+				id := c.Param("id")
+
+				body, err := pyrin.Body[AddMultipleEpisodesBody](c)
 				if err != nil {
 					return nil, err
 				}
@@ -789,6 +873,41 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 				}
 
 				err = app.DB().UpdateAnimeEpisode(ctx, dbEpisode.Index, dbEpisode.AnimeId, changes)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "RemoveEpisode",
+			Method:       http.MethodDelete,
+			Path:         "/animes/:id/episodes/:index",
+			ResponseType: nil,
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				// TODO(patrik): Add admin check
+
+				id := c.Param("id")
+				index, err := strconv.ParseInt(c.Param("index"), 10, 64)
+				if err != nil {
+					// TODO(patrik): Handle error better
+					return nil, errors.New("failed to parse 'index' path param as integer")
+				}
+
+				ctx := context.Background()
+
+				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, AnimeNotFound()
+					}
+
+					return nil, err
+				}
+
+				err = app.DB().RemoveAnimeEpisode(ctx, index, dbAnime.Id)
 				if err != nil {
 					return nil, err
 				}

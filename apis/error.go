@@ -16,6 +16,8 @@ const (
 	ErrTypeAnimeNotFound   pyrin.ErrorType = "ANIME_NOT_FOUND"
 	ErrTypeEpisodeNotFound pyrin.ErrorType = "EPISODE_NOT_FOUND"
 	ErrTypeImageNotFound   pyrin.ErrorType = "IMAGE_NOT_FOUND"
+
+	ErrTypeEpisodeAlreadyExists pyrin.ErrorType = "EPISODE_ALREADY_EXISTS"
 )
 
 func InvalidAuth(message string) *pyrin.Error {
@@ -47,6 +49,14 @@ func ImageNotFound() *pyrin.Error {
 		Code:    http.StatusNotFound,
 		Type:    ErrTypeImageNotFound,
 		Message: "Image not found",
+	}
+}
+
+func EpisodeAlreadyExists() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeEpisodeAlreadyExists,
+		Message: "Episode already exists",
 	}
 }
 
