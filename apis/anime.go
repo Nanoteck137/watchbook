@@ -18,6 +18,8 @@ import (
 	"github.com/nanoteck137/watchbook/utils"
 )
 
+const DateLayout = "2006-01-02"
+
 // TODO(patrik):
 //  - Add missing in-between episodes
 
@@ -182,6 +184,9 @@ type CreateAnimeBody struct {
 	Rating       string  `json:"rating"`
 	AiringSeason string  `json:"airingSeason"`
 
+	StartDate string `json:"startDate"`
+	EndDate   string `json:"endDate"`
+
 	EpisodeCount int `json:"episodeCount"`
 
 	CoverUrl  string `json:"coverUrl"`
@@ -205,6 +210,9 @@ func (b *CreateAnimeBody) Transform() {
 
 	b.EpisodeCount = utils.Min(b.EpisodeCount, 0)
 
+	b.StartDate = transform.String(b.StartDate)
+	b.EndDate = transform.String(b.EndDate)
+
 	b.Tags = utils.TransformSlugArray(b.Tags)
 	b.Studios = utils.TransformSlugArray(b.Studios)
 }
@@ -215,6 +223,9 @@ func (b CreateAnimeBody) Validate() error {
 
 		validate.Field(&b.Status, validate.By(types.ValidateAnimeStatus)),
 		validate.Field(&b.Rating, validate.By(types.ValidateAnimeRating)),
+
+		validate.Field(&b.StartDate, validate.Date(DateLayout)),
+		validate.Field(&b.EndDate, validate.Date(DateLayout)),
 	)
 }
 
@@ -232,6 +243,9 @@ type EditAnimeBody struct {
 	Status       *string  `json:"status,omitempty"`
 	Rating       *string  `json:"rating,omitempty"`
 	AiringSeason *string  `json:"airingSeason,omitempty"`
+
+	StartDate *string `json:"startDate,omitempty"`
+	EndDate   *string `json:"endDate,omitempty"`
 
 	AdminStatus *string `json:"adminStatus,omitempty"`
 
@@ -270,6 +284,9 @@ func (b EditAnimeBody) Validate() error {
 
 		validate.Field(&b.Status, validate.Required.When(b.Status != nil), validate.By(types.ValidateAnimeStatus)),
 		validate.Field(&b.Rating, validate.Required.When(b.Rating != nil), validate.By(types.ValidateAnimeRating)),
+
+		validate.Field(&b.StartDate, validate.Date(DateLayout)),
+		validate.Field(&b.EndDate, validate.Date(DateLayout)),
 
 		validate.Field(&b.AdminStatus, validate.Required.When(b.AdminStatus != nil), validate.By(types.ValidateEntryAdminStatus)),
 	)
@@ -474,8 +491,14 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 						String: body.AiringSeason,
 						Valid:  body.AiringSeason != "",
 					},
-					// StartDate: sql.NullString{},
-					// EndDate:   sql.NullString{},
+					StartDate: sql.NullString{
+						String: body.StartDate,
+						Valid:  body.StartDate != "",
+					},
+					EndDate: sql.NullString{
+						String: body.EndDate,
+						Valid:  body.EndDate != "",
+					},
 				})
 				if err != nil {
 					return nil, err
@@ -669,6 +692,26 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
+				if body.StartDate != nil {
+					changes.StartDate = database.Change[sql.NullString]{
+						Value:   sql.NullString{
+							String: *body.StartDate,
+							Valid:  *body.StartDate != "",
+						},
+						Changed: *body.StartDate != dbAnime.StartDate.String,
+					}
+				}
+
+				if body.EndDate != nil {
+					changes.EndDate = database.Change[sql.NullString]{
+						Value:   sql.NullString{
+							String: *body.EndDate,
+							Valid:  *body.EndDate != "",
+						},
+						Changed: *body.EndDate != dbAnime.EndDate.String,
+					}
+				}
+
 				if body.AiringSeason != nil {
 					airingSeason := *body.AiringSeason
 					if airingSeason != "" {
@@ -679,7 +722,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					}
 
 					changes.AiringSeason = database.Change[sql.NullString]{
-						Value:   sql.NullString{
+						Value: sql.NullString{
 							String: airingSeason,
 							Valid:  airingSeason != "",
 						},
