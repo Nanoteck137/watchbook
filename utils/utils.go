@@ -156,3 +156,25 @@ func Clamp[T cmp.Ordered](value T, min T, max T) T {
 	}
 	return value
 }
+
+func TransformSlugArray(arr []string) []string {
+	res := make([]string, 0, len(arr))
+
+	for _, t := range arr {
+		t = strings.TrimSpace(t)
+		s := Slug(t)
+		if s != "" {
+			res = append(res, s)
+		}
+	}
+
+	return res
+}
+
+func FixNilArrayToEmpty[T any](a []T) []T {
+	if a == nil {
+		return []T{}
+	}
+
+	return a
+}

@@ -62,16 +62,6 @@ func (j *JsonColumn[T]) Value() (driver.Value, error) {
 // 	return j.Val
 // }
 
-type AnimeStudio struct {
-	Slug string `json:"slug"`
-	Name string `json:"name"`
-}
-
-type AnimeTag struct {
-	Slug string `json:"slug"`
-	Name string `json:"name"`
-}
-
 type AnimeUserData struct {
 	List         *types.AnimeUserList `json:"list"`
 	Score        *int64               `json:"score"`
@@ -81,9 +71,8 @@ type AnimeUserData struct {
 }
 
 type AnimeImageJson struct {
-	Hash     string `json:"hash"`
-	Filename string `json:"filename"`
-	IsCover  int    `json:"is_cover"`
+	Filename string               `json:"filename"`
+	Type     types.EntryImageType `json:"type"`
 }
 
 type Anime struct {
@@ -113,36 +102,13 @@ type Anime struct {
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
 
-	Studios JsonColumn[[]AnimeStudio]    `db:"studios"`
-	Tags    JsonColumn[[]AnimeTag]       `db:"tags"`
+	EpisodeCount int64 `db:"episode_count"`
+
+	Studios JsonColumn[[]string]         `db:"studios"`
+	Tags    JsonColumn[[]string]         `db:"tags"`
 	Images  JsonColumn[[]AnimeImageJson] `db:"images"`
 
 	UserData JsonColumn[AnimeUserData] `db:"user_data"`
-}
-
-func AnimeStudioQuery() *goqu.SelectDataset {
-	tbl := goqu.T("anime_studios")
-
-	return dialect.From(tbl).
-		Select(
-			tbl.Col("anime_id").As("id"),
-			goqu.Func(
-				"json_group_array",
-				goqu.Func(
-					"json_object",
-
-					"slug",
-					goqu.I("studios.slug"),
-					"name",
-					goqu.I("studios.name"),
-				),
-			).As("studios"),
-		).
-		Join(
-			goqu.I("studios"),
-			goqu.On(tbl.Col("studio_slug").Eq(goqu.I("studios.slug"))),
-		).
-		GroupBy(tbl.Col("anime_id"))
 }
 
 func AnimeAiringSeasonQuery() *goqu.SelectDataset {
@@ -173,19 +139,22 @@ func AnimeTagQuery() *goqu.SelectDataset {
 			tbl.Col("anime_id").As("id"),
 			goqu.Func(
 				"json_group_array",
-				goqu.Func(
-					"json_object",
-
-					"slug",
-					goqu.I("tags.slug"),
-					"name",
-					goqu.I("tags.name"),
-				),
+				tbl.Col("tag_slug"),
 			).As("data"),
 		).
-		Join(
-			goqu.I("tags"),
-			goqu.On(tbl.Col("tag_slug").Eq(goqu.I("tags.slug"))),
+		GroupBy(tbl.Col("anime_id"))
+}
+
+func AnimeStudioQuery() *goqu.SelectDataset {
+	tbl := goqu.T("anime_studios")
+
+	return dialect.From(tbl).
+		Select(
+			tbl.Col("anime_id").As("id"),
+			goqu.Func(
+				"json_group_array",
+				tbl.Col("tag_slug"),
+			).As("data"),
 		).
 		GroupBy(tbl.Col("anime_id"))
 }
@@ -201,15 +170,15 @@ func AnimeImageJsonQuery() *goqu.SelectDataset {
 				goqu.Func(
 					"json_object",
 
-					"hash",
-					goqu.I("anime_images.hash"),
 					"filename",
-					goqu.I("anime_images.filename"),
-					"is_cover",
-					goqu.I("anime_images.is_cover"),
+					tbl.Col("filename"),
+
+					"type",
+					tbl.Col("type"),
 				),
 			).As("data"),
 		).
+		Where(tbl.Col("is_primary").Gt(0)).
 		GroupBy(tbl.Col("anime_id"))
 }
 
@@ -255,14 +224,25 @@ func AnimeUserDataQuery(userId *string) *goqu.SelectDataset {
 	return query
 }
 
+func AnimeEpisodeCountQuery() *goqu.SelectDataset {
+	tbl := goqu.T("anime_episodes")
+
+	return dialect.From(tbl).
+		Select(
+			tbl.Col("anime_id").As("id"),
+			goqu.COUNT(tbl.Col("idx")).As("data"),
+		).
+		GroupBy(tbl.Col("anime_id"))
+}
+
 // TODO(patrik): Use goqu.T more
 func AnimeQuery(userId *string) *goqu.SelectDataset {
-	// studiosQuery := AnimeStudioQuery()
-	// tagsQuery := AnimeTagQuery()
-	// imagesQuery := AnimeImageJsonQuery()
-	// airingSeasonQuery := AnimeAiringSeasonQuery()
-	//
-	// userDataQuery := AnimeUserDataQuery(userId)
+	episodeCountQuery := AnimeEpisodeCountQuery()
+	studiosQuery := AnimeStudioQuery()
+	tagsQuery := AnimeTagQuery()
+	imagesQuery := AnimeImageJsonQuery()
+
+	userDataQuery := AnimeUserDataQuery(userId)
 
 	query := dialect.From("animes").
 		Select(
@@ -290,32 +270,34 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 			"animes.created",
 			"animes.updated",
 
-			// goqu.I("studios.studios").As("studios"),
-			// goqu.I("tags.data").As("tags"),
-			// goqu.I("images.data").As("images"),
-			//
-			// goqu.I("user_data.data").As("user_data"),
+			goqu.I("episode_count.data").As("episode_count"),
+
+			goqu.I("studios.data").As("studios"),
+			goqu.I("tags.data").As("tags"),
+			goqu.I("images.data").As("images"),
+
+			goqu.I("user_data.data").As("user_data"),
+		).
+		LeftJoin(
+			episodeCountQuery.As("episode_count"),
+			goqu.On(goqu.I("animes.id").Eq(goqu.I("episode_count.id"))),
+		).
+		LeftJoin(
+			studiosQuery.As("studios"),
+			goqu.On(goqu.I("animes.id").Eq(goqu.I("studios.id"))),
+		).
+		LeftJoin(
+			tagsQuery.As("tags"),
+			goqu.On(goqu.I("animes.id").Eq(goqu.I("tags.id"))),
+		).
+		LeftJoin(
+			imagesQuery.As("images"),
+			goqu.On(goqu.I("animes.id").Eq(goqu.I("images.id"))),
+		).
+		LeftJoin(
+			userDataQuery.As("user_data"),
+			goqu.On(goqu.I("animes.id").Eq(goqu.I("user_data.id"))),
 		)
-		// LeftJoin(
-		// 	studiosQuery.As("studios"),
-		// 	goqu.On(goqu.I("animes.id").Eq(goqu.I("studios.id"))),
-		// ).
-		// LeftJoin(
-		// 	tagsQuery.As("tags"),
-		// 	goqu.On(goqu.I("animes.id").Eq(goqu.I("tags.id"))),
-		// ).
-		// LeftJoin(
-		// 	airingSeasonQuery.As("airing_season_tag"),
-		// 	goqu.On(goqu.I("animes.airing_season").Eq(goqu.I("airing_season_tag.slug"))),
-		// ).
-		// LeftJoin(
-		// 	imagesQuery.As("images"),
-		// 	goqu.On(goqu.I("animes.id").Eq(goqu.I("images.id"))),
-		// ).
-		// LeftJoin(
-		// 	userDataQuery.As("user_data"),
-		// 	goqu.On(goqu.I("animes.id").Eq(goqu.I("user_data.id"))),
-		// )
 
 	return query
 }
@@ -581,11 +563,11 @@ func (db *Database) RemoveAllTagsFromAnime(ctx context.Context, animeId string) 
 	return nil
 }
 
-func (db *Database) AddStudioToAnime(ctx context.Context, animeId, studioSlug string) error {
+func (db *Database) AddStudioToAnime(ctx context.Context, animeId, tagSlug string) error {
 	query := dialect.Insert("anime_studios").
 		Rows(goqu.Record{
-			"anime_id":    animeId,
-			"studio_slug": studioSlug,
+			"anime_id": animeId,
+			"tag_slug": tagSlug,
 		})
 
 	_, err := db.db.Exec(ctx, query)

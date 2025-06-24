@@ -21,16 +21,6 @@ import (
 // TODO(patrik):
 //  - Add missing in-between episodes
 
-type AnimeStudio struct {
-	Slug string `json:"slug"`
-	Name string `json:"name"`
-}
-
-type AnimeTag struct {
-	Slug string `json:"slug"`
-	Name string `json:"name"`
-}
-
 type AnimeUser struct {
 	List         *types.AnimeUserList `json:"list"`
 	Score        *int64               `json:"score"`
@@ -48,26 +38,25 @@ type AnimeImage struct {
 type Anime struct {
 	Id string `json:"id"`
 
-	Title        string  `json:"title"`
-	TitleEnglish *string `json:"titleEnglish"`
-
+	Title       string  `json:"title"`
 	Description *string `json:"description"`
 
 	Type         types.AnimeType   `json:"type"`
 	Score        *float64          `json:"score"`
 	Status       types.AnimeStatus `json:"status"`
 	Rating       types.AnimeRating `json:"rating"`
-	EpisodeCount *int64            `json:"episodeCount"`
-	AiringSeason *AnimeTag         `json:"airingSeason"`
+	EpisodeCount int64             `json:"episodeCount"`
+	// AiringSeason *AnimeTag         `json:"airingSeason"`
 
-	StartDate *string `json:"startDate"`
-	EndDate   *string `json:"endDate"`
+	// StartDate *string `json:"startDate"`
+	// EndDate   *string `json:"endDate"`
 
-	Studios []AnimeStudio `json:"studios"`
-	Tags    []AnimeTag    `json:"tags"`
+	Studios []string `json:"studios"`
+	Tags    []string `json:"tags"`
 
-	CoverUrl string       `json:"coverUrl"`
-	Images   []AnimeImage `json:"images"`
+	CoverUrl  *string `json:"coverUrl"`
+	BannerUrl *string `json:"bannerUrl"`
+	LogoUrl   *string `json:"logoUrl"`
 
 	User *AnimeUser `json:"user,omitempty"`
 }
@@ -106,81 +95,57 @@ func getPageOptions(q url.Values) database.FetchOptions {
 
 func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
 	// TODO(patrik): Add default cover for animes without covers
-	coverUrl := ""
-	// for _, image := range anime.Images.Data {
-	// 	if image.IsCover > 0 {
-	// 		coverUrl = ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, image.Filename))
-	// 		break
-	// 	}
-	// }
 
-	// images := []AnimeImage{}
-	// for _, image := range anime.Images.Data {
-	// 	url := ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, image.Filename))
-	//
-	// 	images = append(images, AnimeImage{
-	// 		Hash:    image.Hash,
-	// 		Url:     url,
-	// 		IsCover: image.IsCover > 0,
-	// 	})
-	// }
+	var coverUrl *string
+	var bannerUrl *string
+	var logoUrl *string
 
-	// studios := make([]AnimeStudio, len(anime.Studios.Data))
-	// for i, studio := range anime.Studios.Data {
-	// 	studios[i] = AnimeStudio{
-	// 		Slug: studio.Slug,
-	// 		Name: studio.Name,
-	// 	}
-	// }
+	for _, image := range anime.Images.Data {
+		if image.Type == types.EntryImageTypeCover && coverUrl == nil {
+			url := ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, image.Filename))
+			coverUrl = &url
+		}
 
-	// tags := make([]AnimeTag, len(anime.Tags.Data))
-	// for i, tag := range anime.Tags.Data {
-	// 	tags[i] = AnimeTag{
-	// 		Slug: tag.Slug,
-	// 		Name: tag.Name,
-	// 	}
-	// }
+		if image.Type == types.EntryImageTypeBanner && bannerUrl == nil {
+			url := ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, image.Filename))
+			bannerUrl = &url
+		}
 
-	// var user *AnimeUser
-	// if hasUser {
-	// 	user = &AnimeUser{}
-	//
-	// 	if anime.UserData.Valid {
-	// 		val := anime.UserData.Data
-	// 		user.List = val.List
-	// 		user.Episode = val.Episode
-	// 		user.RewatchCount = val.RewatchCount
-	// 		user.Score = val.Score
-	// 		user.IsRewatching = val.IsRewatching > 0
-	// 	}
-	// }
+		if image.Type == types.EntryImageTypeLogo && logoUrl == nil {
+			url := ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, image.Filename))
+			logoUrl = &url
+		}
+	}
 
-	// var airingSeason *AnimeTag
-	// if anime.AiringSeason.Valid {
-	// 	airingSeason = &AnimeTag{
-	// 		Slug: anime.AiringSeason.Data.Slug,
-	// 		Name: anime.AiringSeason.Data.Name,
-	// 	}
-	// }
+	var user *AnimeUser
+	if hasUser {
+		user = &AnimeUser{}
+
+		if anime.UserData.Valid {
+			val := anime.UserData.Data
+			user.List = val.List
+			user.Episode = val.Episode
+			user.RewatchCount = val.RewatchCount
+			user.Score = val.Score
+			user.IsRewatching = val.IsRewatching > 0
+		}
+	}
 
 	return Anime{
 		Id:           anime.Id,
 		Title:        anime.Title,
-		TitleEnglish: utils.SqlNullToStringPtr(anime.TitleEnglish),
 		Description:  utils.SqlNullToStringPtr(anime.Description),
-		// Type:         anime.Type,
-		Status: anime.Status,
-		Rating: anime.Rating,
-		// AiringSeason: airingSeason,
-		// EpisodeCount: utils.SqlNullToInt64Ptr(anime.EpisodeCount),
-		Score:     utils.SqlNullToFloat64Ptr(anime.Score),
-		StartDate: utils.SqlNullToStringPtr(anime.StartDate),
-		EndDate:   utils.SqlNullToStringPtr(anime.EndDate),
-		// Studios:      studios,
-		// Tags:         tags,
-		CoverUrl: coverUrl,
-		// Images:       images,
-		// User:         user,
+		Type:         anime.Type,
+		Score:        utils.SqlNullToFloat64Ptr(anime.Score),
+		Status:       anime.Status,
+		Rating:       anime.Rating,
+		EpisodeCount: anime.EpisodeCount,
+		Studios:      utils.FixNilArrayToEmpty(anime.Studios.Data),
+		Tags:         utils.FixNilArrayToEmpty(anime.Tags.Data),
+		CoverUrl:     coverUrl,
+		BannerUrl:    bannerUrl,
+		LogoUrl:      logoUrl,
+		User:         user,
 	}
 }
 
@@ -221,6 +186,9 @@ type CreateAnimeBody struct {
 	CoverUrl  string `json:"coverUrl"`
 	BannerUrl string `json:"bannerUrl"`
 	LogoUrl   string `json:"logoUrl"`
+
+	Tags    []string `json:"tags"`
+	Studios []string `json:"studios"`
 }
 
 func (b *CreateAnimeBody) Transform() {
@@ -234,6 +202,9 @@ func (b *CreateAnimeBody) Transform() {
 	b.Score = utils.Clamp(b.Score, 0.0, 10.0)
 
 	b.EpisodeCount = utils.Min(b.EpisodeCount, 0)
+
+	b.Tags = utils.TransformSlugArray(b.Tags)
+	b.Studios = utils.TransformSlugArray(b.Studios)
 }
 
 func (b CreateAnimeBody) Validate() error {
@@ -521,6 +492,34 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.LogoUrl, types.EntryImageTypeLogo, true)
 					if err != nil {
 						logger.Error("failed to download logo image for anime", "animeId", id, "err", err)
+					}
+				}
+
+				for _, tag := range body.Tags {
+					err := app.DB().CreateTag(ctx, tag, tag)
+					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+						return nil, err
+					}
+				}
+
+				for _, tag := range body.Studios {
+					err := app.DB().CreateTag(ctx, tag, tag)
+					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+						return nil, err
+					}
+				}
+
+				for _, tag := range body.Tags {
+					err := app.DB().AddTagToAnime(ctx, id, tag)
+					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+						return nil, err
+					}
+				}
+
+				for _, tag := range body.Studios {
+					err := app.DB().AddStudioToAnime(ctx, id, tag)
+					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+						return nil, err
 					}
 				}
 

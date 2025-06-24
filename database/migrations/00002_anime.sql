@@ -59,9 +59,9 @@ CREATE TABLE anime_tags (
 
 CREATE TABLE anime_studios (
     anime_id TEXT REFERENCES animes(id) ON DELETE CASCADE,
-    studio_slug TEXT REFERENCES studios(slug) ON DELETE CASCADE,
+    tag_slug TEXT REFERENCES tags(slug) ON DELETE CASCADE,
 
-    PRIMARY KEY(anime_id, studio_slug)
+    PRIMARY KEY(anime_id, tag_slug)
 );
 
 CREATE TABLE anime_user_data (
