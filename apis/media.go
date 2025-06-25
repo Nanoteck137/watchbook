@@ -373,7 +373,7 @@ func (b AddImageBody) Validate() error {
 func InstallMediaHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
-			Name:         "GetMedias",
+			Name:         "GetMedia",
 			Method:       http.MethodGet,
 			Path:         "/media",
 			ResponseType: GetMedia{},
@@ -384,8 +384,24 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				ctx := context.TODO()
 
 				var userId *string
-				if user, err := User(app, c); err == nil {
+
+				if q.Has("userId") {
+					id := q.Get("userId")
+
+					user, err := app.DB().GetUserById(ctx, id)
+					if err != nil {
+						if errors.Is(err, database.ErrItemNotFound) {
+							return nil, UserNotFound()
+						}
+
+						return nil, err
+					}
+
 					userId = &user.Id
+				} else {
+					if user, err := User(app, c); err == nil {
+						userId = &user.Id
+					}
 				}
 
 				filterStr := q.Get("filter")
@@ -1230,48 +1246,6 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return nil, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "GetUserMediaList",
-			Method:       http.MethodGet,
-			Path:         "/media/user/list/:id",
-			ResponseType: GetMedia{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				id := c.Param("id")
-
-				q := c.Request().URL.Query()
-				opts := getPageOptions(q)
-
-				ctx := context.TODO()
-
-				user, err := app.DB().GetUserById(ctx, id)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, UserNotFound()
-					}
-
-					return nil, err
-				}
-
-				filterStr := q.Get("filter")
-				sortStr := q.Get("sort")
-				media, p, err := app.DB().GetPagedMedia(ctx, &user.Id, filterStr, sortStr, opts)
-				if err != nil {
-					return nil, err
-				}
-
-				res := GetMedia{
-					Page:  p,
-					Media: make([]Media, len(media)),
-				}
-
-				for i, m := range media {
-					res.Media[i] = ConvertDBMedia(c, true, m)
-				}
-
-				return res, nil
 			},
 		},
 	)
