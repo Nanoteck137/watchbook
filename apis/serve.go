@@ -15,20 +15,20 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 	InstallSystemHandlers(app, g)
 	InstallUserHandlers(app, g)
 
-	InstallAnimeHandlers(app, g)
+	InstallMediaHandlers(app, g)
 
 	g = router.Group("/files")
 	g.Register(
 		pyrin.NormalHandler{
-			Name:        "GetAnimeImage",
+			Name:        "GetMediaImage",
 			Method:      http.MethodGet,
-			Path:        "/animes/:id/:image",
+			Path:        "/media/:id/:image",
 			HandlerFunc: func(c pyrin.Context) error {
 				id := c.Param("id")
 				image := c.Param("image")
 
-				animeDir := app.WorkDir().AnimesDir()
-				p := animeDir.AnimeImageDir(id)
+				mediaDir := app.WorkDir().MediaDir()
+				p := mediaDir.MediaImageDir(id)
 
 				f := os.DirFS(p)
 				return pyrin.ServeFile(c, f, image)

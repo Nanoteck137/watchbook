@@ -9,13 +9,13 @@ import (
 	"github.com/nanoteck137/watchbook/types"
 )
 
-type AnimeImage struct {
+type MediaImage struct {
 	RowId int `db:"rowid"`
 
-	AnimeId string `db:"anime_id"`
+	MediaId string `db:"media_id"`
 	Hash    string `db:"hash"`
 
-	Type      types.EntryImageType `db:"type"`
+	Type      types.MediaImageType `db:"type"`
 	MimeType  string               `db:"mime_type"`
 	Filename  string               `db:"filename"`
 	IsPrimary int                  `db:"is_primary"`
@@ -25,39 +25,39 @@ type AnimeImage struct {
 }
 
 // TODO(patrik): Use goqu.T more
-func AnimeImageQuery() *goqu.SelectDataset {
-	query := dialect.From("anime_images").
+func MediaImageQuery() *goqu.SelectDataset {
+	query := dialect.From("media_images").
 		Select(
-			"anime_images.rowid",
+			"media_images.rowid",
 
-			"anime_images.anime_id",
-			"anime_images.hash",
+			"media_images.media_id",
+			"media_images.hash",
 
-			"anime_images.type",
-			"anime_images.mime_type",
-			"anime_images.filename",
-			"anime_images.is_primary",
+			"media_images.type",
+			"media_images.mime_type",
+			"media_images.filename",
+			"media_images.is_primary",
 
-			"anime_images.created",
-			"anime_images.updated",
+			"media_images.created",
+			"media_images.updated",
 		)
 
 	return query
 }
 
-func (db *Database) GetAnimeImagesByHashAnimeId(ctx context.Context, animeId, hash string) (AnimeImage, error) {
-	query := AnimeImageQuery().
+func (db *Database) GetMediaImagesByHashMediaId(ctx context.Context, mediaId, hash string) (MediaImage, error) {
+	query := MediaImageQuery().
 		Where(
-			goqu.I("anime_images.anime_id").Eq(animeId),
-			goqu.I("anime_images.hash").Eq(hash),
+			goqu.I("media_images.media_id").Eq(mediaId),
+			goqu.I("media_images.hash").Eq(hash),
 		)
 
-	return ember.Single[AnimeImage](db.db, ctx, query)
+	return ember.Single[MediaImage](db.db, ctx, query)
 }
 
-func (db *Database) RemoveAllImagesFromAnime(ctx context.Context, animeId string) error {
-	query := goqu.Delete("anime_images").
-		Where(goqu.I("anime_images.anime_id").Eq(animeId))
+func (db *Database) RemoveAllImagesFromMedia(ctx context.Context, mediaId string) error {
+	query := goqu.Delete("media_images").
+		Where(goqu.I("media_images.media_id").Eq(mediaId))
 
 	_, err := db.db.Exec(ctx, query)
 	if err != nil {
@@ -67,11 +67,11 @@ func (db *Database) RemoveAllImagesFromAnime(ctx context.Context, animeId string
 	return nil
 }
 
-type CreateAnimeImageParams struct {
-	AnimeId string
+type CreateMediaImageParams struct {
+	MediaId string
 	Hash    string
 
-	Type      types.EntryImageType
+	Type      types.MediaImageType
 	MimeType  string
 	Filename  string
 	IsPrimary bool
@@ -80,7 +80,7 @@ type CreateAnimeImageParams struct {
 	Updated int64
 }
 
-func (db *Database) CreateAnimeImage(ctx context.Context, params CreateAnimeImageParams) error {
+func (db *Database) CreateMediaImage(ctx context.Context, params CreateMediaImageParams) error {
 	t := time.Now().UnixMilli()
 	if params.Created == 0 && params.Updated == 0 {
 		params.Created = t
@@ -88,11 +88,11 @@ func (db *Database) CreateAnimeImage(ctx context.Context, params CreateAnimeImag
 	}
 
 	if params.Type == "" {
-		params.Type = types.EntryImageTypeUnknown
+		params.Type = types.MediaImageTypeUnknown
 	}
 
-	query := dialect.Insert("anime_images").Rows(goqu.Record{
-		"anime_id": params.AnimeId,
+	query := dialect.Insert("media_images").Rows(goqu.Record{
+		"media_id": params.MediaId,
 		"hash":     params.Hash,
 
 		"type":       params.Type,
@@ -112,8 +112,8 @@ func (db *Database) CreateAnimeImage(ctx context.Context, params CreateAnimeImag
 	return nil
 }
 
-type AnimeImageChanges struct {
-	Type      Change[types.EntryImageType]
+type MediaImageChanges struct {
+	Type      Change[types.MediaImageType]
 	MimeType  Change[string]
 	Filename  Change[string]
 	IsPrimary Change[bool]
@@ -121,7 +121,7 @@ type AnimeImageChanges struct {
 	Created Change[int64]
 }
 
-func (db *Database) UpdateAnimeImage(ctx context.Context, animeId, hash string, changes AnimeImageChanges) error {
+func (db *Database) UpdateMediaImage(ctx context.Context, mediaId, hash string, changes MediaImageChanges) error {
 	record := goqu.Record{}
 
 	addToRecord(record, "type", changes.Type)
@@ -135,11 +135,11 @@ func (db *Database) UpdateAnimeImage(ctx context.Context, animeId, hash string, 
 		return nil
 	}
 
-	query := dialect.Update("anime_images").
+	query := dialect.Update("media_images").
 		Set(record).
 		Where(
-			goqu.I("anime_images.anime_id").Eq(animeId),
-			goqu.I("anime_images.hash").Eq(hash),
+			goqu.I("media_images.media_id").Eq(mediaId),
+			goqu.I("media_images.hash").Eq(hash),
 		)
 
 	_, err := db.db.Exec(ctx, query)

@@ -6,7 +6,7 @@ import (
 	"github.com/nanoteck137/watchbook/types"
 )
 
-func ConvertAnimeType(typ string) types.AnimeType {
+func ConvertAnimeType(typ string) types.MediaType {
 	// switch typ {
 	// case "TV":
 	// 	return types.AnimeTypeTV
@@ -32,59 +32,45 @@ func ConvertAnimeType(typ string) types.AnimeType {
 	// 	fmt.Printf("WARN: Unknown anime type \"%s\"\n", typ)
 	// }
 
-	return types.AnimeTypeUnknown
+	return types.MediaTypeUnknown
 }
 
-func ConvertAnimeStatus(status string) types.AnimeStatus {
+func ConvertAnimeStatus(status string) types.MediaStatus {
 	switch status {
 	case "Currently Airing":
-		return types.AnimeStatusAiring
+		return types.MediaStatusAiring
 	case "Finished Airing":
-		return types.AnimeStatusFinished
+		return types.MediaStatusFinished
 	case "Not yet aired":
-		return types.AnimeStatusNotAired
+		return types.MediaStatusNotAired
 	case "":
 	default:
 		// TODO(patrik): Better logging
 		fmt.Printf("WARN: Unknown anime status \"%s\"\n", status)
 	}
 
-	return types.AnimeStatusUnknown
+	return types.MediaStatusUnknown
 }
 
-func ConvertAnimeRating(rating string) types.AnimeRating {
+func ConvertAnimeRating(rating string) types.MediaRating {
 	switch rating {
 	case "G - All Ages":
-		return types.AnimeRatingAllAges
+		return types.MediaRatingAllAges
 	case "PG - Children":
-		return types.AnimeRatingPG
+		return types.MediaRatingPG
 	case "PG-13 - Teens 13 or older":
-		return types.AnimeRatingPG13
+		return types.MediaRatingPG13
 	case "R - 17+ (violence & profanity)":
-		return types.AnimeRatingR17
+		return types.MediaRatingR17
 	case "R+ - Mild Nudity":
-		return types.AnimeRatingRMildNudity
+		return types.MediaRatingRMildNudity
 	case "Rx - Hentai":
-		return types.AnimeRatingRHentai
+		return types.MediaRatingRHentai
 	case "":
 	default:
 		// TODO(patrik): Better logging
 		fmt.Printf("WARN: Unknown anime rating \"%s\"\n", rating)
 	}
 
-	return types.AnimeRatingUnknown
-}
-
-func ConvertThemeSongType(typ ThemeSongType) types.AnimeThemeSongType {
-	switch(typ) {
-	case ThemeSongOpening:
-		return types.AnimeThemeSongTypeOpening
-	case ThemeSongEnding:
-		return types.AnimeThemeSongTypeEnding
-	default:
-		// TODO(patrik): Better logging
-		fmt.Printf("WARN: Unknown theme song type \"%s\"\n", typ)
-	}
-
-	return types.AnimeThemeSongTypeUnknown
+	return types.MediaRatingUnknown
 }

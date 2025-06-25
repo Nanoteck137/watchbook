@@ -13,11 +13,11 @@ const (
 	ErrTypeApiTokenNotFound   pyrin.ErrorType = "API_TOKEN_NOT_FOUND"
 	ErrTypeInvalidCredentials pyrin.ErrorType = "INVALID_CREDENTIALS"
 
-	ErrTypeAnimeNotFound   pyrin.ErrorType = "ANIME_NOT_FOUND"
-	ErrTypeEpisodeNotFound pyrin.ErrorType = "EPISODE_NOT_FOUND"
+	ErrTypeMediaNotFound   pyrin.ErrorType = "MEDIA_NOT_FOUND"
+	ErrTypePartNotFound pyrin.ErrorType = "PART_NOT_FOUND"
 	ErrTypeImageNotFound   pyrin.ErrorType = "IMAGE_NOT_FOUND"
 
-	ErrTypeEpisodeAlreadyExists pyrin.ErrorType = "EPISODE_ALREADY_EXISTS"
+	ErrTypePartAlreadyExists pyrin.ErrorType = "PART_ALREADY_EXISTS"
 )
 
 func InvalidAuth(message string) *pyrin.Error {
@@ -28,19 +28,19 @@ func InvalidAuth(message string) *pyrin.Error {
 	}
 }
 
-func AnimeNotFound() *pyrin.Error {
+func MediaNotFound() *pyrin.Error {
 	return &pyrin.Error{
 		Code:    http.StatusNotFound,
-		Type:    ErrTypeAnimeNotFound,
-		Message: "Anime not found",
+		Type:    ErrTypeMediaNotFound,
+		Message: "Media not found",
 	}
 }
 
-func EpisodeNotFound() *pyrin.Error {
+func PartNotFound() *pyrin.Error {
 	return &pyrin.Error{
 		Code:    http.StatusNotFound,
-		Type:    ErrTypeEpisodeNotFound,
-		Message: "Episode not found",
+		Type:    ErrTypePartNotFound,
+		Message: "Part not found",
 	}
 }
 
@@ -52,11 +52,11 @@ func ImageNotFound() *pyrin.Error {
 	}
 }
 
-func EpisodeAlreadyExists() *pyrin.Error {
+func PartAlreadyExists() *pyrin.Error {
 	return &pyrin.Error{
 		Code:    http.StatusBadRequest,
-		Type:    ErrTypeEpisodeAlreadyExists,
-		Message: "Episode already exists",
+		Type:    ErrTypePartAlreadyExists,
+		Message: "Part already exists",
 	}
 }
 

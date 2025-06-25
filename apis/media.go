@@ -21,34 +21,34 @@ import (
 const DateLayout = "2006-01-02"
 
 // TODO(patrik):
-//  - Add missing in-between episodes
+//  - Add missing in-between parts
 
-type AnimeUser struct {
-	List         *types.AnimeUserList `json:"list"`
+type MediaUser struct {
+	List         *types.MediaUserList `json:"list"`
 	Score        *int64               `json:"score"`
-	Episode      *int64               `json:"episode"`
-	RewatchCount *int64               `json:"rewatchCount"`
-	IsRewatching bool                 `json:"isRewatching"`
+	Part         *int64               `json:"part"`
+	RevisitCount *int64               `json:"revisitCount"`
+	IsRevisiting bool                 `json:"isRevisiting"`
 }
 
-type AnimeImage struct {
+type MediaImage struct {
 	Hash    string `json:"hash"`
 	Url     string `json:"url"`
 	IsCover bool   `json:"isCover"`
 }
 
-type Anime struct {
+type Media struct {
 	Id string `json:"id"`
 
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
 
-	Type         types.AnimeType   `json:"type"`
-	Score        *float64          `json:"score"`
-	Status       types.AnimeStatus `json:"status"`
-	Rating       types.AnimeRating `json:"rating"`
-	EpisodeCount int64             `json:"episodeCount"`
-	// AiringSeason *AnimeTag         `json:"airingSeason"`
+	Type      types.MediaType   `json:"type"`
+	Score     *float64          `json:"score"`
+	Status    types.MediaStatus `json:"status"`
+	Rating    types.MediaRating `json:"rating"`
+	PartCount int64             `json:"partCount"`
+	// AiringSeason *MediaTag         `json:"airingSeason"`
 
 	// StartDate *string `json:"startDate"`
 	// EndDate   *string `json:"endDate"`
@@ -60,16 +60,16 @@ type Anime struct {
 	BannerUrl *string `json:"bannerUrl"`
 	LogoUrl   *string `json:"logoUrl"`
 
-	User *AnimeUser `json:"user,omitempty"`
+	User *MediaUser `json:"user,omitempty"`
 }
 
-type GetAnimes struct {
-	Page   types.Page `json:"page"`
-	Animes []Anime    `json:"animes"`
+type GetMedia struct {
+	Page  types.Page `json:"page"`
+	Media []Media    `json:"media"`
 }
 
-type GetAnimeById struct {
-	Anime
+type GetMediaById struct {
+	Media
 }
 
 // TODO(patrik): Move
@@ -95,81 +95,80 @@ func getPageOptions(q url.Values) database.FetchOptions {
 	}
 }
 
-func ConvertDBAnime(c pyrin.Context, hasUser bool, anime database.Anime) Anime {
-	// TODO(patrik): Add default cover for animes without covers
-
+func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
+	// TODO(patrik): Add default cover
 	var coverUrl *string
 	var bannerUrl *string
 	var logoUrl *string
 
-	for _, image := range anime.Images.Data {
-		if image.Type == types.EntryImageTypeCover && coverUrl == nil {
-			url := ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, image.Filename))
+	for _, image := range media.Images.Data {
+		if image.Type == types.MediaImageTypeCover && coverUrl == nil {
+			url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", media.Id, image.Filename))
 			coverUrl = &url
 		}
 
-		if image.Type == types.EntryImageTypeBanner && bannerUrl == nil {
-			url := ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, image.Filename))
+		if image.Type == types.MediaImageTypeBanner && bannerUrl == nil {
+			url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", media.Id, image.Filename))
 			bannerUrl = &url
 		}
 
-		if image.Type == types.EntryImageTypeLogo && logoUrl == nil {
-			url := ConvertURL(c, fmt.Sprintf("/files/animes/%s/%s", anime.Id, image.Filename))
+		if image.Type == types.MediaImageTypeLogo && logoUrl == nil {
+			url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", media.Id, image.Filename))
 			logoUrl = &url
 		}
 	}
 
-	var user *AnimeUser
+	var user *MediaUser
 	if hasUser {
-		user = &AnimeUser{}
+		user = &MediaUser{}
 
-		if anime.UserData.Valid {
-			val := anime.UserData.Data
+		if media.UserData.Valid {
+			val := media.UserData.Data
 			user.List = val.List
-			user.Episode = val.Episode
-			user.RewatchCount = val.RewatchCount
+			user.Part = val.Part
+			user.RevisitCount = val.RevisitCount
 			user.Score = val.Score
-			user.IsRewatching = val.IsRewatching > 0
+			user.IsRevisiting = val.IsRevisiting > 0
 		}
 	}
 
-	return Anime{
-		Id:           anime.Id,
-		Title:        anime.Title,
-		Description:  utils.SqlNullToStringPtr(anime.Description),
-		Type:         anime.Type,
-		Score:        utils.SqlNullToFloat64Ptr(anime.Score),
-		Status:       anime.Status,
-		Rating:       anime.Rating,
-		EpisodeCount: anime.EpisodeCount,
-		Studios:      utils.FixNilArrayToEmpty(anime.Studios.Data),
-		Tags:         utils.FixNilArrayToEmpty(anime.Tags.Data),
-		CoverUrl:     coverUrl,
-		BannerUrl:    bannerUrl,
-		LogoUrl:      logoUrl,
-		User:         user,
+	return Media{
+		Id:          media.Id,
+		Title:       media.Title,
+		Description: utils.SqlNullToStringPtr(media.Description),
+		Type:        media.Type,
+		Score:       utils.SqlNullToFloat64Ptr(media.Score),
+		Status:      media.Status,
+		Rating:      media.Rating,
+		PartCount:   media.PartCount,
+		Studios:     utils.FixNilArrayToEmpty(media.Studios.Data),
+		Tags:        utils.FixNilArrayToEmpty(media.Tags.Data),
+		CoverUrl:    coverUrl,
+		BannerUrl:   bannerUrl,
+		LogoUrl:     logoUrl,
+		User:        user,
 	}
 }
 
-type SetAnimeUserData struct {
-	List         *types.AnimeUserList `json:"list,omitempty"`
+type SetMediaUserData struct {
+	List         *types.MediaUserList `json:"list,omitempty"`
 	Score        *int64               `json:"score,omitempty"`
-	Episode      *int64               `json:"episode,omitempty"`
-	RewatchCount *int64               `json:"rewatchCount,omitempty"`
-	IsRewatching *bool                `json:"isRewatching,omitempty"`
+	Part         *int64               `json:"part,omitempty"`
+	RevisitCount *int64               `json:"revisitCount,omitempty"`
+	IsRevisiting *bool                `json:"isRevisiting,omitempty"`
 }
 
-func (b *SetAnimeUserData) Transform() {
+func (b *SetMediaUserData) Transform() {
 	if b.Score != nil {
 		*b.Score = utils.Clamp(*b.Score, 0, 10)
 	}
 }
 
-type CreateAnime struct {
+type CreateMedia struct {
 	Id string `json:"id"`
 }
 
-type CreateAnimeBody struct {
+type CreateMediaBody struct {
 	Type string `json:"type"`
 
 	TmdbId    string `json:"tmdbId"`
@@ -187,7 +186,7 @@ type CreateAnimeBody struct {
 	StartDate string `json:"startDate"`
 	EndDate   string `json:"endDate"`
 
-	EpisodeCount int `json:"episodeCount"`
+	PartCount int `json:"partCount"`
 
 	CoverUrl  string `json:"coverUrl"`
 	BannerUrl string `json:"bannerUrl"`
@@ -197,7 +196,7 @@ type CreateAnimeBody struct {
 	Studios []string `json:"studios"`
 }
 
-func (b *CreateAnimeBody) Transform() {
+func (b *CreateMediaBody) Transform() {
 	b.TmdbId = transform.String(b.TmdbId)
 	b.MalId = transform.String(b.MalId)
 	b.AnilistId = transform.String(b.AnilistId)
@@ -208,7 +207,7 @@ func (b *CreateAnimeBody) Transform() {
 	b.Score = utils.Clamp(b.Score, 0.0, 10.0)
 	b.AiringSeason = utils.TransformStringSlug(b.AiringSeason)
 
-	b.EpisodeCount = utils.Min(b.EpisodeCount, 0)
+	b.PartCount = utils.Min(b.PartCount, 0)
 
 	b.StartDate = transform.String(b.StartDate)
 	b.EndDate = transform.String(b.EndDate)
@@ -217,19 +216,19 @@ func (b *CreateAnimeBody) Transform() {
 	b.Studios = utils.TransformSlugArray(b.Studios)
 }
 
-func (b CreateAnimeBody) Validate() error {
+func (b CreateMediaBody) Validate() error {
 	return validate.ValidateStruct(&b,
-		validate.Field(&b.Type, validate.Required, validate.By(types.ValidateAnimeType)),
+		validate.Field(&b.Type, validate.Required, validate.By(types.ValidateMediaType)),
 
-		validate.Field(&b.Status, validate.By(types.ValidateAnimeStatus)),
-		validate.Field(&b.Rating, validate.By(types.ValidateAnimeRating)),
+		validate.Field(&b.Status, validate.By(types.ValidateMediaStatus)),
+		validate.Field(&b.Rating, validate.By(types.ValidateMediaRating)),
 
 		validate.Field(&b.StartDate, validate.Date(DateLayout)),
 		validate.Field(&b.EndDate, validate.Date(DateLayout)),
 	)
 }
 
-type EditAnimeBody struct {
+type EditMediaBody struct {
 	Type *string `json:"type,omitempty"`
 
 	TmdbId    *string `json:"tmdbId,omitempty"`
@@ -253,7 +252,7 @@ type EditAnimeBody struct {
 	Studios *[]string `json:"studios,omitempty"`
 }
 
-func (b *EditAnimeBody) Transform() {
+func (b *EditMediaBody) Transform() {
 	b.TmdbId = transform.StringPtr(b.TmdbId)
 	b.MalId = transform.StringPtr(b.MalId)
 	b.AnilistId = transform.StringPtr(b.AnilistId)
@@ -278,62 +277,62 @@ func (b *EditAnimeBody) Transform() {
 	}
 }
 
-func (b EditAnimeBody) Validate() error {
+func (b EditMediaBody) Validate() error {
 	return validate.ValidateStruct(&b,
-		validate.Field(&b.Type, validate.Required.When(b.Type != nil), validate.By(types.ValidateAnimeType)),
+		validate.Field(&b.Type, validate.Required.When(b.Type != nil), validate.By(types.ValidateMediaType)),
 
-		validate.Field(&b.Status, validate.Required.When(b.Status != nil), validate.By(types.ValidateAnimeStatus)),
-		validate.Field(&b.Rating, validate.Required.When(b.Rating != nil), validate.By(types.ValidateAnimeRating)),
+		validate.Field(&b.Status, validate.Required.When(b.Status != nil), validate.By(types.ValidateMediaStatus)),
+		validate.Field(&b.Rating, validate.Required.When(b.Rating != nil), validate.By(types.ValidateMediaRating)),
 
 		validate.Field(&b.StartDate, validate.Date(DateLayout)),
 		validate.Field(&b.EndDate, validate.Date(DateLayout)),
 
-		validate.Field(&b.AdminStatus, validate.Required.When(b.AdminStatus != nil), validate.By(types.ValidateEntryAdminStatus)),
+		validate.Field(&b.AdminStatus, validate.Required.When(b.AdminStatus != nil), validate.By(types.ValidateMediaAdminStatus)),
 	)
 }
 
-type AnimeEpisode struct {
+type MediaPart struct {
 	Index   int64  `json:"index"`
-	AnimeId string `json:"animeId"`
+	MediaId string `json:"mediaId"`
 
 	Name string `json:"name"`
 }
 
-type GetAnimeEpisodes struct {
-	Episodes []AnimeEpisode `json:"episodes"`
+type GetMediaParts struct {
+	Parts []MediaPart `json:"parts"`
 }
 
-type AddMultipleEpisodesBody struct {
+type AddMultiplePartsBody struct {
 	Count int `json:"count"`
 }
 
-func (b *AddMultipleEpisodesBody) Transform() {
+func (b *AddMultiplePartsBody) Transform() {
 	b.Count = utils.Min(b.Count, 0)
 }
 
-type AddEpisode struct {
+type AddPart struct {
 	Index int64 `json:"index"`
 }
 
-type AddEpisodeBody struct {
+type AddPartBody struct {
 	Index int64  `json:"index"`
 	Name  string `json:"name"`
 }
 
-func (b *AddEpisodeBody) Transform() {
+func (b *AddPartBody) Transform() {
 	b.Name = transform.String(b.Name)
 	b.Index = utils.Min(b.Index, 0)
 }
 
-type EditEpisodeBody struct {
+type EditPartBody struct {
 	Name *string `json:"name"`
 }
 
-func (b *EditEpisodeBody) Transform() {
+func (b *EditPartBody) Transform() {
 	b.Name = transform.StringPtr(b.Name)
 }
 
-func (b EditEpisodeBody) Validate() error {
+func (b EditPartBody) Validate() error {
 	return validate.ValidateStruct(&b,
 		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
 	)
@@ -347,7 +346,7 @@ type EditImageBody struct {
 
 func (b EditImageBody) Validate() error {
 	return validate.ValidateStruct(&b,
-		validate.Field(&b.Type, validate.Required.When(b.Type != nil), validate.By(types.ValidateEntryImageType)),
+		validate.Field(&b.Type, validate.Required.When(b.Type != nil), validate.By(types.ValidateMediaImageType)),
 	)
 }
 
@@ -367,17 +366,17 @@ func (b *AddImageBody) Transform() {
 func (b AddImageBody) Validate() error {
 	return validate.ValidateStruct(&b,
 		validate.Field(&b.ImageUrl, validate.Required),
-		validate.Field(&b.Type, validate.Required, validate.By(types.ValidateEntryImageType)),
+		validate.Field(&b.Type, validate.Required, validate.By(types.ValidateMediaImageType)),
 	)
 }
 
-func InstallAnimeHandlers(app core.App, group pyrin.Group) {
+func InstallMediaHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
-			Name:         "GetAnimes",
+			Name:         "GetMedias",
 			Method:       http.MethodGet,
-			Path:         "/animes",
-			ResponseType: GetAnimes{},
+			Path:         "/media",
+			ResponseType: GetMedia{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				q := c.Request().URL.Query()
 				opts := getPageOptions(q)
@@ -391,18 +390,18 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 
 				filterStr := q.Get("filter")
 				sortStr := q.Get("sort")
-				animes, p, err := app.DB().GetPagedAnimes(ctx, userId, filterStr, sortStr, opts)
+				media, p, err := app.DB().GetPagedMedia(ctx, userId, filterStr, sortStr, opts)
 				if err != nil {
 					return nil, err
 				}
 
-				res := GetAnimes{
-					Page:   p,
-					Animes: make([]Anime, len(animes)),
+				res := GetMedia{
+					Page:  p,
+					Media: make([]Media, len(media)),
 				}
 
-				for i, anime := range animes {
-					res.Animes[i] = ConvertDBAnime(c, userId != nil, anime)
+				for i, m := range media {
+					res.Media[i] = ConvertDBMedia(c, userId != nil, m)
 				}
 
 				return res, nil
@@ -410,10 +409,10 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "GetAnimeById",
+			Name:         "GetMediaById",
 			Method:       http.MethodGet,
-			Path:         "/animes/:id",
-			ResponseType: GetAnimeById{},
+			Path:         "/media/:id",
+			ResponseType: GetMediaById{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
@@ -422,31 +421,31 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					userId = &user.Id
 				}
 
-				anime, err := app.DB().GetAnimeById(c.Request().Context(), userId, id)
+				media, err := app.DB().GetMediaById(c.Request().Context(), userId, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, AnimeNotFound()
+						return nil, MediaNotFound()
 					}
 
 					return nil, err
 				}
 
-				return GetAnimeById{
-					Anime: ConvertDBAnime(c, userId != nil, anime),
+				return GetMediaById{
+					Media: ConvertDBMedia(c, userId != nil, media),
 				}, nil
 			},
 		},
 
 		pyrin.ApiHandler{
-			Name:         "CreateAnime",
+			Name:         "CreateMedia",
 			Method:       http.MethodPost,
-			Path:         "/animes",
-			ResponseType: CreateAnime{},
-			BodyType:     CreateAnimeBody{},
+			Path:         "/media",
+			ResponseType: CreateMedia{},
+			BodyType:     CreateMediaBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				// TODO(patrik): Add admin check
 
-				body, err := pyrin.Body[CreateAnimeBody](c)
+				body, err := pyrin.Body[CreateMediaBody](c)
 				if err != nil {
 					return nil, err
 				}
@@ -460,9 +459,9 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				ty := types.AnimeType(body.Type)
+				ty := types.MediaType(body.Type)
 
-				id, err := app.DB().CreateAnime(ctx, database.CreateAnimeParams{
+				id, err := app.DB().CreateMedia(ctx, database.CreateMediaParams{
 					Type: ty,
 					TmdbId: sql.NullString{
 						String: body.TmdbId,
@@ -485,8 +484,8 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 						Float64: body.Score,
 						Valid:   body.Score != 0.0,
 					},
-					Status: types.AnimeStatus(body.Status),
-					Rating: types.AnimeRating(body.Rating),
+					Status: types.MediaStatus(body.Status),
+					Rating: types.MediaRating(body.Rating),
 					AiringSeason: sql.NullString{
 						String: body.AiringSeason,
 						Valid:  body.AiringSeason != "",
@@ -505,8 +504,8 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 				}
 
 				if ty.IsMovie() {
-					err := app.DB().CreateAnimeEpisode(ctx, database.CreateAnimeEpisodeParams{
-						AnimeId: id,
+					err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
+						MediaId: id,
 						Name:    body.Title,
 						Index:   1,
 					})
@@ -514,10 +513,10 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 						return nil, err
 					}
 				} else {
-					for i := range body.EpisodeCount {
-						err := app.DB().CreateAnimeEpisode(ctx, database.CreateAnimeEpisodeParams{
-							AnimeId: id,
-							Name:    fmt.Sprintf("Episode %d", i+1),
+					for i := range body.PartCount {
+						err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
+							MediaId: id,
+							Name:    fmt.Sprintf("Part %d", i+1),
 							Index:   int64(i + 1),
 						})
 						if err != nil {
@@ -527,23 +526,23 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 				}
 
 				if body.CoverUrl != "" {
-					_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.CoverUrl, types.EntryImageTypeCover, true)
+					_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.CoverUrl, types.MediaImageTypeCover, true)
 					if err != nil {
-						logger.Error("failed to download cover image for anime", "animeId", id, "err", err)
+						logger.Error("failed to download cover image for media", "mediaId", id, "err", err)
 					}
 				}
 
 				if body.BannerUrl != "" {
-					_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.BannerUrl, types.EntryImageTypeBanner, true)
+					_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.BannerUrl, types.MediaImageTypeBanner, true)
 					if err != nil {
-						logger.Error("failed to download banner image for anime", "animeId", id, "err", err)
+						logger.Error("failed to download banner image for media", "mediaId", id, "err", err)
 					}
 				}
 
 				if body.LogoUrl != "" {
-					_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.LogoUrl, types.EntryImageTypeLogo, true)
+					_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.LogoUrl, types.MediaImageTypeLogo, true)
 					if err != nil {
-						logger.Error("failed to download logo image for anime", "animeId", id, "err", err)
+						logger.Error("failed to download logo image for media", "media", id, "err", err)
 					}
 				}
 
@@ -555,7 +554,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 				}
 
 				for _, tag := range body.Tags {
-					err := app.DB().AddTagToAnime(ctx, id, tag)
+					err := app.DB().AddTagToMedia(ctx, id, tag)
 					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 						return nil, err
 					}
@@ -569,53 +568,53 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 				}
 
 				for _, tag := range body.Studios {
-					err := app.DB().AddStudioToAnime(ctx, id, tag)
+					err := app.DB().AddStudioToMedia(ctx, id, tag)
 					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 						return nil, err
 					}
 				}
 
-				return CreateAnime{
+				return CreateMedia{
 					Id: id,
 				}, nil
 			},
 		},
 
 		pyrin.ApiHandler{
-			Name:         "EditAnime",
+			Name:         "EditMedia",
 			Method:       http.MethodPatch,
-			Path:         "/animes/:id",
+			Path:         "/media/:id",
 			ResponseType: nil,
-			BodyType:     EditAnimeBody{},
+			BodyType:     EditMediaBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
 				// TODO(patrik): Add admin check
 
-				body, err := pyrin.Body[EditAnimeBody](c)
+				body, err := pyrin.Body[EditMediaBody](c)
 				if err != nil {
 					return nil, err
 				}
 
 				ctx := context.Background()
 
-				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, AnimeNotFound()
+						return nil, MediaNotFound()
 					}
 
 					return nil, err
 				}
 
-				changes := database.AnimeChanges{}
+				changes := database.MediaChanges{}
 
 				if body.Type != nil {
-					t := types.AnimeType(*body.Type)
+					t := types.MediaType(*body.Type)
 
-					changes.Type = database.Change[types.AnimeType]{
+					changes.Type = database.Change[types.MediaType]{
 						Value:   t,
-						Changed: t != dbAnime.Type,
+						Changed: t != dbMedia.Type,
 					}
 				}
 
@@ -625,7 +624,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 							String: *body.TmdbId,
 							Valid:  *body.TmdbId != "",
 						},
-						Changed: *body.TmdbId != dbAnime.TmdbId.String,
+						Changed: *body.TmdbId != dbMedia.TmdbId.String,
 					}
 				}
 
@@ -635,7 +634,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 							String: *body.MalId,
 							Valid:  *body.MalId != "",
 						},
-						Changed: *body.MalId != dbAnime.MalId.String,
+						Changed: *body.MalId != dbMedia.MalId.String,
 					}
 				}
 
@@ -645,14 +644,14 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 							String: *body.AnilistId,
 							Valid:  *body.AnilistId != "",
 						},
-						Changed: *body.AnilistId != dbAnime.AnilistId.String,
+						Changed: *body.AnilistId != dbMedia.AnilistId.String,
 					}
 				}
 
 				if body.Title != nil {
 					changes.Title = database.Change[string]{
 						Value:   *body.Title,
-						Changed: *body.Title != dbAnime.Title,
+						Changed: *body.Title != dbMedia.Title,
 					}
 				}
 
@@ -662,7 +661,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 							String: *body.Description,
 							Valid:  *body.Description != "",
 						},
-						Changed: *body.Description != dbAnime.Description.String,
+						Changed: *body.Description != dbMedia.Description.String,
 					}
 				}
 
@@ -672,43 +671,43 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 							Float64: *body.Score,
 							Valid:   *body.Score != 0.0,
 						},
-						Changed: *body.Score != dbAnime.Score.Float64,
+						Changed: *body.Score != dbMedia.Score.Float64,
 					}
 				}
 
 				if body.Status != nil {
-					s := types.AnimeStatus(*body.Status)
-					changes.Status = database.Change[types.AnimeStatus]{
+					s := types.MediaStatus(*body.Status)
+					changes.Status = database.Change[types.MediaStatus]{
 						Value:   s,
-						Changed: s != dbAnime.Status,
+						Changed: s != dbMedia.Status,
 					}
 				}
 
 				if body.Rating != nil {
-					r := types.AnimeRating(*body.Rating)
-					changes.Rating = database.Change[types.AnimeRating]{
+					r := types.MediaRating(*body.Rating)
+					changes.Rating = database.Change[types.MediaRating]{
 						Value:   r,
-						Changed: r != dbAnime.Rating,
+						Changed: r != dbMedia.Rating,
 					}
 				}
 
 				if body.StartDate != nil {
 					changes.StartDate = database.Change[sql.NullString]{
-						Value:   sql.NullString{
+						Value: sql.NullString{
 							String: *body.StartDate,
 							Valid:  *body.StartDate != "",
 						},
-						Changed: *body.StartDate != dbAnime.StartDate.String,
+						Changed: *body.StartDate != dbMedia.StartDate.String,
 					}
 				}
 
 				if body.EndDate != nil {
 					changes.EndDate = database.Change[sql.NullString]{
-						Value:   sql.NullString{
+						Value: sql.NullString{
 							String: *body.EndDate,
 							Valid:  *body.EndDate != "",
 						},
-						Changed: *body.EndDate != dbAnime.EndDate.String,
+						Changed: *body.EndDate != dbMedia.EndDate.String,
 					}
 				}
 
@@ -726,25 +725,25 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 							String: airingSeason,
 							Valid:  airingSeason != "",
 						},
-						Changed: airingSeason != dbAnime.AiringSeason.String,
+						Changed: airingSeason != dbMedia.AiringSeason.String,
 					}
 				}
 
 				if body.AdminStatus != nil {
-					s := types.EntryAdminStatus(*body.AdminStatus)
-					changes.AdminStatus = database.Change[types.EntryAdminStatus]{
+					s := types.MediaAdminStatus(*body.AdminStatus)
+					changes.AdminStatus = database.Change[types.MediaAdminStatus]{
 						Value:   s,
-						Changed: s != dbAnime.AdminStatus,
+						Changed: s != dbMedia.AdminStatus,
 					}
 				}
 
-				err = app.DB().UpdateAnime(ctx, dbAnime.Id, changes)
+				err = app.DB().UpdateMedia(ctx, dbMedia.Id, changes)
 				if err != nil {
 					return nil, err
 				}
 
 				if body.Tags != nil {
-					err := app.DB().RemoveAllTagsFromAnime(ctx, dbAnime.Id)
+					err := app.DB().RemoveAllTagsFromMedia(ctx, dbMedia.Id)
 					if err != nil {
 						return nil, err
 					}
@@ -759,7 +758,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					}
 
 					for _, tag := range tags {
-						err := app.DB().AddTagToAnime(ctx, id, tag)
+						err := app.DB().AddTagToMedia(ctx, id, tag)
 						if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 							return nil, err
 						}
@@ -767,7 +766,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 				}
 
 				if body.Studios != nil {
-					err := app.DB().RemoveAllStudiosFromAnime(ctx, dbAnime.Id)
+					err := app.DB().RemoveAllStudiosFromMedia(ctx, dbMedia.Id)
 					if err != nil {
 						return nil, err
 					}
@@ -782,7 +781,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					}
 
 					for _, tag := range studios {
-						err := app.DB().AddStudioToAnime(ctx, id, tag)
+						err := app.DB().AddStudioToMedia(ctx, id, tag)
 						if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 							return nil, err
 						}
@@ -794,67 +793,67 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "GetAnimeEpisodes",
+			Name:         "GetMediaParts",
 			Method:       http.MethodGet,
-			Path:         "/animes/:id/episodes",
-			ResponseType: GetAnimeEpisodes{},
+			Path:         "/media/:id/parts",
+			ResponseType: GetMediaParts{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
 				ctx := context.Background()
 
-				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, AnimeNotFound()
+						return nil, MediaNotFound()
 					}
 
 					return nil, err
 				}
 
-				episodes, err := app.DB().GetAnimeEpisodesByAnimeId(ctx, dbAnime.Id)
+				parts, err := app.DB().GetMediaPartsByMediaId(ctx, dbMedia.Id)
 				if err != nil {
 					return nil, err
 				}
 
-				res := make([]AnimeEpisode, len(episodes))
+				res := make([]MediaPart, len(parts))
 
-				for i, episode := range episodes {
-					res[i] = AnimeEpisode{
-						Index:   episode.Index,
-						AnimeId: episode.AnimeId,
-						Name:    episode.Name,
+				for i, part := range parts {
+					res[i] = MediaPart{
+						Index:   part.Index,
+						MediaId: part.MediaId,
+						Name:    part.Name,
 					}
 				}
 
-				return GetAnimeEpisodes{
-					Episodes: res,
+				return GetMediaParts{
+					Parts: res,
 				}, nil
 			},
 		},
 
 		pyrin.ApiHandler{
-			Name:         "AddEpisode",
+			Name:         "AddPart",
 			Method:       http.MethodPost,
-			Path:         "/animes/:id/single/episodes",
-			ResponseType: AddEpisode{},
-			BodyType:     AddEpisodeBody{},
+			Path:         "/media/:id/single/parts",
+			ResponseType: AddPart{},
+			BodyType:     AddPartBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				// TODO(patrik): Add admin check
 
 				id := c.Param("id")
 
-				body, err := pyrin.Body[AddEpisodeBody](c)
+				body, err := pyrin.Body[AddPartBody](c)
 				if err != nil {
 					return nil, err
 				}
 
 				ctx := context.Background()
 
-				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, AnimeNotFound()
+						return nil, MediaNotFound()
 					}
 
 					return nil, err
@@ -864,89 +863,89 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 
 				if index == 0 {
 					// TODO(patrik): A better implementation would be getting
-					// the last episode from the database
-					episodes, err := app.DB().GetAnimeEpisodesByAnimeId(ctx, dbAnime.Id)
+					// the last part from the database
+					parts, err := app.DB().GetMediaPartsByMediaId(ctx, dbMedia.Id)
 					if err != nil {
 						return nil, err
 					}
 
-					if len(episodes) > 0 {
-						episode := episodes[len(episodes)-1]
-						index = episode.Index + 1
+					if len(parts) > 0 {
+						part := parts[len(parts)-1]
+						index = part.Index + 1
 					}
 				}
 
 				name := body.Name
 				if name == "" {
-					name = fmt.Sprintf("Episode %d", index)
+					name = fmt.Sprintf("Part %d", index)
 				}
 
-				err = app.DB().CreateAnimeEpisode(ctx, database.CreateAnimeEpisodeParams{
+				err = app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
 					Index:   index,
-					AnimeId: dbAnime.Id,
+					MediaId: dbMedia.Id,
 					Name:    name,
 				})
 				if err != nil {
 					if errors.Is(err, database.ErrItemAlreadyExists) {
-						return nil, EpisodeAlreadyExists()
+						return nil, PartAlreadyExists()
 					}
 
 					return nil, err
 				}
 
-				return AddEpisode{
+				return AddPart{
 					Index: index,
 				}, nil
 			},
 		},
 
 		pyrin.ApiHandler{
-			Name:         "AddMultipleEpisodes",
+			Name:         "AddMultipleParts",
 			Method:       http.MethodPost,
-			Path:         "/animes/:id/multiple/episodes",
+			Path:         "/media/:id/multiple/parts",
 			ResponseType: nil,
-			BodyType:     AddMultipleEpisodesBody{},
+			BodyType:     AddMultiplePartsBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				// TODO(patrik): Add admin check
 
 				id := c.Param("id")
 
-				body, err := pyrin.Body[AddMultipleEpisodesBody](c)
+				body, err := pyrin.Body[AddMultiplePartsBody](c)
 				if err != nil {
 					return nil, err
 				}
 
 				ctx := context.Background()
 
-				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, AnimeNotFound()
+						return nil, MediaNotFound()
 					}
 
 					return nil, err
 				}
 
 				// TODO(patrik): A better implementation would be getting
-				// the last episode from the database
-				episodes, err := app.DB().GetAnimeEpisodesByAnimeId(ctx, dbAnime.Id)
+				// the last part from the database
+				parts, err := app.DB().GetMediaPartsByMediaId(ctx, dbMedia.Id)
 				if err != nil {
 					return nil, err
 				}
 
 				lastIndex := int64(0)
-				if len(episodes) > 0 {
-					episode := episodes[len(episodes)-1]
-					lastIndex = episode.Index
+				if len(parts) > 0 {
+					part := parts[len(parts)-1]
+					lastIndex = part.Index
 				}
 
 				for i := range body.Count {
 					idx := lastIndex + int64(i) + 1
 
-					err := app.DB().CreateAnimeEpisode(ctx, database.CreateAnimeEpisodeParams{
+					err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
 						Index:   idx,
-						AnimeId: dbAnime.Id,
-						Name:    fmt.Sprintf("Episode %d", idx),
+						MediaId: dbMedia.Id,
+						Name:    fmt.Sprintf("Part %d", idx),
 					})
 					if err != nil {
 						return nil, err
@@ -958,11 +957,11 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "EditEpisode",
+			Name:         "EditPart",
 			Method:       http.MethodPatch,
-			Path:         "/animes/:id/episodes/:index",
+			Path:         "/media/:id/parts/:index",
 			ResponseType: nil,
-			BodyType:     EditEpisodeBody{},
+			BodyType:     EditPartBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				// TODO(patrik): Add admin check
 
@@ -973,41 +972,41 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					return nil, errors.New("failed to parse 'index' path param as integer")
 				}
 
-				body, err := pyrin.Body[EditEpisodeBody](c)
+				body, err := pyrin.Body[EditPartBody](c)
 				if err != nil {
 					return nil, err
 				}
 
 				ctx := context.Background()
 
-				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, AnimeNotFound()
+						return nil, MediaNotFound()
 					}
 
 					return nil, err
 				}
 
-				dbEpisode, err := app.DB().GetAnimeEpisodeByIndexAnimeId(ctx, index, dbAnime.Id)
+				dbPart, err := app.DB().GetMediaPartByIndexMediaId(ctx, index, dbMedia.Id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, EpisodeNotFound()
+						return nil, PartNotFound()
 					}
 
 					return nil, err
 				}
 
-				changes := database.AnimeEpisodeChanges{}
+				changes := database.MediaPartChanges{}
 
 				if body.Name != nil {
 					changes.Name = database.Change[string]{
 						Value:   *body.Name,
-						Changed: *body.Name != dbEpisode.Name,
+						Changed: *body.Name != dbPart.Name,
 					}
 				}
 
-				err = app.DB().UpdateAnimeEpisode(ctx, dbEpisode.Index, dbEpisode.AnimeId, changes)
+				err = app.DB().UpdateMediaPart(ctx, dbPart.Index, dbPart.MediaId, changes)
 				if err != nil {
 					return nil, err
 				}
@@ -1017,9 +1016,9 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "RemoveEpisode",
+			Name:         "RemovePart",
 			Method:       http.MethodDelete,
-			Path:         "/animes/:id/episodes/:index",
+			Path:         "/media/:id/parts/:index",
 			ResponseType: nil,
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				// TODO(patrik): Add admin check
@@ -1033,16 +1032,16 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.Background()
 
-				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, AnimeNotFound()
+						return nil, MediaNotFound()
 					}
 
 					return nil, err
 				}
 
-				err = app.DB().RemoveAnimeEpisode(ctx, index, dbAnime.Id)
+				err = app.DB().RemoveMediaPart(ctx, index, dbMedia.Id)
 				if err != nil {
 					return nil, err
 				}
@@ -1054,7 +1053,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 		pyrin.ApiHandler{
 			Name:         "AddImage",
 			Method:       http.MethodPost,
-			Path:         "/animes/:id/images",
+			Path:         "/media/:id/images",
 			ResponseType: AddImage{},
 			BodyType:     AddImageBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
@@ -1069,19 +1068,19 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.Background()
 
-				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, AnimeNotFound()
+						return nil, MediaNotFound()
 					}
 
 					return nil, err
 				}
 
-				t := types.EntryImageType(body.Type)
-				hash, err := downloadImage(ctx, app.DB(), app.WorkDir(), dbAnime.Id, body.ImageUrl, t, false)
+				t := types.MediaImageType(body.Type)
+				hash, err := downloadImage(ctx, app.DB(), app.WorkDir(), dbMedia.Id, body.ImageUrl, t, false)
 				if err != nil {
-					logger.Error("failed to download image for anime", "animeId", dbAnime.Id, "err", err)
+					logger.Error("failed to download image for media", "mediaId", dbMedia.Id, "err", err)
 					return nil, err
 				}
 
@@ -1094,7 +1093,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 		pyrin.ApiHandler{
 			Name:         "EditImage",
 			Method:       http.MethodPatch,
-			Path:         "/animes/:id/images/:hash",
+			Path:         "/media/:id/images/:hash",
 			ResponseType: nil,
 			BodyType:     EditImageBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
@@ -1110,16 +1109,16 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.Background()
 
-				dbAnime, err := app.DB().GetAnimeById(ctx, nil, id)
+				dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, AnimeNotFound()
+						return nil, MediaNotFound()
 					}
 
 					return nil, err
 				}
 
-				dbImage, err := app.DB().GetAnimeImagesByHashAnimeId(ctx, dbAnime.Id, hash)
+				dbImage, err := app.DB().GetMediaImagesByHashMediaId(ctx, dbMedia.Id, hash)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
 						return nil, ImageNotFound()
@@ -1128,11 +1127,11 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				changes := database.AnimeImageChanges{}
+				changes := database.MediaImageChanges{}
 
 				if body.Type != nil {
-					t := types.EntryImageType(*body.Type)
-					changes.Type = database.Change[types.EntryImageType]{
+					t := types.MediaImageType(*body.Type)
+					changes.Type = database.Change[types.MediaImageType]{
 						Value:   t,
 						Changed: t != dbImage.Type,
 					}
@@ -1145,7 +1144,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				err = app.DB().UpdateAnimeImage(ctx, dbImage.AnimeId, dbImage.Hash, changes)
+				err = app.DB().UpdateMediaImage(ctx, dbImage.MediaId, dbImage.Hash, changes)
 				if err != nil {
 					return nil, err
 				}
@@ -1155,17 +1154,17 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "SetAnimeUserData",
+			Name:         "SetMediaUserData",
 			Method:       http.MethodPost,
-			Path:         "/animes/:id/user",
+			Path:         "/media/:id/user",
 			ResponseType: nil,
-			BodyType:     SetAnimeUserData{},
+			BodyType:     SetMediaUserData{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
 				ctx := context.TODO()
 
-				body, err := pyrin.Body[SetAnimeUserData](c)
+				body, err := pyrin.Body[SetMediaUserData](c)
 				if err != nil {
 					return nil, err
 				}
@@ -1175,21 +1174,21 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				anime, err := app.DB().GetAnimeById(ctx, &user.Id, id)
+				media, err := app.DB().GetMediaById(ctx, &user.Id, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, AnimeNotFound()
+						return nil, MediaNotFound()
 					}
 
 					return nil, err
 				}
 
-				val := anime.UserData.Data
+				val := media.UserData.Data
 
-				data := database.SetAnimeUserData{
-					List:         utils.AnimeUserListPtrToSqlNull(val.List),
-					Episode:      utils.Int64PtrToSqlNull(val.Episode),
-					IsRewatching: val.IsRewatching > 0,
+				data := database.SetMediaUserData{
+					List:         utils.MediaUserListPtrToSqlNull(val.List),
+					Part:         utils.Int64PtrToSqlNull(val.Part),
+					IsRevisiting: val.IsRevisiting > 0,
 					Score:        utils.Int64PtrToSqlNull(val.Score),
 				}
 
@@ -1200,22 +1199,22 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				if body.Episode != nil {
-					data.Episode = sql.NullInt64{
-						Int64: *body.Episode,
-						Valid: *body.Episode != 0,
+				if body.Part != nil {
+					data.Part = sql.NullInt64{
+						Int64: *body.Part,
+						Valid: *body.Part != 0,
 					}
 				}
 
-				if body.RewatchCount != nil {
-					data.RewatchCount = sql.NullInt64{
-						Int64: *body.RewatchCount,
-						Valid: *body.RewatchCount != 0,
+				if body.RevisitCount != nil {
+					data.RevisitCount = sql.NullInt64{
+						Int64: *body.RevisitCount,
+						Valid: *body.RevisitCount != 0,
 					}
 				}
 
-				if body.IsRewatching != nil {
-					data.IsRewatching = *body.IsRewatching
+				if body.IsRevisiting != nil {
+					data.IsRevisiting = *body.IsRevisiting
 				}
 
 				if body.Score != nil {
@@ -1225,7 +1224,7 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				err = app.DB().SetAnimeUserData(ctx, anime.Id, user.Id, data)
+				err = app.DB().SetMediaUserData(ctx, media.Id, user.Id, data)
 				if err != nil {
 					return nil, err
 				}
@@ -1235,10 +1234,10 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "GetUserAnimeList",
+			Name:         "GetUserMediaList",
 			Method:       http.MethodGet,
-			Path:         "/animes/user/list/:id",
-			ResponseType: GetAnimes{},
+			Path:         "/media/user/list/:id",
+			ResponseType: GetMedia{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
@@ -1258,18 +1257,18 @@ func InstallAnimeHandlers(app core.App, group pyrin.Group) {
 
 				filterStr := q.Get("filter")
 				sortStr := q.Get("sort")
-				animes, p, err := app.DB().GetPagedAnimes(ctx, &user.Id, filterStr, sortStr, opts)
+				media, p, err := app.DB().GetPagedMedia(ctx, &user.Id, filterStr, sortStr, opts)
 				if err != nil {
 					return nil, err
 				}
 
-				res := GetAnimes{
-					Page:   p,
-					Animes: make([]Anime, len(animes)),
+				res := GetMedia{
+					Page:  p,
+					Media: make([]Media, len(media)),
 				}
 
-				for i, anime := range animes {
-					res.Animes[i] = ConvertDBAnime(c, true, anime)
+				for i, m := range media {
+					res.Media[i] = ConvertDBMedia(c, true, m)
 				}
 
 				return res, nil

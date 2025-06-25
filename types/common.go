@@ -16,22 +16,22 @@ func (d WorkDir) SetupFile() string {
 	return path.Join(d.String(), "setup")
 }
 
-func (d WorkDir) AnimesDir() AnimeDir {
-	return AnimeDir(path.Join(d.String(), "animes"))
+func (d WorkDir) MediaDir() MediaDir {
+	return MediaDir(path.Join(d.String(), "media"))
 }
 
-type AnimeDir string
+type MediaDir string
 
-func (d AnimeDir) String() string {
+func (d MediaDir) String() string {
 	return string(d)
 }
 
-func (d AnimeDir) ImagesDir() string {
+func (d MediaDir) ImagesDir() string {
 	return path.Join(d.String(), "images")
 }
 
-func (d AnimeDir) AnimeImageDir(id string) string {
-	return path.Join(d.ImagesDir(), id)
+func (d MediaDir) MediaImageDir(mediaId string) string {
+	return path.Join(d.ImagesDir(), mediaId)
 }
 
 type Change[T any] struct {

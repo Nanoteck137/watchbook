@@ -15,7 +15,7 @@ import (
 var CreateId = createIdGenerator(32)
 var CreateSmallId = createIdGenerator(8)
 
-var CreateAnimeId = createIdGenerator(8)
+var CreateMediaId = createIdGenerator(8)
 
 var CreateApiTokenId = createIdGenerator(32)
 
@@ -95,7 +95,7 @@ func StringPtrToSqlNull(i *string) sql.NullString {
 	}
 }
 
-func AnimeUserListPtrToSqlNull(i *types.AnimeUserList) sql.NullString {
+func MediaUserListPtrToSqlNull(i *types.MediaUserList) sql.NullString {
 	if i == nil {
 		return sql.NullString{}
 	}

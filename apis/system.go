@@ -32,7 +32,7 @@ var dl = downloader.NewDownloader(
 	mal.UserAgent,
 )
 
-func downloadImage(ctx context.Context, db *database.Database, workDir types.WorkDir, animeId, url string, typ types.EntryImageType, isPrimary bool) (string, error) {
+func downloadImage(ctx context.Context, db *database.Database, workDir types.WorkDir, mediaId, url string, typ types.MediaImageType, isPrimary bool) (string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("downloadImage: failed http get request: %w", err)
@@ -61,8 +61,8 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 		return "", fmt.Errorf("downloadImage: failed io.Copy: %w", err)
 	}
 
-	animeDir := workDir.AnimesDir()
-	dst := animeDir.AnimeImageDir(animeId)
+	mediaDir := workDir.MediaDir()
+	dst := mediaDir.MediaImageDir(mediaId)
 	err = os.Mkdir(dst, 0755)
 	if err != nil && !os.IsExist(err) {
 		return "", fmt.Errorf("downloadImage: failed os.Mkdir: %w", err)
@@ -73,8 +73,8 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 
 	name := hash + ext
 
-	err = db.CreateAnimeImage(ctx, database.CreateAnimeImageParams{
-		AnimeId:   animeId,
+	err = db.CreateMediaImage(ctx, database.CreateMediaImageParams{
+		MediaId:   mediaId,
 		Hash:      hash,
 		Type:      typ,
 		MimeType:  mediaType,
@@ -86,7 +86,7 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 			return hash, nil
 		}
 
-		return "", fmt.Errorf("downloadImage: failed to create anime image: %w", err)
+		return "", fmt.Errorf("downloadImage: failed to create media image: %w", err)
 	}
 
 	err = os.WriteFile(path.Join(dst, name), buf.Bytes(), 0644)
@@ -97,8 +97,8 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 	return hash, nil
 }
 
-// func fetchAndUpdateAnime(ctx context.Context, db *database.Database, workDir types.WorkDir, animeId string) error {
-// 	anime, err := db.GetAnimeById(ctx, nil, animeId)
+// func fetchAndUpdateMedia(ctx context.Context, db *database.Database, workDir types.WorkDir, animeId string) error {
+// 	anime, err := db.GetMediaById(ctx, nil, animeId)
 // 	if err != nil {
 // 		return err
 // 	}
@@ -111,7 +111,7 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 //
 // 	fmt.Printf("Updating %s (%s) - %s\n", anime.Title, malId, anime.Id)
 //
-// 	animeData, err := mal.FetchAnimeData(dl, malId, true)
+// 	animeData, err := mal.FetchMediaData(dl, malId, true)
 // 	if err != nil {
 // 		return err
 // 	}
@@ -179,9 +179,9 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 // 		}
 // 	}
 //
-// 	animeType := mal.ConvertAnimeType(animeData.Type)
-// 	animeStatus := mal.ConvertAnimeStatus(animeData.Status)
-// 	animeRating := mal.ConvertAnimeRating(animeData.Rating)
+// 	animeType := mal.ConvertMediaType(animeData.Type)
+// 	animeStatus := mal.ConvertMediaStatus(animeData.Status)
+// 	animeRating := mal.ConvertMediaRating(animeData.Rating)
 //
 // 	aniDbId := ""
 // 	animeNewsNetworkId := ""
@@ -190,11 +190,11 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 // 		aniDbId = u.Query().Get("aid")
 // 	}
 //
-// 	if u, err := url.Parse(animeData.AnimeNewsNetworkUrl); err == nil {
+// 	if u, err := url.Parse(animeData.MediaNewsNetworkUrl); err == nil {
 // 		animeNewsNetworkId = u.Query().Get("id")
 // 	}
 //
-// 	err = db.UpdateAnime(ctx, animeId, database.AnimeChanges{
+// 	err = db.UpdateMedia(ctx, animeId, database.AnimeChanges{
 // 		AniDbId: database.Change[sql.NullString]{
 // 			Value: sql.NullString{
 // 				String: aniDbId,
@@ -203,12 +203,12 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 // 			Changed: aniDbId != anime.AniDbId.String,
 // 		},
 //
-// 		AnimeNewsNetworkId: database.Change[sql.NullString]{
+// 		MediaNewsNetworkId: database.Change[sql.NullString]{
 // 			Value: sql.NullString{
 // 				String: animeNewsNetworkId,
 // 				Valid:  animeNewsNetworkId != "",
 // 			},
-// 			Changed: animeNewsNetworkId != anime.AnimeNewsNetworkId.String,
+// 			Changed: animeNewsNetworkId != anime.MediaNewsNetworkId.String,
 // 		},
 //
 // 		Title: database.Change[string]{
@@ -232,17 +232,17 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 // 			Changed: animeData.Description != anime.Description.String,
 // 		},
 //
-// 		Type: database.Change[types.AnimeType]{
+// 		Type: database.Change[types.MediaType]{
 // 			Value:   animeType,
 // 			Changed: animeType != anime.Type,
 // 		},
 //
-// 		Status: database.Change[types.AnimeStatus]{
+// 		Status: database.Change[types.MediaStatus]{
 // 			Value:   animeStatus,
 // 			Changed: animeStatus != anime.Status,
 // 		},
 //
-// 		Rating: database.Change[types.AnimeRating]{
+// 		Rating: database.Change[types.MediaRating]{
 // 			Value:   animeRating,
 // 			Changed: animeRating != anime.Rating,
 // 		},
@@ -299,14 +299,14 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 // 		return err
 // 	}
 //
-// 	err = db.DeleteAllAnimeThemeSongs(ctx, anime.Id)
+// 	err = db.DeleteAllMediaThemeSongs(ctx, anime.Id)
 // 	if err != nil {
 // 		return err
 // 	}
 //
 // 	for i, themeSong := range animeData.ThemeSongs {
-// 		err := db.CreateAnimeThemeSong(ctx, database.CreateAnimeThemeSongParams{
-// 			AnimeId: animeId,
+// 		err := db.CreateMediaThemeSong(ctx, database.CreateAnimeThemeSongParams{
+// 			MediaId: animeId,
 // 			Idx:     i,
 // 			Raw:     themeSong.Raw,
 // 			Type:    mal.ConvertThemeSongType(themeSong.Type),
@@ -317,38 +317,38 @@ func downloadImage(ctx context.Context, db *database.Database, workDir types.Wor
 // 	}
 //
 // 	for _, theme := range animeData.Themes {
-// 		err := db.AddTagToAnime(ctx, animeId, utils.Slug(theme))
+// 		err := db.AddTagToMedia(ctx, animeId, utils.Slug(theme))
 // 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 // 			return err
 // 		}
 // 	}
 //
-// 	err = db.RemoveAllTagsFromAnime(ctx, animeId)
+// 	err = db.RemoveAllTagsFromMedia(ctx, animeId)
 // 	if err != nil {
 // 		return err
 // 	}
 //
-// 	err = db.RemoveAllStudiosFromAnime(ctx, animeId)
+// 	err = db.RemoveAllStudiosFromMedia(ctx, animeId)
 // 	if err != nil {
 // 		return err
 // 	}
 //
 // 	for _, genre := range animeData.Genres {
-// 		err := db.AddTagToAnime(ctx, animeId, utils.Slug(genre))
+// 		err := db.AddTagToMedia(ctx, animeId, utils.Slug(genre))
 // 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 // 			return err
 // 		}
 // 	}
 //
 // 	for _, demographic := range animeData.Demographics {
-// 		err := db.AddTagToAnime(ctx, animeId, utils.Slug(demographic))
+// 		err := db.AddTagToMedia(ctx, animeId, utils.Slug(demographic))
 // 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 // 			return err
 // 		}
 // 	}
 //
 // 	for _, studio := range animeData.Studios {
-// 		err := db.AddStudioToAnime(ctx, animeId, utils.Slug(studio))
+// 		err := db.AddStudioToMedia(ctx, animeId, utils.Slug(studio))
 // 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 // 			return err
 // 		}
@@ -479,7 +479,7 @@ func (d *DownloadHandler) updateStatus(current, total int) {
 	d.totalDownloads = total
 }
 
-func (d *DownloadHandler) download(app core.App, animeIds []string) error {
+func (d *DownloadHandler) download(app core.App, mediaIds []string) error {
 	d.isDownloading.Store(true)
 	defer d.isDownloading.Store(false)
 
@@ -488,22 +488,22 @@ func (d *DownloadHandler) download(app core.App, animeIds []string) error {
 	// db := app.DB()
 	// workDir := app.WorkDir()
 
-	d.updateStatus(0, len(animeIds))
+	d.updateStatus(0, len(mediaIds))
 	d.sendStatusEvent()
 
-	for i, id := range animeIds {
+	for i, id := range mediaIds {
 		_ = id
 
 		if d.downloadCanceled.Load() {
 			return fmt.Errorf("download canceled")
 		}
 
-		d.updateStatus(i+1, len(animeIds))
+		d.updateStatus(i+1, len(mediaIds))
 		d.sendStatusEvent()
 
-		// err := fetchAndUpdateAnime(ctx, db, workDir, id)
+		// err := fetchAndUpdateMedia(ctx, db, workDir, id)
 		// if err != nil {
-		// 	return fmt.Errorf("failed to download anime (%s): %w", id, err)
+		// 	return fmt.Errorf("failed to download media (%s): %w", id, err)
 		// }
 	}
 
@@ -514,14 +514,14 @@ func (d *DownloadHandler) cancelDownload() {
 	d.downloadCanceled.Store(true)
 }
 
-func (d *DownloadHandler) startDownload(app core.App, animeIds []string) error {
+func (d *DownloadHandler) startDownload(app core.App, mediaIds []string) error {
 	if d.isDownloading.Load() {
 		return errors.New("already downloading")
 	}
 
 	d.downloadCanceled.Store(false)
 
-	err := d.download(app, animeIds)
+	err := d.download(app, mediaIds)
 	d.lastError = err
 
 	d.sendStatusEvent()
