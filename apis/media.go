@@ -140,7 +140,7 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 		Score:       utils.SqlNullToFloat64Ptr(media.Score),
 		Status:      media.Status,
 		Rating:      media.Rating,
-		PartCount:   media.PartCount,
+		PartCount:   media.PartCount.Int64,
 		Studios:     utils.FixNilArrayToEmpty(media.Studios.Data),
 		Tags:        utils.FixNilArrayToEmpty(media.Tags.Data),
 		CoverUrl:    coverUrl,
@@ -532,7 +532,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					for i := range body.PartCount {
 						err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
 							MediaId: id,
-							Name:    fmt.Sprintf("Part %d", i+1),
+							Name:    fmt.Sprintf("Episode %d", i+1),
 							Index:   int64(i + 1),
 						})
 						if err != nil {
@@ -893,7 +893,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 				name := body.Name
 				if name == "" {
-					name = fmt.Sprintf("Part %d", index)
+					name = fmt.Sprintf("Episode %d", index)
 				}
 
 				err = app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
@@ -961,7 +961,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
 						Index:   idx,
 						MediaId: dbMedia.Id,
-						Name:    fmt.Sprintf("Part %d", idx),
+						Name:    fmt.Sprintf("Episode %d", idx),
 					})
 					if err != nil {
 						return nil, err

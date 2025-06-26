@@ -54,7 +54,7 @@ type Media struct {
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
 
-	PartCount int64 `db:"part_count"`
+	PartCount sql.NullInt64 `db:"part_count"`
 
 	Studios JsonColumn[[]string]         `db:"studios"`
 	Tags    JsonColumn[[]string]         `db:"tags"`

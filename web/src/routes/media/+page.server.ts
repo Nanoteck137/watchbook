@@ -5,13 +5,13 @@ import type { PageServerLoad } from "./$types";
 export const load: PageServerLoad = async ({ locals, url }) => {
   const query = getPagedQueryOptions(url.searchParams);
 
-  const animes = await locals.apiClient.getAnimes({ query });
-  if (!animes.success) {
-    throw error(animes.error.code, { message: animes.error.message });
+  const media = await locals.apiClient.getMedia({ query });
+  if (!media.success) {
+    throw error(media.error.code, { message: media.error.message });
   }
 
   return {
-    page: animes.data.page,
-    animes: animes.data.animes,
+    page: media.data.page,
+    media: media.data.media,
   };
 };

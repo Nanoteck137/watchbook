@@ -20,6 +20,18 @@ func (d WorkDir) MediaDir() MediaDir {
 	return MediaDir(path.Join(d.String(), "media"))
 }
 
+func (d WorkDir) CacheDir() string {
+	return path.Join(d.String(), "cache")
+}
+
+func (d WorkDir) CacheProvidersDir() string {
+	return path.Join(d.CacheDir(), "providers")
+}
+
+func (d WorkDir) CacheProviderDir(providerName string) string {
+	return path.Join(d.CacheProvidersDir(), providerName)
+}
+
 type MediaDir string
 
 func (d MediaDir) String() string {

@@ -8,12 +8,12 @@ const (
 	MediaTypeUnknown     MediaType = "unknown"
 	MediaTypeSeason      MediaType = "season"
 	MediaTypeMovie       MediaType = "movie"
-	MediaTypeMediaSeason MediaType = "anime-season"
-	MediaTypeMediaMovie  MediaType = "anime-movie"
+	MediaTypeAnimeSeason MediaType = "anime-season"
+	MediaTypeAnimeMovie  MediaType = "anime-movie"
 )
 
 func (t MediaType) IsMovie() bool {
-	return t == MediaTypeMovie || t == MediaTypeMediaMovie
+	return t == MediaTypeMovie || t == MediaTypeAnimeMovie
 }
 
 func IsValidMediaType(t MediaType) bool {
@@ -21,8 +21,8 @@ func IsValidMediaType(t MediaType) bool {
 	case MediaTypeUnknown,
 		MediaTypeSeason,
 		MediaTypeMovie,
-		MediaTypeMediaSeason,
-		MediaTypeMediaMovie:
+		MediaTypeAnimeSeason,
+		MediaTypeAnimeMovie:
 		return true
 	}
 

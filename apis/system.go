@@ -15,22 +15,18 @@ import (
 	"path"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/watchbook"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
-	"github.com/nanoteck137/watchbook/downloader"
-	"github.com/nanoteck137/watchbook/mal"
 	"github.com/nanoteck137/watchbook/types"
-	"golang.org/x/time/rate"
 )
 
-var dl = downloader.NewDownloader(
-	rate.NewLimiter(rate.Every(4*time.Second), 10),
-	mal.UserAgent,
-)
+// var dl = downloader.NewDownloader(
+// 	rate.NewLimiter(rate.Every(4*time.Second), 10),
+// 	mal.UserAgent,
+// )
 
 func downloadImage(ctx context.Context, db *database.Database, workDir types.WorkDir, mediaId, url string, typ types.MediaImageType, isPrimary bool) (string, error) {
 	resp, err := http.Get(url)

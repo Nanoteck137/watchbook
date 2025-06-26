@@ -179,8 +179,8 @@ func (c *Client) DeleteApiToken(id string, options Options) (*any, error) {
 	return Request[any](data, nil)
 }
 
-func (c *Client) GetAnimes(options Options) (*GetAnimes, error) {
-	path := "/api/v1/animes"
+func (c *Client) GetMedia(options Options) (*GetMedia, error) {
+	path := "/api/v1/media"
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -192,11 +192,11 @@ func (c *Client) GetAnimes(options Options) (*GetAnimes, error) {
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
-	return Request[GetAnimes](data, nil)
+	return Request[GetMedia](data, nil)
 }
 
-func (c *Client) GetAnimeById(id string, options Options) (*GetAnimeById, error) {
-	path := Sprintf("/api/v1/animes/%v", id)
+func (c *Client) GetMediaById(id string, options Options) (*GetMediaById, error) {
+	path := Sprintf("/api/v1/media/%v", id)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -208,11 +208,11 @@ func (c *Client) GetAnimeById(id string, options Options) (*GetAnimeById, error)
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
-	return Request[GetAnimeById](data, nil)
+	return Request[GetMediaById](data, nil)
 }
 
-func (c *Client) CreateAnime(body CreateAnimeBody, options Options) (*CreateAnime, error) {
-	path := "/api/v1/animes"
+func (c *Client) CreateMedia(body CreateMediaBody, options Options) (*CreateMedia, error) {
+	path := "/api/v1/media"
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -224,11 +224,59 @@ func (c *Client) CreateAnime(body CreateAnimeBody, options Options) (*CreateAnim
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
-	return Request[CreateAnime](data, body)
+	return Request[CreateMedia](data, body)
 }
 
-func (c *Client) SetAnimeUserData(id string, body SetAnimeUserData, options Options) (*any, error) {
-	path := Sprintf("/api/v1/animes/%v/user", id)
+func (c *Client) EditMedia(id string, body EditMediaBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) GetMediaParts(id string, options Options) (*GetMediaParts, error) {
+	path := Sprintf("/api/v1/media/%v/parts", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetMediaParts](data, nil)
+}
+
+func (c *Client) AddPart(id string, body AddPartBody, options Options) (*AddPart, error) {
+	path := Sprintf("/api/v1/media/%v/single/parts", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[AddPart](data, body)
+}
+
+func (c *Client) AddMultipleParts(id string, body AddMultiplePartsBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/multiple/parts", id)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -243,8 +291,88 @@ func (c *Client) SetAnimeUserData(id string, body SetAnimeUserData, options Opti
 	return Request[any](data, body)
 }
 
-func (c *Client) GetUserAnimeList(id string, options Options) (*GetAnimes, error) {
-	path := Sprintf("/api/v1/animes/user/list/%v", id)
+func (c *Client) EditPart(id string, index string, body EditPartBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) RemovePart(id string, index string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "DELETE",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
+func (c *Client) AddImage(id string, body AddImageBody, options Options) (*AddImage, error) {
+	path := Sprintf("/api/v1/media/%v/images", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[AddImage](data, body)
+}
+
+func (c *Client) EditImage(id string, hash string, body EditImageBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/images/%v", id, hash)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) SetMediaUserData(id string, body SetMediaUserData, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/user", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) ProviderMyAnimeListGetAnime(id string, options Options) (*ProviderMyAnimeListAnime, error) {
+	path := Sprintf("/api/v1/provider/myanimelist/anime/%v", id)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -256,7 +384,7 @@ func (c *Client) GetUserAnimeList(id string, options Options) (*GetAnimes, error
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
-	return Request[GetAnimes](data, nil)
+	return Request[ProviderMyAnimeListAnime](data, nil)
 }
 
 
@@ -320,32 +448,72 @@ func (c *ClientUrls) DeleteApiToken(id string) (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) GetAnimes() (*URL, error) {
-	path := "/api/v1/animes"
+func (c *ClientUrls) GetMedia() (*URL, error) {
+	path := "/api/v1/media"
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) GetAnimeById(id string) (*URL, error) {
-	path := Sprintf("/api/v1/animes/%v", id)
+func (c *ClientUrls) GetMediaById(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v", id)
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) CreateAnime() (*URL, error) {
-	path := "/api/v1/animes"
+func (c *ClientUrls) CreateMedia() (*URL, error) {
+	path := "/api/v1/media"
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) SetAnimeUserData(id string) (*URL, error) {
-	path := Sprintf("/api/v1/animes/%v/user", id)
+func (c *ClientUrls) EditMedia(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v", id)
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) GetUserAnimeList(id string) (*URL, error) {
-	path := Sprintf("/api/v1/animes/user/list/%v", id)
+func (c *ClientUrls) GetMediaParts(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/parts", id)
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) GetAnimeImage(id string, image string) (*URL, error) {
-	path := Sprintf("/files/animes/%v/%v", id, image)
+func (c *ClientUrls) AddPart(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/single/parts", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) AddMultipleParts(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/multiple/parts", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditPart(id string, index string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) RemovePart(id string, index string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) AddImage(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/images", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditImage(id string, hash string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/images/%v", id, hash)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) SetMediaUserData(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/user", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) ProviderMyAnimeListGetAnime(id string) (*URL, error) {
+	path := Sprintf("/api/v1/provider/myanimelist/anime/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetMediaImage(id string, image string) (*URL, error) {
+	path := Sprintf("/files/media/%v/%v", id, image)
 	return c.getUrl(path)
 }

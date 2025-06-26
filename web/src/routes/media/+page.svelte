@@ -25,26 +25,24 @@
 <Spacer size="sm" />
 
 <div class="flex flex-col gap-4">
-  {#each data.animes as anime}
-    {@const title = pickTitle(anime)}
-
+  {#each data.media as media}
     <div class="flex justify-between border-b py-2">
       <div class="flex">
-        <Image class="h-20 w-14" src={anime.coverUrl} alt="cover" />
+        <Image class="h-20 w-14" src={media.coverUrl} alt="cover" />
         <div class="px-4 py-1">
           <a
             class="line-clamp-2 text-ellipsis text-sm font-semibold hover:cursor-pointer hover:underline"
-            href="/animes/{anime.id}"
-            {title}
+            href="/media/{media.id}"
+            title={media.title}
           >
-            {title}
+            {media.title}
           </a>
         </div>
       </div>
       <div class="flex min-w-24 max-w-24 items-center justify-center border-l">
         <Star size={18} class="fill-foreground" />
         <Spacer horizontal size="xs" />
-        <p class="font-mono text-xs">{anime.score?.toFixed(2) ?? "N/A"}</p>
+        <p class="font-mono text-xs">{media.score?.toFixed(2) ?? "N/A"}</p>
       </div>
     </div>
   {/each}

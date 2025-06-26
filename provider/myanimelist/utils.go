@@ -1,4 +1,4 @@
-package mal
+package myanimelist
 
 import (
 	"fmt"
@@ -12,5 +12,6 @@ func parseDate(s string) (time.Time, error) {
 }
 
 func formatDate(t time.Time) string {
+	// TODO(patrik): Change with t.Format()
 	return fmt.Sprintf("%d-%02d-%02d", t.Year(), t.Month(), t.Day())
 }

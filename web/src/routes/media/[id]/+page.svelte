@@ -1,11 +1,10 @@
 <script lang="ts">
   import { invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
-  import { Anime } from "$lib/api/types.js";
   import Image from "$lib/components/Image.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
   import type { UserList } from "$lib/types.js";
-  import { cn, pickTitle } from "$lib/utils.js";
+  import { cn } from "$lib/utils.js";
   import {
     Breadcrumb,
     Button,
@@ -15,7 +14,6 @@
     DropdownMenu,
     Input,
     Label,
-    Separator,
   } from "@nanoteck137/nano-ui";
   import { ChevronDown, Eye, Star } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
@@ -37,14 +35,14 @@
 
   async function updateScore(score: number | null) {
     if (score === null) {
-      const res = await apiClient.setAnimeUserData(data.anime.id, {
+      const res = await apiClient.setMediaUserData(data.media.id, {
         score: 0,
       });
       if (!res.success) {
         return handleApiError(res.error);
       }
     } else {
-      const res = await apiClient.setAnimeUserData(data.anime.id, { score });
+      const res = await apiClient.setMediaUserData(data.media.id, { score });
       if (!res.success) {
         return handleApiError(res.error);
       }
@@ -55,14 +53,14 @@
 
   async function updateList(list: UserList | null) {
     if (list === null) {
-      const res = await apiClient.setAnimeUserData(data.anime.id, {
+      const res = await apiClient.setMediaUserData(data.media.id, {
         list: "",
       });
       if (!res.success) {
         return handleApiError(res.error);
       }
     } else {
-      const res = await apiClient.setAnimeUserData(data.anime.id, {
+      const res = await apiClient.setMediaUserData(data.media.id, {
         list,
       });
       if (!res.success) {
@@ -74,7 +72,7 @@
   }
 
   function formatScore() {
-    const score = data.anime.user?.score;
+    const score = data.media.user?.score;
 
     if (score === null) return "-";
 
@@ -82,7 +80,7 @@
   }
 
   function formatList() {
-    const category = data.anime.user?.list;
+    const category = data.media.user?.list;
 
     if (!category) return "Not Added";
 
@@ -107,13 +105,13 @@
   <Breadcrumb.Root>
     <Breadcrumb.List>
       <Breadcrumb.Item>
-        <Breadcrumb.Link href="/animes">Animes</Breadcrumb.Link>
+        <Breadcrumb.Link href="/media">Media</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
       <Breadcrumb.Item>
-        <Breadcrumb.Page class="line-clamp-1 max-w-96 text-ellipsis"
-          >{pickTitle(data.anime)}</Breadcrumb.Page
-        >
+        <Breadcrumb.Page class="line-clamp-1 max-w-96 text-ellipsis">
+          {data.media.title}
+        </Breadcrumb.Page>
       </Breadcrumb.Item>
     </Breadcrumb.List>
   </Breadcrumb.Root>
@@ -122,15 +120,15 @@
 <Spacer size="sm" />
 
 <div class="flex flex-col items-center gap-2">
-  <Image class="min-h-80 w-56" src={data.anime.coverUrl} alt="cover" />
+  <Image class="min-h-80 w-56" src={data.media.coverUrl} alt="cover" />
   <div class="flex flex-col gap-1">
-    <p class="text-center text-base">{data.anime.title}</p>
-    {#if data.anime.titleEnglish}
+    <p class="text-center text-base">{data.media.title}</p>
+    <!-- {#if data.anime.titleEnglish}
       <Separator />
       <p class="text-center text-sm text-zinc-300">
         {data.anime.titleEnglish}
       </p>
-    {/if}
+    {/if} -->
   </div>
 </div>
 
@@ -165,7 +163,7 @@
         <DropdownMenu.Item onclick={() => updateList("plan-to-watch")}>
           Plan to Watch
         </DropdownMenu.Item>
-        {#if !!data.anime.user?.list}
+        {#if !!data.media.user?.list}
           <DropdownMenu.Separator />
           <DropdownMenu.Item onclick={() => updateList(null)}>
             Remove
@@ -233,8 +231,7 @@
         <Eye size={18} />
         <Spacer horizontal size="sm" />
         <p class="text-base">
-          {data.anime.user?.episode ?? "??"} / {data.anime.episodeCount ??
-            "??"}
+          {data.media.user?.part ?? "??"} / {data.media.partCount ?? "??"}
         </p>
       </div>
     </Dialog.Trigger>
@@ -247,14 +244,15 @@
           const formData = new FormData(e.target as HTMLFormElement);
           console.log(formData);
 
+          // TODO(patrik): Rename
           const episode = formData.get("episode")?.toString() ?? "0";
           const rewatchCount = formData.get("rewatchCount")?.toString() ?? "0";
           const isRewatching = formData.get("isRewatching")?.toString() ?? "";
 
-          const res = await apiClient.setAnimeUserData(data.anime.id, {
-            episode: parseInt(episode === "" ? "0" : episode),
-            rewatchCount: parseInt(rewatchCount === "" ? "0" : rewatchCount),
-            isRewatching: isRewatching === "on",
+          const res = await apiClient.setMediaUserData(data.media.id, {
+            part: parseInt(episode === "" ? "0" : episode),
+            revisitCount: parseInt(rewatchCount === "" ? "0" : rewatchCount),
+            isRevisiting: isRewatching === "on",
           });
 
           if (!res.success) {
@@ -279,7 +277,7 @@
               name="episode"
               id="episode"
               type="number"
-              value={data.anime.user?.episode ?? 0}
+              value={data.media.user?.part ?? 0}
             />
           </div>
           <div class="flex flex-col gap-2">
@@ -288,14 +286,14 @@
               name="rewatchCount"
               id="rewatchCount"
               type="number"
-              value={data.anime.user?.rewatchCount ?? 0}
+              value={data.media.user?.revisitCount ?? 0}
             />
           </div>
           <div class="flex items-center gap-2">
             <Checkbox
               name="isRewatching"
               id="isRewatching"
-              checked={data.anime.user?.isRewatching ?? false}
+              checked={data.media.user?.isRevisiting ?? false}
             />
             <Label for="isRewatching">Is Rewatching</Label>
           </div>
@@ -340,7 +338,7 @@
   <Spacer horizontal size="xs" />
   <span>Score:</span>
   <Spacer horizontal size="xs" />
-  <p class="text-base">{data.anime.score?.toFixed(2) ?? "N/A"}</p>
+  <p class="text-base">{data.media.score?.toFixed(2) ?? "N/A"}</p>
 </div>
 
 <Spacer size="xs" />
@@ -348,10 +346,10 @@
 <div
   class="flex flex-col gap-1 rounded bg-primary p-2 text-primary-foreground"
 >
-  <p>Type: {formatAnimeType(data.anime.type)}</p>
-  <p>Episodes: {data.anime.episodeCount}</p>
-  <p>Status: {data.anime.status}</p>
-  {#if data.anime.airingSeason}
+  <p>Type: {formatAnimeType(data.media.type)}</p>
+  <p>Episodes: {data.media.partCount}</p>
+  <p>Status: {data.media.status}</p>
+  <!-- {#if data.media.airingSeason}
     <p>
       Airing Season:
       <a
@@ -361,40 +359,40 @@
         {data.anime.airingSeason.name}
       </a>
     </p>
+  {/if} -->
+  <!-- {#if data.media.startDate}
+    <p>Start Date: {data.media.startDate}</p>
   {/if}
-  {#if data.anime.startDate}
-    <p>Start Date: {data.anime.startDate}</p>
-  {/if}
-  {#if data.anime.endDate}
-    <p>End Date: {data.anime.endDate}</p>
-  {/if}
+  {#if data.media.endDate}
+    <p>End Date: {data.media.endDate}</p>
+  {/if} -->
   <p>
     Studios:
-    {#each data.anime.studios as studio, i}
+    {#each data.media.studios as studio, i}
       {#if i != 0}
         <span>, </span>
       {/if}
-      <a class="text-blue-500 hover:underline" href="/studios/{studio.slug}">
-        {studio.name}
+      <a class="text-blue-500 hover:underline" href="/studios/{studio}">
+        {studio}
       </a>
     {/each}
   </p>
   <p>
     Tags:
-    {#each data.anime.tags as tag, i}
+    {#each data.media.tags as tag, i}
       {#if i != 0}
         <span>, </span>
       {/if}
-      <a class="text-blue-500 hover:underline" href="/tags/{tag.slug}">
-        {tag.name}
+      <a class="text-blue-500 hover:underline" href="/tags/{tag}">
+        {tag}
       </a>
     {/each}
   </p>
-  <p>Rating: {data.anime.rating}</p>
+  <p>Rating: {data.media.rating}</p>
 </div>
 
-<div class="flex flex-col">
+<!-- <div class="flex flex-col">
   {#each data.anime.images as image}
     <Image class="min-h-80 w-56" src={image.url} alt="cover" />
   {/each}
-</div>
+</div> -->
