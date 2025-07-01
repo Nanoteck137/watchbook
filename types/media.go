@@ -208,54 +208,6 @@ func IsValidMediaUserList(l MediaUserList) bool {
 	return false
 }
 
-type MediaAdminStatus string
-
-const (
-	MediaAdminStatusNotFixed MediaAdminStatus = "not-fixed"
-	MediaAdminStatusFixed    MediaAdminStatus = "fixed"
-)
-
-func IsValidMediaAdminStatus(l MediaAdminStatus) bool {
-	switch l {
-	case MediaAdminStatusNotFixed,
-		MediaAdminStatusFixed:
-		return true
-	}
-
-	return false
-}
-
-func ValidateMediaAdminStatus(val any) error {
-	if s, ok := val.(string); ok {
-		if s == "" {
-			return nil
-		}
-
-		t := MediaAdminStatus(s)
-		if !IsValidMediaAdminStatus(t) {
-			return errors.New("invalid admin status")
-		}
-	} else if p, ok := val.(*string); ok {
-		if p == nil {
-			return nil
-		}
-
-		s := *p
-		if s == "" {
-			return nil
-		}
-
-		t := MediaAdminStatus(s)
-		if !IsValidMediaAdminStatus(t) {
-			return errors.New("invalid admin status")
-		}
-	} else {
-		return errors.New("expected string")
-	}
-
-	return nil
-}
-
 type MediaImageType string
 
 const (

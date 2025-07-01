@@ -194,6 +194,9 @@ type CreateMediaBody struct {
 
 	Tags    []string `json:"tags"`
 	Studios []string `json:"studios"`
+
+	CollectionId   string `json:"collectionId,omitempty"`
+	CollectionName string `json:"collectionName,omitempty"`
 }
 
 func (b *CreateMediaBody) Transform() {
@@ -220,11 +223,15 @@ func (b CreateMediaBody) Validate() error {
 	return validate.ValidateStruct(&b,
 		validate.Field(&b.Type, validate.Required, validate.By(types.ValidateMediaType)),
 
+		validate.Field(&b.Title, validate.Required),
+
 		validate.Field(&b.Status, validate.By(types.ValidateMediaStatus)),
 		validate.Field(&b.Rating, validate.By(types.ValidateMediaRating)),
 
 		validate.Field(&b.StartDate, validate.Date(DateLayout)),
 		validate.Field(&b.EndDate, validate.Date(DateLayout)),
+
+		validate.Field(&b.CollectionName, validate.Required.When(b.CollectionId != "")),
 	)
 }
 
@@ -281,13 +288,15 @@ func (b EditMediaBody) Validate() error {
 	return validate.ValidateStruct(&b,
 		validate.Field(&b.Type, validate.Required.When(b.Type != nil), validate.By(types.ValidateMediaType)),
 
+		validate.Field(&b.Title, validate.Required.When(b.Title != nil)),
+
 		validate.Field(&b.Status, validate.Required.When(b.Status != nil), validate.By(types.ValidateMediaStatus)),
 		validate.Field(&b.Rating, validate.Required.When(b.Rating != nil), validate.By(types.ValidateMediaRating)),
 
 		validate.Field(&b.StartDate, validate.Date(DateLayout)),
 		validate.Field(&b.EndDate, validate.Date(DateLayout)),
 
-		validate.Field(&b.AdminStatus, validate.Required.When(b.AdminStatus != nil), validate.By(types.ValidateMediaAdminStatus)),
+		validate.Field(&b.AdminStatus, validate.Required.When(b.AdminStatus != nil), validate.By(types.ValidateAdminStatus)),
 	)
 }
 
@@ -590,6 +599,28 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
+				if body.CollectionId != "" {
+					col, err := app.DB().GetCollectionById(ctx, nil, body.CollectionId)
+					if err != nil {
+						// TODO(patrik): Better handling of error
+						if !errors.Is(err, database.ErrItemNotFound) {
+							return nil, CollectionNotFound()
+						}
+
+						return nil, err
+					}
+
+					err = app.DB().CreateCollectionMediaItem(ctx, database.CreateCollectionMediaItemParams{
+						CollectionId: col.Id,
+						MediaId:      id,
+						Name:         body.CollectionName,
+						OrderNumber:  0,
+					})
+					if err != nil {
+						return nil, err
+					}
+				}
+
 				return CreateMedia{
 					Id: id,
 				}, nil
@@ -746,8 +777,8 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				}
 
 				if body.AdminStatus != nil {
-					s := types.MediaAdminStatus(*body.AdminStatus)
-					changes.AdminStatus = database.Change[types.MediaAdminStatus]{
+					s := types.AdminStatus(*body.AdminStatus)
+					changes.AdminStatus = database.Change[types.AdminStatus]{
 						Value:   s,
 						Changed: s != dbMedia.AdminStatus,
 					}

@@ -49,7 +49,7 @@ type Media struct {
 	StartDate sql.NullString `db:"start_date"`
 	EndDate   sql.NullString `db:"end_date"`
 
-	AdminStatus types.MediaAdminStatus `db:"admin_status"`
+	AdminStatus types.AdminStatus `db:"admin_status"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -347,7 +347,7 @@ type CreateMediaParams struct {
 	StartDate sql.NullString
 	EndDate   sql.NullString
 
-	AdminStatus types.MediaAdminStatus
+	AdminStatus types.AdminStatus
 
 	Created int64
 	Updated int64
@@ -381,7 +381,7 @@ func (db *Database) CreateMedia(ctx context.Context, params CreateMediaParams) (
 	}
 
 	if params.AdminStatus == "" {
-		params.AdminStatus = types.MediaAdminStatusNotFixed
+		params.AdminStatus = types.AdminStatusNotFixed
 	}
 
 	query := dialect.Insert("media").Rows(goqu.Record{
@@ -433,7 +433,7 @@ type MediaChanges struct {
 	StartDate Change[sql.NullString]
 	EndDate   Change[sql.NullString]
 
-	AdminStatus Change[types.MediaAdminStatus]
+	AdminStatus Change[types.AdminStatus]
 
 	Created Change[int64]
 }
