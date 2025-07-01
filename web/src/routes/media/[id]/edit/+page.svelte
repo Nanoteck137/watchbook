@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
-  import type { ProviderMyAnimeListAnime } from "$lib/api/types";
   import {
     MediaRating,
     MediaStatus,
@@ -11,10 +10,11 @@
     parseMediaType,
   } from "$lib/api_types";
   import FormItem from "$lib/components/FormItem.svelte";
-  import { cn, pickTitle } from "$lib/utils";
+  import Spacer from "$lib/components/Spacer.svelte";
+  import { cn } from "$lib/utils";
   import {
+    Breadcrumb,
     Button,
-    Checkbox,
     Input,
     Label,
     Select,
@@ -27,24 +27,7 @@
 
   const apiClient = getApiClient();
 
-  let loading = $state(false);
-  let data = $state<ProviderMyAnimeListAnime | null>(null);
-
-  async function fetchData(invalidateCache: boolean) {
-    loading = true;
-    const res = await apiClient.providerMyAnimeListGetAnime("28851", {
-      query: { invalidateCache: invalidateCache.toString() },
-    });
-    if (!res.success) {
-      handleApiError(res.error);
-      loading = false;
-      return;
-    }
-
-    data = res.data;
-
-    loading = false;
-  }
+  const { data } = $props();
 
   const mediaTypeLabels: { [K in MediaType]: string } = {
     unknown: "Unknown",
@@ -91,11 +74,6 @@
 
     tags: z.string(),
     studios: z.string(),
-
-    coverUrl: z.string(),
-
-    partCount: z.number(),
-    generateParts: z.boolean(),
   });
 
   const { form, enhance, errors, submitting } = superForm(
@@ -108,7 +86,7 @@
         console.log(f.data);
 
         if (f.valid) {
-          const res = await apiClient.createMedia({
+          const res = await apiClient.editMedia(data.media.id, {
             title: f.data.title,
             description: f.data.description,
             type: f.data.type,
@@ -123,50 +101,72 @@
             tmdbId: f.data.tmdbId,
             malId: f.data.malId,
             anilistId: f.data.anilistId,
-            partCount: f.data.generateParts ? f.data.partCount : 0,
-            coverUrl: f.data.coverUrl,
-            bannerUrl: "",
-            logoUrl: "",
           });
           if (!res.success) {
             return handleApiError(res.error);
           }
 
           // TODO(patrik): Navigate to media item
-          toast.success("Successfully created media item");
-          goto(`/media/${res.data.id}`, { invalidateAll: true });
+          toast.success("Successfully updated media item");
+          await invalidateAll();
         }
       },
     },
   );
 
   $effect(() => {
-    $form.type = parseMediaType(data?.type);
+    const media = data.media;
 
-    $form.tmdbId = "";
-    $form.malId = data?.malId ?? "";
-    $form.anilistId = "";
+    $form.type = parseMediaType(media.type);
 
-    $form.title = pickTitle(data ?? { title: "", titleEnglish: "" });
-    $form.description = data?.description ?? "";
+    // $form.tmdbId = media.;
+    // $form.malId = data?.malId ?? "";
+    // $form.anilistId = "";
 
-    $form.score = data?.score ?? 0.0;
-    $form.status = parseMediaStatus(data?.status);
-    $form.rating = parseMediaRating(data?.rating);
-    $form.airingSeason = data?.airingSeason ?? "";
+    $form.title = media.title;
+    $form.description = media.description ?? "";
 
-    $form.startDate = data?.startDate ?? "";
-    $form.endDate = data?.endDate ?? "";
+    $form.score = media.score ?? 0.0;
+    $form.status = parseMediaStatus(media.status);
+    $form.rating = parseMediaRating(media.rating);
+    // $form.airingSeason = media.data?.airingSeason ?? "";
 
-    $form.tags = data?.tags.join(",") ?? "";
-    $form.studios = data?.studios.join(",") ?? "";
+    // $form.startDate = media.startDate ?? "";
+    // $form.endDate = data?.endDate ?? "";
 
-    $form.coverUrl = data?.coverImageUrl ?? "";
+    $form.tags = media.tags.join(",") ?? "";
+    $form.studios = media.studios.join(",") ?? "";
 
-    $form.partCount = data?.episodeCount ?? 0;
-    $form.generateParts = true;
+    // $form.coverUrl = data?.coverImageUrl ?? "";
+
+    // $form.episodeCount = data?.episodeCount ?? 0;
+    // $form.generateEpisodes = true;
   });
 </script>
+
+<div class="py-2">
+  <Breadcrumb.Root>
+    <Breadcrumb.List>
+      <Breadcrumb.Item>
+        <Breadcrumb.Link href="/media">Media</Breadcrumb.Link>
+      </Breadcrumb.Item>
+      <Breadcrumb.Separator />
+      <Breadcrumb.Item>
+        <Breadcrumb.Link href={`/media/${data.media.id}`}>
+          {data.media.title}
+        </Breadcrumb.Link>
+      </Breadcrumb.Item>
+      <Breadcrumb.Separator />
+      <Breadcrumb.Item>
+        <Breadcrumb.Page class="line-clamp-1 max-w-96 text-ellipsis">
+          Edit
+        </Breadcrumb.Page>
+      </Breadcrumb.Item>
+    </Breadcrumb.List>
+  </Breadcrumb.Root>
+</div>
+
+<Spacer size="sm" />
 
 <form method="POST" class="w-2/3 space-y-6" use:enhance>
   <FormItem>
@@ -402,100 +402,7 @@
     {/if}
   </FormItem>
 
-  <FormItem>
-    <Label for="coverUrl" aria-invalid={$errors.coverUrl ? "true" : undefined}>
-      Cover URL
-    </Label>
-    <Input
-      id="coverUrl"
-      name="coverUrl"
-      type="text"
-      bind:value={$form.coverUrl}
-    />
-    {#if $errors.coverUrl}
-      <span class="invalid">{$errors.coverUrl}</span>
-    {/if}
-  </FormItem>
-
-  <FormItem>
-    <Label
-      for="partCount"
-      aria-invalid={$errors.partCount ? "true" : undefined}
-    >
-      part Count
-    </Label>
-    <Input
-      id="partCount"
-      name="partCount"
-      type="number"
-      bind:value={$form.partCount}
-      disabled={!$form.generateParts}
-    />
-    {#if $errors.partCount}
-      <span class="invalid">{$errors.partCount}</span>
-    {/if}
-  </FormItem>
-
-  <FormItem>
-    <Label
-      for="generateParts"
-      aria-invalid={$errors.generateParts ? "true" : undefined}
-    >
-      Generate Parts?
-    </Label>
-    <Checkbox
-      id="generateParts"
-      name="generateParts"
-      bind:checked={$form.generateParts}
-    />
-    {#if $errors.generateParts}
-      <span class="invalid">{$errors.generateParts}</span>
-    {/if}
-  </FormItem>
-
   <Button type="submit" disabled={$submitting}>Submit</Button>
 </form>
-
-<p>Loading: {loading}</p>
-
-<form
-  onsubmit={async (e) => {
-    e.preventDefault();
-    await fetchData(false);
-  }}
->
-  <FormItem>
-    <Label for="malId">MyAnimeList ID</Label>
-    <Input id="malId" name="malId" type="text" />
-  </FormItem>
-
-  <Button type="submit">Get</Button>
-</form>
-{#if data}
-  <p>Using Cache: {data.usingCache}</p>
-  <Button
-    onclick={() => {
-      fetchData(true);
-    }}
-  >
-    Invalidate Cache
-  </Button>
-  <FormItem>
-    <Label for="title">Title</Label>
-    <Input id="title" name="title" type="text" value={pickTitle(data)} />
-  </FormItem>
-  <FormItem>
-    <Label for="description">Description</Label>
-    <textarea
-      id="description"
-      class={cn(
-        "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive field-sizing-content shadow-xs flex min-h-16 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30 md:text-sm",
-        "",
-      )}
-      value={data.description}
-      rows={10}
-    ></textarea>
-  </FormItem>
-{/if}
 
 <SuperDebug data={$form} />
