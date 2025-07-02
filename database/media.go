@@ -37,8 +37,6 @@ type Media struct {
 	AnilistId sql.NullString `db:"anilist_id"`
 
 	Title        string         `db:"title"`
-	TitleEnglish sql.NullString `db:"title_english"`
-
 	Description sql.NullString `db:"description"`
 
 	Score        sql.NullFloat64   `db:"score"`

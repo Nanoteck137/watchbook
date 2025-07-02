@@ -3,6 +3,7 @@ package apis
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/nanoteck137/pyrin"
@@ -11,6 +12,7 @@ import (
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
 	"github.com/nanoteck137/watchbook/types"
+	"github.com/nanoteck137/watchbook/utils"
 )
 
 type Collection struct {
@@ -35,6 +37,92 @@ func ConvertDBCollection(c pyrin.Context, hasUser bool, collection database.Coll
 		Type: collection.Type,
 		Name: collection.Name,
 	}
+}
+
+type CollectionItem struct {
+	CollectionId string `json:"collectionId"`
+	MediaId      string `json:"mediaId"`
+
+	Title       string  `json:"title"`
+	Description *string `json:"description"`
+
+	Type         types.MediaType   `json:"type"`
+	Score        *float64          `json:"score"`
+	Status       types.MediaStatus `json:"status"`
+	Rating       types.MediaRating `json:"rating"`
+	PartCount    int64             `json:"partCount"`
+	AiringSeason *string           `json:"airingSeason"`
+
+	StartDate *string `json:"startDate"`
+	EndDate   *string `json:"endDate"`
+
+	Studios []string `json:"studios"`
+	Tags    []string `json:"tags"`
+
+	CoverUrl *string `json:"coverUrl"`
+
+	User *MediaUser `json:"user,omitempty"`
+}
+
+func ConvertDBCollectionItem(c pyrin.Context, hasUser bool, item database.FullCollectionMediaItem) CollectionItem {
+	// TODO(patrik): Add default cover
+	var coverUrl *string
+	// var bannerUrl *string
+	// var logoUrl *string
+
+	for _, image := range item.MediaImages.Data {
+		if image.Type == types.MediaImageTypeCover && coverUrl == nil {
+			url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", item.MediaId, image.Filename))
+			coverUrl = &url
+		}
+
+		// if image.Type == types.MediaImageTypeBanner && bannerUrl == nil {
+		// 	url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", media.Id, image.Filename))
+		// 	bannerUrl = &url
+		// }
+		//
+		// if image.Type == types.MediaImageTypeLogo && logoUrl == nil {
+		// 	url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", media.Id, image.Filename))
+		// 	logoUrl = &url
+		// }
+	}
+
+	var user *MediaUser
+	if hasUser {
+		user = &MediaUser{}
+
+		if item.MediaUserData.Valid {
+			val := item.MediaUserData.Data
+			user.List = val.List
+			user.Part = val.Part
+			user.RevisitCount = val.RevisitCount
+			user.Score = val.Score
+			user.IsRevisiting = val.IsRevisiting > 0
+		}
+	}
+
+	return CollectionItem{
+		CollectionId: item.CollectionId,
+		MediaId:      item.MediaId,
+		Title:        item.MediaTitle,
+		Description:  utils.SqlNullToStringPtr(item.MediaDescription),
+		Type:         item.MediaType,
+		Score:        utils.SqlNullToFloat64Ptr(item.MediaScore),
+		Status:       item.MediaStatus,
+		Rating:       item.MediaRating,
+		PartCount:    item.MediaPartCount.Int64,
+		AiringSeason: utils.SqlNullToStringPtr(item.MediaAiringSeason),
+		StartDate:    utils.SqlNullToStringPtr(item.MediaStartDate),
+		EndDate:      utils.SqlNullToStringPtr(item.MediaEndDate),
+		Studios:      utils.FixNilArrayToEmpty(item.MediaStudios.Data),
+		Tags:         utils.FixNilArrayToEmpty(item.MediaTags.Data),
+		CoverUrl:     coverUrl,
+		User:         user,
+	}
+}
+
+type GetCollectionItems struct {
+	Items []CollectionItem `json:"items"`
 }
 
 type CreateCollection struct {
@@ -138,6 +226,47 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 				return GetCollectionById{
 					Collection: ConvertDBCollection(c, false, collection),
 				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetCollectionItems",
+			Method:       http.MethodGet,
+			Path:         "/collections/:id/items",
+			ResponseType: GetCollectionItems{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				var userId *string
+				if user, err := User(app, c); err == nil {
+					userId = &user.Id
+				}
+
+				ctx := c.Request().Context()
+
+				collection, err := app.DB().GetCollectionById(ctx, userId, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, CollectionNotFound()
+					}
+
+					return nil, err
+				}
+
+				items, err := app.DB().GetFullAllCollectionMediaItemsByCollection(ctx, userId, collection.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				res := GetCollectionItems{
+					Items: make([]CollectionItem, len(items)),
+				}
+
+				for i, item := range items {
+					res.Items[i] = ConvertDBCollectionItem(c, userId != nil, item)
+				}
+
+				return res, nil
 			},
 		},
 
