@@ -10,7 +10,7 @@ import (
 	"strconv"
 
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/pyrin/tools/transform"
+	"github.com/nanoteck137/pyrin/anvil"
 	"github.com/nanoteck137/validate"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
@@ -26,7 +26,7 @@ const DateLayout = "2006-01-02"
 type MediaUser struct {
 	List         *types.MediaUserList `json:"list"`
 	Score        *int64               `json:"score"`
-	Part         *int64               `json:"part"`
+	CurrentPart  *int64               `json:"currentPart"`
 	RevisitCount *int64               `json:"revisitCount"`
 	IsRevisiting bool                 `json:"isRevisiting"`
 }
@@ -43,15 +43,15 @@ type Media struct {
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
 
-	Type      types.MediaType   `json:"type"`
-	Score     *float64          `json:"score"`
-	Status    types.MediaStatus `json:"status"`
-	Rating    types.MediaRating `json:"rating"`
-	PartCount int64             `json:"partCount"`
-	// AiringSeason *MediaTag         `json:"airingSeason"`
+	MediaType    types.MediaType   `json:"mediaType"`
+	Score        *float64          `json:"score"`
+	Status       types.MediaStatus `json:"status"`
+	Rating       types.MediaRating `json:"rating"`
+	PartCount    int64             `json:"partCount"`
+	AiringSeason *string           `json:"airingSeason"`
 
-	// StartDate *string `json:"startDate"`
-	// EndDate   *string `json:"endDate"`
+	StartDate *string `json:"startDate"`
+	EndDate   *string `json:"endDate"`
 
 	Studios []string `json:"studios"`
 	Tags    []string `json:"tags"`
@@ -125,7 +125,7 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 		if media.UserData.Valid {
 			val := media.UserData.Data
 			user.List = val.List
-			user.Part = val.Part
+			user.CurrentPart = val.Part
 			user.RevisitCount = val.RevisitCount
 			user.Score = val.Score
 			user.IsRevisiting = val.IsRevisiting > 0
@@ -133,27 +133,30 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 	}
 
 	return Media{
-		Id:          media.Id,
-		Title:       media.Title,
-		Description: utils.SqlNullToStringPtr(media.Description),
-		Type:        media.Type,
-		Score:       utils.SqlNullToFloat64Ptr(media.Score),
-		Status:      media.Status,
-		Rating:      media.Rating,
-		PartCount:   media.PartCount.Int64,
-		Studios:     utils.FixNilArrayToEmpty(media.Studios.Data),
-		Tags:        utils.FixNilArrayToEmpty(media.Tags.Data),
-		CoverUrl:    coverUrl,
-		BannerUrl:   bannerUrl,
-		LogoUrl:     logoUrl,
-		User:        user,
+		Id:           media.Id,
+		Title:        media.Title,
+		Description:  utils.SqlNullToStringPtr(media.Description),
+		MediaType:    media.Type,
+		Score:        utils.SqlNullToFloat64Ptr(media.Score),
+		Status:       media.Status,
+		Rating:       media.Rating,
+		PartCount:    media.PartCount.Int64,
+		Studios:      utils.FixNilArrayToEmpty(media.Studios.Data),
+		Tags:         utils.FixNilArrayToEmpty(media.Tags.Data),
+		CoverUrl:     coverUrl,
+		BannerUrl:    bannerUrl,
+		LogoUrl:      logoUrl,
+		User:         user,
+		AiringSeason: utils.SqlNullToStringPtr(media.AiringSeason),
+		StartDate:    utils.SqlNullToStringPtr(media.StartDate),
+		EndDate:      utils.SqlNullToStringPtr(media.EndDate),
 	}
 }
 
 type SetMediaUserData struct {
 	List         *types.MediaUserList `json:"list,omitempty"`
 	Score        *int64               `json:"score,omitempty"`
-	Part         *int64               `json:"part,omitempty"`
+	CurrentPart  *int64               `json:"currentPart,omitempty"`
 	RevisitCount *int64               `json:"revisitCount,omitempty"`
 	IsRevisiting *bool                `json:"isRevisiting,omitempty"`
 }
@@ -169,7 +172,7 @@ type CreateMedia struct {
 }
 
 type CreateMediaBody struct {
-	Type string `json:"type"`
+	MediaType string `json:"mediaType"`
 
 	TmdbId    string `json:"tmdbId"`
 	MalId     string `json:"malId"`
@@ -200,20 +203,20 @@ type CreateMediaBody struct {
 }
 
 func (b *CreateMediaBody) Transform() {
-	b.TmdbId = transform.String(b.TmdbId)
-	b.MalId = transform.String(b.MalId)
-	b.AnilistId = transform.String(b.AnilistId)
+	b.TmdbId = anvil.String(b.TmdbId)
+	b.MalId = anvil.String(b.MalId)
+	b.AnilistId = anvil.String(b.AnilistId)
 
-	b.Title = transform.String(b.Title)
-	b.Description = transform.String(b.Description)
+	b.Title = anvil.String(b.Title)
+	b.Description = anvil.String(b.Description)
 
 	b.Score = utils.Clamp(b.Score, 0.0, 10.0)
 	b.AiringSeason = utils.TransformStringSlug(b.AiringSeason)
 
 	b.PartCount = utils.Min(b.PartCount, 0)
 
-	b.StartDate = transform.String(b.StartDate)
-	b.EndDate = transform.String(b.EndDate)
+	b.StartDate = anvil.String(b.StartDate)
+	b.EndDate = anvil.String(b.EndDate)
 
 	b.Tags = utils.TransformSlugArray(b.Tags)
 	b.Studios = utils.TransformSlugArray(b.Studios)
@@ -221,7 +224,7 @@ func (b *CreateMediaBody) Transform() {
 
 func (b CreateMediaBody) Validate() error {
 	return validate.ValidateStruct(&b,
-		validate.Field(&b.Type, validate.Required, validate.By(types.ValidateMediaType)),
+		validate.Field(&b.MediaType, validate.Required, validate.By(types.ValidateMediaType)),
 
 		validate.Field(&b.Title, validate.Required),
 
@@ -236,7 +239,7 @@ func (b CreateMediaBody) Validate() error {
 }
 
 type EditMediaBody struct {
-	Type *string `json:"type,omitempty"`
+	MediaType *string `json:"mediaType,omitempty"`
 
 	TmdbId    *string `json:"tmdbId,omitempty"`
 	MalId     *string `json:"malId,omitempty"`
@@ -260,12 +263,12 @@ type EditMediaBody struct {
 }
 
 func (b *EditMediaBody) Transform() {
-	b.TmdbId = transform.StringPtr(b.TmdbId)
-	b.MalId = transform.StringPtr(b.MalId)
-	b.AnilistId = transform.StringPtr(b.AnilistId)
+	b.TmdbId = anvil.StringPtr(b.TmdbId)
+	b.MalId = anvil.StringPtr(b.MalId)
+	b.AnilistId = anvil.StringPtr(b.AnilistId)
 
-	b.Title = transform.StringPtr(b.Title)
-	b.Description = transform.StringPtr(b.Description)
+	b.Title = anvil.StringPtr(b.Title)
+	b.Description = anvil.StringPtr(b.Description)
 
 	if b.Score != nil {
 		*b.Score = utils.Clamp(*b.Score, 0.0, 10.0)
@@ -286,7 +289,7 @@ func (b *EditMediaBody) Transform() {
 
 func (b EditMediaBody) Validate() error {
 	return validate.ValidateStruct(&b,
-		validate.Field(&b.Type, validate.Required.When(b.Type != nil), validate.By(types.ValidateMediaType)),
+		validate.Field(&b.MediaType, validate.Required.When(b.MediaType != nil), validate.By(types.ValidateMediaType)),
 
 		validate.Field(&b.Title, validate.Required.When(b.Title != nil)),
 
@@ -329,7 +332,7 @@ type AddPartBody struct {
 }
 
 func (b *AddPartBody) Transform() {
-	b.Name = transform.String(b.Name)
+	b.Name = anvil.String(b.Name)
 	b.Index = utils.Min(b.Index, 0)
 }
 
@@ -338,7 +341,7 @@ type EditPartBody struct {
 }
 
 func (b *EditPartBody) Transform() {
-	b.Name = transform.StringPtr(b.Name)
+	b.Name = anvil.StringPtr(b.Name)
 }
 
 func (b EditPartBody) Validate() error {
@@ -348,14 +351,14 @@ func (b EditPartBody) Validate() error {
 }
 
 type EditImageBody struct {
-	Type *string `json:"type"`
+	ImageType *string `json:"imageType"`
 
 	IsPriamry *bool `json:"isPrimary"`
 }
 
 func (b EditImageBody) Validate() error {
 	return validate.ValidateStruct(&b,
-		validate.Field(&b.Type, validate.Required.When(b.Type != nil), validate.By(types.ValidateMediaImageType)),
+		validate.Field(&b.ImageType, validate.Required.When(b.ImageType != nil), validate.By(types.ValidateMediaImageType)),
 	)
 }
 
@@ -364,18 +367,18 @@ type AddImage struct {
 }
 
 type AddImageBody struct {
-	ImageUrl string `json:"imageUrl"`
-	Type     string `json:"type"`
+	ImageUrl  string `json:"imageUrl"`
+	ImageType string `json:"imageType"`
 }
 
 func (b *AddImageBody) Transform() {
-	b.ImageUrl = transform.String(b.ImageUrl)
+	b.ImageUrl = anvil.String(b.ImageUrl)
 }
 
 func (b AddImageBody) Validate() error {
 	return validate.ValidateStruct(&b,
 		validate.Field(&b.ImageUrl, validate.Required),
-		validate.Field(&b.Type, validate.Required, validate.By(types.ValidateMediaImageType)),
+		validate.Field(&b.ImageType, validate.Required, validate.By(types.ValidateMediaImageType)),
 	)
 }
 
@@ -484,7 +487,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				ty := types.MediaType(body.Type)
+				ty := types.MediaType(body.MediaType)
 
 				id, err := app.DB().CreateMedia(ctx, database.CreateMediaParams{
 					Type: ty,
@@ -656,8 +659,8 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 				changes := database.MediaChanges{}
 
-				if body.Type != nil {
-					t := types.MediaType(*body.Type)
+				if body.MediaType != nil {
+					t := types.MediaType(*body.MediaType)
 
 					changes.Type = database.Change[types.MediaType]{
 						Value:   t,
@@ -1124,7 +1127,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				t := types.MediaImageType(body.Type)
+				t := types.MediaImageType(body.ImageType)
 				hash, err := downloadImage(ctx, app.DB(), app.WorkDir(), dbMedia.Id, body.ImageUrl, t, false)
 				if err != nil {
 					logger.Error("failed to download image for media", "mediaId", dbMedia.Id, "err", err)
@@ -1176,8 +1179,8 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 				changes := database.MediaImageChanges{}
 
-				if body.Type != nil {
-					t := types.MediaImageType(*body.Type)
+				if body.ImageType != nil {
+					t := types.MediaImageType(*body.ImageType)
 					changes.Type = database.Change[types.MediaImageType]{
 						Value:   t,
 						Changed: t != dbImage.Type,
@@ -1246,10 +1249,10 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				if body.Part != nil {
+				if body.CurrentPart != nil {
 					data.Part = sql.NullInt64{
-						Int64: *body.Part,
-						Valid: *body.Part != 0,
+						Int64: *body.CurrentPart,
+						Valid: *body.CurrentPart != 0,
 					}
 				}
 

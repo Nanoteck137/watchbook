@@ -23,7 +23,10 @@ var genCmd = &cobra.Command{
 		router := spark.Router{}
 		apis.RegisterHandlers(nil, &router)
 
-		serverDef, err := spark.CreateServerDef(&router)
+		nameFilter := spark.NameFilter{}
+		nameFilter.LoadDefault()
+
+		serverDef, err := spark.CreateServerDef(&router, nameFilter)
 		if err != nil {
 			logger.Fatal("failed to create server def", "err", err)
 		}

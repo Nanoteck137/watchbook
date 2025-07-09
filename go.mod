@@ -11,7 +11,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/gosimple/slug v1.14.0
 	github.com/mattn/go-sqlite3 v1.14.28
-	github.com/nanoteck137/pyrin v0.15.3-0.20250601202521-e04de59a6565
+	github.com/nanoteck137/pyrin v0.15.3-0.20250709125342-036f69d0fe08
 	github.com/nanoteck137/validate v0.0.0-20241129211421-90ceb11de343
 	github.com/nrednav/cuid2 v1.0.0
 	github.com/pressly/goose/v3 v3.17.0

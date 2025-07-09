@@ -165,6 +165,8 @@ github.com/nanoteck137/pyrin v0.15.3-0.20250601192745-6925db1deb92 h1:UxQlpI59jZ
 github.com/nanoteck137/pyrin v0.15.3-0.20250601192745-6925db1deb92/go.mod h1:n0CnFvINVSILZ+nW/JFuCQhK8iMB9T1tOUTIny3jT0w=
 github.com/nanoteck137/pyrin v0.15.3-0.20250601202521-e04de59a6565 h1:Z5vbex9TOjZ7EQCopugxpb4uEn+Vcwe1mi7frzvzdDM=
 github.com/nanoteck137/pyrin v0.15.3-0.20250601202521-e04de59a6565/go.mod h1:n0CnFvINVSILZ+nW/JFuCQhK8iMB9T1tOUTIny3jT0w=
+github.com/nanoteck137/pyrin v0.15.3-0.20250709125342-036f69d0fe08 h1:d0WoWzzMv0OieaKAYr8fZuSatXTWG7JVhvRAgi/KqcU=
+github.com/nanoteck137/pyrin v0.15.3-0.20250709125342-036f69d0fe08/go.mod h1:n0CnFvINVSILZ+nW/JFuCQhK8iMB9T1tOUTIny3jT0w=
 github.com/nanoteck137/validate v0.0.0-20241129211421-90ceb11de343 h1:EjWdC/+BXfC4YTKxdslWV8rFZXlZ48VAKpDTQs4Lo2U=
 github.com/nanoteck137/validate v0.0.0-20241129211421-90ceb11de343/go.mod h1:+21LcVRcjVhpx5vU3qJZpsJwV4NzAk2MH87WMvhG/sk=
 github.com/nrednav/cuid2 v1.0.0 h1:27dn1oGiG+23Wa8XJ2DHeMoMa18Zs9u1+UHI9IlcGKM=

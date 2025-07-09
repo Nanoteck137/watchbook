@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/pyrin/tools/transform"
+	"github.com/nanoteck137/pyrin/anvil"
 	"github.com/nanoteck137/validate"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
@@ -18,7 +18,7 @@ type UpdateUserSettingsBody struct {
 }
 
 func (b *UpdateUserSettingsBody) Transform() {
-	b.DisplayName = transform.StringPtr(b.DisplayName)
+	b.DisplayName = anvil.StringPtr(b.DisplayName)
 }
 
 func (b UpdateUserSettingsBody) Validate() error {
@@ -38,7 +38,7 @@ type CreateApiTokenBody struct {
 }
 
 func (b *CreateApiTokenBody) Transform() {
-	b.Name = transform.String(b.Name)
+	b.Name = anvil.String(b.Name)
 }
 
 func (b CreateApiTokenBody) Validate() error {

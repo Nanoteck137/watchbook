@@ -231,7 +231,8 @@
         <Eye size={18} />
         <Spacer horizontal size="sm" />
         <p class="text-base">
-          {data.media.user?.part ?? "??"} / {data.media.partCount ?? "??"}
+          {data.media.user?.currentPart ?? "??"} / {data.media.partCount ??
+            "??"}
         </p>
       </div>
     </Dialog.Trigger>
@@ -250,7 +251,7 @@
           const isRewatching = formData.get("isRewatching")?.toString() ?? "";
 
           const res = await apiClient.setMediaUserData(data.media.id, {
-            part: parseInt(episode === "" ? "0" : episode),
+            currentPart: parseInt(episode === "" ? "0" : episode),
             revisitCount: parseInt(rewatchCount === "" ? "0" : rewatchCount),
             isRevisiting: isRewatching === "on",
           });
@@ -277,7 +278,7 @@
               name="episode"
               id="episode"
               type="number"
-              value={data.media.user?.part ?? 0}
+              value={data.media.user?.currentPart ?? 0}
             />
           </div>
           <div class="flex flex-col gap-2">
@@ -346,7 +347,7 @@
 <div
   class="flex flex-col gap-1 rounded bg-primary p-2 text-primary-foreground"
 >
-  <p>Type: {formatAnimeType(data.media.type)}</p>
+  <p>Type: {formatAnimeType(data.media.mediaType)}</p>
   <p>Episodes: {data.media.partCount}</p>
   <p>Status: {data.media.status}</p>
   <!-- {#if data.media.airingSeason}

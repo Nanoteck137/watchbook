@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/pyrin/tools/transform"
+	"github.com/nanoteck137/pyrin/anvil"
 	"github.com/nanoteck137/validate"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
@@ -16,14 +16,14 @@ import (
 )
 
 type Collection struct {
-	Id   string               `json:"id"`
-	Type types.CollectionType `json:"type"`
+	Id             string               `json:"id"`
+	CollectionType types.CollectionType `json:"collectionType"`
 
 	Name string `json:"name"`
 }
 
 type GetCollections struct {
-	// Page       types.Page `json:"page"`
+	Page        types.Page   `json:"page"`
 	Collections []Collection `json:"collections"`
 }
 
@@ -33,9 +33,9 @@ type GetCollectionById struct {
 
 func ConvertDBCollection(c pyrin.Context, hasUser bool, collection database.Collection) Collection {
 	return Collection{
-		Id:   collection.Id,
-		Type: collection.Type,
-		Name: collection.Name,
+		Id:             collection.Id,
+		CollectionType: collection.Type,
+		Name:           collection.Name,
 	}
 }
 
@@ -43,10 +43,13 @@ type CollectionItem struct {
 	CollectionId string `json:"collectionId"`
 	MediaId      string `json:"mediaId"`
 
+	CollectionName string `json:"collectionName"`
+	Order          int64  `json:"order"`
+
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
 
-	Type         types.MediaType   `json:"type"`
+	MediaType    types.MediaType   `json:"mediaType"`
 	Score        *float64          `json:"score"`
 	Status       types.MediaStatus `json:"status"`
 	Rating       types.MediaRating `json:"rating"`
@@ -94,7 +97,7 @@ func ConvertDBCollectionItem(c pyrin.Context, hasUser bool, item database.FullCo
 		if item.MediaUserData.Valid {
 			val := item.MediaUserData.Data
 			user.List = val.List
-			user.Part = val.Part
+			user.CurrentPart = val.Part
 			user.RevisitCount = val.RevisitCount
 			user.Score = val.Score
 			user.IsRevisiting = val.IsRevisiting > 0
@@ -102,22 +105,24 @@ func ConvertDBCollectionItem(c pyrin.Context, hasUser bool, item database.FullCo
 	}
 
 	return CollectionItem{
-		CollectionId: item.CollectionId,
-		MediaId:      item.MediaId,
-		Title:        item.MediaTitle,
-		Description:  utils.SqlNullToStringPtr(item.MediaDescription),
-		Type:         item.MediaType,
-		Score:        utils.SqlNullToFloat64Ptr(item.MediaScore),
-		Status:       item.MediaStatus,
-		Rating:       item.MediaRating,
-		PartCount:    item.MediaPartCount.Int64,
-		AiringSeason: utils.SqlNullToStringPtr(item.MediaAiringSeason),
-		StartDate:    utils.SqlNullToStringPtr(item.MediaStartDate),
-		EndDate:      utils.SqlNullToStringPtr(item.MediaEndDate),
-		Studios:      utils.FixNilArrayToEmpty(item.MediaStudios.Data),
-		Tags:         utils.FixNilArrayToEmpty(item.MediaTags.Data),
-		CoverUrl:     coverUrl,
-		User:         user,
+		CollectionId:   item.CollectionId,
+		MediaId:        item.MediaId,
+		Title:          item.MediaTitle,
+		Description:    utils.SqlNullToStringPtr(item.MediaDescription),
+		MediaType:      item.MediaType,
+		Score:          utils.SqlNullToFloat64Ptr(item.MediaScore),
+		Status:         item.MediaStatus,
+		Rating:         item.MediaRating,
+		PartCount:      item.MediaPartCount.Int64,
+		AiringSeason:   utils.SqlNullToStringPtr(item.MediaAiringSeason),
+		StartDate:      utils.SqlNullToStringPtr(item.MediaStartDate),
+		EndDate:        utils.SqlNullToStringPtr(item.MediaEndDate),
+		Studios:        utils.FixNilArrayToEmpty(item.MediaStudios.Data),
+		Tags:           utils.FixNilArrayToEmpty(item.MediaTags.Data),
+		CoverUrl:       coverUrl,
+		User:           user,
+		CollectionName: item.CollectionName,
+		Order:          item.OrderNumber,
 	}
 }
 
@@ -130,24 +135,24 @@ type CreateCollection struct {
 }
 
 type CreateCollectionBody struct {
-	Type string `json:"type"`
+	CollectionType string `json:"collectionType"`
 
 	Name string `json:"name"`
 }
 
 func (b *CreateCollectionBody) Transform() {
-	b.Name = transform.String(b.Name)
+	b.Name = anvil.String(b.Name)
 }
 
 func (b CreateCollectionBody) Validate() error {
 	return validate.ValidateStruct(&b,
-		validate.Field(&b.Type, validate.Required, validate.By(types.ValidateCollectionType)),
+		validate.Field(&b.CollectionType, validate.Required, validate.By(types.ValidateCollectionType)),
 		validate.Field(&b.Name, validate.Required),
 	)
 }
 
 type EditCollectionBody struct {
-	Type *string `json:"type,omitempty"`
+	CollectionType *string `json:"collectionType,omitempty"`
 
 	Name *string `json:"name,omitempty"`
 
@@ -155,12 +160,12 @@ type EditCollectionBody struct {
 }
 
 func (b *EditCollectionBody) Transform() {
-	b.Name = transform.StringPtr(b.Name)
+	b.Name = anvil.StringPtr(b.Name)
 }
 
 func (b EditCollectionBody) Validate() error {
 	return validate.ValidateStruct(&b,
-		validate.Field(&b.Type, validate.Required.When(b.Type != nil), validate.By(types.ValidateCollectionType)),
+		validate.Field(&b.CollectionType, validate.Required.When(b.CollectionType != nil), validate.By(types.ValidateCollectionType)),
 
 		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
 
@@ -176,20 +181,20 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 			Path:         "/collections",
 			ResponseType: GetCollections{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				// q := c.Request().URL.Query()
-				// opts := getPageOptions(q)
+				q := c.Request().URL.Query()
+				opts := getPageOptions(q)
 
 				ctx := context.TODO()
 
-				// filterStr := q.Get("filter")
-				// sortStr := q.Get("sort")
-				collections, err := app.DB().GetAllCollections(ctx)
+				filterStr := q.Get("filter")
+				sortStr := q.Get("sort")
+				collections, page, err := app.DB().GetPagedCollections(ctx, nil, filterStr, sortStr, opts)
 				if err != nil {
 					return nil, err
 				}
 
 				res := GetCollections{
-					// Page:       types.Page{},
+					Page:        page,
 					Collections: make([]Collection, len(collections)),
 				}
 
@@ -286,7 +291,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.Background()
 
-				ty := types.CollectionType(body.Type)
+				ty := types.CollectionType(body.CollectionType)
 
 				id, err := app.DB().CreateCollection(ctx, database.CreateCollectionParams{
 					Type:        ty,
@@ -332,8 +337,8 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 
 				changes := database.CollectionChanges{}
 
-				if body.Type != nil {
-					t := types.CollectionType(*body.Type)
+				if body.CollectionType != nil {
+					t := types.CollectionType(*body.CollectionType)
 
 					changes.Type = database.Change[types.CollectionType]{
 						Value:   t,

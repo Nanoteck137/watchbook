@@ -104,6 +104,26 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/media/${id}/user`, "POST", z.undefined(), z.any(), body, options)
   }
   
+  getCollections(options?: ExtraOptions) {
+    return this.request("/api/v1/collections", "GET", api.GetCollections, z.any(), undefined, options)
+  }
+  
+  getCollectionById(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/collections/${id}`, "GET", api.GetCollectionById, z.any(), undefined, options)
+  }
+  
+  getCollectionItems(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/collections/${id}/items`, "GET", api.GetCollectionItems, z.any(), undefined, options)
+  }
+  
+  createCollection(body: api.CreateCollectionBody, options?: ExtraOptions) {
+    return this.request("/api/v1/collections", "POST", api.CreateCollection, z.any(), body, options)
+  }
+  
+  editCollection(id: string, body: api.EditCollectionBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/collections/${id}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
   providerMyAnimeListGetAnime(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/provider/myanimelist/anime/${id}`, "GET", api.ProviderMyAnimeListAnime, z.any(), undefined, options)
   }
@@ -211,6 +231,26 @@ export class ClientUrls {
   
   setMediaUserData(id: string) {
     return createUrl(this.baseUrl, `/api/v1/media/${id}/user`)
+  }
+  
+  getCollections() {
+    return createUrl(this.baseUrl, "/api/v1/collections")
+  }
+  
+  getCollectionById(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/collections/${id}`)
+  }
+  
+  getCollectionItems(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/collections/${id}/items`)
+  }
+  
+  createCollection() {
+    return createUrl(this.baseUrl, "/api/v1/collections")
+  }
+  
+  editCollection(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/collections/${id}`)
   }
   
   providerMyAnimeListGetAnime(id: string) {

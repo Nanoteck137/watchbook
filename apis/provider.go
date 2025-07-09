@@ -13,7 +13,7 @@ import (
 type ProviderMyAnimeListAnime struct {
 	MalId string `json:"malId"`
 
-	Type types.MediaType `json:"type"`
+	MediaType types.MediaType `json:"mediaType"`
 
 	Title        string `json:"title"`
 	TitleEnglish string `json:"titleEnglish"`
@@ -60,7 +60,7 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 
 				return ProviderMyAnimeListAnime{
 					MalId:         id,
-					Type:          entry.Type,
+					MediaType:     entry.Type,
 					Title:         entry.Title,
 					TitleEnglish:  entry.TitleEnglish,
 					Description:   entry.Description,
