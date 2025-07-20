@@ -111,7 +111,7 @@
           const res = await apiClient.createMedia({
             title: f.data.title,
             description: f.data.description,
-            type: f.data.type,
+            mediaType: f.data.type,
             score: f.data.score,
             status: f.data.status,
             rating: f.data.rating,
@@ -141,7 +141,7 @@
   );
 
   $effect(() => {
-    $form.type = parseMediaType(data?.type);
+    $form.type = parseMediaType(data?.mediaType);
 
     $form.tmdbId = "";
     $form.malId = data?.malId ?? "";

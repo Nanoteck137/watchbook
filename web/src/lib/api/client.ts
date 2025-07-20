@@ -31,12 +31,12 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/system/info", "GET", api.GetSystemInfo, z.any(), undefined, options)
   }
   
-  startDownload(body: api.StartDownloadBody, options?: ExtraOptions) {
-    return this.request("/api/v1/system/download", "POST", z.undefined(), z.any(), body, options)
+  syncLibrary(options?: ExtraOptions) {
+    return this.request("/api/v1/system/library", "POST", z.undefined(), z.any(), undefined, options)
   }
   
-  cancelDownload(options?: ExtraOptions) {
-    return this.request("/api/v1/system/download", "DELETE", z.undefined(), z.any(), undefined, options)
+  cleanupLibrary(options?: ExtraOptions) {
+    return this.request("/api/v1/system/library/cleanup", "POST", z.undefined(), z.any(), undefined, options)
   }
   
   
@@ -157,16 +157,16 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/system/info")
   }
   
-  startDownload() {
-    return createUrl(this.baseUrl, "/api/v1/system/download")
+  syncLibrary() {
+    return createUrl(this.baseUrl, "/api/v1/system/library")
   }
   
-  cancelDownload() {
-    return createUrl(this.baseUrl, "/api/v1/system/download")
+  cleanupLibrary() {
+    return createUrl(this.baseUrl, "/api/v1/system/library/cleanup")
   }
   
   sseHandler() {
-    return createUrl(this.baseUrl, "/api/v1/system/sse")
+    return createUrl(this.baseUrl, "/api/v1/system/library/sse")
   }
   
   updateUserSettings() {

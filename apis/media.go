@@ -553,26 +553,26 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				if body.CoverUrl != "" {
-					_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.CoverUrl, types.MediaImageTypeCover, true)
-					if err != nil {
-						logger.Error("failed to download cover image for media", "mediaId", id, "err", err)
-					}
-				}
-
-				if body.BannerUrl != "" {
-					_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.BannerUrl, types.MediaImageTypeBanner, true)
-					if err != nil {
-						logger.Error("failed to download banner image for media", "mediaId", id, "err", err)
-					}
-				}
-
-				if body.LogoUrl != "" {
-					_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.LogoUrl, types.MediaImageTypeLogo, true)
-					if err != nil {
-						logger.Error("failed to download logo image for media", "media", id, "err", err)
-					}
-				}
+				// if body.CoverUrl != "" {
+				// 	_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.CoverUrl, types.MediaImageTypeCover, true)
+				// 	if err != nil {
+				// 		logger.Error("failed to download cover image for media", "mediaId", id, "err", err)
+				// 	}
+				// }
+				//
+				// if body.BannerUrl != "" {
+				// 	_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.BannerUrl, types.MediaImageTypeBanner, true)
+				// 	if err != nil {
+				// 		logger.Error("failed to download banner image for media", "mediaId", id, "err", err)
+				// 	}
+				// }
+				//
+				// if body.LogoUrl != "" {
+				// 	_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.LogoUrl, types.MediaImageTypeLogo, true)
+				// 	if err != nil {
+				// 		logger.Error("failed to download logo image for media", "media", id, "err", err)
+				// 	}
+				// }
 
 				for _, tag := range body.Tags {
 					err := app.DB().CreateTag(ctx, tag, tag)
@@ -1109,34 +1109,35 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				// TODO(patrik): Add admin check
 
-				id := c.Param("id")
+				// id := c.Param("id")
+				//
+				// body, err := pyrin.Body[AddImageBody](c)
+				// if err != nil {
+				// 	return nil, err
+				// }
+				//
+				// ctx := context.Background()
 
-				body, err := pyrin.Body[AddImageBody](c)
-				if err != nil {
-					return nil, err
-				}
+				// dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
+				// if err != nil {
+				// 	if errors.Is(err, database.ErrItemNotFound) {
+				// 		return nil, MediaNotFound()
+				// 	}
+				//
+				// 	return nil, err
+				// }
+				//
+				// t := types.MediaImageType(body.ImageType)
+				// hash, err := downloadImage(ctx, app.DB(), app.WorkDir(), dbMedia.Id, body.ImageUrl, t, false)
+				// if err != nil {
+				// 	logger.Error("failed to download image for media", "mediaId", dbMedia.Id, "err", err)
+				// 	return nil, err
+				// }
 
-				ctx := context.Background()
-
-				dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, MediaNotFound()
-					}
-
-					return nil, err
-				}
-
-				t := types.MediaImageType(body.ImageType)
-				hash, err := downloadImage(ctx, app.DB(), app.WorkDir(), dbMedia.Id, body.ImageUrl, t, false)
-				if err != nil {
-					logger.Error("failed to download image for media", "mediaId", dbMedia.Id, "err", err)
-					return nil, err
-				}
-
-				return AddImage{
-					Hash: hash,
-				}, nil
+				// return AddImage{
+				// 	Hash: hash,
+				// }, nil
+				return nil, nil
 			},
 		},
 

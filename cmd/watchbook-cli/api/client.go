@@ -82,8 +82,8 @@ func (c *Client) GetSystemInfo(options Options) (*GetSystemInfo, error) {
 	return Request[GetSystemInfo](data, nil)
 }
 
-func (c *Client) StartDownload(body StartDownloadBody, options Options) (*any, error) {
-	path := "/api/v1/system/download"
+func (c *Client) SyncLibrary(options Options) (*any, error) {
+	path := "/api/v1/system/library"
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -95,11 +95,11 @@ func (c *Client) StartDownload(body StartDownloadBody, options Options) (*any, e
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
-	return Request[any](data, body)
+	return Request[any](data, nil)
 }
 
-func (c *Client) CancelDownload(options Options) (*any, error) {
-	path := "/api/v1/system/download"
+func (c *Client) CleanupLibrary(options Options) (*any, error) {
+	path := "/api/v1/system/library/cleanup"
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func (c *Client) CancelDownload(options Options) (*any, error) {
 
 	data := RequestData{
 		Url: url,
-		Method: "DELETE",
+		Method: "POST",
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
@@ -371,6 +371,86 @@ func (c *Client) SetMediaUserData(id string, body SetMediaUserData, options Opti
 	return Request[any](data, body)
 }
 
+func (c *Client) GetCollections(options Options) (*GetCollections, error) {
+	path := "/api/v1/collections"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetCollections](data, nil)
+}
+
+func (c *Client) GetCollectionById(id string, options Options) (*GetCollectionById, error) {
+	path := Sprintf("/api/v1/collections/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetCollectionById](data, nil)
+}
+
+func (c *Client) GetCollectionItems(id string, options Options) (*GetCollectionItems, error) {
+	path := Sprintf("/api/v1/collections/%v/items", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetCollectionItems](data, nil)
+}
+
+func (c *Client) CreateCollection(body CreateCollectionBody, options Options) (*CreateCollection, error) {
+	path := "/api/v1/collections"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[CreateCollection](data, body)
+}
+
+func (c *Client) EditCollection(id string, body EditCollectionBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/collections/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
 func (c *Client) ProviderMyAnimeListGetAnime(id string, options Options) (*ProviderMyAnimeListAnime, error) {
 	path := Sprintf("/api/v1/provider/myanimelist/anime/%v", id)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -413,18 +493,18 @@ func (c *ClientUrls) GetSystemInfo() (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) StartDownload() (*URL, error) {
-	path := "/api/v1/system/download"
+func (c *ClientUrls) SyncLibrary() (*URL, error) {
+	path := "/api/v1/system/library"
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) CancelDownload() (*URL, error) {
-	path := "/api/v1/system/download"
+func (c *ClientUrls) CleanupLibrary() (*URL, error) {
+	path := "/api/v1/system/library/cleanup"
 	return c.getUrl(path)
 }
 
 func (c *ClientUrls) SseHandler() (*URL, error) {
-	path := "/api/v1/system/sse"
+	path := "/api/v1/system/library/sse"
 	return c.getUrl(path)
 }
 
@@ -505,6 +585,31 @@ func (c *ClientUrls) EditImage(id string, hash string) (*URL, error) {
 
 func (c *ClientUrls) SetMediaUserData(id string) (*URL, error) {
 	path := Sprintf("/api/v1/media/%v/user", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetCollections() (*URL, error) {
+	path := "/api/v1/collections"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetCollectionById(id string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetCollectionItems(id string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v/items", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) CreateCollection() (*URL, error) {
+	path := "/api/v1/collections"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditCollection(id string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v", id)
 	return c.getUrl(path)
 }
 

@@ -253,6 +253,13 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 	return query
 }
 
+func (db *Database) GetAllMediaIds(ctx context.Context) ([]string, error) {
+	query := dialect.From("media").
+		Select("media.id")
+
+	return ember.Multiple[string](db.db, ctx, query)
+}
+
 type FetchOptions struct {
 	PerPage int
 	Page    int

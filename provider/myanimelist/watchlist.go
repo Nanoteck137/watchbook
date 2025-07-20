@@ -65,13 +65,13 @@ type WatchlistEntry struct {
 	// AnimeStudios       string           `json:"anime_studios"`        //null,
 	// AnimeLicensors     string           `json:"anime_licensors"`      //null,
 	// AnimeSeason        string           `json:"anime_season"`         //null,
-	// Demographics       string           `json:"demographics"`             //[],
+	// Demographics       []string           `json:"demographics"`             //[],
 	// TitleLocalized     string           `json:"title_localized"`          //null,
 	// Days               string           `json:"days_string"`              //null,
 	// StartDate          string           `json:"start_date_string"`        //null,
 	// FinishedDate       string           `json:"finish_date_string"`       //null,
-	// AnimeTitle         string           `json:"anime_title"`
-	// AnimeTitleEnglish  string           `json:"anime_title_eng"`
+	// // AnimeTitle         string           `json:"anime_title"`
+	// // AnimeTitleEnglish  string           `json:"anime_title_eng"`
 	// AnimeNumEpisodes   int              `json:"anime_num_episodes"`
 	// AnimeAiringStatus  int              `json:"anime_airing_status"`
 	// AnimeTotalMembers  int              `json:"anime_total_members"`
@@ -107,7 +107,7 @@ func GetUserWatchlistPage(dl *downloader.Downloader, page int, username string) 
 	return dest, nil
 }
 
-func GetUserWatchlist(dl *downloader.Downloader, username string) ([]WatchlistEntry, error) {
+func GetUserWatchlist(username string) ([]WatchlistEntry, error) {
 	total, err := GetUserWatchlistPage(dl, 0, username)
 	if err != nil {
 		return nil, err

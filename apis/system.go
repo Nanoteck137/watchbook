@@ -1,357 +1,472 @@
 package apis
 
 import (
-	"bytes"
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"mime"
 	"net/http"
-	"os"
-	"path"
+	"strings"
 	"sync"
 	"sync/atomic"
 
+	"github.com/labstack/gommon/log"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/watchbook"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
+	"github.com/nanoteck137/watchbook/library"
 	"github.com/nanoteck137/watchbook/types"
+	"github.com/nanoteck137/watchbook/utils"
+	"github.com/pelletier/go-toml/v2"
 )
 
-// var dl = downloader.NewDownloader(
-// 	rate.NewLimiter(rate.Every(4*time.Second), 10),
-// 	mal.UserAgent,
-// )
-
-func downloadImage(ctx context.Context, db *database.Database, workDir types.WorkDir, mediaId, url string, typ types.MediaImageType, isPrimary bool) (string, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", fmt.Errorf("downloadImage: failed http get request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	contentType := resp.Header.Get("Content-Type")
-	mediaType, _, err := mime.ParseMediaType(contentType)
-	if err != nil {
-		return "", fmt.Errorf("downloadImage: failed to parse Content-Type: %w", err)
-	}
-
-	ext := ""
-	switch mediaType {
-	case "image/png":
-		ext = ".png"
-	case "image/jpeg":
-		ext = ".jpeg"
-	default:
-		return "", fmt.Errorf("downloadImage: unsupported media type (%s): %w", mediaType, err)
-	}
-
-	buf := bytes.Buffer{}
-	_, err = io.Copy(&buf, resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("downloadImage: failed io.Copy: %w", err)
-	}
-
-	mediaDir := workDir.MediaDir()
-	dst := mediaDir.MediaImageDir(mediaId)
-	err = os.Mkdir(dst, 0755)
-	if err != nil && !os.IsExist(err) {
-		return "", fmt.Errorf("downloadImage: failed os.Mkdir: %w", err)
-	}
-
-	rawHash := sha256.Sum256(buf.Bytes())
-	hash := hex.EncodeToString(rawHash[:])
-
-	name := hash + ext
-
-	err = db.CreateMediaImage(ctx, database.CreateMediaImageParams{
-		MediaId:   mediaId,
-		Hash:      hash,
-		Type:      typ,
-		MimeType:  mediaType,
-		Filename:  name,
-		IsPrimary: isPrimary,
-	})
-	if err != nil {
-		if errors.Is(err, database.ErrItemAlreadyExists) {
-			return hash, nil
-		}
-
-		return "", fmt.Errorf("downloadImage: failed to create media image: %w", err)
-	}
-
-	err = os.WriteFile(path.Join(dst, name), buf.Bytes(), 0644)
-	if err != nil {
-		return "", fmt.Errorf("downloadImage: failed to write image to disk: %w", err)
-	}
-
-	return hash, nil
+type GetSystemInfo struct {
+	Version string `json:"version"`
 }
 
-// func fetchAndUpdateMedia(ctx context.Context, db *database.Database, workDir types.WorkDir, animeId string) error {
-// 	anime, err := db.GetMediaById(ctx, nil, animeId)
+func slugifyArray(arr []string) []string {
+	seen := map[string]bool{}
+	res := make([]string, 0, len(arr))
+
+	for _, value := range arr {
+		value = utils.Slug(strings.TrimSpace(value))
+		if value == "" {
+			continue
+		}
+
+		if !seen[value] {
+			seen[value] = true
+			res = append(res, value)
+		}
+	}
+
+	return res
+}
+
+// TODO(patrik): Add testing for this
+func FixMedia(media *library.Media) error {
+	// album := &metadata.Album
+	//
+	// album.Name = anvil.String(album.Name)
+	//
+	// if album.Year == 0 {
+	// 	album.Year = metadata.General.Year
+	// }
+	//
+	// if len(album.Artists) == 0 {
+	// 	album.Artists = []string{UNKNOWN_ARTIST_NAME}
+	// }
+	//
+	// album.Artists = fixArr(album.Artists)
+	//
+	// for i := range metadata.Tracks {
+	// 	t := &metadata.Tracks[i]
+	//
+	// 	if t.Year == 0 {
+	// 		t.Year = metadata.General.Year
+	// 	}
+	//
+	// 	t.Name = anvil.String(t.Name)
+	//
+	// 	t.Tags = append(t.Tags, metadata.General.Tags...)
+	// 	t.Tags = append(t.Tags, metadata.General.TrackTags...)
+	//
+	// 	if len(t.Artists) == 0 {
+	// 		t.Artists = []string{UNKNOWN_ARTIST_NAME}
+	// 	}
+	//
+	// 	t.Artists = fixArr(t.Artists)
+	//
+	// 	for i, tag := range t.Tags {
+	// 		t.Tags[i] = utils.Slug(strings.TrimSpace(tag))
+	// 	}
+	// }
+
+	media.General.Tags = slugifyArray(media.General.Tags)
+	media.General.Studios = slugifyArray(media.General.Studios)
+
+	// err := validate.ValidateStruct(&metadata.Album,
+	// 	validate.Field(&metadata.Album.Name, validate.Required),
+	// 	validate.Field(&metadata.Album.Artists, validate.Length(1, 0)),
+	// )
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// for _, track := range metadata.Tracks {
+	// 	err := validate.ValidateStruct(&track,
+	// 		validate.Field(&track.File, validate.Required),
+	// 		validate.Field(&track.Name, validate.Required),
+	// 		validate.Field(&track.Artists, validate.Length(1, 0)),
+	// 	)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
+
+	return nil
+}
+
+type SyncHelper struct {
+	media map[string]struct{}
+}
+
+// func (helper *SyncHelper) getOrCreateArtist(ctx context.Context, db *database.Database, name string) (string, error) {
+// 	slug := utils.Slug(name)
+//
+// 	if artist, exists := helper.artists[slug]; exists {
+// 		return artist, nil
+// 	}
+//
+// 	dbArtist, err := db.GetArtistBySlug(ctx, slug)
 // 	if err != nil {
-// 		return err
-// 	}
-//
-// 	if !anime.MalId.Valid {
-// 		return nil
-// 	}
-//
-// 	malId := anime.MalId.String
-//
-// 	fmt.Printf("Updating %s (%s) - %s\n", anime.Title, malId, anime.Id)
-//
-// 	animeData, err := mal.FetchMediaData(dl, malId, true)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	hasCover := false
-// 	for _, image := range anime.Images.Data {
-// 		if image.IsCover > 0 {
-// 			hasCover = true
-// 			break
+// 		if errors.Is(err, database.ErrItemNotFound) {
+// 			dbArtist, err = db.CreateArtist(ctx, database.CreateArtistParams{
+// 				Slug: slug,
+// 				Name: name,
+// 			})
+// 			if err != nil {
+// 				return "", err
+// 			}
+// 		} else {
+// 			return "", err
 // 		}
 // 	}
 //
-// 	for _, url := range animeData.Pictures {
-// 		err := downloadImage(ctx, db, workDir, anime.Id, url, false)
-// 		if err != nil {
-// 			logger.Error("failed to download image", "err", err, "animeId", anime.Id)
-// 			continue
-// 		}
-// 	}
-//
-// 	if !hasCover {
-// 		err := downloadImage(ctx, db, workDir, anime.Id, animeData.CoverImageUrl, true)
-// 		if err != nil {
-// 			logger.Error("failed to download image", "err", err, "animeId", anime.Id)
-// 		}
-// 	}
-//
-// 	// TODO(patrik): Add some sanitization
-// 	for _, theme := range animeData.Themes {
-// 		err := db.CreateTag(ctx, utils.Slug(theme), theme)
-// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-// 			return err
-// 		}
-// 	}
-//
-// 	// TODO(patrik): Add some sanitization
-// 	for _, genre := range animeData.Genres {
-// 		err := db.CreateTag(ctx, utils.Slug(genre), genre)
-// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-// 			return err
-// 		}
-// 	}
-//
-// 	// TODO(patrik): Add some sanitization
-// 	for _, demographic := range animeData.Demographics {
-// 		err := db.CreateTag(ctx, utils.Slug(demographic), demographic)
-// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-// 			return err
-// 		}
-// 	}
-//
-// 	// TODO(patrik): Add some sanitization
-// 	for _, studio := range animeData.Studios {
-// 		err := db.CreateStudio(ctx, utils.Slug(studio), studio)
-// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-// 			return err
-// 		}
-// 	}
-//
-// 	airingSeasonSlug := utils.Slug(animeData.Premiered)
-// 	if airingSeasonSlug != "" {
-// 		err = db.CreateTag(ctx, airingSeasonSlug, animeData.Premiered)
-// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-// 			return err
-// 		}
-// 	}
-//
-// 	animeType := mal.ConvertMediaType(animeData.Type)
-// 	animeStatus := mal.ConvertMediaStatus(animeData.Status)
-// 	animeRating := mal.ConvertMediaRating(animeData.Rating)
-//
-// 	aniDbId := ""
-// 	animeNewsNetworkId := ""
-//
-// 	if u, err := url.Parse(animeData.AniDBUrl); err == nil {
-// 		aniDbId = u.Query().Get("aid")
-// 	}
-//
-// 	if u, err := url.Parse(animeData.MediaNewsNetworkUrl); err == nil {
-// 		animeNewsNetworkId = u.Query().Get("id")
-// 	}
-//
-// 	err = db.UpdateMedia(ctx, animeId, database.AnimeChanges{
-// 		AniDbId: database.Change[sql.NullString]{
-// 			Value: sql.NullString{
-// 				String: aniDbId,
-// 				Valid:  aniDbId != "",
-// 			},
-// 			Changed: aniDbId != anime.AniDbId.String,
-// 		},
-//
-// 		MediaNewsNetworkId: database.Change[sql.NullString]{
-// 			Value: sql.NullString{
-// 				String: animeNewsNetworkId,
-// 				Valid:  animeNewsNetworkId != "",
-// 			},
-// 			Changed: animeNewsNetworkId != anime.MediaNewsNetworkId.String,
-// 		},
-//
-// 		Title: database.Change[string]{
-// 			Value:   animeData.Title,
-// 			Changed: animeData.Title != anime.Title,
-// 		},
-//
-// 		TitleEnglish: database.Change[sql.NullString]{
-// 			Value: sql.NullString{
-// 				String: animeData.TitleEnglish,
-// 				Valid:  animeData.TitleEnglish != "",
-// 			},
-// 			Changed: animeData.TitleEnglish != anime.TitleEnglish.String,
-// 		},
-//
-// 		Description: database.Change[sql.NullString]{
-// 			Value: sql.NullString{
-// 				String: animeData.Description,
-// 				Valid:  animeData.Description != "",
-// 			},
-// 			Changed: animeData.Description != anime.Description.String,
-// 		},
-//
-// 		Type: database.Change[types.MediaType]{
-// 			Value:   animeType,
-// 			Changed: animeType != anime.Type,
-// 		},
-//
-// 		Status: database.Change[types.MediaStatus]{
-// 			Value:   animeStatus,
-// 			Changed: animeStatus != anime.Status,
-// 		},
-//
-// 		Rating: database.Change[types.MediaRating]{
-// 			Value:   animeRating,
-// 			Changed: animeRating != anime.Rating,
-// 		},
-//
-// 		AiringSeason: database.Change[sql.NullString]{
-// 			Value: sql.NullString{
-// 				String: airingSeasonSlug,
-// 				Valid:  airingSeasonSlug != "",
-// 			},
-// 			Changed: true,
-// 		},
-//
-// 		EpisodeCount: database.Change[sql.NullInt64]{
-// 			Value: sql.NullInt64{
-// 				Int64: utils.NullToDefault(animeData.EpisodeCount),
-// 				Valid: animeData.EpisodeCount != nil,
-// 			},
-// 			Changed: true,
-// 		},
-//
-// 		StartDate: database.Change[sql.NullString]{
-// 			Value: sql.NullString{
-// 				String: utils.NullToDefault(animeData.StartDate),
-// 				Valid:  animeData.StartDate != nil,
-// 			},
-// 			Changed: true,
-// 		},
-//
-// 		EndDate: database.Change[sql.NullString]{
-// 			Value: sql.NullString{
-// 				String: utils.NullToDefault(animeData.EndDate),
-// 				Valid:  animeData.EndDate != nil,
-// 			},
-// 			Changed: true,
-// 		},
-//
-// 		Score: database.Change[sql.NullFloat64]{
-// 			Value: sql.NullFloat64{
-// 				Float64: utils.NullToDefault(animeData.Score),
-// 				Valid:   animeData.Score != nil,
-// 			},
-// 			Changed: true,
-// 		},
-//
-// 		LastDataFetch: database.Change[sql.NullInt64]{
-// 			Value: sql.NullInt64{
-// 				Int64: time.Now().UnixMilli(),
-// 				Valid: true,
-// 			},
-// 			Changed: true,
-// 		},
-// 	})
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	err = db.DeleteAllMediaThemeSongs(ctx, anime.Id)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	for i, themeSong := range animeData.ThemeSongs {
-// 		err := db.CreateMediaThemeSong(ctx, database.CreateAnimeThemeSongParams{
-// 			MediaId: animeId,
-// 			Idx:     i,
-// 			Raw:     themeSong.Raw,
-// 			Type:    mal.ConvertThemeSongType(themeSong.Type),
-// 		})
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-//
-// 	for _, theme := range animeData.Themes {
-// 		err := db.AddTagToMedia(ctx, animeId, utils.Slug(theme))
-// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-// 			return err
-// 		}
-// 	}
-//
-// 	err = db.RemoveAllTagsFromMedia(ctx, animeId)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	err = db.RemoveAllStudiosFromMedia(ctx, animeId)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	for _, genre := range animeData.Genres {
-// 		err := db.AddTagToMedia(ctx, animeId, utils.Slug(genre))
-// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-// 			return err
-// 		}
-// 	}
-//
-// 	for _, demographic := range animeData.Demographics {
-// 		err := db.AddTagToMedia(ctx, animeId, utils.Slug(demographic))
-// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-// 			return err
-// 		}
-// 	}
-//
-// 	for _, studio := range animeData.Studios {
-// 		err := db.AddStudioToMedia(ctx, animeId, utils.Slug(studio))
-// 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-// 			return err
-// 		}
-// 	}
-//
-// 	return nil
+// 	helper.artists[slug] = dbArtist.Id
+// 	return dbArtist.Id, nil
 // }
+
+func (helper *SyncHelper) setMediaTags(ctx context.Context, db *database.Database, mediaId string, tags []string) error {
+	err := db.RemoveAllTagsFromMedia(ctx, mediaId)
+	if err != nil {
+		return err
+	}
+
+	for _, tag := range tags {
+		err := db.CreateTag(ctx, tag, tag)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+
+		err = db.AddTagToMedia(ctx, mediaId, tag)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (helper *SyncHelper) setMediaStudios(ctx context.Context, db *database.Database, mediaId string, studios []string) error {
+	err := db.RemoveAllStudiosFromMedia(ctx, mediaId)
+	if err != nil {
+		return err
+	}
+
+	for _, studio := range studios {
+		err := db.CreateTag(ctx, studio, studio)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+
+		err = db.AddStudioToMedia(ctx, mediaId, studio)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// TODO(patrik): Update the errors for album
+func (helper *SyncHelper) syncMedia(ctx context.Context, media *library.Media, db *database.Database) error {
+	err := FixMedia(media)
+	if err != nil {
+		return err
+	}
+
+	dbMedia, err := db.GetMediaById(ctx, nil, media.Id)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			_, err = db.CreateMedia(ctx, database.CreateMediaParams{
+				Id:    media.Id,
+				Title: media.General.Title,
+			})
+			if err != nil {
+				return fmt.Errorf("failed to create media: %w", err)
+			}
+
+			dbMedia, err = db.GetMediaById(ctx, nil, media.Id)
+			if err != nil {
+				return fmt.Errorf("failed to get media after creation: %w", err)
+			}
+		} else {
+			return err
+		}
+	}
+
+	helper.media[dbMedia.Id] = struct{}{}
+
+	if media.General.AiringSeason != "" {
+		err = db.CreateTag(ctx, media.General.AiringSeason, media.General.AiringSeason)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return fmt.Errorf("failed to create airing season tag: %w", err)
+		}
+	}
+
+	changes := database.MediaChanges{}
+
+	changes.Type = database.Change[types.MediaType]{
+		Value:   media.MediaType,
+		Changed: media.MediaType != dbMedia.Type,
+	}
+
+	changes.TmdbId = database.Change[sql.NullString]{
+		Value: sql.NullString{
+			String: media.Ids.TheMovieDB,
+			Valid:  media.Ids.TheMovieDB != "",
+		},
+		Changed: media.Ids.TheMovieDB != dbMedia.TmdbId.String,
+	}
+
+	changes.MalId = database.Change[sql.NullString]{
+		Value: sql.NullString{
+			String: media.Ids.MyAnimeList,
+			Valid:  media.Ids.MyAnimeList != "",
+		},
+		Changed: media.Ids.MyAnimeList != dbMedia.MalId.String,
+	}
+
+	changes.AnilistId = database.Change[sql.NullString]{
+		Value: sql.NullString{
+			String: media.Ids.Anilist,
+			Valid:  media.Ids.Anilist != "",
+		},
+		Changed: media.Ids.Anilist != dbMedia.AnilistId.String,
+	}
+
+	changes.Title = database.Change[string]{
+		Value:   media.General.Title,
+		Changed: media.General.Title != dbMedia.Title,
+	}
+
+	// changes.Description
+
+	changes.Score = database.Change[sql.NullFloat64]{
+		Value: sql.NullFloat64{
+			Float64: media.General.Score,
+			Valid:   media.General.Score != 0.0,
+		},
+		Changed: media.General.Score != dbMedia.Score.Float64,
+	}
+
+	changes.Status = database.Change[types.MediaStatus]{
+		Value:   media.General.Status,
+		Changed: media.General.Status != dbMedia.Status,
+	}
+
+	changes.Rating = database.Change[types.MediaRating]{
+		Value:   media.General.Rating,
+		Changed: media.General.Rating != dbMedia.Rating,
+	}
+
+	changes.AiringSeason = database.Change[sql.NullString]{
+		Value: sql.NullString{
+			String: media.General.AiringSeason,
+			Valid:  media.General.AiringSeason != "",
+		},
+		Changed: media.General.AiringSeason != dbMedia.AiringSeason.String,
+	}
+
+	changes.StartDate = database.Change[sql.NullString]{
+		Value: sql.NullString{
+			String: media.General.StartDate,
+			Valid:  media.General.StartDate != "",
+		},
+		Changed: media.General.StartDate != dbMedia.StartDate.String,
+	}
+
+	changes.EndDate = database.Change[sql.NullString]{
+		Value: sql.NullString{
+			String: media.General.EndDate,
+			Valid:  media.General.EndDate != "",
+		},
+		Changed: media.General.EndDate != dbMedia.EndDate.String,
+	}
+
+	err = db.UpdateMedia(ctx, dbMedia.Id, changes)
+	if err != nil {
+		return fmt.Errorf("failed to update media: %w", err)
+	}
+
+	err = helper.setMediaTags(ctx, db, dbMedia.Id, media.General.Tags)
+	if err != nil {
+		return fmt.Errorf("failed to set media tags: %w", err)
+	}
+
+	err = helper.setMediaStudios(ctx, db, dbMedia.Id, media.General.Studios)
+	if err != nil {
+		return fmt.Errorf("failed to set media studios: %w", err)
+	}
+
+	return nil
+}
+
+type ReportType string
+
+const (
+	ReportTypeSearch ReportType = "search"
+	ReportTypeSync   ReportType = "sync"
+)
+
+type SyncError struct {
+	Type        ReportType `json:"type"`
+	Message     string     `json:"message"`
+	FullMessage *string    `json:"fullMessage,omitempty"`
+}
+
+type MissingMedia struct {
+	Id    string `json:"id"`
+	Title string `json:"title"`
+}
+
+type SyncHandler struct {
+	broker *Broker
+
+	mutex sync.RWMutex
+
+	isSyncing atomic.Bool
+
+	syncErrors   []SyncError
+	missingMedia []MissingMedia
+
+	SyncChannel chan bool
+}
+
+type Report struct {
+	SyncErrors   []SyncError    `json:"syncErrors"`
+	MissingMedia []MissingMedia `json:"missingMedia"`
+}
+
+func (s *SyncHandler) GetReport() Report {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	return Report{
+		SyncErrors:   s.syncErrors,
+		MissingMedia: s.missingMedia,
+	}
+}
+
+func (s *SyncHandler) Cleanup(app core.App) error {
+	ctx := context.TODO()
+
+	for _, track := range s.missingMedia {
+		err := app.DB().RemoveMedia(ctx, track.Id)
+		if err != nil {
+			return err
+		}
+
+		log.Info("Deleted media", "media", track)
+	}
+
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.missingMedia = []MissingMedia{}
+
+	return nil
+}
+
+func (s *SyncHandler) RunSync(app core.App) error {
+	s.isSyncing.Store(true)
+	defer s.isSyncing.Store(false)
+
+	// TODO(patrik): Check for duplicated ids
+	mediaSearch, err := library.FindMedia(app.Config().LibraryDir)
+	if err != nil {
+		return err
+	}
+
+	log.Debug("Done searching for media")
+
+	ctx := context.TODO()
+
+	helper := SyncHelper{
+		media: map[string]struct{}{},
+	}
+
+	var syncErrors []error
+
+	for _, media := range mediaSearch.Media {
+		log.Debug("Syncing media", "path", media.Path)
+
+		err := helper.syncMedia(ctx, &media, app.DB())
+		if err != nil {
+			syncErrors = append(syncErrors, err)
+		}
+	}
+
+	var missingMedia []MissingMedia
+
+	{
+		ids, err := app.DB().GetAllMediaIds(ctx)
+		if err != nil {
+			return err
+		}
+
+		for _, id := range ids {
+			_, exists := helper.media[id]
+			if !exists {
+				media, err := app.DB().GetMediaById(ctx, nil, id)
+				if err != nil {
+					// TODO(patrik): How should we handle the error?
+					continue
+				}
+
+				missingMedia = append(missingMedia, MissingMedia{
+					Id:    id,
+					Title: media.Title,
+				})
+			}
+		}
+	}
+
+	errs := make([]SyncError, 0, len(mediaSearch.Errors)+len(syncErrors))
+	for _, err := range mediaSearch.Errors {
+		var fullMessage *string
+
+		var tomlError *toml.DecodeError
+		if errors.As(err, &tomlError) {
+			m := tomlError.String()
+			fullMessage = &m
+		}
+
+		errs = append(errs, SyncError{
+			Type:        ReportTypeSearch,
+			Message:     err.Error(),
+			FullMessage: fullMessage,
+		})
+	}
+
+	for _, err := range syncErrors {
+		errs = append(errs, SyncError{
+			Type:    ReportTypeSync,
+			Message: err.Error(),
+		})
+	}
+
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.syncErrors = errs
+	s.missingMedia = missingMedia
+
+	return nil
+}
 
 type Event struct {
 	Type string `json:"type"`
@@ -371,7 +486,7 @@ type Broker struct {
 	clients        map[chan EventData]bool
 }
 
-func NewBrokerServer() (broker *Broker) {
+func NewServer() (broker *Broker) {
 	// Instantiate a broker
 	broker = &Broker{
 		Notifier:       make(chan EventData, 1),
@@ -391,10 +506,10 @@ func (broker *Broker) listen() {
 		select {
 		case s := <-broker.newClients:
 			broker.clients[s] = true
-			logger.Debug("Client added", "numClients", len(broker.clients))
+			log.Debug("Client added", "numClients", len(broker.clients))
 		case s := <-broker.closingClients:
 			delete(broker.clients, s)
-			logger.Debug("Removed client", "numClients", len(broker.clients))
+			log.Debug("Removed client", "numClients", len(broker.clients))
 		case event := <-broker.Notifier:
 			for clientMessageChan := range broker.clients {
 				clientMessageChan <- event
@@ -407,139 +522,31 @@ func (broker *Broker) EmitEvent(event EventData) {
 	broker.Notifier <- event
 }
 
-type GetSystemInfo struct {
-	Version string `json:"version"`
+var syncHandler = SyncHandler{
+	SyncChannel: make(chan bool),
+	broker:      NewServer(),
 }
 
-type DownloadHandlerStatus struct {
-	IsDownloading   bool   `json:"isDownloading"`
-	CurrentDownload int    `json:"currentDownload"`
-	TotalDownloads  int    `json:"totalDownloads"`
-	LastError       string `json:"lastError"`
+const (
+	EventSyncing string = "syncing"
+	EventReport  string = "report"
+)
+
+type SyncEvent struct {
+	Syncing bool `json:"syncing"`
 }
 
-type DownloadHandler struct {
-	isDownloading    atomic.Bool
-	downloadCanceled atomic.Bool
-
-	mutex           sync.Mutex
-	currentDownload int
-	totalDownloads  int
-
-	lastError error
-
-	broker *Broker
+func (s SyncEvent) GetEventType() string {
+	return EventSyncing
 }
 
-func NewDownloadHandler() *DownloadHandler {
-	return &DownloadHandler{
-		isDownloading:   atomic.Bool{},
-		mutex:           sync.Mutex{},
-		currentDownload: 0,
-		totalDownloads:  0,
-		lastError:       nil,
-		broker:          NewBrokerServer(),
-	}
+type ReportEvent struct {
+	Report
 }
 
-func (d *DownloadHandler) getStatus() DownloadHandlerStatus {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
-
-	var lastError string
-
-	err := d.lastError
-	if err != nil {
-		lastError = err.Error()
-	}
-
-	return DownloadHandlerStatus{
-		IsDownloading:   d.isDownloading.Load(),
-		CurrentDownload: d.currentDownload,
-		TotalDownloads:  d.totalDownloads,
-		LastError:       lastError,
-	}
+func (s ReportEvent) GetEventType() string {
+	return EventReport
 }
-
-func (d *DownloadHandler) sendStatusEvent() {
-	d.broker.EmitEvent(StatusEvent{
-		DownloadHandlerStatus: d.getStatus(),
-	})
-}
-
-func (d *DownloadHandler) updateStatus(current, total int) {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
-
-	d.currentDownload = current
-	d.totalDownloads = total
-}
-
-func (d *DownloadHandler) download(app core.App, mediaIds []string) error {
-	d.isDownloading.Store(true)
-	defer d.isDownloading.Store(false)
-
-	// ctx := context.TODO()
-	//
-	// db := app.DB()
-	// workDir := app.WorkDir()
-
-	d.updateStatus(0, len(mediaIds))
-	d.sendStatusEvent()
-
-	for i, id := range mediaIds {
-		_ = id
-
-		if d.downloadCanceled.Load() {
-			return fmt.Errorf("download canceled")
-		}
-
-		d.updateStatus(i+1, len(mediaIds))
-		d.sendStatusEvent()
-
-		// err := fetchAndUpdateMedia(ctx, db, workDir, id)
-		// if err != nil {
-		// 	return fmt.Errorf("failed to download media (%s): %w", id, err)
-		// }
-	}
-
-	return nil
-}
-
-func (d *DownloadHandler) cancelDownload() {
-	d.downloadCanceled.Store(true)
-}
-
-func (d *DownloadHandler) startDownload(app core.App, mediaIds []string) error {
-	if d.isDownloading.Load() {
-		return errors.New("already downloading")
-	}
-
-	d.downloadCanceled.Store(false)
-
-	err := d.download(app, mediaIds)
-	d.lastError = err
-
-	d.sendStatusEvent()
-
-	return nil
-}
-
-var _ EventData = (*StatusEvent)(nil)
-
-type StatusEvent struct {
-	DownloadHandlerStatus
-}
-
-func (e StatusEvent) GetEventType() string {
-	return "status"
-}
-
-type StartDownloadBody struct {
-	Ids []string `json:"ids"`
-}
-
-var downloadHandler = NewDownloadHandler()
 
 func InstallSystemHandlers(app core.App, group pyrin.Group) {
 	group.Register(
@@ -556,43 +563,61 @@ func InstallSystemHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:     "StartDownload",
-			Path:     "/system/download",
-			Method:   http.MethodPost,
-			BodyType: StartDownloadBody{},
+			Name:         "SyncLibrary",
+			Method:       http.MethodPost,
+			Path:         "/system/library",
+			ResponseType: nil,
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				body, err := pyrin.Body[StartDownloadBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				if downloadHandler.isDownloading.Load() {
-					// TODO(patrik): Better error
-					return nil, errors.New("already downloading")
-				}
-
 				go func() {
-					err := downloadHandler.startDownload(app, body.Ids)
-					if err != nil {
-						logger.Error("failed to start downloader", "err", err)
+					if syncHandler.isSyncing.Load() {
+						log.Info("Syncing already")
+						return
 					}
+
+					log.Info("Started library sync")
+
+					syncHandler.broker.EmitEvent(SyncEvent{
+						Syncing: true,
+					})
+
+					err := syncHandler.RunSync(app)
+					if err != nil {
+						log.Error("Failed to run sync", "err", err)
+					}
+
+					syncHandler.broker.EmitEvent(SyncEvent{
+						Syncing: false,
+					})
+
+					syncHandler.broker.EmitEvent(ReportEvent{
+						Report: syncHandler.GetReport(),
+					})
+
+					log.Info("Library sync done")
 				}()
 
 				return nil, nil
 			},
 		},
 
+		// TODO(patrik): Better name?
 		pyrin.ApiHandler{
-			Name:   "CancelDownload",
-			Path:   "/system/download",
-			Method: http.MethodDelete,
+			Name:   "CleanupLibrary",
+			Method: http.MethodPost,
+			Path:   "/system/library/cleanup",
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				if !downloadHandler.isDownloading.Load() {
-					// TODO(patrik): Better error
-					return nil, errors.New("not downloading")
+				if syncHandler.isSyncing.Load() {
+					return nil, errors.New("library is syncing")
 				}
 
-				downloadHandler.cancelDownload()
+				err := syncHandler.Cleanup(app)
+				if err != nil {
+					return nil, err
+				}
+
+				syncHandler.broker.EmitEvent(ReportEvent{
+					Report: syncHandler.GetReport(),
+				})
 
 				return nil, nil
 			},
@@ -601,7 +626,7 @@ func InstallSystemHandlers(app core.App, group pyrin.Group) {
 		pyrin.NormalHandler{
 			Name:   "SseHandler",
 			Method: http.MethodGet,
-			Path:   "/system/sse",
+			Path:   "/system/library/sse",
 			HandlerFunc: func(c pyrin.Context) error {
 				r := c.Request()
 				w := c.Response()
@@ -615,10 +640,10 @@ func InstallSystemHandlers(app core.App, group pyrin.Group) {
 				rc := http.NewResponseController(w)
 
 				eventChan := make(chan EventData)
-				downloadHandler.broker.newClients <- eventChan
+				syncHandler.broker.newClients <- eventChan
 
 				defer func() {
-					downloadHandler.broker.closingClients <- eventChan
+					syncHandler.broker.closingClients <- eventChan
 				}()
 
 				sendEvent := func(eventData EventData) {
@@ -636,14 +661,20 @@ func InstallSystemHandlers(app core.App, group pyrin.Group) {
 					rc.Flush()
 				}
 
-				sendEvent(StatusEvent{
-					DownloadHandlerStatus: downloadHandler.getStatus(),
+				sendEvent(SyncEvent{
+					Syncing: syncHandler.isSyncing.Load(),
+				})
+
+				sendEvent(ReportEvent{
+					Report: syncHandler.GetReport(),
 				})
 
 				for {
 					select {
 					case <-r.Context().Done():
+						syncHandler.broker.closingClients <- eventChan
 						return nil
+
 					case event := <-eventChan:
 						sendEvent(event)
 					}
