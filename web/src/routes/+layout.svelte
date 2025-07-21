@@ -115,7 +115,7 @@
 
     <div class="flex flex-col gap-2 px-4 py-4">
       <Link title="Home" href="/" icon={Home} onClick={close} />
-      <Link title="Animes" href="/animes" icon={Origami} onClick={close} />
+      <Link title="Media" href="/media" icon={Origami} onClick={close} />
       <!-- <Link title="Albums" href="/albums" icon={DiscAlbum} onClick={close} /> -->
       <!-- <Link title="Tracks" href="/tracks" icon={FileMusic} onClick={close} /> -->
 
