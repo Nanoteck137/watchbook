@@ -339,6 +339,22 @@ func (helper *SyncHelper) syncMedia(ctx context.Context, media *library.Media, d
 		return fmt.Errorf("failed to set media studios: %w", err)
 	}
 
+	err = db.RemoveAllMediaParts(ctx, dbMedia.Id)
+	if err != nil {
+		return fmt.Errorf("failed to remove all media parts: %w", err)
+	}
+
+	for i, part := range media.Parts {
+		err = db.CreateMediaPart(ctx, database.CreateMediaPartParams{
+			Index:   int64(i),
+			MediaId: dbMedia.Id,
+			Name:    part.Name,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to add media part (%d): %w", i, err)
+		}
+	}
+
 	return nil
 }
 

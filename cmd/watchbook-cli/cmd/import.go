@@ -8,7 +8,6 @@ import (
 	"path"
 
 	"github.com/doug-martin/goqu/v9"
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/watchbook/database"
 	"github.com/nanoteck137/watchbook/library"
@@ -471,7 +470,11 @@ var importCmd = &cobra.Command{
 				Path: "",
 			}
 
-			pretty.Println(media)
+			for i := range anime.EpisodeCount.Int64 {
+				media.Parts = append(media.Parts, library.MediaPart{
+					Name: fmt.Sprintf("Episode %d", i + 1),
+				})
+			}
 
 			cover := ""
 

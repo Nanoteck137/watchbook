@@ -147,3 +147,17 @@ func (db *Database) RemoveMediaPart(ctx context.Context, idx int64, mediaId stri
 
 	return nil
 }
+
+func (db *Database) RemoveAllMediaParts(ctx context.Context, mediaId string) error {
+	query := dialect.Delete("media_parts").
+		Where(
+			goqu.I("media_parts.media_id").Eq(mediaId),
+		)
+
+	_, err := db.db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

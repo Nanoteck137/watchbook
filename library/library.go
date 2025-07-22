@@ -18,7 +18,7 @@ type MediaImages struct {
 }
 
 type MediaGeneral struct {
-	Title       string `toml:"title"`
+	Title string `toml:"title"`
 
 	Score        float64           `toml:"score"`
 	Status       types.MediaStatus `toml:"status"`
@@ -38,6 +38,10 @@ type MediaIds struct {
 	Anilist     string `toml:"anilist"`
 }
 
+type MediaPart struct {
+	Name string `toml:"name"`
+}
+
 type Media struct {
 	Id        string          `toml:"id"`
 	MediaType types.MediaType `toml:"mediaType"`
@@ -45,6 +49,8 @@ type Media struct {
 	Ids     MediaIds     `toml:"ids"`
 	General MediaGeneral `toml:"general"`
 	Images  MediaImages  `toml:"images"`
+
+	Parts []MediaPart `toml:"parts"`
 
 	Path string `toml:"-"`
 }
