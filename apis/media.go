@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"path"
 	"strconv"
 
 	"github.com/nanoteck137/pyrin"
@@ -101,21 +102,19 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 	var bannerUrl *string
 	var logoUrl *string
 
-	for _, image := range media.Images.Data {
-		if image.Type == types.MediaImageTypeCover && coverUrl == nil {
-			url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", media.Id, image.Filename))
-			coverUrl = &url
-		}
+	if media.CoverFile.Valid {
+		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", media.Id, path.Base(media.CoverFile.String)))
+		coverUrl = &url
+	}
 
-		if image.Type == types.MediaImageTypeBanner && bannerUrl == nil {
-			url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", media.Id, image.Filename))
-			bannerUrl = &url
-		}
+	if media.LogoFile.Valid {
+		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", media.Id, path.Base(media.LogoFile.String)))
+		logoUrl = &url
+	}
 
-		if image.Type == types.MediaImageTypeLogo && logoUrl == nil {
-			url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", media.Id, image.Filename))
-			logoUrl = &url
-		}
+	if media.BannerFile.Valid {
+		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", media.Id, path.Base(media.BannerFile.String)))
+		bannerUrl = &url
 	}
 
 	var user *MediaUser
@@ -143,13 +142,13 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 		PartCount:    media.PartCount.Int64,
 		Studios:      utils.FixNilArrayToEmpty(media.Studios.Data),
 		Tags:         utils.FixNilArrayToEmpty(media.Tags.Data),
+		AiringSeason: utils.SqlNullToStringPtr(media.AiringSeason),
+		StartDate:    utils.SqlNullToStringPtr(media.StartDate),
+		EndDate:      utils.SqlNullToStringPtr(media.EndDate),
 		CoverUrl:     coverUrl,
 		BannerUrl:    bannerUrl,
 		LogoUrl:      logoUrl,
 		User:         user,
-		AiringSeason: utils.SqlNullToStringPtr(media.AiringSeason),
-		StartDate:    utils.SqlNullToStringPtr(media.StartDate),
-		EndDate:      utils.SqlNullToStringPtr(media.EndDate),
 	}
 }
 

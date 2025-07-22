@@ -36,7 +36,7 @@ type Media struct {
 	MalId     sql.NullString `db:"mal_id"`
 	AnilistId sql.NullString `db:"anilist_id"`
 
-	Title        string         `db:"title"`
+	Title       string         `db:"title"`
 	Description sql.NullString `db:"description"`
 
 	Score        sql.NullFloat64   `db:"score"`
@@ -46,6 +46,10 @@ type Media struct {
 
 	StartDate sql.NullString `db:"start_date"`
 	EndDate   sql.NullString `db:"end_date"`
+
+	CoverFile  sql.NullString `db:"cover_file"`
+	LogoFile   sql.NullString `db:"logo_file"`
+	BannerFile sql.NullString `db:"banner_file"`
 
 	AdminStatus types.AdminStatus `db:"admin_status"`
 
@@ -216,6 +220,10 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 			"media.start_date",
 			"media.end_date",
 
+			"media.cover_file",
+			"media.logo_file",
+			"media.banner_file",
+
 			"media.admin_status",
 
 			"media.created",
@@ -352,6 +360,10 @@ type CreateMediaParams struct {
 	StartDate sql.NullString
 	EndDate   sql.NullString
 
+	CoverFile  sql.NullString
+	LogoFile   sql.NullString
+	BannerFile sql.NullString
+
 	AdminStatus types.AdminStatus
 
 	Created int64
@@ -409,6 +421,10 @@ func (db *Database) CreateMedia(ctx context.Context, params CreateMediaParams) (
 		"start_date": params.StartDate,
 		"end_date":   params.EndDate,
 
+		"cover_file":  params.CoverFile,
+		"logo_file":   params.LogoFile,
+		"banner_file": params.BannerFile,
+
 		"admin_status": params.AdminStatus,
 
 		"created": created,
@@ -438,6 +454,10 @@ type MediaChanges struct {
 	StartDate Change[sql.NullString]
 	EndDate   Change[sql.NullString]
 
+	CoverFile  Change[sql.NullString]
+	LogoFile   Change[sql.NullString]
+	BannerFile Change[sql.NullString]
+
 	AdminStatus Change[types.AdminStatus]
 
 	Created Change[int64]
@@ -463,6 +483,10 @@ func (db *Database) UpdateMedia(ctx context.Context, id string, changes MediaCha
 
 	addToRecord(record, "start_date", changes.StartDate)
 	addToRecord(record, "end_date", changes.EndDate)
+
+	addToRecord(record, "cover_file", changes.CoverFile)
+	addToRecord(record, "logo_file", changes.LogoFile)
+	addToRecord(record, "banner_file", changes.BannerFile)
 
 	addToRecord(record, "admin_status", changes.AdminStatus)
 

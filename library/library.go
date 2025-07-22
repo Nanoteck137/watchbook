@@ -49,6 +49,30 @@ type Media struct {
 	Path string `toml:"-"`
 }
 
+func (m Media) GetCoverPath() string {
+	if m.Images.Cover == "" {
+		return ""
+	}
+
+	return path.Join(m.Path, m.Images.Cover)
+}
+
+func (m Media) GetLogoPath() string {
+	if m.Images.Logo == "" {
+		return ""
+	}
+
+	return path.Join(m.Path, m.Images.Logo)
+}
+
+func (m Media) GetBannerPath() string {
+	if m.Images.Banner == "" {
+		return ""
+	}
+
+	return path.Join(m.Path, m.Images.Banner)
+}
+
 type MediaSearch struct {
 	Media  []Media
 	Errors map[string]error

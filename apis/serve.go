@@ -1,12 +1,15 @@
 package apis
 
 import (
+	"errors"
 	"net/http"
 	"os"
+	"path"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/watchbook"
 	"github.com/nanoteck137/watchbook/core"
+	"github.com/nanoteck137/watchbook/database"
 )
 
 func RegisterHandlers(app core.App, router pyrin.Router) {
@@ -29,8 +32,14 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 				id := c.Param("id")
 				image := c.Param("image")
 
-				mediaDir := app.WorkDir().MediaDir()
-				p := mediaDir.MediaImageDir(id)
+				media, err := app.DB().GetMediaById(c.Request().Context(), nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return pyrin.NoContentNotFound()
+					}
+				}
+
+				p := path.Dir(media.CoverFile.String)
 
 				f := os.DirFS(p)
 				return pyrin.ServeFile(c, f, image)

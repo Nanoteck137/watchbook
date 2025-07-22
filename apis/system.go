@@ -297,6 +297,33 @@ func (helper *SyncHelper) syncMedia(ctx context.Context, media *library.Media, d
 		Changed: media.General.EndDate != dbMedia.EndDate.String,
 	}
 
+	coverPath := media.GetCoverPath()
+	changes.CoverFile = database.Change[sql.NullString]{
+		Value:   sql.NullString{
+			String: coverPath,
+			Valid:  coverPath != "",
+		},
+		Changed: coverPath != dbMedia.CoverFile.String,
+	}
+
+	logoPath := media.GetLogoPath()
+	changes.LogoFile = database.Change[sql.NullString]{
+		Value:   sql.NullString{
+			String: logoPath,
+			Valid:  logoPath != "",
+		},
+		Changed: logoPath != dbMedia.LogoFile.String,
+	}
+
+	bannerPath := media.GetBannerPath()
+	changes.BannerFile = database.Change[sql.NullString]{
+		Value:   sql.NullString{
+			String: bannerPath,
+			Valid:  bannerPath != "",
+		},
+		Changed: bannerPath != dbMedia.BannerFile.String,
+	}
+
 	err = db.UpdateMedia(ctx, dbMedia.Id, changes)
 	if err != nil {
 		return fmt.Errorf("failed to update media: %w", err)

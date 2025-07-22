@@ -18,6 +18,10 @@ CREATE TABLE media (
 	start_date TEXT, 
     end_date TEXT,
 
+    cover_file TEXT,
+    logo_file TEXT,
+    banner_file TEXT,
+
     admin_status TEXT NOT NULL,
 
     created INTEGER NOT NULL,
