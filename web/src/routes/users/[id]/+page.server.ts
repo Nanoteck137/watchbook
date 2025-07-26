@@ -5,6 +5,7 @@ import type { PageServerLoad } from "./$types";
 export const load: PageServerLoad = async ({ locals, params, url }) => {
   const queryParams = url.searchParams;
   const query = getPagedQueryOptions(queryParams);
+  query["userId"] = params.id;
   query["filter"] = "userList != null";
 
   let list = queryParams.get("list");
@@ -16,7 +17,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
     query["filter"] = `userList == "${list}"`;
   }
 
-  const animes = await locals.apiClient.getUserAnimeList(params.id, {
+  const animes = await locals.apiClient.getMedia({
     query,
   });
   if (!animes.success) {
@@ -25,6 +26,6 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 
   return {
     page: animes.data.page,
-    animes: animes.data.animes,
+    media: animes.data.media,
   };
 };

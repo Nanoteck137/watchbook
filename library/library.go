@@ -11,7 +11,7 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
-type MediaImages struct {
+type Images struct {
 	Cover  string `toml:"cover"`
 	Banner string `toml:"banner"`
 	Logo   string `toml:"logo"`
@@ -34,6 +34,7 @@ type MediaGeneral struct {
 
 type MediaIds struct {
 	TheMovieDB  string `toml:"theMovieDB"`
+	Imdb        string `toml:"IMDb"`
 	MyAnimeList string `toml:"myAnimeList"`
 	Anilist     string `toml:"anilist"`
 }
@@ -48,7 +49,7 @@ type Media struct {
 
 	Ids     MediaIds     `toml:"ids"`
 	General MediaGeneral `toml:"general"`
-	Images  MediaImages  `toml:"images"`
+	Images  Images       `toml:"images"`
 
 	Parts []MediaPart `toml:"parts"`
 
@@ -79,9 +80,31 @@ func (m Media) GetBannerPath() string {
 	return path.Join(m.Path, m.Images.Banner)
 }
 
-type MediaSearch struct {
-	Media  []Media
-	Errors map[string]error
+type CollectionGeneral struct {
+	Name string `toml:"name"`
+}
+
+type CollectionEntry struct {
+	Path       string `toml:"path"`
+	SearchSlug string `toml:"searchSlug"`
+	Order      int    `toml:"order"`
+}
+
+type Collection struct {
+	Id string `toml:"id"`
+
+	General CollectionGeneral `toml:"general"`
+	Images  Images            `toml:"images"`
+
+	Entries []CollectionEntry `toml:"entries"`
+
+	Path string `toml:"-"`
+}
+
+type LibrarySearch struct {
+	Media       []Media
+	Collections []Collection
+	Errors      map[string]error
 }
 
 func readMedia(p string) (Media, error) {
@@ -97,21 +120,32 @@ func readMedia(p string) (Media, error) {
 		return Media{}, err
 	}
 
-	// if metadata.General.Cover != "" {
-	// 	metadata.General.Cover = path.Join(p, metadata.General.Cover)
-	// }
-	//
-	// for i, t := range metadata.Tracks {
-	// 	metadata.Tracks[i].File = path.Join(p, t.File)
-	// }
-
 	media.Path = p
 
 	return media, nil
 }
 
-func FindMedia(p string) (*MediaSearch, error) {
-	var media []string
+func readCollection(p string) (Collection, error) {
+	metadataPath := path.Join(p, "collection.toml")
+	data, err := os.ReadFile(metadataPath)
+	if err != nil {
+		return Collection{}, err
+	}
+
+	var collection Collection
+	err = toml.Unmarshal(data, &collection)
+	if err != nil {
+		return Collection{}, err
+	}
+
+	collection.Path = p
+
+	return collection, nil
+}
+
+func SearchLibrary(p string) (*LibrarySearch, error) {
+	var mediaPaths []string
+	var collectionPaths []string
 
 	err := filepath.WalkDir(p, func(p string, d fs.DirEntry, err error) error {
 		if d == nil {
@@ -129,7 +163,11 @@ func FindMedia(p string) (*MediaSearch, error) {
 		}
 
 		if name == "media.toml" {
-			media = append(media, path.Dir(p))
+			mediaPaths = append(mediaPaths, path.Dir(p))
+		}
+
+		if name == "collection.toml" {
+			collectionPaths = append(collectionPaths, path.Dir(p))
 		}
 
 		return nil
@@ -139,20 +177,31 @@ func FindMedia(p string) (*MediaSearch, error) {
 	}
 
 	errors := map[string]error{}
-	res := make([]Media, 0, len(media))
+	media := make([]Media, 0, len(mediaPaths))
+	collections := make([]Collection, 0, len(collectionPaths))
 
-	for _, p := range media {
-		media, err := readMedia(p)
+	for _, p := range mediaPaths {
+		m, err := readMedia(p)
 		if err != nil {
 			errors[p] = err
 			continue
 		}
 
-		res = append(res, media)
+		media = append(media, m)
 	}
 
-	return &MediaSearch{
-		Media:  res,
+	for _, p := range collectionPaths {
+		collection, err := readCollection(p)
+		if err != nil {
+			errors[p] = err
+			continue
+		}
+
+		collections = append(collections, collection)
+	}
+
+	return &LibrarySearch{
+		Media:  media,
 		Errors: errors,
 	}, nil
 }

@@ -17,9 +17,6 @@ import (
 	"github.com/nanoteck137/watchbook/utils"
 )
 
-// TODO(patrik): Remove?
-const DateLayout = "2006-01-02"
-
 type MediaUser struct {
 	List         *types.MediaUserList `json:"list"`
 	Score        *int64               `json:"score"`

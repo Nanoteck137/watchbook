@@ -33,6 +33,7 @@ type Media struct {
 	Type types.MediaType `db:"type"`
 
 	TmdbId    sql.NullString `db:"tmdb_id"`
+	ImdbId    sql.NullString `db:"imdb_id"`
 	MalId     sql.NullString `db:"mal_id"`
 	AnilistId sql.NullString `db:"anilist_id"`
 
@@ -143,11 +144,11 @@ func MediaUserDataQuery(userId *string) *goqu.SelectDataset {
 		Select(
 			tbl.Col("media_id").As("id"),
 
-			// tbl.Col("list"),
-			// tbl.Col("part"),
-			// tbl.Col("revisit_count"),
-			// tbl.Col("is_revisiting"),
-			// tbl.Col("score"),
+			tbl.Col("list"),
+			tbl.Col("part"),
+			tbl.Col("revisit_count"),
+			tbl.Col("is_revisiting"),
+			tbl.Col("score"),
 
 			goqu.Func(
 				"json_object",
@@ -206,6 +207,7 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 			"media.type",
 
 			"media.tmdb_id",
+			"media.imdb_id",
 			"media.mal_id",
 			"media.anilist_id",
 
@@ -345,6 +347,7 @@ type CreateMediaParams struct {
 	Type types.MediaType
 
 	TmdbId    sql.NullString
+	ImdbId    sql.NullString
 	MalId     sql.NullString
 	AnilistId sql.NullString
 
@@ -406,6 +409,7 @@ func (db *Database) CreateMedia(ctx context.Context, params CreateMediaParams) (
 		"type": params.Type,
 
 		"tmdb_id":    params.TmdbId,
+		"imdb_id":    params.ImdbId,
 		"mal_id":     params.MalId,
 		"anilist_id": params.AnilistId,
 
@@ -439,6 +443,7 @@ type MediaChanges struct {
 	Type Change[types.MediaType]
 
 	TmdbId    Change[sql.NullString]
+	ImdbId    Change[sql.NullString]
 	MalId     Change[sql.NullString]
 	AnilistId Change[sql.NullString]
 
@@ -469,6 +474,7 @@ func (db *Database) UpdateMedia(ctx context.Context, id string, changes MediaCha
 	addToRecord(record, "type", changes.Type)
 
 	addToRecord(record, "tmdb_id", changes.TmdbId)
+	addToRecord(record, "imdb_id", changes.ImdbId)
 	addToRecord(record, "mal_id", changes.MalId)
 	addToRecord(record, "anilist_id", changes.AnilistId)
 

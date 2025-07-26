@@ -4,6 +4,7 @@ CREATE TABLE media (
     type TEXT NOT NULL,
 
     tmdb_id TEXT,
+    imdb_id TEXT,
     mal_id TEXT,
     anilist_id TEXT,
 

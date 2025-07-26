@@ -348,25 +348,25 @@
   class="flex flex-col gap-1 rounded bg-primary p-2 text-primary-foreground"
 >
   <p>Type: {formatAnimeType(data.media.mediaType)}</p>
-  <p>Episodes: {data.media.partCount}</p>
+  <p>Parts: {data.media.partCount}</p>
   <p>Status: {data.media.status}</p>
-  <!-- {#if data.media.airingSeason}
+  {#if data.media.airingSeason}
     <p>
       Airing Season:
       <a
         class="text-blue-500 hover:underline"
-        href="/airing/{data.anime.airingSeason.slug}"
+        href="/airing/{data.media.airingSeason}"
       >
-        {data.anime.airingSeason.name}
+        {data.media.airingSeason}
       </a>
     </p>
-  {/if} -->
-  <!-- {#if data.media.startDate}
+  {/if}
+  {#if data.media.startDate}
     <p>Start Date: {data.media.startDate}</p>
   {/if}
   {#if data.media.endDate}
     <p>End Date: {data.media.endDate}</p>
-  {/if} -->
+  {/if}
   <p>
     Studios:
     {#each data.media.studios as studio, i}

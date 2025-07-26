@@ -1,6 +1,44 @@
 package types
 
-import "errors"
+import (
+	"errors"
+	"strconv"
+	"time"
+)
+
+const MediaDateLayout = "2006-01-02"
+
+func GetAiringSeason(d string) string {
+	t, err := time.Parse(MediaDateLayout, d)
+	if err != nil {
+		return ""
+	}
+
+	year := t.Year()
+
+	switch t.Month() {
+	case time.January, time.February, time.March:
+		return "winter-"+strconv.Itoa(year)
+	case time.April, time.May, time.June:
+		return "spring-"+strconv.Itoa(year)
+	case time.July, time.August, time.September:
+		return "summer-"+strconv.Itoa(year)
+	case time.October, time.November, time.December:
+		return "winter-"+strconv.Itoa(year)
+	}
+
+	return ""
+}
+
+func IsReleased(d string) bool {
+	t, err := time.Parse(MediaDateLayout, d)
+	if err != nil {
+		return false
+	}
+
+	newT := time.Now().Sub(t)
+	return newT.Seconds() > 0
+}
 
 type MediaType string
 
@@ -219,9 +257,9 @@ const (
 
 func IsValidMediaImageType(l MediaImageType) bool {
 	switch l {
-	case MediaImageTypeUnknown, 
-		MediaImageTypeCover, 
-		MediaImageTypeBanner, 
+	case MediaImageTypeUnknown,
+		MediaImageTypeCover,
+		MediaImageTypeBanner,
 		MediaImageTypeLogo:
 		return true
 	}

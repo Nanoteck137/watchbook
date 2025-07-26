@@ -1,10 +1,13 @@
 package myanimelist
 
 import (
+	"log/slog"
+	"net/url"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/nanoteck137/watchbook/utils"
@@ -33,6 +36,8 @@ type RelatedEntry struct {
 }
 
 type Anime struct {
+	Id string `json:"id"`
+
 	Title        string `json:"title"`
 	TitleEnglish string `json:"titleEnglish"`
 
@@ -70,6 +75,31 @@ type Anime struct {
 	Pictures []string `json:"pictures"`
 }
 
+type SeasonalAnime struct {
+	Id string `json:"id"`
+
+	Title        string `json:"title"`
+	TitleEnglish string `json:"titleEnglish"`
+
+	CoverImageUrl string `json:"coverImageUrl"`
+
+	Type         string `json:"type"`
+	Status       string `json:"status"`
+	EpisodeCount int64  `json:"episodeCount"`
+	Rating       string `json:"rating"`
+
+	StartDate string `json:"startDate"`
+	EndDate   string `json:"endDate"`
+
+	Score float64 `json:"score"`
+
+	Studios []string `json:"studios"`
+
+	Genres       []string `json:"genres"`
+	Themes       []string `json:"themes"`
+	Demographics []string `json:"demographics"`
+}
+
 type EpisodeExtraInfo struct {
 	Total   int64 `json:"total"`
 	Current int64 `json:"current"`
@@ -82,6 +112,10 @@ type Episode struct {
 	Aired           string  `json:"aired"`
 	AverageScoreRaw string  `json:"averageScoreRaw"`
 	AverageScore    float64 `json:"averageScore"`
+}
+
+type Seasonal struct {
+	Animes []SeasonalAnime
 }
 
 func ExtractAnimeData(pagePath string) (Anime, error) {
@@ -167,7 +201,7 @@ func ExtractAnimeData(pagePath string) (Anime, error) {
 		{
 			start := dates[0]
 			start = strings.TrimSpace(start)
-			t, err := parseDate(start)
+			t, err := ParseDate(start)
 			if err == nil {
 				f := formatDate(t)
 				startDate = &f
@@ -178,7 +212,7 @@ func ExtractAnimeData(pagePath string) (Anime, error) {
 			end := dates[1]
 			if end != "?" {
 				end = strings.TrimSpace(end)
-				t, err := parseDate(end)
+				t, err := ParseDate(end)
 				if err == nil {
 					f := formatDate(t)
 					endDate = &f
@@ -403,7 +437,7 @@ func ExtractEpisodeData(pagePath string) ([]Episode, EpisodeExtraInfo, error) {
 		aired := s.Find(".episode-aired").Text()
 		aired = strings.TrimSpace(aired)
 
-		t, _ := parseDate(aired)
+		t, _ := ParseDate(aired)
 		aired = formatDate(t)
 
 		averageScoreRaw := s.Find(".average > .value").Text()
@@ -448,4 +482,210 @@ func ExtractPictures(pagePath string) ([]string, error) {
 	})
 
 	return images, nil
+}
+
+var rxClassTrim = regexp.MustCompile("[\t\r\n]")
+
+func getClassesSlice(classes string) []string {
+	return strings.Split(rxClassTrim.ReplaceAllString(" "+classes+" ", " "), " ")
+}
+
+func ExtractSeasonalAnimes(pagePath string) (Seasonal, error) {
+	f, err := os.Open(pagePath)
+	if err != nil {
+		return Seasonal{}, err
+	}
+
+	doc, err := goquery.NewDocumentFromReader(f)
+	if err != nil {
+		return Seasonal{}, err
+	}
+
+	var animes []SeasonalAnime
+
+	doc.Find(".seasonal-anime").Each(func(i int, s *goquery.Selection) {
+		titleEl := s.Find(".title")
+
+		linkTitle := titleEl.Find(".link-title")
+		link, _ := linkTitle.Attr("href")
+		title := strings.TrimSpace(linkTitle.Text())
+
+		englishTitle := titleEl.Find(".h3_anime_subtitle").Text()
+		englishTitle = strings.TrimSpace(englishTitle)
+
+		class, _ := s.Attr("class")
+
+		cs := getClassesSlice(class)
+
+		animeType := "Unknown"
+		rating := ""
+		status := ""
+
+		isForKids := false
+
+		for _, clx := range cs {
+			if clx == "r18" {
+				rating = "Rx - Hentai"
+			}
+
+			if clx == "kids" {
+				isForKids = true
+			}
+
+			if strings.Contains(clx, "js-anime-type-") {
+				ty := strings.TrimPrefix(clx, "js-anime-type-")
+				switch ty {
+				case "all":
+				case "1":
+					animeType = "TV"
+				case "2":
+					animeType = "OVA"
+				case "3":
+					animeType = "Movie"
+				case "4":
+					animeType = "Special"
+				case "5":
+					animeType = "ONA"
+				case "9":
+					animeType = "TV Special"
+				default:
+					slog.Warn("Unknown anime type", "type", ty, "title", title)
+				}
+			}
+		}
+
+		u, _ := url.Parse(link)
+		splits := strings.Split(u.Path, "/")
+		id := splits[2]
+
+		infoEl := s.Find(".info")
+		startDateStr := infoEl.Children().Eq(0).Text()
+		startDateStr = strings.TrimSpace(startDateStr)
+		startDate, _ := ParseDate(startDateStr)
+
+		img := s.Find(".image img")
+		coverImageUrl, _ := img.Attr("data-src")
+		if coverImageUrl == "" {
+			coverImageUrl, _ = img.Attr("src")
+		}
+
+		scoreStr := s.Find(".js-score").Text()
+		score, _ := strconv.ParseFloat(scoreStr, 64)
+
+		epsStr := infoEl.Children().Eq(1).Children().Eq(0).Text()
+		epsStr = strings.TrimSpace(epsStr)
+		eps := int64(utils.ExtractNumber(epsStr))
+
+		var endDate *time.Time
+		if eps != 0 {
+			t := startDate.AddDate(0, 0, 7*(int(eps)-1))
+			sub := time.Now().Sub(t)
+
+			if sub < 0 {
+				status = "Currently Airing"
+			} else {
+				status = "Finished Airing"
+			}
+
+			endDate = &t
+		}
+
+		var genres []string
+
+		genresEl := s.Find(".genres > .genres-inner > .genre")
+		genresEl.Each(func(i int, s *goquery.Selection) {
+			genre := s.Find("a").Text()
+			genres = append(genres, genre)
+		})
+
+		leftside := s.Find("div .synopsis")
+
+		var studios []string
+		leftside.Find(".caption:contains(\"Studio\")").Parent().Find("a").Each(func(i int, s *goquery.Selection) {
+			raw := s.Text()
+			raw = strings.TrimSpace(raw)
+
+			if raw != "Unknown" {
+				studios = append(studios, s.Text())
+			}
+		})
+
+		leftside.Find(".caption:contains(\"Studios\")").Parent().Find("a").Each(func(i int, s *goquery.Selection) {
+			raw := s.Text()
+			raw = strings.TrimSpace(raw)
+
+			if raw != "Unknown" {
+				studios = append(studios, s.Text())
+			}
+		})
+
+		var themes []string
+		leftside.Find("span:contains(\"Theme\")").Parent().Find("a").Each(func(i int, s *goquery.Selection) {
+			t := s.Text()
+			t = strings.TrimSpace(t)
+
+			if t != "" {
+				themes = append(themes, s.Text())
+			}
+		})
+
+		leftside.Find("span:contains(\"Themes\")").Parent().Find("a").Each(func(i int, s *goquery.Selection) {
+			t := s.Text()
+			t = strings.TrimSpace(t)
+
+			if t != "" {
+				themes = append(themes, s.Text())
+			}
+		})
+
+		var demographic []string
+		leftside.Find("span:contains(\"Demographic\")").Parent().Find("a").Each(func(i int, s *goquery.Selection) {
+			t := s.Text()
+			t = strings.TrimSpace(t)
+
+			if t != "" {
+				demographic = append(demographic, s.Text())
+			}
+		})
+
+		leftside.Find("span:contains(\"Demographics\")").Parent().Find("a").Each(func(i int, s *goquery.Selection) {
+			t := s.Text()
+			t = strings.TrimSpace(t)
+
+			if t != "" {
+				demographic = append(demographic, s.Text())
+			}
+		})
+
+		if isForKids {
+			return
+		}
+
+		endDateS := ""
+		if endDate != nil {
+			endDateS = formatDate(*endDate)
+		}
+
+		animes = append(animes, SeasonalAnime{
+			Id:            id,
+			Title:         title,
+			TitleEnglish:  englishTitle,
+			CoverImageUrl: coverImageUrl,
+			Type:          animeType,
+			Status:        status,
+			EpisodeCount:  eps,
+			Rating:        rating,
+			StartDate:     formatDate(startDate),
+			EndDate:       endDateS,
+			Score:         score,
+			Studios:       studios,
+			Genres:        genres,
+			Themes:        themes,
+			Demographics:  demographic,
+		})
+	})
+
+	return Seasonal{
+		Animes: animes,
+	}, nil
 }

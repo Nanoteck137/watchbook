@@ -270,3 +270,30 @@ func FetchAnimeData(dl *downloader.Downloader, id string, fetchPictures bool) (*
 
 	return &anime, nil
 }
+
+func FetchSeasonal(season string, year int) (Seasonal, error) {
+	p, err := os.MkdirTemp("", "anime*")
+	if err != nil {
+		return Seasonal{}, fmt.Errorf("failed to create temp dir: %w", err)
+	}
+	defer os.RemoveAll(p)
+
+	err = os.Mkdir(p, 0755)
+	if err != nil && !os.IsExist(err) {
+		return Seasonal{}, fmt.Errorf("failed to create entry dir: %w", err)
+	}
+
+	baseUrl := fmt.Sprintf("https://myanimelist.net/anime/season/%d/%s", year, season)
+
+	err = dl.DownloadToFile(baseUrl, path.Join(p, "root.html"))
+	if err != nil {
+		return Seasonal{}, fmt.Errorf("failed to download entry root page: %w", err)
+	}
+
+	seasonal, err := ExtractSeasonalAnimes(path.Join(p, "root.html"))
+	if err != nil {
+		return Seasonal{}, fmt.Errorf("failed to extract anime data: %w", err)
+	}
+
+	return seasonal, nil
+}

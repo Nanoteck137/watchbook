@@ -429,7 +429,7 @@ func (s *SyncHandler) RunSync(app core.App) error {
 	defer s.isSyncing.Store(false)
 
 	// TODO(patrik): Check for duplicated ids
-	mediaSearch, err := library.FindMedia(app.Config().LibraryDir)
+	librarySearch, err := library.SearchLibrary(app.Config().LibraryDir)
 	if err != nil {
 		return err
 	}
@@ -444,7 +444,7 @@ func (s *SyncHandler) RunSync(app core.App) error {
 
 	var syncErrors []error
 
-	for _, media := range mediaSearch.Media {
+	for _, media := range librarySearch.Media {
 		log.Debug("Syncing media", "path", media.Path)
 
 		err := helper.syncMedia(ctx, &media, app.DB())
@@ -478,8 +478,8 @@ func (s *SyncHandler) RunSync(app core.App) error {
 		}
 	}
 
-	errs := make([]SyncError, 0, len(mediaSearch.Errors)+len(syncErrors))
-	for _, err := range mediaSearch.Errors {
+	errs := make([]SyncError, 0, len(librarySearch.Errors)+len(syncErrors))
+	for _, err := range librarySearch.Errors {
 		var fullMessage *string
 
 		var tomlError *toml.DecodeError

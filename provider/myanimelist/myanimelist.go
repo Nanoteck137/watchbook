@@ -164,6 +164,106 @@ func fetchAndCacheNewAnimeData(malId string, cacheDest string) (AnimeEntry, erro
 	return res, nil
 }
 
+func fetchAnimeData(malId string) (AnimeEntry, error) {
+	data, err := FetchAnimeData(dl, malId, false)
+	if err != nil {
+		return AnimeEntry{}, err
+	}
+
+	desc := strings.Builder{}
+
+	fmt.Fprintf(&desc, "Type: %s\n", data.Type)
+	fmt.Fprintf(&desc, "Status: %s\n", data.Status)
+	if data.EpisodeCount != nil {
+		fmt.Fprintf(&desc, "Episode Count: %d\n", *data.EpisodeCount)
+	}
+	fmt.Fprintf(&desc, "Rating: %s\n", data.Rating)
+	fmt.Fprintf(&desc, "Premiered: %s\n", data.Premiered)
+	fmt.Fprintf(&desc, "Source: %s\n", data.Source)
+	fmt.Fprintf(&desc, "Broadcast: %s\n", data.Broadcast)
+
+	if len(data.ThemeSongs) > 0 {
+		desc.WriteString("Theme Songs:\n")
+		for _, t := range data.ThemeSongs {
+			ty := "UNKNOWN"
+
+			switch t.Type {
+			case ThemeSongOpening:
+				ty = "OP"
+			case ThemeSongEnding:
+				ty = "ED"
+			}
+
+			desc.WriteString(t.Raw)
+			desc.WriteString(" (")
+			desc.WriteString(ty)
+			desc.WriteString(")\n")
+		}
+	}
+
+	desc.WriteString("\n\n")
+
+	desc.WriteString(data.Description)
+
+	var startDate *string
+	var endDate *string
+
+	if data.StartDate != nil && *data.StartDate != "" {
+		startDate = data.StartDate
+	}
+
+	if data.EndDate != nil && *data.EndDate != "" {
+		endDate = data.EndDate
+	}
+
+	studios := make([]string, 0, len(data.Studios))
+	tags := make([]string, 0, len(data.Genres)+len(data.Themes)+len(data.Demographics))
+
+	for _, s := range data.Studios {
+		studios = append(studios, utils.Slug(s))
+	}
+
+	for _, t := range data.Genres {
+		tags = append(tags, utils.Slug(t))
+	}
+
+	for _, t := range data.Themes {
+		tags = append(tags, utils.Slug(t))
+	}
+
+	for _, t := range data.Demographics {
+		tags = append(tags, utils.Slug(t))
+	}
+
+	res := AnimeEntry{
+		Type:          ConvertAnimeType(data.Type),
+		Title:         data.Title,
+		TitleEnglish:  data.TitleEnglish,
+		Description:   strings.TrimSpace(desc.String()),
+		Score:         data.Score,
+		Status:        ConvertAnimeStatus(data.Status),
+		Rating:        ConvertAnimeRating(data.Rating),
+		AiringSeason:  utils.Slug(data.Premiered),
+		StartDate:     startDate,
+		EndDate:       endDate,
+		Studios:       studios,
+		Tags:          tags,
+		CoverImageUrl: data.CoverImageUrl,
+		EpisodeCount:  data.EpisodeCount,
+	}
+
+	return res, nil
+}
+
+func RawGetAnime(malId string) (AnimeEntry, error) {
+	res, err := fetchAnimeData(malId)
+	if err != nil {
+		return AnimeEntry{}, err
+	}
+
+	return res, nil
+}
+
 func GetAnime(workDir types.WorkDir, malId string, useCache bool) (AnimeEntry, error) {
 	cacheDir := workDir.CacheProviderDir("myanimelist")
 
@@ -230,6 +330,7 @@ func ConvertAnimeType(typ string) types.MediaType {
 	case "TV Special":
 		return types.MediaTypeAnimeSeason
 	case "":
+		return types.MediaTypeUnknown
 	default:
 		// TODO(patrik): Better logging
 		fmt.Printf("WARN: Unknown anime type \"%s\"\n", typ)
@@ -247,6 +348,7 @@ func ConvertAnimeStatus(status string) types.MediaStatus {
 	case "Not yet aired":
 		return types.MediaStatusNotAired
 	case "":
+		return types.MediaStatusUnknown
 	default:
 		// TODO(patrik): Better logging
 		fmt.Printf("WARN: Unknown anime status \"%s\"\n", status)
@@ -270,6 +372,7 @@ func ConvertAnimeRating(rating string) types.MediaRating {
 	case "Rx - Hentai":
 		return types.MediaRatingRHentai
 	case "":
+		return types.MediaRatingUnknown
 	default:
 		// TODO(patrik): Better logging
 		fmt.Printf("WARN: Unknown anime rating \"%s\"\n", rating)

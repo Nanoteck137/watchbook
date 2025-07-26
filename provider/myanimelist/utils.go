@@ -7,7 +7,7 @@ import (
 
 const DateLayout = "Jan _2, 2006"
 
-func parseDate(s string) (time.Time, error) {
+func ParseDate(s string) (time.Time, error) {
 	return time.Parse(DateLayout, s)
 }
 

@@ -7,8 +7,11 @@ import (
 	"io"
 	"log"
 	"math"
+	"net/url"
 	"os"
+	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/gosimple/slug"
 	"github.com/nanoteck137/watchbook/types"
@@ -211,4 +214,50 @@ func CopyFile(src, dst string) (int64, error) {
 	defer destination.Close()
 	nBytes, err := io.Copy(destination, source)
 	return nBytes, err
+}
+
+func RoundFloat(val float64, precision uint) float64 {
+    ratio := math.Pow(10, float64(precision))
+    return math.Round(val*ratio) / ratio
+}
+
+func CreateUrlBase(addr, path string, query url.Values) (*url.URL, error) {
+	u, err := url.Parse(addr)
+	if err != nil {
+		return nil, err
+	}
+
+	u.Path = path
+
+	if query != nil {
+		params := u.Query()
+		for k, v := range query {
+			params[k] = v
+		}
+		u.RawQuery = params.Encode()
+	}
+
+	return u, nil
+}
+
+func ExtractNumber(s string) int {
+	n := ""
+	for _, c := range s {
+		if unicode.IsDigit(c) {
+			n += string(c)
+		} else {
+			break
+		}
+	}
+
+	if len(n) == 0 {
+		return 0
+	}
+
+	i, err := strconv.ParseInt(n, 10, 64)
+	if err != nil {
+		return 0
+	}
+
+	return int(i)
 }

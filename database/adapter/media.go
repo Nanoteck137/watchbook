@@ -22,16 +22,16 @@ func (a *MediaResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 			Kind: filter.NameKindString,
 			Name: "media.id",
 		}, true
+	case "malId":
+		return filter.Name{
+			Kind: filter.NameKindString,
+			Name: "media.mal_id",
+			Nullable: true,
+		}, true
 	case "userList":
 		return filter.Name{
 			Kind: filter.NameKindString,
 			Name: "user_data.list",
-			Nullable: true,
-		}, true
-	case "lastDataFetch":
-		return filter.Name{
-			Kind: filter.NameKindNumber,
-			Name: "media.last_data_fetch",
 			Nullable: true,
 		}, true
 	case "airingSeason":
