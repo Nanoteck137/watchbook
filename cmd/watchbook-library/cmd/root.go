@@ -5,14 +5,14 @@ import (
 
 	"github.com/nanoteck137/pyrin/trail"
 	"github.com/nanoteck137/watchbook"
-	"github.com/nanoteck137/watchbook/cmd/watchbook-cli/config"
+	"github.com/nanoteck137/watchbook/cmd/watchbook-library/config"
 	"github.com/spf13/cobra"
 )
 
 var logger = trail.NewLogger(&trail.Options{Debug: true, Level: slog.LevelInfo})
 
 var rootCmd = &cobra.Command{
-	Use:     watchbook.CliAppName,
+	Use:     watchbook.LibraryAppName,
 	Version: watchbook.Version,
 }
 
@@ -23,7 +23,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.SetVersionTemplate(watchbook.VersionTemplate(watchbook.CliAppName))
+	rootCmd.SetVersionTemplate(watchbook.VersionTemplate(watchbook.LibraryAppName))
 
 	cobra.OnInitialize(config.InitConfig)
 

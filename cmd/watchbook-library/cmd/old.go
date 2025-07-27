@@ -13,7 +13,6 @@ import (
 	"github.com/nanoteck137/watchbook/library"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
-	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 )
 
@@ -467,18 +466,10 @@ var oldImportCmd = &cobra.Command{
 
 			media.Images.Cover = "cover" + ext
 
-			d, err := toml.Marshal(media)
+			err = saveMedia(out, media)
 			if err != nil {
-				logger.Fatal("failed to marshal media", "err", err, "title", media.General.Title)
+				logger.Fatal("failed to save media", "err", err, "title", media.General.Title)
 			}
-
-			dst = path.Join(out, "media.toml")
-			err = os.WriteFile(dst, d, 0644)
-			if err != nil {
-				logger.Fatal("failed to write media for anime", "err", err, "title", media.General.Title, "dstPath", dst)
-			}
-
-			// break
 		}
 	},
 }

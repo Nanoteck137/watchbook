@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
 
 	"github.com/kr/pretty"
+	"github.com/nanoteck137/watchbook/cmd/watchbook-library/config"
 	"github.com/nanoteck137/watchbook/library"
 	"github.com/nanoteck137/watchbook/provider/myanimelist"
 	"github.com/nanoteck137/watchbook/types"
@@ -13,6 +15,48 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 )
+
+func openLibrary(dir string) (*library.LibrarySearch, error) {
+	search, err := library.SearchLibrary(dir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search library: %w", err)
+	}
+
+	if len(search.Errors) > 0 {
+		return nil, fmt.Errorf("library has errors: %v", search.Errors)
+	}
+
+	return search, nil
+}
+
+func prepareLibraryMal(search *library.LibrarySearch) map[string]library.Media {
+	entries := make(map[string]library.Media)
+
+	for _, media := range search.Media {
+		id := media.Ids.MyAnimeList
+		if id == "" {
+			continue
+		}
+
+		entries[id] = media
+	}
+
+	return entries
+}
+
+func saveMedia(out string, media library.Media) error {
+	d, err := toml.Marshal(media)
+	if err != nil {
+		return fmt.Errorf("failed to marshal media: %w", err)
+	}
+
+	err = os.WriteFile(path.Join(out, "media.toml"), d, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to save marshaled media: %w", err)
+	}
+
+	return nil
+}
 
 var malCmd = &cobra.Command{
 	Use: "mal",
@@ -27,27 +71,12 @@ var malGetCmd = &cobra.Command{
 		libDir := "./work/library"
 		outDir := "./work/library"
 
-		search, err := library.SearchLibrary(libDir)
+		search, err := openLibrary(libDir)
 		if err != nil {
-			logger.Fatal("failed to search library", "err", err)
+			logger.Fatal("failed to open library", "err", err)
 		}
 
-		if len(search.Errors) > 0 {
-			logger.Fatal("library has some errors", "errors", search.Errors)
-		}
-
-		entries := make(map[string]library.Media)
-
-		for _, media := range search.Media {
-			id := media.Ids.MyAnimeList
-			if id == "" {
-				continue
-			}
-
-			entries[id] = media
-		}
-
-		pretty.Println(entries)
+		entries := prepareLibraryMal(search)
 
 		if m, exists := entries[malId]; exists {
 			logger.Fatal("entry with id already exists", "id", malId, "path", m.Path)
@@ -127,15 +156,9 @@ var malGetCmd = &cobra.Command{
 
 		media.Images.Cover = path.Base(p)
 
-		d, err := toml.Marshal(media)
+		err = saveMedia(out, media)
 		if err != nil {
-			logger.Fatal("failed to marshal media", "err", err, "title", media.General.Title)
-		}
-
-		dst := path.Join(out, "media.toml")
-		err = os.WriteFile(dst, d, 0644)
-		if err != nil {
-			logger.Fatal("failed to write media for anime", "err", err, "title", media.General.Title, "dstPath", dst)
+			logger.Fatal("failed to save media", "err", err, "title", media.General.Title)
 		}
 
 		pretty.Println(media)
@@ -145,28 +168,25 @@ var malGetCmd = &cobra.Command{
 var malTestCmd = &cobra.Command{
 	Use: "test",
 	Run: func(cmd *cobra.Command, args []string) {
-		libDir := "./work/library"
-		outDir := "./work/library"
+		cfg := config.LoadedConfig
+		pretty.Println(cfg)
 
-		search, err := library.SearchLibrary(libDir)
+		return
+
+		dir := "./work/library"
+		outDir := path.Join(dir, "download")
+
+		err := os.Mkdir(outDir, 0755)
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			logger.Fatal("failed to create dir", "err", err, "path", outDir)
+		}
+
+		search, err := openLibrary(dir)
 		if err != nil {
-			logger.Fatal("failed to search library", "err", err)
+			logger.Fatal("failed to open library", "err", err, "dir", dir)
 		}
 
-		if len(search.Errors) > 0 {
-			logger.Fatal("library has some errors", "errors", search.Errors)
-		}
-
-		entries := make(map[string]library.Media)
-
-		for _, media := range search.Media {
-			id := media.Ids.MyAnimeList
-			if id == "" {
-				continue
-			}
-
-			entries[id] = media
-		}
+		entries := prepareLibraryMal(search)
 
 		seasonal, err := myanimelist.FetchSeasonal("winter", 2021)
 		if err != nil {
@@ -249,15 +269,9 @@ var malTestCmd = &cobra.Command{
 
 			media.Images.Cover = path.Base(p)
 
-			d, err := toml.Marshal(media)
+			err = saveMedia(out, media)
 			if err != nil {
-				logger.Fatal("failed to marshal media", "err", err, "title", media.General.Title)
-			}
-
-			dst := path.Join(out, "media.toml")
-			err = os.WriteFile(dst, d, 0644)
-			if err != nil {
-				logger.Fatal("failed to write media for anime", "err", err, "title", media.General.Title, "dstPath", dst)
+				logger.Fatal("failed to save media", "err", err, "title", media.General.Title)
 			}
 
 			entries[anime.Id] = media
