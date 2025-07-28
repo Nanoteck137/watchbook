@@ -56,6 +56,10 @@ type FullCollectionMediaItem struct {
 	MediaStartDate sql.NullString `db:"media_start_date"`
 	MediaEndDate   sql.NullString `db:"media_end_date"`
 
+	MediaCoverFile  sql.NullString `db:"media_cover_file"`
+	MediaLogoFile   sql.NullString `db:"media_logo_file"`
+	MediaBannerFile sql.NullString `db:"media_banner_file"`
+
 	MediaAdminStatus types.AdminStatus `db:"media_admin_status"`
 
 	MediaCreated int64 `db:"media_created"`
@@ -127,6 +131,10 @@ func FullCollectionMediaItemQuery(userId *string) *goqu.SelectDataset {
 			goqu.I("media.start_date").As("media_start_date"),
 			goqu.I("media.end_date").As("media_end_date"),
 
+			goqu.I("media.cover_file").As("media_cover_file"),
+			goqu.I("media.logo_file").As("media_logo_file"),
+			goqu.I("media.banner_file").As("media_banner_file"),
+
 			goqu.I("media.admin_status").As("media_admin_status"),
 
 			goqu.I("media.created").As("media_created"),
@@ -136,7 +144,6 @@ func FullCollectionMediaItemQuery(userId *string) *goqu.SelectDataset {
 
 			goqu.I("media.studios").As("media_studios"),
 			goqu.I("media.tags").As("media_tags"),
-			goqu.I("media.images").As("media_images"),
 
 			goqu.I("media.user_data").As("media_user_data"),
 		).
@@ -174,6 +181,7 @@ type CreateCollectionMediaItemParams struct {
 	MediaId      string
 
 	Name           string
+	SearchSlug     string
 	OrderNumber    int64
 	SubOrderNumber int64
 
@@ -193,6 +201,7 @@ func (db *Database) CreateCollectionMediaItem(ctx context.Context, params Create
 		"media_id":      params.MediaId,
 
 		"name":            params.Name,
+		"search_slug":     params.SearchSlug,
 		"order_number":    params.OrderNumber,
 		"suborder_number": params.SubOrderNumber,
 
@@ -210,6 +219,7 @@ func (db *Database) CreateCollectionMediaItem(ctx context.Context, params Create
 
 type CollectionMediaItemChanges struct {
 	Name           Change[string]
+	SearchSlug     Change[string]
 	OrderNumber    Change[int64]
 	SubOrderNumber Change[int64]
 
@@ -220,6 +230,7 @@ func (db *Database) UpdateCollectionMediaItem(ctx context.Context, collectionId,
 	record := goqu.Record{}
 
 	addToRecord(record, "name", changes.Name)
+	addToRecord(record, "search_slug", changes.SearchSlug)
 	addToRecord(record, "order_number", changes.OrderNumber)
 	addToRecord(record, "suborder_number", changes.SubOrderNumber)
 

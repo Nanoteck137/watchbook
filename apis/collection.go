@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"path"
 	"sort"
 
 	"github.com/nanoteck137/pyrin"
@@ -65,7 +66,9 @@ type CollectionItem struct {
 	Studios []string `json:"studios"`
 	Tags    []string `json:"tags"`
 
-	CoverUrl *string `json:"coverUrl"`
+	CoverUrl  *string `json:"coverUrl"`
+	LogoUrl   *string `json:"logoUrl"`
+	BannerUrl *string `json:"bannerUrl"`
 
 	User *MediaUser `json:"user,omitempty"`
 }
@@ -73,24 +76,22 @@ type CollectionItem struct {
 func ConvertDBCollectionItem(c pyrin.Context, hasUser bool, item database.FullCollectionMediaItem) CollectionItem {
 	// TODO(patrik): Add default cover
 	var coverUrl *string
-	// var bannerUrl *string
-	// var logoUrl *string
+	var bannerUrl *string
+	var logoUrl *string
 
-	for _, image := range item.MediaImages.Data {
-		if image.Type == types.MediaImageTypeCover && coverUrl == nil {
-			url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", item.MediaId, image.Filename))
-			coverUrl = &url
-		}
+	if item.MediaCoverFile.Valid {
+		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", item.MediaId, path.Base(item.MediaCoverFile.String)))
+		coverUrl = &url
+	}
 
-		// if image.Type == types.MediaImageTypeBanner && bannerUrl == nil {
-		// 	url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", media.Id, image.Filename))
-		// 	bannerUrl = &url
-		// }
-		//
-		// if image.Type == types.MediaImageTypeLogo && logoUrl == nil {
-		// 	url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", media.Id, image.Filename))
-		// 	logoUrl = &url
-		// }
+	if item.MediaLogoFile.Valid {
+		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", item.MediaId, path.Base(item.MediaLogoFile.String)))
+		logoUrl = &url
+	}
+
+	if item.MediaBannerFile.Valid {
+		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", item.MediaId, path.Base(item.MediaBannerFile.String)))
+		bannerUrl = &url
 	}
 
 	var user *MediaUser
@@ -123,6 +124,8 @@ func ConvertDBCollectionItem(c pyrin.Context, hasUser bool, item database.FullCo
 		Studios:        utils.FixNilArrayToEmpty(item.MediaStudios.Data),
 		Tags:           utils.FixNilArrayToEmpty(item.MediaTags.Data),
 		CoverUrl:       coverUrl,
+		LogoUrl:        logoUrl,
+		BannerUrl:      bannerUrl,
 		User:           user,
 		CollectionName: item.CollectionName,
 		SearchSlug:     item.SearchSlug,

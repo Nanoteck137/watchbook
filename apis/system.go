@@ -420,6 +420,7 @@ func (helper *SyncHelper) syncCollection(ctx context.Context, collection *librar
 			Name:           entry.SearchSlug,
 			OrderNumber:    int64(entry.Order),
 			SubOrderNumber: int64(entry.SubOrder),
+			SearchSlug:     entry.SearchSlug,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to add media to collection: %w", err)
