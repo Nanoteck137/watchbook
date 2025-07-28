@@ -9,6 +9,7 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/nanoteck137/pyrin/ember"
+	"github.com/nanoteck137/watchbook/cmd/watchbook-library/config"
 	"github.com/nanoteck137/watchbook/database"
 	"github.com/nanoteck137/watchbook/library"
 	"github.com/nanoteck137/watchbook/types"
@@ -333,11 +334,19 @@ func AnimeQuery(userId *string) *goqu.SelectDataset {
 }
 
 var oldImportCmd = &cobra.Command{
-	Use: "import",
+	Use: "import <OLD_WATCHBOOK_DIR>",
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		dir := "./work/library"
+		cfg := config.LoadedConfig
 
-		workDir := "/Volumes/old/watchbook"
+		libraryDir := LibraryDir(cfg.LibraryDir)
+
+		err := ensureMalDirs(libraryDir)
+		if err != nil {
+			logger.Fatal("failed to create mal dirs", "err", err)
+		}
+
+		workDir := args[0]
 
 		dbFile := path.Join(workDir, "data.db")
 		dbUrl := fmt.Sprintf("file:%s?_foreign_keys=true", dbFile)
@@ -452,7 +461,7 @@ var oldImportCmd = &cobra.Command{
 			p := path.Join(workDir, "animes", "images", anime.Id, cover)
 			ext := path.Ext(p)
 
-			out := path.Join(dir, anime.MalId.String+"-"+utils.Slug(media.General.Title))
+			out := path.Join(libraryDir.MalEntriesDir(), anime.MalId.String+"-"+utils.Slug(media.General.Title))
 			err = os.Mkdir(out, 0755)
 			if err != nil {
 				logger.Fatal("failed to create dir for anime", "err", err, "title", media.General.Title)

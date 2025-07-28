@@ -9,4 +9,5 @@ node_modules/
 
 .DS_Store
 config.toml
+lib-config.toml
 result

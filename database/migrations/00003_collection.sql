@@ -5,6 +5,10 @@ CREATE TABLE collections (
 
 	name TEXT NOT NULL CHECK(name<>''),
 
+    cover_file TEXT,
+    logo_file TEXT,
+    banner_file TEXT,
+
     admin_status TEXT NOT NULL,
 
     created INTEGER NOT NULL,
@@ -16,7 +20,9 @@ CREATE TABLE collection_media_items (
     media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE,
 
     name TEXT NOT NULL,
+    search_slug TEXT NOT NULL,
     order_number INTEGER NOT NULL,
+    suborder_number INTEGER NOT NULL,
 
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL,

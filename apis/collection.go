@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
@@ -44,7 +45,9 @@ type CollectionItem struct {
 	MediaId      string `json:"mediaId"`
 
 	CollectionName string `json:"collectionName"`
+	SearchSlug     string `json:"searchSlug"`
 	Order          int64  `json:"order"`
+	SubOrder       int64  `json:"subOrder"`
 
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
@@ -122,12 +125,14 @@ func ConvertDBCollectionItem(c pyrin.Context, hasUser bool, item database.FullCo
 		CoverUrl:       coverUrl,
 		User:           user,
 		CollectionName: item.CollectionName,
+		SearchSlug:     item.SearchSlug,
 		Order:          item.OrderNumber,
+		SubOrder:       item.SubOrderNumber,
 	}
 }
 
 type GetCollectionItems struct {
-	Items []CollectionItem `json:"items"`
+	Items [][]CollectionItem `json:"items"`
 }
 
 type CreateCollection struct {
@@ -263,12 +268,33 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				res := GetCollectionItems{
-					Items: make([]CollectionItem, len(items)),
+				order := make(map[int64][]CollectionItem)
+
+				for _, item := range items {
+					i := ConvertDBCollectionItem(c, userId != nil, item)
+					order[item.OrderNumber] = append(order[item.OrderNumber], i)
 				}
 
-				for i, item := range items {
-					res.Items[i] = ConvertDBCollectionItem(c, userId != nil, item)
+				keys := make([]int64, 0, len(order))
+
+				for k := range order {
+					keys = append(keys, k)
+				}
+
+				sort.SliceStable(keys, func(i, j int) bool {
+					return keys[i] < keys[j]
+				})
+
+				res := GetCollectionItems{}
+
+				for _, k := range keys {
+					items := order[k]
+
+					sort.SliceStable(items, func(i, j int) bool {
+						return items[i].SubOrder < items[j].SubOrder
+					})
+
+					res.Items = append(res.Items, items)
 				}
 
 				return res, nil

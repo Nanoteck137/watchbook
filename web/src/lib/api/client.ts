@@ -64,40 +64,8 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/media/${id}`, "GET", api.GetMediaById, z.any(), undefined, options)
   }
   
-  createMedia(body: api.CreateMediaBody, options?: ExtraOptions) {
-    return this.request("/api/v1/media", "POST", api.CreateMedia, z.any(), body, options)
-  }
-  
-  editMedia(id: string, body: api.EditMediaBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/${id}`, "PATCH", z.undefined(), z.any(), body, options)
-  }
-  
   getMediaParts(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/media/${id}/parts`, "GET", api.GetMediaParts, z.any(), undefined, options)
-  }
-  
-  addPart(id: string, body: api.AddPartBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/${id}/single/parts`, "POST", api.AddPart, z.any(), body, options)
-  }
-  
-  addMultipleParts(id: string, body: api.AddMultiplePartsBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/${id}/multiple/parts`, "POST", z.undefined(), z.any(), body, options)
-  }
-  
-  editPart(id: string, index: string, body: api.EditPartBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/${id}/parts/${index}`, "PATCH", z.undefined(), z.any(), body, options)
-  }
-  
-  removePart(id: string, index: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/${id}/parts/${index}`, "DELETE", z.undefined(), z.any(), undefined, options)
-  }
-  
-  addImage(id: string, body: api.AddImageBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/${id}/images`, "POST", api.AddImage, z.any(), body, options)
-  }
-  
-  editImage(id: string, hash: string, body: api.EditImageBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/${id}/images/${hash}`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
   setMediaUserData(id: string, body: api.SetMediaUserData, options?: ExtraOptions) {
@@ -193,40 +161,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/media/${id}`)
   }
   
-  createMedia() {
-    return createUrl(this.baseUrl, "/api/v1/media")
-  }
-  
-  editMedia(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/${id}`)
-  }
-  
   getMediaParts(id: string) {
     return createUrl(this.baseUrl, `/api/v1/media/${id}/parts`)
-  }
-  
-  addPart(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/${id}/single/parts`)
-  }
-  
-  addMultipleParts(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/${id}/multiple/parts`)
-  }
-  
-  editPart(id: string, index: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/${id}/parts/${index}`)
-  }
-  
-  removePart(id: string, index: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/${id}/parts/${index}`)
-  }
-  
-  addImage(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/${id}/images`)
-  }
-  
-  editImage(id: string, hash: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/${id}/images/${hash}`)
   }
   
   setMediaUserData(id: string) {

@@ -7,10 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"path"
 	"strings"
 	"sync"
 	"sync/atomic"
 
+	"github.com/kr/pretty"
 	"github.com/labstack/gommon/log"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/watchbook"
@@ -110,7 +112,8 @@ func FixMedia(media *library.Media) error {
 }
 
 type SyncHelper struct {
-	media map[string]struct{}
+	media            map[string]struct{}
+	mediaPathMapping map[string]string
 }
 
 // func (helper *SyncHelper) getOrCreateArtist(ctx context.Context, db *database.Database, name string) (string, error) {
@@ -209,6 +212,7 @@ func (helper *SyncHelper) syncMedia(ctx context.Context, media *library.Media, d
 	}
 
 	helper.media[dbMedia.Id] = struct{}{}
+	helper.mediaPathMapping[media.Path] = dbMedia.Id
 
 	if media.General.AiringSeason != "" {
 		err = db.CreateTag(ctx, media.General.AiringSeason, media.General.AiringSeason)
@@ -299,7 +303,7 @@ func (helper *SyncHelper) syncMedia(ctx context.Context, media *library.Media, d
 
 	coverPath := media.GetCoverPath()
 	changes.CoverFile = database.Change[sql.NullString]{
-		Value:   sql.NullString{
+		Value: sql.NullString{
 			String: coverPath,
 			Valid:  coverPath != "",
 		},
@@ -308,7 +312,7 @@ func (helper *SyncHelper) syncMedia(ctx context.Context, media *library.Media, d
 
 	logoPath := media.GetLogoPath()
 	changes.LogoFile = database.Change[sql.NullString]{
-		Value:   sql.NullString{
+		Value: sql.NullString{
 			String: logoPath,
 			Valid:  logoPath != "",
 		},
@@ -317,7 +321,7 @@ func (helper *SyncHelper) syncMedia(ctx context.Context, media *library.Media, d
 
 	bannerPath := media.GetBannerPath()
 	changes.BannerFile = database.Change[sql.NullString]{
-		Value:   sql.NullString{
+		Value: sql.NullString{
 			String: bannerPath,
 			Valid:  bannerPath != "",
 		},
@@ -352,6 +356,73 @@ func (helper *SyncHelper) syncMedia(ctx context.Context, media *library.Media, d
 		})
 		if err != nil {
 			return fmt.Errorf("failed to add media part (%d): %w", i, err)
+		}
+	}
+
+	return nil
+}
+
+func (helper *SyncHelper) syncCollection(ctx context.Context, collection *library.Collection, db *database.Database) error {
+	// err := FixMedia(media)
+	// if err != nil {
+	// 	return err
+	// }
+
+	dbCollection, err := db.GetCollectionById(ctx, nil, collection.Id)
+	if err != nil {
+		if errors.Is(err, database.ErrItemNotFound) {
+			_, err = db.CreateCollection(ctx, database.CreateCollectionParams{
+				Id:          collection.Id,
+				Type:        types.CollectionTypeAnime,
+				Name:        collection.General.Name,
+			})
+			if err != nil {
+				return fmt.Errorf("failed to create media: %w", err)
+			}
+
+			dbCollection, err = db.GetCollectionById(ctx, nil, collection.Id)
+			if err != nil {
+				return fmt.Errorf("failed to get media after creation: %w", err)
+			}
+		} else {
+			return err
+		}
+	}
+
+	// TODO(patrik): Fill out
+	changes := database.CollectionChanges{}
+
+	changes.Name = database.Change[string]{
+		Value:   collection.General.Name,
+		Changed: collection.General.Name != dbCollection.Name,
+	}
+
+	err = db.UpdateCollection(ctx, dbCollection.Id, changes)
+	if err != nil {
+		return fmt.Errorf("failed to update collection: %w", err)
+	}
+
+	err = db.RemoveAllCollectionMediaItems(ctx, dbCollection.Id)
+	if err != nil {
+		return fmt.Errorf("failed to remove all media items from collection: %w", err)
+	}
+
+	for _, entry := range collection.Entries {
+		p := path.Join(collection.Path, entry.Path)
+		mediaId, ok := helper.mediaPathMapping[p]
+		if !ok {
+			return fmt.Errorf("failed to map path to media: %v", p)
+		}
+
+		err := db.CreateCollectionMediaItem(ctx, database.CreateCollectionMediaItemParams{
+			CollectionId:   dbCollection.Id,
+			MediaId:        mediaId,
+			Name:           entry.SearchSlug,
+			OrderNumber:    int64(entry.Order),
+			SubOrderNumber: int64(entry.SubOrder),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to add media to collection: %w", err)
 		}
 	}
 
@@ -439,10 +510,13 @@ func (s *SyncHandler) RunSync(app core.App) error {
 	ctx := context.TODO()
 
 	helper := SyncHelper{
-		media: map[string]struct{}{},
+		media:            map[string]struct{}{},
+		mediaPathMapping: map[string]string{},
 	}
 
 	var syncErrors []error
+
+	pretty.Println(librarySearch.Collections)
 
 	for _, media := range librarySearch.Media {
 		log.Debug("Syncing media", "path", media.Path)
@@ -452,6 +526,16 @@ func (s *SyncHandler) RunSync(app core.App) error {
 			syncErrors = append(syncErrors, err)
 		}
 	}
+
+	for _, collection := range librarySearch.Collections {
+		log.Debug("Syncing collection", "path", collection.Path)
+
+		err := helper.syncCollection(ctx, &collection, app.DB())
+		if err != nil {
+			syncErrors = append(syncErrors, err)
+		}
+	}
+
 
 	var missingMedia []MissingMedia
 

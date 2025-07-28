@@ -16,8 +16,10 @@ type CollectionMediaItem struct {
 	CollectionId string `db:"collection_id"`
 	MediaId      string `db:"media_id"`
 
-	Name        string `db:"name"`
-	OrderNumber int64  `db:"order_number"`
+	Name           string `db:"name"`
+	SearchSlug     string `db:"search_slug"`
+	OrderNumber    int64  `db:"order_number"`
+	SubOrderNumber int64  `db:"suborder_number"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -30,7 +32,9 @@ type FullCollectionMediaItem struct {
 	MediaId      string `db:"media_id"`
 
 	CollectionName string `db:"collection_name"`
+	SearchSlug     string `db:"search_slug"`
 	OrderNumber    int64  `db:"order_number"`
+	SubOrderNumber int64  `db:"suborder_number"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -76,7 +80,9 @@ func CollectionMediaItemQuery(userId *string) *goqu.SelectDataset {
 			"collection_media_items.media_id",
 
 			"collection_media_items.name",
+			"collection_media_items.search_slug",
 			"collection_media_items.order_number",
+			"collection_media_items.suborder_number",
 
 			"collection_media_items.created",
 			"collection_media_items.updated",
@@ -97,7 +103,9 @@ func FullCollectionMediaItemQuery(userId *string) *goqu.SelectDataset {
 			"collection_media_items.media_id",
 
 			goqu.I("collection_media_items.name").As("collection_name"),
+			"collection_media_items.search_slug",
 			"collection_media_items.order_number",
+			"collection_media_items.suborder_number",
 
 			"collection_media_items.created",
 			"collection_media_items.updated",
@@ -165,8 +173,9 @@ type CreateCollectionMediaItemParams struct {
 	CollectionId string
 	MediaId      string
 
-	Name        string
-	OrderNumber int64
+	Name           string
+	OrderNumber    int64
+	SubOrderNumber int64
 
 	Created int64
 	Updated int64
@@ -183,8 +192,9 @@ func (db *Database) CreateCollectionMediaItem(ctx context.Context, params Create
 		"collection_id": params.CollectionId,
 		"media_id":      params.MediaId,
 
-		"name":         params.Name,
-		"order_number": params.OrderNumber,
+		"name":            params.Name,
+		"order_number":    params.OrderNumber,
+		"suborder_number": params.SubOrderNumber,
 
 		"created": params.Created,
 		"updated": params.Updated,
@@ -199,8 +209,9 @@ func (db *Database) CreateCollectionMediaItem(ctx context.Context, params Create
 }
 
 type CollectionMediaItemChanges struct {
-	Name        Change[string]
-	OrderNumber Change[int64]
+	Name           Change[string]
+	OrderNumber    Change[int64]
+	SubOrderNumber Change[int64]
 
 	Created Change[int64]
 }
@@ -210,6 +221,7 @@ func (db *Database) UpdateCollectionMediaItem(ctx context.Context, collectionId,
 
 	addToRecord(record, "name", changes.Name)
 	addToRecord(record, "order_number", changes.OrderNumber)
+	addToRecord(record, "suborder_number", changes.SubOrderNumber)
 
 	addToRecord(record, "created", changes.Created)
 
@@ -239,6 +251,20 @@ func (db *Database) RemoveCollectionMediaItem(ctx context.Context, collectionId,
 		Where(
 			goqu.I("collection_media_items.collection_id").Eq(collectionId),
 			goqu.I("collection_media_items.media_id").Eq(mediaId),
+		)
+
+	_, err := db.db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *Database) RemoveAllCollectionMediaItems(ctx context.Context, collectionId string) error {
+	query := dialect.Delete("collection_media_items").
+		Where(
+			goqu.I("collection_media_items.collection_id").Eq(collectionId),
 		)
 
 	_, err := db.db.Exec(ctx, query)

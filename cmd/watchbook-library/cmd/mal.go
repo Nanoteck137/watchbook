@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -15,6 +14,46 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 )
+
+type LibraryDir string
+
+func (d LibraryDir) String() string {
+	return string(d)
+}
+
+func (d LibraryDir) MalDir() string {
+	return path.Join(d.String(), "mal")
+}
+
+func (d LibraryDir) MalEntriesDir() string {
+	return path.Join(d.MalDir(), "entries")
+}
+
+func (d LibraryDir) MalCollectionEntriesDir() string {
+	return path.Join(d.MalDir(), "collection-entries")
+}
+
+func (d LibraryDir) MalDownloadDir() string {
+	return path.Join(d.MalDir(), "download")
+}
+
+func ensureMalDirs(libraryDir LibraryDir) error {
+	dirs := []string{
+		libraryDir.MalDir(),
+		libraryDir.MalEntriesDir(),
+		libraryDir.MalCollectionEntriesDir(),
+		libraryDir.MalDownloadDir(),
+	}
+
+	for _, dir := range dirs {
+		err := os.Mkdir(dir, 0755)
+		if err != nil && !os.IsExist(err) {
+			return err
+		}
+	}
+
+	return nil
+}
 
 func openLibrary(dir string) (*library.LibrarySearch, error) {
 	search, err := library.SearchLibrary(dir)
@@ -169,21 +208,17 @@ var malTestCmd = &cobra.Command{
 	Use: "test",
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.LoadedConfig
-		pretty.Println(cfg)
 
-		return
+		libraryDir := LibraryDir(cfg.LibraryDir)
 
-		dir := "./work/library"
-		outDir := path.Join(dir, "download")
-
-		err := os.Mkdir(outDir, 0755)
-		if err != nil && !errors.Is(err, os.ErrNotExist) {
-			logger.Fatal("failed to create dir", "err", err, "path", outDir)
+		err := ensureMalDirs(libraryDir)
+		if err != nil {
+			logger.Fatal("failed to create mal dirs", "err", err)
 		}
 
-		search, err := openLibrary(dir)
+		search, err := openLibrary(libraryDir.String())
 		if err != nil {
-			logger.Fatal("failed to open library", "err", err, "dir", dir)
+			logger.Fatal("failed to open library", "err", err, "dir", libraryDir.String())
 		}
 
 		entries := prepareLibraryMal(search)
@@ -256,18 +291,18 @@ var malTestCmd = &cobra.Command{
 				}
 			}
 
-			out := path.Join(outDir, anime.Id+"-"+utils.Slug(media.General.Title))
+			out := path.Join(libraryDir.MalDownloadDir(), anime.Id+"-"+utils.Slug(media.General.Title))
 			err = os.Mkdir(out, 0755)
 			if err != nil {
 				logger.Fatal("failed to create dir for anime", "err", err, "title", media.General.Title)
 			}
 
-			p, err := downloadImage(anime.CoverImageUrl, out, "cover")
-			if err != nil {
-				logger.Fatal("failed to donwload image")
-			}
-
-			media.Images.Cover = path.Base(p)
+			// p, err := downloadImage(anime.CoverImageUrl, out, "cover")
+			// if err != nil {
+			// 	logger.Fatal("failed to donwload image")
+			// }
+			//
+			// media.Images.Cover = path.Base(p)
 
 			err = saveMedia(out, media)
 			if err != nil {
@@ -279,6 +314,7 @@ var malTestCmd = &cobra.Command{
 	},
 }
 
+// TODO(patrik): Move to watchbook-cli
 // var importMalUserCmd = &cobra.Command{
 // 	Use: "import-mal-user",
 // 	Run: func(cmd *cobra.Command, args []string) {

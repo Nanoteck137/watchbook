@@ -88,6 +88,7 @@ type CollectionEntry struct {
 	Path       string `toml:"path"`
 	SearchSlug string `toml:"searchSlug"`
 	Order      int    `toml:"order"`
+	SubOrder   int    `toml:"subOrder"`
 }
 
 type Collection struct {
@@ -99,6 +100,30 @@ type Collection struct {
 	Entries []CollectionEntry `toml:"entries"`
 
 	Path string `toml:"-"`
+}
+
+func (c Collection) GetCoverPath() string {
+	if c.Images.Cover == "" {
+		return ""
+	}
+
+	return path.Join(c.Path, c.Images.Cover)
+}
+
+func (c Collection) GetLogoPath() string {
+	if c.Images.Logo == "" {
+		return ""
+	}
+
+	return path.Join(c.Path, c.Images.Logo)
+}
+
+func (c Collection) GetBannerPath() string {
+	if c.Images.Banner == "" {
+		return ""
+	}
+
+	return path.Join(c.Path, c.Images.Banner)
 }
 
 type LibrarySearch struct {
@@ -201,7 +226,8 @@ func SearchLibrary(p string) (*LibrarySearch, error) {
 	}
 
 	return &LibrarySearch{
-		Media:  media,
-		Errors: errors,
+		Media:       media,
+		Errors:      errors,
+		Collections: collections,
 	}, nil
 }

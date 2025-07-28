@@ -211,38 +211,6 @@ func (c *Client) GetMediaById(id string, options Options) (*GetMediaById, error)
 	return Request[GetMediaById](data, nil)
 }
 
-func (c *Client) CreateMedia(body CreateMediaBody, options Options) (*CreateMedia, error) {
-	path := "/api/v1/media"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[CreateMedia](data, body)
-}
-
-func (c *Client) EditMedia(id string, body EditMediaBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/%v", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "PATCH",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
-}
-
 func (c *Client) GetMediaParts(id string, options Options) (*GetMediaParts, error) {
 	path := Sprintf("/api/v1/media/%v/parts", id)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -257,102 +225,6 @@ func (c *Client) GetMediaParts(id string, options Options) (*GetMediaParts, erro
 		Headers: options.Header,
 	}
 	return Request[GetMediaParts](data, nil)
-}
-
-func (c *Client) AddPart(id string, body AddPartBody, options Options) (*AddPart, error) {
-	path := Sprintf("/api/v1/media/%v/single/parts", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[AddPart](data, body)
-}
-
-func (c *Client) AddMultipleParts(id string, body AddMultiplePartsBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/%v/multiple/parts", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
-}
-
-func (c *Client) EditPart(id string, index string, body EditPartBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "PATCH",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
-}
-
-func (c *Client) RemovePart(id string, index string, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "DELETE",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, nil)
-}
-
-func (c *Client) AddImage(id string, body AddImageBody, options Options) (*AddImage, error) {
-	path := Sprintf("/api/v1/media/%v/images", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[AddImage](data, body)
-}
-
-func (c *Client) EditImage(id string, hash string, body EditImageBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/%v/images/%v", id, hash)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "PATCH",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
 }
 
 func (c *Client) SetMediaUserData(id string, body SetMediaUserData, options Options) (*any, error) {
@@ -538,48 +410,8 @@ func (c *ClientUrls) GetMediaById(id string) (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) CreateMedia() (*URL, error) {
-	path := "/api/v1/media"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) EditMedia(id string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v", id)
-	return c.getUrl(path)
-}
-
 func (c *ClientUrls) GetMediaParts(id string) (*URL, error) {
 	path := Sprintf("/api/v1/media/%v/parts", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) AddPart(id string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/single/parts", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) AddMultipleParts(id string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/multiple/parts", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) EditPart(id string, index string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) RemovePart(id string, index string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) AddImage(id string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/images", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) EditImage(id string, hash string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/images/%v", id, hash)
 	return c.getUrl(path)
 }
 
