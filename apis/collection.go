@@ -21,6 +21,10 @@ type Collection struct {
 	Id             string               `json:"id"`
 	CollectionType types.CollectionType `json:"collectionType"`
 
+	CoverUrl  *string `json:"coverUrl"`
+	LogoUrl   *string `json:"logoUrl"`
+	BannerUrl *string `json:"bannerUrl"`
+
 	Name string `json:"name"`
 }
 
@@ -34,10 +38,33 @@ type GetCollectionById struct {
 }
 
 func ConvertDBCollection(c pyrin.Context, hasUser bool, collection database.Collection) Collection {
+	// TODO(patrik): Add default cover
+	var coverUrl *string
+	var bannerUrl *string
+	var logoUrl *string
+
+	if collection.CoverFile.Valid {
+		url := ConvertURL(c, fmt.Sprintf("/files/collection/%s/%s", collection.Id, path.Base(collection.CoverFile.String)))
+		coverUrl = &url
+	}
+
+	if collection.LogoFile.Valid {
+		url := ConvertURL(c, fmt.Sprintf("/files/collection/%s/%s", collection.Id, path.Base(collection.LogoFile.String)))
+		logoUrl = &url
+	}
+
+	if collection.BannerFile.Valid {
+		url := ConvertURL(c, fmt.Sprintf("/files/collection/%s/%s", collection.Id, path.Base(collection.BannerFile.String)))
+		bannerUrl = &url
+	}
+
 	return Collection{
 		Id:             collection.Id,
 		CollectionType: collection.Type,
 		Name:           collection.Name,
+		CoverUrl:       coverUrl,
+		LogoUrl:        logoUrl,
+		BannerUrl:      bannerUrl,
 	}
 }
 

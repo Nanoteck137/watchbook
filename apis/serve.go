@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/watchbook"
@@ -40,6 +41,41 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 				}
 
 				p := path.Dir(media.CoverFile.String)
+
+				f := os.DirFS(p)
+				return pyrin.ServeFile(c, f, image)
+			},
+		},
+
+		pyrin.NormalHandler{
+			Name:        "GetCollectionImage",
+			Method:      http.MethodGet,
+			Path:        "/collections/:id/:image",
+			HandlerFunc: func(c pyrin.Context) error {
+				id := c.Param("id")
+				image := c.Param("image")
+
+				collection, err := app.DB().GetCollectionById(c.Request().Context(), nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return pyrin.NoContentNotFound()
+					}
+				}
+
+				// TODO(patrik): Better handling
+				name := strings.TrimSuffix(image, path.Ext(image))
+
+				imageFile := ""
+				switch name {
+				case "cover":
+					imageFile = collection.CoverFile.String
+				case "logo":
+					imageFile = collection.LogoFile.String
+				case "banner":
+					imageFile = collection.BannerFile.String
+				}
+
+				p := path.Dir(imageFile)
 
 				f := os.DirFS(p)
 				return pyrin.ServeFile(c, f, image)
