@@ -96,6 +96,7 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/provider/myanimelist/anime/${id}`, "GET", api.ProviderMyAnimeListAnime, z.any(), undefined, options)
   }
   
+  
 }
 
 export class ClientUrls {
@@ -195,5 +196,9 @@ export class ClientUrls {
   
   getMediaImage(id: string, image: string) {
     return createUrl(this.baseUrl, `/files/media/${id}/${image}`)
+  }
+  
+  getCollectionImage(id: string, image: string) {
+    return createUrl(this.baseUrl, `/files/collections/${id}/${image}`)
   }
 }

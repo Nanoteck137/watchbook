@@ -340,6 +340,7 @@ func (c *Client) ProviderMyAnimeListGetAnime(id string, options Options) (*Provi
 }
 
 
+
 func (c *ClientUrls) Signup() (*URL, error) {
 	path := "/api/v1/auth/signup"
 	return c.getUrl(path)
@@ -452,5 +453,10 @@ func (c *ClientUrls) ProviderMyAnimeListGetAnime(id string) (*URL, error) {
 
 func (c *ClientUrls) GetMediaImage(id string, image string) (*URL, error) {
 	path := Sprintf("/files/media/%v/%v", id, image)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetCollectionImage(id string, image string) (*URL, error) {
+	path := Sprintf("/files/collections/%v/%v", id, image)
 	return c.getUrl(path)
 }
