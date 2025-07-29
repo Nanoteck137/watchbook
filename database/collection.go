@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
@@ -20,6 +21,10 @@ type Collection struct {
 
 	Name string `db:"name"`
 
+	CoverFile  sql.NullString `db:"cover_file"`
+	LogoFile   sql.NullString `db:"logo_file"`
+	BannerFile sql.NullString `db:"banner_file"`
+
 	AdminStatus types.AdminStatus `db:"admin_status"`
 
 	Created int64 `db:"created"`
@@ -36,6 +41,10 @@ func CollectionQuery(userId *string) *goqu.SelectDataset {
 			"collections.type",
 
 			"collections.name",
+
+			"collections.cover_file",
+			"collections.logo_file",
+			"collections.banner_file",
 
 			"collections.admin_status",
 
@@ -112,6 +121,10 @@ type CreateCollectionParams struct {
 
 	Name string
 
+	CoverFile  sql.NullString
+	LogoFile   sql.NullString
+	BannerFile sql.NullString
+
 	AdminStatus types.AdminStatus
 
 	Created int64
@@ -143,6 +156,10 @@ func (db *Database) CreateCollection(ctx context.Context, params CreateCollectio
 
 		"name": params.Name,
 
+		"cover_file":  params.CoverFile,
+		"logo_file":   params.LogoFile,
+		"banner_file": params.BannerFile,
+
 		"admin_status": params.AdminStatus,
 
 		"created": params.Created,
@@ -158,6 +175,10 @@ type CollectionChanges struct {
 
 	Name Change[string]
 
+	CoverFile  Change[sql.NullString]
+	LogoFile   Change[sql.NullString]
+	BannerFile Change[sql.NullString]
+
 	AdminStatus Change[types.AdminStatus]
 
 	Created Change[int64]
@@ -169,6 +190,10 @@ func (db *Database) UpdateCollection(ctx context.Context, id string, changes Col
 	addToRecord(record, "type", changes.Type)
 
 	addToRecord(record, "name", changes.Name)
+
+	addToRecord(record, "cover_file", changes.CoverFile)
+	addToRecord(record, "logo_file", changes.LogoFile)
+	addToRecord(record, "banner_file", changes.BannerFile)
 
 	addToRecord(record, "admin_status", changes.AdminStatus)
 

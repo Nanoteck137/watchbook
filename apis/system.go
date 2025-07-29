@@ -397,6 +397,33 @@ func (helper *SyncHelper) syncCollection(ctx context.Context, collection *librar
 		Changed: collection.General.Name != dbCollection.Name,
 	}
 
+	coverPath := collection.GetCoverPath()
+	changes.CoverFile = database.Change[sql.NullString]{
+		Value: sql.NullString{
+			String: coverPath,
+			Valid:  coverPath != "",
+		},
+		Changed: coverPath != dbCollection.CoverFile.String,
+	}
+
+	logoPath := collection.GetLogoPath()
+	changes.LogoFile = database.Change[sql.NullString]{
+		Value: sql.NullString{
+			String: logoPath,
+			Valid:  logoPath != "",
+		},
+		Changed: logoPath != dbCollection.LogoFile.String,
+	}
+
+	bannerPath := collection.GetBannerPath()
+	changes.BannerFile = database.Change[sql.NullString]{
+		Value: sql.NullString{
+			String: bannerPath,
+			Valid:  bannerPath != "",
+		},
+		Changed: bannerPath != dbCollection.BannerFile.String,
+	}
+
 	err = db.UpdateCollection(ctx, dbCollection.Id, changes)
 	if err != nil {
 		return fmt.Errorf("failed to update collection: %w", err)

@@ -541,7 +541,7 @@ var tmdbTvCmd = &cobra.Command{
 				logger.Fatal("failed to download banner image", "err", err, "name", collection.General.Name)
 			}
 
-			collection.Images.Cover = path.Base(out)
+			collection.Images.Banner = path.Base(out)
 		}
 
 		{
