@@ -310,12 +310,12 @@
 
 <Spacer size="lg" />
 
-<!-- {#if data.anime.description}
+{#if data.media.description}
   <div class="flex flex-col gap-1">
     <p
       class={`text-ellipsis whitespace-pre-line text-sm ${!showMore ? "line-clamp-2" : ""}`}
     >
-      {data.anime.description}
+      {data.media.description}
     </p>
     <Button
       class="w-fit"
@@ -328,9 +328,9 @@
       Show More
     </Button>
   </div>
-{/if} -->
+{/if}
 
-<!-- <Spacer size="lg" /> -->
+<Spacer size="lg" />
 
 <div
   class="flex items-center justify-center rounded bg-primary py-1 text-primary-foreground"
