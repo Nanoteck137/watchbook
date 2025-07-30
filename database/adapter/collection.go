@@ -16,12 +16,17 @@ func (a *CollectionResolverAdapter) DefaultSort() (string, filter.SortType) {
 }
 
 func (a *CollectionResolverAdapter) ResolveVariableName(name string) (filter.Name, bool) {
-	// switch name {
-	// case "id":
-	// 	return filter.Name{
-	// 		Kind: filter.NameKindString,
-	// 		Name: "media.id",
-	// 	}, true
+	switch name {
+	case "id":
+		return filter.Name{
+			Kind: filter.NameKindString,
+			Name: "collections.id",
+		}, true
+	case "name":
+		return filter.Name{
+			Kind: filter.NameKindString,
+			Name: "collections.name",
+		}, true
 	// case "userList":
 	// 	return filter.Name{
 	// 		Kind: filter.NameKindString,
@@ -45,7 +50,7 @@ func (a *CollectionResolverAdapter) ResolveVariableName(name string) (filter.Nam
 	// 		Kind: filter.NameKindString,
 	// 		Name: "media.status",
 	// 	}, true
-	// }
+	}
 
 	return filter.Name{}, false
 }

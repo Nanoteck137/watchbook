@@ -28,6 +28,11 @@ func (a *MediaResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 			Name: "media.mal_id",
 			Nullable: true,
 		}, true
+	case "title":
+		return filter.Name{
+			Kind: filter.NameKindString,
+			Name: "media.title",
+		}, true
 	case "userList":
 		return filter.Name{
 			Kind: filter.NameKindString,
