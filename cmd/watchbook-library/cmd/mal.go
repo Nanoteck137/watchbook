@@ -29,8 +29,8 @@ func (d LibraryDir) MalEntriesDir() string {
 	return path.Join(d.MalDir(), "entries")
 }
 
-func (d LibraryDir) MalCollectionEntriesDir() string {
-	return path.Join(d.MalDir(), "collection-entries")
+func (d LibraryDir) MalSeriesDir() string {
+	return path.Join(d.MalDir(), "series")
 }
 
 func (d LibraryDir) MalDownloadDir() string {
@@ -41,7 +41,7 @@ func ensureMalDirs(libraryDir LibraryDir) error {
 	dirs := []string{
 		libraryDir.MalDir(),
 		libraryDir.MalEntriesDir(),
-		libraryDir.MalCollectionEntriesDir(),
+		libraryDir.MalSeriesDir(),
 		libraryDir.MalDownloadDir(),
 	}
 
@@ -107,12 +107,18 @@ var malGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		malId := args[0]
 
-		libDir := "./work/library"
-		outDir := "./work/library"
+		cfg := config.LoadedConfig
 
-		search, err := openLibrary(libDir)
+		libraryDir := LibraryDir(cfg.LibraryDir)
+
+		err := ensureMalDirs(libraryDir)
 		if err != nil {
-			logger.Fatal("failed to open library", "err", err)
+			logger.Fatal("failed to create mal dirs", "err", err)
+		}
+
+		search, err := openLibrary(libraryDir.String())
+		if err != nil {
+			logger.Fatal("failed to open library", "err", err, "dir", libraryDir.String())
 		}
 
 		entries := prepareLibraryMal(search)
@@ -154,6 +160,7 @@ var malGetCmd = &cobra.Command{
 			},
 			General: library.MediaGeneral{
 				Title:        title,
+				Description:  data.Description,
 				Score:        score,
 				Status:       data.Status,
 				Rating:       data.Rating,
@@ -182,7 +189,7 @@ var malGetCmd = &cobra.Command{
 			}
 		}
 
-		out := path.Join(outDir, malId+"-"+utils.Slug(media.General.Title))
+		out := path.Join(libraryDir.MalDownloadDir(), malId+"-"+utils.Slug(media.General.Title))
 		err = os.Mkdir(out, 0755)
 		if err != nil {
 			logger.Fatal("failed to create dir for anime", "err", err, "title", media.General.Title)
@@ -262,8 +269,9 @@ var malTestCmd = &cobra.Command{
 					MyAnimeList: anime.Id,
 				},
 				General: library.MediaGeneral{
-					Title:        title,
-					Score:        anime.Score,
+					Title: title,
+					Score: anime.Score,
+					// Description: anime.Demographics,
 					Status:       myanimelist.ConvertAnimeStatus(anime.Status),
 					Rating:       myanimelist.ConvertAnimeRating(anime.Rating),
 					AiringSeason: airingSeason,
