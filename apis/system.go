@@ -258,7 +258,7 @@ func (helper *SyncHelper) syncMedia(ctx context.Context, media *library.Media, d
 	}
 
 	changes.Description = database.Change[sql.NullString]{
-		Value:   sql.NullString{
+		Value: sql.NullString{
 			String: media.General.Description,
 			Valid:  media.General.Description != "",
 		},
@@ -378,9 +378,9 @@ func (helper *SyncHelper) syncCollection(ctx context.Context, collection *librar
 	if err != nil {
 		if errors.Is(err, database.ErrItemNotFound) {
 			_, err = db.CreateCollection(ctx, database.CreateCollectionParams{
-				Id:          collection.Id,
-				Type:        types.CollectionTypeAnime,
-				Name:        collection.General.Name,
+				Id:   collection.Id,
+				Type: types.CollectionTypeAnime,
+				Name: collection.General.Name,
 			})
 			if err != nil {
 				return fmt.Errorf("failed to create media: %w", err)
@@ -450,7 +450,7 @@ func (helper *SyncHelper) syncCollection(ctx context.Context, collection *librar
 		err := db.CreateCollectionMediaItem(ctx, database.CreateCollectionMediaItemParams{
 			CollectionId:   dbCollection.Id,
 			MediaId:        mediaId,
-			Name:           entry.SearchSlug,
+			Name:           entry.Name,
 			OrderNumber:    int64(entry.Order),
 			SubOrderNumber: int64(entry.SubOrder),
 			SearchSlug:     entry.SearchSlug,
@@ -569,7 +569,6 @@ func (s *SyncHandler) RunSync(app core.App) error {
 			syncErrors = append(syncErrors, err)
 		}
 	}
-
 
 	var missingMedia []MissingMedia
 
