@@ -432,6 +432,7 @@ var oldImportCmd = &cobra.Command{
 				Images: library.Images{},
 				General: library.MediaGeneral{
 					Title:        title,
+					Description: anime.Description.String,
 					Score:        anime.Score.Float64,
 					Status:       status,
 					Rating:       rating,
