@@ -87,6 +87,7 @@ type CollectionGeneral struct {
 
 type CollectionEntry struct {
 	Path       string `toml:"path"`
+	Name       string `toml:"name"`
 	SearchSlug string `toml:"searchSlug"`
 	Order      int    `toml:"order"`
 	SubOrder   int    `toml:"subOrder"`
