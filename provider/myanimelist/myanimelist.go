@@ -266,8 +266,10 @@ func RawGetAnime(malId string) (AnimeEntry, error) {
 	return res, nil
 }
 
+// TODO(patrik): Remove
 func GetAnime(workDir types.WorkDir, malId string, useCache bool) (AnimeEntry, error) {
-	cacheDir := workDir.CacheProviderDir("myanimelist")
+	panic("REMOVE")
+	cacheDir := "" 
 
 	err := os.Mkdir(cacheDir, 0755)
 	if err != nil && !os.IsExist(err) {
