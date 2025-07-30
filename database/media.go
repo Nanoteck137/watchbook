@@ -57,9 +57,8 @@ type Media struct {
 
 	PartCount sql.NullInt64 `db:"part_count"`
 
-	Studios JsonColumn[[]string]         `db:"studios"`
-	Tags    JsonColumn[[]string]         `db:"tags"`
-	Images  JsonColumn[[]MediaImageJson] `db:"images"`
+	Studios JsonColumn[[]string] `db:"studios"`
+	Tags    JsonColumn[[]string] `db:"tags"`
 
 	UserData JsonColumn[MediaUserData] `db:"user_data"`
 }
@@ -109,29 +108,6 @@ func MediaStudioQuery() *goqu.SelectDataset {
 				tbl.Col("tag_slug"),
 			).As("data"),
 		).
-		GroupBy(tbl.Col("media_id"))
-}
-
-func MediaImageJsonQuery() *goqu.SelectDataset {
-	tbl := goqu.T("media_images")
-
-	return dialect.From(tbl).
-		Select(
-			tbl.Col("media_id").As("id"),
-			goqu.Func(
-				"json_group_array",
-				goqu.Func(
-					"json_object",
-
-					"filename",
-					tbl.Col("filename"),
-
-					"type",
-					tbl.Col("type"),
-				),
-			).As("data"),
-		).
-		Where(tbl.Col("is_primary").Gt(0)).
 		GroupBy(tbl.Col("media_id"))
 }
 
@@ -193,7 +169,6 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 	partCountQuery := MediaPartCountQuery()
 	studiosQuery := MediaStudioQuery()
 	tagsQuery := MediaTagQuery()
-	imagesQuery := MediaImageJsonQuery()
 
 	userDataQuery := MediaUserDataQuery(userId)
 
@@ -231,7 +206,6 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 
 			goqu.I("studios.data").As("studios"),
 			goqu.I("tags.data").As("tags"),
-			goqu.I("images.data").As("images"),
 
 			goqu.I("user_data.data").As("user_data"),
 		).
@@ -246,10 +220,6 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 		LeftJoin(
 			tagsQuery.As("tags"),
 			goqu.On(goqu.I("media.id").Eq(goqu.I("tags.id"))),
-		).
-		LeftJoin(
-			imagesQuery.As("images"),
-			goqu.On(goqu.I("media.id").Eq(goqu.I("images.id"))),
 		).
 		LeftJoin(
 			userDataQuery.As("user_data"),
