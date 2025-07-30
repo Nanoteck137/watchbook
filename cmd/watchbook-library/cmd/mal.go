@@ -269,9 +269,9 @@ var malTestCmd = &cobra.Command{
 					MyAnimeList: anime.Id,
 				},
 				General: library.MediaGeneral{
-					Title: title,
-					Score: anime.Score,
-					// Description: anime.Demographics,
+					Title:        title,
+					Score:        anime.Score,
+					Description:  anime.Description,
 					Status:       myanimelist.ConvertAnimeStatus(anime.Status),
 					Rating:       myanimelist.ConvertAnimeRating(anime.Rating),
 					AiringSeason: airingSeason,

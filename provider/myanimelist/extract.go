@@ -81,6 +81,8 @@ type SeasonalAnime struct {
 	Title        string `json:"title"`
 	TitleEnglish string `json:"titleEnglish"`
 
+	Description string `json:"description"`
+
 	CoverImageUrl string `json:"coverImageUrl"`
 
 	Type         string `json:"type"`
@@ -600,6 +602,9 @@ func ExtractSeasonalAnimes(pagePath string) (Seasonal, error) {
 
 		leftside := s.Find("div .synopsis")
 
+		preline := leftside.Find(".preline")
+		description := strings.TrimSpace(preline.Text())
+
 		var studios []string
 		leftside.Find(".caption:contains(\"Studio\")").Parent().Find("a").Each(func(i int, s *goquery.Selection) {
 			raw := s.Text()
@@ -670,6 +675,7 @@ func ExtractSeasonalAnimes(pagePath string) (Seasonal, error) {
 			Id:            id,
 			Title:         title,
 			TitleEnglish:  englishTitle,
+			Description:   description,
 			CoverImageUrl: coverImageUrl,
 			Type:          animeType,
 			Status:        status,
