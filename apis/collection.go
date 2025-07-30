@@ -9,8 +9,6 @@ import (
 	"sort"
 
 	"github.com/nanoteck137/pyrin"
-	"github.com/nanoteck137/pyrin/anvil"
-	"github.com/nanoteck137/validate"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
 	"github.com/nanoteck137/watchbook/types"
@@ -165,49 +163,6 @@ type GetCollectionItems struct {
 	Items [][]CollectionItem `json:"items"`
 }
 
-type CreateCollection struct {
-	Id string `json:"id"`
-}
-
-type CreateCollectionBody struct {
-	CollectionType string `json:"collectionType"`
-
-	Name string `json:"name"`
-}
-
-func (b *CreateCollectionBody) Transform() {
-	b.Name = anvil.String(b.Name)
-}
-
-func (b CreateCollectionBody) Validate() error {
-	return validate.ValidateStruct(&b,
-		validate.Field(&b.CollectionType, validate.Required, validate.By(types.ValidateCollectionType)),
-		validate.Field(&b.Name, validate.Required),
-	)
-}
-
-type EditCollectionBody struct {
-	CollectionType *string `json:"collectionType,omitempty"`
-
-	Name *string `json:"name,omitempty"`
-
-	AdminStatus *string `json:"adminStatus,omitempty"`
-}
-
-func (b *EditCollectionBody) Transform() {
-	b.Name = anvil.StringPtr(b.Name)
-}
-
-func (b EditCollectionBody) Validate() error {
-	return validate.ValidateStruct(&b,
-		validate.Field(&b.CollectionType, validate.Required.When(b.CollectionType != nil), validate.By(types.ValidateCollectionType)),
-
-		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
-
-		validate.Field(&b.AdminStatus, validate.Required.When(b.AdminStatus != nil), validate.By(types.ValidateAdminStatus)),
-	)
-}
-
 func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -328,100 +283,6 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return res, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "CreateCollection",
-			Method:       http.MethodPost,
-			Path:         "/collections",
-			ResponseType: CreateCollection{},
-			BodyType:     CreateCollectionBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				// TODO(patrik): Add admin check
-
-				body, err := pyrin.Body[CreateCollectionBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				ctx := context.Background()
-
-				ty := types.CollectionType(body.CollectionType)
-
-				id, err := app.DB().CreateCollection(ctx, database.CreateCollectionParams{
-					Type:        ty,
-					Name:        body.Name,
-				})
-				if err != nil {
-					return nil, err
-				}
-
-				return CreateCollection{
-					Id: id,
-				}, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "EditCollection",
-			Method:       http.MethodPatch,
-			Path:         "/collections/:id",
-			ResponseType: nil,
-			BodyType:     EditCollectionBody{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				id := c.Param("id")
-
-				// TODO(patrik): Add admin check
-
-				body, err := pyrin.Body[EditCollectionBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				ctx := context.Background()
-
-				dbCollection, err := app.DB().GetCollectionById(ctx, nil, id)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, CollectionNotFound()
-					}
-
-					return nil, err
-				}
-
-				changes := database.CollectionChanges{}
-
-				if body.CollectionType != nil {
-					t := types.CollectionType(*body.CollectionType)
-
-					changes.Type = database.Change[types.CollectionType]{
-						Value:   t,
-						Changed: t != dbCollection.Type,
-					}
-				}
-
-				if body.Name != nil {
-					changes.Name = database.Change[string]{
-						Value:   *body.Name,
-						Changed: *body.Name != dbCollection.Name,
-					}
-				}
-
-				// if body.AdminStatus != nil {
-				// 	s := types.AdminStatus(*body.AdminStatus)
-				// 	changes.AdminStatus = database.Change[types.AdminStatus]{
-				// 		Value:   s,
-				// 		Changed: s != dbCollection.AdminStatus,
-				// 	}
-				// }
-
-				err = app.DB().UpdateCollection(ctx, dbCollection.Id, changes)
-				if err != nil {
-					return nil, err
-				}
-
-				return nil, nil
 			},
 		},
 	)
