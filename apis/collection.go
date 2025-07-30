@@ -44,17 +44,17 @@ func ConvertDBCollection(c pyrin.Context, hasUser bool, collection database.Coll
 	var logoUrl *string
 
 	if collection.CoverFile.Valid {
-		url := ConvertURL(c, fmt.Sprintf("/files/collection/%s/%s", collection.Id, path.Base(collection.CoverFile.String)))
+		url := ConvertURL(c, fmt.Sprintf("/files/collections/%s/%s", collection.Id, path.Base(collection.CoverFile.String)))
 		coverUrl = &url
 	}
 
 	if collection.LogoFile.Valid {
-		url := ConvertURL(c, fmt.Sprintf("/files/collection/%s/%s", collection.Id, path.Base(collection.LogoFile.String)))
+		url := ConvertURL(c, fmt.Sprintf("/files/collections/%s/%s", collection.Id, path.Base(collection.LogoFile.String)))
 		logoUrl = &url
 	}
 
 	if collection.BannerFile.Valid {
-		url := ConvertURL(c, fmt.Sprintf("/files/collection/%s/%s", collection.Id, path.Base(collection.BannerFile.String)))
+		url := ConvertURL(c, fmt.Sprintf("/files/collections/%s/%s", collection.Id, path.Base(collection.BannerFile.String)))
 		bannerUrl = &url
 	}
 
