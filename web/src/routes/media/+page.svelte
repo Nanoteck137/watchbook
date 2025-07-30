@@ -6,8 +6,6 @@
   import { pickTitle } from "$lib/utils.js";
   import { Pagination } from "@nanoteck137/nano-ui";
   import { Star } from "lucide-svelte";
-  import ImportMalListDialog from "./ImportMalListDialog.svelte";
-  import ImportAnime from "./ImportAnime.svelte";
   import { page } from "$app/stores";
 
   const { data } = $props();
@@ -18,9 +16,6 @@
   //  - Medium image size: 160x220 (h-56 w-40)
   //  - Small image size: 50x70 (h-20 w-14)
 </script>
-
-<ImportMalListDialog />
-<ImportAnime />
 
 <Spacer size="sm" />
 
