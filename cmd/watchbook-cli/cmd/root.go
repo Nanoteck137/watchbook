@@ -5,7 +5,7 @@ import (
 
 	"github.com/nanoteck137/pyrin/trail"
 	"github.com/nanoteck137/watchbook"
-	"github.com/nanoteck137/watchbook/cmd/watchbook-cli/config"
+	"github.com/nanoteck137/watchbook/config"
 	"github.com/spf13/cobra"
 )
 
