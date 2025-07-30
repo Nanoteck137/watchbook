@@ -23,25 +23,8 @@ CREATE TABLE media (
     logo_file TEXT,
     banner_file TEXT,
 
-    admin_status TEXT NOT NULL,
-
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL
-);
-
-CREATE TABLE media_images (
-    media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE,
-    hash TEXT NOT NULL, 
-
-    type TEXT NOT NULL,
-    mime_type TEXT NOT NULL,
-    filename TEXT NOT NULL,
-    is_primary BOOL NOT NULL,
-
-    created INTEGER NOT NULL,
-    updated INTEGER NOT NULL,
-
-    PRIMARY KEY(media_id, hash)
 );
 
 CREATE TABLE media_tags (
@@ -90,5 +73,4 @@ DROP TABLE media_parts;
 DROP TABLE media_user_data;
 DROP TABLE media_studios;
 DROP TABLE media_tags;
-DROP TABLE media_images;
 DROP TABLE media;

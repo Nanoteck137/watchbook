@@ -9,8 +9,6 @@ CREATE TABLE collections (
     logo_file TEXT,
     banner_file TEXT,
 
-    admin_status TEXT NOT NULL,
-
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL
 );

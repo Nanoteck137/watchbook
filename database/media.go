@@ -52,8 +52,6 @@ type Media struct {
 	LogoFile   sql.NullString `db:"logo_file"`
 	BannerFile sql.NullString `db:"banner_file"`
 
-	AdminStatus types.AdminStatus `db:"admin_status"`
-
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
 
@@ -226,8 +224,6 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 			"media.logo_file",
 			"media.banner_file",
 
-			"media.admin_status",
-
 			"media.created",
 			"media.updated",
 
@@ -367,8 +363,6 @@ type CreateMediaParams struct {
 	LogoFile   sql.NullString
 	BannerFile sql.NullString
 
-	AdminStatus types.AdminStatus
-
 	Created int64
 	Updated int64
 }
@@ -400,10 +394,6 @@ func (db *Database) CreateMedia(ctx context.Context, params CreateMediaParams) (
 		params.Rating = types.MediaRatingUnknown
 	}
 
-	if params.AdminStatus == "" {
-		params.AdminStatus = types.AdminStatusNotFixed
-	}
-
 	query := dialect.Insert("media").Rows(goqu.Record{
 		"id":   id,
 		"type": params.Type,
@@ -428,8 +418,6 @@ func (db *Database) CreateMedia(ctx context.Context, params CreateMediaParams) (
 		"cover_file":  params.CoverFile,
 		"logo_file":   params.LogoFile,
 		"banner_file": params.BannerFile,
-
-		"admin_status": params.AdminStatus,
 
 		"created": created,
 		"updated": updated,
@@ -463,8 +451,6 @@ type MediaChanges struct {
 	LogoFile   Change[sql.NullString]
 	BannerFile Change[sql.NullString]
 
-	AdminStatus Change[types.AdminStatus]
-
 	Created Change[int64]
 }
 
@@ -493,8 +479,6 @@ func (db *Database) UpdateMedia(ctx context.Context, id string, changes MediaCha
 	addToRecord(record, "cover_file", changes.CoverFile)
 	addToRecord(record, "logo_file", changes.LogoFile)
 	addToRecord(record, "banner_file", changes.BannerFile)
-
-	addToRecord(record, "admin_status", changes.AdminStatus)
 
 	addToRecord(record, "created", changes.Created)
 

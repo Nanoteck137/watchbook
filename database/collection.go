@@ -25,8 +25,6 @@ type Collection struct {
 	LogoFile   sql.NullString `db:"logo_file"`
 	BannerFile sql.NullString `db:"banner_file"`
 
-	AdminStatus types.AdminStatus `db:"admin_status"`
-
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
 }
@@ -45,8 +43,6 @@ func CollectionQuery(userId *string) *goqu.SelectDataset {
 			"collections.cover_file",
 			"collections.logo_file",
 			"collections.banner_file",
-
-			"collections.admin_status",
 
 			"collections.created",
 			"collections.updated",
@@ -125,8 +121,6 @@ type CreateCollectionParams struct {
 	LogoFile   sql.NullString
 	BannerFile sql.NullString
 
-	AdminStatus types.AdminStatus
-
 	Created int64
 	Updated int64
 }
@@ -146,10 +140,6 @@ func (db *Database) CreateCollection(ctx context.Context, params CreateCollectio
 		params.Type = types.CollectionTypeUnknown
 	}
 
-	if params.AdminStatus == "" {
-		params.AdminStatus = types.AdminStatusNotFixed
-	}
-
 	query := dialect.Insert("collections").Rows(goqu.Record{
 		"id":   params.Id,
 		"type": params.Type,
@@ -159,8 +149,6 @@ func (db *Database) CreateCollection(ctx context.Context, params CreateCollectio
 		"cover_file":  params.CoverFile,
 		"logo_file":   params.LogoFile,
 		"banner_file": params.BannerFile,
-
-		"admin_status": params.AdminStatus,
 
 		"created": params.Created,
 		"updated": params.Updated,
@@ -179,8 +167,6 @@ type CollectionChanges struct {
 	LogoFile   Change[sql.NullString]
 	BannerFile Change[sql.NullString]
 
-	AdminStatus Change[types.AdminStatus]
-
 	Created Change[int64]
 }
 
@@ -194,8 +180,6 @@ func (db *Database) UpdateCollection(ctx context.Context, id string, changes Col
 	addToRecord(record, "cover_file", changes.CoverFile)
 	addToRecord(record, "logo_file", changes.LogoFile)
 	addToRecord(record, "banner_file", changes.BannerFile)
-
-	addToRecord(record, "admin_status", changes.AdminStatus)
 
 	addToRecord(record, "created", changes.Created)
 

@@ -352,7 +352,6 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 				id, err := app.DB().CreateCollection(ctx, database.CreateCollectionParams{
 					Type:        ty,
 					Name:        body.Name,
-					AdminStatus: "",
 				})
 				if err != nil {
 					return nil, err
@@ -409,13 +408,13 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				if body.AdminStatus != nil {
-					s := types.AdminStatus(*body.AdminStatus)
-					changes.AdminStatus = database.Change[types.AdminStatus]{
-						Value:   s,
-						Changed: s != dbCollection.AdminStatus,
-					}
-				}
+				// if body.AdminStatus != nil {
+				// 	s := types.AdminStatus(*body.AdminStatus)
+				// 	changes.AdminStatus = database.Change[types.AdminStatus]{
+				// 		Value:   s,
+				// 		Changed: s != dbCollection.AdminStatus,
+				// 	}
+				// }
 
 				err = app.DB().UpdateCollection(ctx, dbCollection.Id, changes)
 				if err != nil {
