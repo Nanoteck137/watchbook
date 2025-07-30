@@ -18,7 +18,8 @@ type Images struct {
 }
 
 type MediaGeneral struct {
-	Title string `toml:"title"`
+	Title       string `toml:"title"`
+	Description string `toml:"description"`
 
 	Score        float64           `toml:"score"`
 	Status       types.MediaStatus `toml:"status"`

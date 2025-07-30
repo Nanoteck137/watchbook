@@ -257,7 +257,13 @@ func (helper *SyncHelper) syncMedia(ctx context.Context, media *library.Media, d
 		Changed: media.General.Title != dbMedia.Title,
 	}
 
-	// changes.Description
+	changes.Description = database.Change[sql.NullString]{
+		Value:   sql.NullString{
+			String: media.General.Description,
+			Valid:  media.General.Description != "",
+		},
+		Changed: media.General.Description != dbMedia.Description.String,
+	}
 
 	changes.Score = database.Change[sql.NullFloat64]{
 		Value: sql.NullFloat64{
