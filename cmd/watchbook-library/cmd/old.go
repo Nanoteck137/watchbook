@@ -462,7 +462,7 @@ var oldImportCmd = &cobra.Command{
 			p := path.Join(workDir, "animes", "images", anime.Id, cover)
 			ext := path.Ext(p)
 
-			out := path.Join(libraryDir.MalEntriesDir(), anime.MalId.String+"-"+utils.Slug(media.General.Title))
+			out := path.Join(libraryDir.MalAnimesDir(), anime.MalId.String+"-"+utils.Slug(media.General.Title))
 			err = os.Mkdir(out, 0755)
 			if err != nil {
 				logger.Fatal("failed to create dir for anime", "err", err, "title", media.General.Title)

@@ -25,8 +25,12 @@ func (d LibraryDir) MalDir() string {
 	return path.Join(d.String(), "mal")
 }
 
-func (d LibraryDir) MalEntriesDir() string {
-	return path.Join(d.MalDir(), "entries")
+func (d LibraryDir) MalAnimesDir() string {
+	return path.Join(d.MalDir(), "animes")
+}
+
+func (d LibraryDir) MalMangasDir() string {
+	return path.Join(d.MalDir(), "mangas")
 }
 
 func (d LibraryDir) MalSeriesDir() string {
@@ -40,9 +44,10 @@ func (d LibraryDir) MalDownloadDir() string {
 func ensureMalDirs(libraryDir LibraryDir) error {
 	dirs := []string{
 		libraryDir.MalDir(),
-		libraryDir.MalEntriesDir(),
-		libraryDir.MalSeriesDir(),
-		libraryDir.MalDownloadDir(),
+		libraryDir.MalAnimesDir(), 
+		libraryDir.MalMangasDir(), 
+		libraryDir.MalSeriesDir(), 
+		libraryDir.MalDownloadDir(), 
 	}
 
 	for _, dir := range dirs {
