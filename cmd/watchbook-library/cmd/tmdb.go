@@ -413,10 +413,13 @@ var tmdbTvCmd = &cobra.Command{
 
 		for _, season := range decodedRes.Seasons {
 			name := ""
+			entryName := ""
 			if season.SeasonNumber == 0 {
 				name = "Specials"
+				entryName = "Specials"
 			} else {
 				name = fmt.Sprintf("%s (Season %d)", decodedRes.Name, season.SeasonNumber)
+				entryName = fmt.Sprintf("Season %d", season.SeasonNumber)
 			}
 
 			out := path.Join(out, utils.Slug(name))
@@ -516,6 +519,8 @@ var tmdbTvCmd = &cobra.Command{
 				Path:       path.Base(out),
 				SearchSlug: fmt.Sprintf("season-%d", season.SeasonNumber),
 				Order:      season.SeasonNumber,
+				Name:       entryName,
+				SubOrder:   0,
 			})
 		}
 
