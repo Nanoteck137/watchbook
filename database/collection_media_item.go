@@ -60,8 +60,6 @@ type FullCollectionMediaItem struct {
 	MediaLogoFile   sql.NullString `db:"media_logo_file"`
 	MediaBannerFile sql.NullString `db:"media_banner_file"`
 
-	MediaAdminStatus types.AdminStatus `db:"media_admin_status"`
-
 	MediaCreated int64 `db:"media_created"`
 	MediaUpdated int64 `db:"media_updated"`
 
@@ -134,8 +132,6 @@ func FullCollectionMediaItemQuery(userId *string) *goqu.SelectDataset {
 			goqu.I("media.cover_file").As("media_cover_file"),
 			goqu.I("media.logo_file").As("media_logo_file"),
 			goqu.I("media.banner_file").As("media_banner_file"),
-
-			goqu.I("media.admin_status").As("media_admin_status"),
 
 			goqu.I("media.created").As("media_created"),
 			goqu.I("media.updated").As("media_updated"),
