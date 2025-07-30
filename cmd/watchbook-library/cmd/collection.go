@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/huh"
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/watchbook/library"
 	"github.com/nanoteck137/watchbook/utils"
 	"github.com/pelletier/go-toml/v2"
