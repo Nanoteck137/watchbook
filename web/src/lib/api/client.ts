@@ -31,25 +31,17 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/system/info", "GET", api.GetSystemInfo, z.any(), undefined, options)
   }
   
-  startDownload(body: api.StartDownloadBody, options?: ExtraOptions) {
-    return this.request("/api/v1/system/download", "POST", z.undefined(), z.any(), body, options)
+  syncLibrary(options?: ExtraOptions) {
+    return this.request("/api/v1/system/library", "POST", z.undefined(), z.any(), undefined, options)
   }
   
-  cancelDownload(options?: ExtraOptions) {
-    return this.request("/api/v1/system/download", "DELETE", z.undefined(), z.any(), undefined, options)
+  cleanupLibrary(options?: ExtraOptions) {
+    return this.request("/api/v1/system/library/cleanup", "POST", z.undefined(), z.any(), undefined, options)
   }
   
   
   updateUserSettings(body: api.UpdateUserSettingsBody, options?: ExtraOptions) {
     return this.request("/api/v1/user/settings", "PATCH", z.undefined(), z.any(), body, options)
-  }
-  
-  importMalList(body: api.ImportMalListBody, options?: ExtraOptions) {
-    return this.request("/api/v1/user/import/mal", "POST", z.undefined(), z.any(), body, options)
-  }
-  
-  importMalAnime(body: api.ImportMalAnimeBody, options?: ExtraOptions) {
-    return this.request("/api/v1/user/import/mal/anime", "POST", api.ImportMalAnime, z.any(), body, options)
   }
   
   createApiToken(body: api.CreateApiTokenBody, options?: ExtraOptions) {
@@ -64,21 +56,46 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/user/apitoken/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
-  getAnimes(options?: ExtraOptions) {
-    return this.request("/api/v1/animes", "GET", api.GetAnimes, z.any(), undefined, options)
+  getMedia(options?: ExtraOptions) {
+    return this.request("/api/v1/media", "GET", api.GetMedia, z.any(), undefined, options)
   }
   
-  getAnimeById(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/animes/${id}`, "GET", api.GetAnimeById, z.any(), undefined, options)
+  getMediaById(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/${id}`, "GET", api.GetMediaById, z.any(), undefined, options)
   }
   
-  setAnimeUserData(id: string, body: api.SetAnimeUserData, options?: ExtraOptions) {
-    return this.request(`/api/v1/animes/${id}/user`, "POST", z.undefined(), z.any(), body, options)
+  getMediaParts(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/${id}/parts`, "GET", api.GetMediaParts, z.any(), undefined, options)
   }
   
-  getUserAnimeList(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/animes/user/list/${id}`, "GET", api.GetAnimes, z.any(), undefined, options)
+  setMediaUserData(id: string, body: api.SetMediaUserData, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/${id}/user`, "POST", z.undefined(), z.any(), body, options)
   }
+  
+  getCollections(options?: ExtraOptions) {
+    return this.request("/api/v1/collections", "GET", api.GetCollections, z.any(), undefined, options)
+  }
+  
+  getCollectionById(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/collections/${id}`, "GET", api.GetCollectionById, z.any(), undefined, options)
+  }
+  
+  getCollectionItems(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/collections/${id}/items`, "GET", api.GetCollectionItems, z.any(), undefined, options)
+  }
+  
+  createCollection(body: api.CreateCollectionBody, options?: ExtraOptions) {
+    return this.request("/api/v1/collections", "POST", api.CreateCollection, z.any(), body, options)
+  }
+  
+  editCollection(id: string, body: api.EditCollectionBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/collections/${id}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  providerMyAnimeListGetAnime(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/provider/myanimelist/anime/${id}`, "GET", api.ProviderMyAnimeListAnime, z.any(), undefined, options)
+  }
+  
   
 }
 
@@ -109,28 +126,20 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/system/info")
   }
   
-  startDownload() {
-    return createUrl(this.baseUrl, "/api/v1/system/download")
+  syncLibrary() {
+    return createUrl(this.baseUrl, "/api/v1/system/library")
   }
   
-  cancelDownload() {
-    return createUrl(this.baseUrl, "/api/v1/system/download")
+  cleanupLibrary() {
+    return createUrl(this.baseUrl, "/api/v1/system/library/cleanup")
   }
   
   sseHandler() {
-    return createUrl(this.baseUrl, "/api/v1/system/sse")
+    return createUrl(this.baseUrl, "/api/v1/system/library/sse")
   }
   
   updateUserSettings() {
     return createUrl(this.baseUrl, "/api/v1/user/settings")
-  }
-  
-  importMalList() {
-    return createUrl(this.baseUrl, "/api/v1/user/import/mal")
-  }
-  
-  importMalAnime() {
-    return createUrl(this.baseUrl, "/api/v1/user/import/mal/anime")
   }
   
   createApiToken() {
@@ -145,23 +154,51 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/user/apitoken/${id}`)
   }
   
-  getAnimes() {
-    return createUrl(this.baseUrl, "/api/v1/animes")
+  getMedia() {
+    return createUrl(this.baseUrl, "/api/v1/media")
   }
   
-  getAnimeById(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/animes/${id}`)
+  getMediaById(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}`)
   }
   
-  setAnimeUserData(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/animes/${id}/user`)
+  getMediaParts(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}/parts`)
   }
   
-  getUserAnimeList(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/animes/user/list/${id}`)
+  setMediaUserData(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}/user`)
   }
   
-  getAnimeImage(id: string, image: string) {
-    return createUrl(this.baseUrl, `/files/animes/${id}/${image}`)
+  getCollections() {
+    return createUrl(this.baseUrl, "/api/v1/collections")
+  }
+  
+  getCollectionById(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/collections/${id}`)
+  }
+  
+  getCollectionItems(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/collections/${id}/items`)
+  }
+  
+  createCollection() {
+    return createUrl(this.baseUrl, "/api/v1/collections")
+  }
+  
+  editCollection(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/collections/${id}`)
+  }
+  
+  providerMyAnimeListGetAnime(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/provider/myanimelist/anime/${id}`)
+  }
+  
+  getMediaImage(id: string, image: string) {
+    return createUrl(this.baseUrl, `/files/media/${id}/${image}`)
+  }
+  
+  getCollectionImage(id: string, image: string) {
+    return createUrl(this.baseUrl, `/files/collections/${id}/${image}`)
   }
 }

@@ -40,6 +40,8 @@ func (scraper *Downloader) DownloadToFile(url, dest string) error {
 		req.Header.Set("User-Agent", scraper.userAgent)
 	}
 
+	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
+
 	resp, err := scraper.client.Do(req)
 	if err != nil {
 		return err

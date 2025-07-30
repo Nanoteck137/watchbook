@@ -2,26 +2,38 @@
   import { PUBLIC_COMMIT, PUBLIC_VERSION } from "$env/static/public";
   import { getApiClient, handleApiError } from "$lib";
   import { Button } from "@nanoteck137/nano-ui";
-  import { onMount } from "svelte";
-  import toast from "svelte-5-french-toast";
+  import { onDestroy, onMount } from "svelte";
   import { z } from "zod";
 
   const { data } = $props();
   const apiClient = getApiClient();
 
-  let isDownloading = $state(false);
-  let lastError = $state("");
-  let currentDownload = $state(0);
-  let totalDownloads = $state(0);
+  let test = $state<string[]>([]);
+  let syncing = $state(false);
+
+  const SyncError = z.object({
+    type: z.string(),
+    message: z.string(),
+    fullMessage: z.string().optional(),
+  });
+
+  const MissingMedia = z.object({
+    id: z.string(),
+    title: z.string(),
+  });
 
   const Event = z.discriminatedUnion("type", [
     z.object({
-      type: z.literal("status"),
+      type: z.literal("syncing"),
       data: z.object({
-        isDownloading: z.boolean(),
-        currentDownload: z.number(),
-        totalDownloads: z.number(),
-        lastError: z.string(),
+        syncing: z.boolean(),
+      }),
+    }),
+    z.object({
+      type: z.literal("report"),
+      data: z.object({
+        syncErrors: z.array(SyncError).nullable(),
+        missingMedia: z.array(MissingMedia).nullable(),
       }),
     }),
   ]);
@@ -29,7 +41,7 @@
   onMount(() => {
     console.log("Mount");
     const eventSource = new EventSource(
-      data.apiAddress + "/api/v1/system/sse",
+      data.apiAddress + "/api/v1/system/library/sse",
     );
 
     eventSource.onmessage = (e) => {
@@ -37,11 +49,17 @@
       console.log(event);
 
       switch (event.type) {
-        case "status":
-          isDownloading = event.data.isDownloading;
-          currentDownload = event.data.currentDownload;
-          totalDownloads = event.data.totalDownloads;
-          lastError = event.data.lastError;
+        case "syncing":
+          syncing = event.data.syncing;
+          break;
+        case "report":
+          console.log("Report", event.data);
+          // const mapped =
+          //   event.data.reports?.map((t) => {
+          //     if (t.fullMessage) return t.fullMessage;
+          //     return t.message;
+          //   }) ?? [];
+          // test = mapped;
           break;
       }
     };
@@ -58,73 +76,33 @@
 <p>Version: {PUBLIC_VERSION}</p>
 <p>Commit: {PUBLIC_COMMIT}</p>
 
+<p>Library Syncing: {syncing}</p>
+
 <Button
   onclick={async () => {
-    // const filter = "lastDataFetch == null";
-    const filter = 'status != "finished" || lastDataFetch == null';
-
-    const getAnime = async function (page: number) {
-      const animes = await apiClient.getAnimes({
-        query: { filter, page: page.toString() },
-      });
-      if (!animes.success) {
-        handleApiError(animes.error);
-        throw "Failed";
-      }
-
-      return animes.data;
-    };
-
-    const firstPage = await getAnime(0);
-    let ids = firstPage.animes.map((a) => a.id);
-
-    for (let i = 1; i < firstPage.page.totalPages; i++) {
-      const anime = await getAnime(i);
-      anime.animes.forEach((a) => {
-        ids.push(a.id);
-      });
-    }
-
-    const res = await apiClient.startDownload({ ids });
+    const res = await apiClient.syncLibrary();
     if (!res.success) {
-      return handleApiError(res.error);
+      handleApiError(res.error);
+      return;
     }
-
-    toast.success("Starting download");
   }}
 >
-  Download Not Fetched Animes
+  Sync Library
 </Button>
 
 <Button
   onclick={async () => {
-    // const res = await apiClient.startDownload();
-    // if (!res.success) {
-    //   return handleApiError(res.error);
-    // }
-    // toast.success("Starting download");
-  }}>Start Download</Button
+    const res = await apiClient.cleanupLibrary();
+    if (!res.success) {
+      handleApiError(res.error);
+      return;
+    }
+  }}
 >
+  Cleanup Library
+</Button>
 
-<p>Is Downloading: {isDownloading}</p>
-{#if lastError.length > 0}
-  <p>Last Error: {lastError}</p>
-{/if}
-{#if isDownloading}
-  <p>
-    Progress: {currentDownload} / {totalDownloads} ({Math.floor(
-      (currentDownload / totalDownloads) * 100,
-    )}%)
-  </p>
-  <Button
-    onclick={async () => {
-      const res = await apiClient.cancelDownload();
-      if (!res.success) {
-        return handleApiError(res.error);
-      }
-      toast.success("Canceled download");
-    }}
-  >
-    Cancel Download
-  </Button>
-{/if}
+{#each test as message}
+  <p class="whitespace-pre font-mono">{message}</p>
+  <br />
+{/each}

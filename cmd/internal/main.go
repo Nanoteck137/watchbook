@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/nanoteck137/pyrin/spark"
+	"github.com/nanoteck137/pyrin/spark/golang"
 	"github.com/nanoteck137/pyrin/spark/typescript"
 	"github.com/nanoteck137/pyrin/trail"
 	"github.com/nanoteck137/watchbook/apis"
@@ -22,7 +23,10 @@ var genCmd = &cobra.Command{
 		router := spark.Router{}
 		apis.RegisterHandlers(nil, &router)
 
-		serverDef, err := spark.CreateServerDef(&router)
+		nameFilter := spark.NameFilter{}
+		nameFilter.LoadDefault()
+
+		serverDef, err := spark.CreateServerDef(&router, nameFilter)
 		if err != nil {
 			logger.Fatal("failed to create server def", "err", err)
 		}
@@ -45,6 +49,15 @@ var genCmd = &cobra.Command{
 			err = gen.Generate(&serverDef, resolver, "web/src/lib/api")
 			if err != nil {
 				logger.Fatal("failed to generate typescript client", "err", err)
+			}
+		}
+
+		{
+			gen := golang.GolangGenerator{}
+
+			err = gen.Generate(&serverDef, resolver, "cmd/watchbook-cli/api")
+			if err != nil {
+				logger.Fatal("failed to generate golang client", "err", err)
 			}
 		}
 	},

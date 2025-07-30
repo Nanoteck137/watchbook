@@ -27,14 +27,14 @@
           pname = "watchbook";
           version = fullVersion;
           src = ./.;
-          subPackages = ["cmd/watchbook"];
+          subPackages = ["cmd/watchbook" "cmd/watchbook-cli" "cmd/watchbook-library"];
 
           ldflags = [
             "-X github.com/nanoteck137/watchbook.Version=${version}"
             "-X github.com/nanoteck137/watchbook.Commit=${self.dirtyRev or self.rev or "no-commit"}"
           ];
 
-          vendorHash = "sha256-y2tPUeptnPnUKE+kMYLW5c9r6Kbc6rBijKZIH76BQQY=";
+          vendorHash = "sha256-tvqi8Qa3EK7JZ206FXIw78E34ETAeOLPkUiGfJrYl6g=";
         };
 
         frontend = pkgs.buildNpmPackage {

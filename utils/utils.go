@@ -3,9 +3,15 @@ package utils
 import (
 	"cmp"
 	"database/sql"
+	"fmt"
+	"io"
 	"log"
 	"math"
+	"net/url"
+	"os"
+	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/gosimple/slug"
 	"github.com/nanoteck137/watchbook/types"
@@ -15,7 +21,8 @@ import (
 var CreateId = createIdGenerator(32)
 var CreateSmallId = createIdGenerator(8)
 
-var CreateAnimeId = createIdGenerator(8)
+var CreateMediaId = createIdGenerator(12)
+var CreateCollectionId = createIdGenerator(8)
 
 var CreateApiTokenId = createIdGenerator(32)
 
@@ -95,7 +102,7 @@ func StringPtrToSqlNull(i *string) sql.NullString {
 	}
 }
 
-func AnimeUserListPtrToSqlNull(i *types.AnimeUserList) sql.NullString {
+func MediaUserListPtrToSqlNull(i *types.MediaUserList) sql.NullString {
 	if i == nil {
 		return sql.NullString{}
 	}
@@ -140,6 +147,14 @@ func SqlNullToFloat64Ptr(value sql.NullFloat64) *float64 {
 	return nil
 }
 
+func Min[T cmp.Ordered](value T, min T) T {
+	if value < min {
+		return min
+	}
+
+	return value
+}
+
 func Clamp[T cmp.Ordered](value T, min T, max T) T {
 	if value < min {
 		return min
@@ -147,4 +162,102 @@ func Clamp[T cmp.Ordered](value T, min T, max T) T {
 		return max
 	}
 	return value
+}
+
+func TransformStringSlug(s string) string {
+	s = strings.TrimSpace(s)
+	return Slug(s)
+}
+
+func TransformSlugArray(arr []string) []string {
+	res := make([]string, 0, len(arr))
+
+	for _, t := range arr {
+		t = strings.TrimSpace(t)
+		s := Slug(t)
+		if s != "" {
+			res = append(res, s)
+		}
+	}
+
+	return res
+}
+
+func FixNilArrayToEmpty[T any](a []T) []T {
+	if a == nil {
+		return []T{}
+	}
+
+	return a
+}
+
+func CopyFile(src, dst string) (int64, error) {
+	sourceFileStat, err := os.Stat(src)
+	if err != nil {
+		return 0, err
+	}
+
+	if !sourceFileStat.Mode().IsRegular() {
+		return 0, fmt.Errorf("%s is not a regular file", src)
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return 0, err
+	}
+	defer source.Close()
+
+	destination, err := os.Create(dst)
+	if err != nil {
+		return 0, err
+	}
+	defer destination.Close()
+	nBytes, err := io.Copy(destination, source)
+	return nBytes, err
+}
+
+func RoundFloat(val float64, precision uint) float64 {
+    ratio := math.Pow(10, float64(precision))
+    return math.Round(val*ratio) / ratio
+}
+
+func CreateUrlBase(addr, path string, query url.Values) (*url.URL, error) {
+	u, err := url.Parse(addr)
+	if err != nil {
+		return nil, err
+	}
+
+	u.Path = path
+
+	if query != nil {
+		params := u.Query()
+		for k, v := range query {
+			params[k] = v
+		}
+		u.RawQuery = params.Encode()
+	}
+
+	return u, nil
+}
+
+func ExtractNumber(s string) int {
+	n := ""
+	for _, c := range s {
+		if unicode.IsDigit(c) {
+			n += string(c)
+		} else {
+			break
+		}
+	}
+
+	if len(n) == 0 {
+		return 0
+	}
+
+	i, err := strconv.ParseInt(n, 10, 64)
+	if err != nil {
+		return 0
+	}
+
+	return int(i)
 }

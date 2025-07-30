@@ -42,8 +42,11 @@ func (app *BaseApp) Bootstrap() error {
 	workDir := app.config.WorkDir()
 
 	dirs := []string{
-		workDir.AnimesDir().String(),
-		workDir.AnimesDir().ImagesDir(),
+		workDir.MediaDir().String(),
+		workDir.MediaDir().ImagesDir(),
+
+		workDir.CacheDir(),
+		workDir.CacheProvidersDir(),
 	}
 
 	for _, dir := range dirs {

@@ -1,6 +1,8 @@
 package apis
 
 import (
+	"context"
+	"errors"
 	"fmt"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -42,26 +44,25 @@ func User(app core.App, c pyrin.Context, checks ...UserCheckFunc) (*database.Use
 }
 
 func getUser(app core.App, c pyrin.Context) (*database.User, error) {
-	// TODO(patrik): Add back api tokens
-	// apiTokenHeader := c.Request().Header.Get("X-Api-Token")
-	// if apiTokenHeader != "" {
-	// 	ctx := context.TODO()
-	// 	token, err := app.DB().GetApiTokenById(ctx, apiTokenHeader)
-	// 	if err != nil {
-	// 		if errors.Is(err, database.ErrItemNotFound) {
-	// 			return nil, InvalidAuth("invalid api token")
-	// 		}
-	//
-	// 		return nil, err
-	// 	}
-	//
-	// 	user, err := app.DB().GetUserById(c.Request().Context(), token.UserId)
-	// 	if err != nil {
-	// 		return nil, InvalidAuth("invalid api token")
-	// 	}
-	//
-	// 	return &user, nil
-	// }
+	apiTokenHeader := c.Request().Header.Get("X-Api-Token")
+	if apiTokenHeader != "" {
+		ctx := context.TODO()
+		token, err := app.DB().GetApiTokenById(ctx, apiTokenHeader)
+		if err != nil {
+			if errors.Is(err, database.ErrItemNotFound) {
+				return nil, InvalidAuth("invalid api token")
+			}
+
+			return nil, err
+		}
+
+		user, err := app.DB().GetUserById(c.Request().Context(), token.UserId)
+		if err != nil {
+			return nil, InvalidAuth("invalid api token")
+		}
+
+		return &user, nil
+	}
 
 	authHeader := c.Request().Header.Get("Authorization")
 	tokenString := utils.ParseAuthHeader(authHeader)

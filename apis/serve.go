@@ -1,12 +1,16 @@
 package apis
 
 import (
+	"errors"
 	"net/http"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/watchbook"
 	"github.com/nanoteck137/watchbook/core"
+	"github.com/nanoteck137/watchbook/database"
 )
 
 func RegisterHandlers(app core.App, router pyrin.Router) {
@@ -15,20 +19,63 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 	InstallSystemHandlers(app, g)
 	InstallUserHandlers(app, g)
 
-	InstallAnimeHandlers(app, g)
+	InstallMediaHandlers(app, g)
+	InstallCollectionHandlers(app, g)
+	InstallProviderHandlers(app, g)
 
 	g = router.Group("/files")
 	g.Register(
 		pyrin.NormalHandler{
-			Name:        "GetAnimeImage",
+			Name:        "GetMediaImage",
 			Method:      http.MethodGet,
-			Path:        "/animes/:id/:image",
+			Path:        "/media/:id/:image",
 			HandlerFunc: func(c pyrin.Context) error {
 				id := c.Param("id")
 				image := c.Param("image")
 
-				animeDir := app.WorkDir().AnimesDir()
-				p := animeDir.AnimeImageDir(id)
+				media, err := app.DB().GetMediaById(c.Request().Context(), nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return pyrin.NoContentNotFound()
+					}
+				}
+
+				p := path.Dir(media.CoverFile.String)
+
+				f := os.DirFS(p)
+				return pyrin.ServeFile(c, f, image)
+			},
+		},
+
+		pyrin.NormalHandler{
+			Name:        "GetCollectionImage",
+			Method:      http.MethodGet,
+			Path:        "/collections/:id/:image",
+			HandlerFunc: func(c pyrin.Context) error {
+				id := c.Param("id")
+				image := c.Param("image")
+
+				collection, err := app.DB().GetCollectionById(c.Request().Context(), nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return pyrin.NoContentNotFound()
+					}
+				}
+
+				// TODO(patrik): Better handling
+				name := strings.TrimSuffix(image, path.Ext(image))
+
+				imageFile := ""
+				switch name {
+				case "cover":
+					imageFile = collection.CoverFile.String
+				case "logo":
+					imageFile = collection.LogoFile.String
+				case "banner":
+					imageFile = collection.BannerFile.String
+				}
+
+				p := path.Dir(imageFile)
 
 				f := os.DirFS(p)
 				return pyrin.ServeFile(c, f, image)
