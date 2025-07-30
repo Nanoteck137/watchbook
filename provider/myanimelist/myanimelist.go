@@ -71,6 +71,11 @@ func fetchAndCacheNewAnimeData(malId string, cacheDest string) (AnimeEntry, erro
 
 	desc := strings.Builder{}
 
+	if data.Description != "" {
+		desc.WriteString(data.Description)
+		desc.WriteString("\n\n")
+	}
+
 	fmt.Fprintf(&desc, "Type: %s\n", data.Type)
 	fmt.Fprintf(&desc, "Status: %s\n", data.Status)
 	if data.EpisodeCount != nil {
@@ -99,10 +104,6 @@ func fetchAndCacheNewAnimeData(malId string, cacheDest string) (AnimeEntry, erro
 			desc.WriteString(")\n")
 		}
 	}
-
-	desc.WriteString("\n\n")
-
-	desc.WriteString(data.Description)
 
 	var startDate *string
 	var endDate *string
@@ -172,6 +173,11 @@ func fetchAnimeData(malId string) (AnimeEntry, error) {
 
 	desc := strings.Builder{}
 
+	if data.Description != "" {
+		desc.WriteString(data.Description)
+		desc.WriteString("\n\n")
+	}
+
 	fmt.Fprintf(&desc, "Type: %s\n", data.Type)
 	fmt.Fprintf(&desc, "Status: %s\n", data.Status)
 	if data.EpisodeCount != nil {
@@ -200,10 +206,6 @@ func fetchAnimeData(malId string) (AnimeEntry, error) {
 			desc.WriteString(")\n")
 		}
 	}
-
-	desc.WriteString("\n\n")
-
-	desc.WriteString(data.Description)
 
 	var startDate *string
 	var endDate *string
