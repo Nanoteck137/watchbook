@@ -148,6 +148,10 @@ func downloadImage(url, outDir, name string) (string, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("downloadImage: download unsuccessfull: %s", resp.Status)
+	}
+
 	contentType := resp.Header.Get("Content-Type")
 	mediaType, _, err := mime.ParseMediaType(contentType)
 	if err != nil {
@@ -161,7 +165,7 @@ func downloadImage(url, outDir, name string) (string, error) {
 	case "image/jpeg":
 		ext = ".jpeg"
 	default:
-		return "", fmt.Errorf("downloadImage: unsupported media type (%s): %w", mediaType, err)
+		return "", fmt.Errorf("downloadImage: unsupported media type: %s", mediaType)
 	}
 
 	out := path.Join(outDir, name+ext)
