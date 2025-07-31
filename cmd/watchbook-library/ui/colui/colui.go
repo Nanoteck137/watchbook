@@ -217,7 +217,7 @@ func EditMainMenu(data library.Collection, dir string) error {
 			break
 		}
 
-		err = library.WriteCollection(dir, data)
+		err = col.Save()
 		if err != nil {
 			return fmt.Errorf("failed to write collection to disk: %w", err)
 		}
