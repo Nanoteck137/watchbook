@@ -14,6 +14,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
   return {
     collection: collection.data,
-    items: items.data.items,
+    groups: items.data.groups,
   };
 };

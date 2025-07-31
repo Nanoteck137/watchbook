@@ -163,7 +163,7 @@ type CollectionGroup struct {
 	Name  string `json:"name"`
 	Order int    `json:"order"`
 
-	Entries []CollectionItem
+	Entries []CollectionItem `json:"entries"`
 }
 
 type GetCollectionItems struct {

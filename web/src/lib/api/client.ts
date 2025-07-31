@@ -84,14 +84,6 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/collections/${id}/items`, "GET", api.GetCollectionItems, z.any(), undefined, options)
   }
   
-  createCollection(body: api.CreateCollectionBody, options?: ExtraOptions) {
-    return this.request("/api/v1/collections", "POST", api.CreateCollection, z.any(), body, options)
-  }
-  
-  editCollection(id: string, body: api.EditCollectionBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/collections/${id}`, "PATCH", z.undefined(), z.any(), body, options)
-  }
-  
   providerMyAnimeListGetAnime(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/provider/myanimelist/anime/${id}`, "GET", api.ProviderMyAnimeListAnime, z.any(), undefined, options)
   }
@@ -180,14 +172,6 @@ export class ClientUrls {
   
   getCollectionItems(id: string) {
     return createUrl(this.baseUrl, `/api/v1/collections/${id}/items`)
-  }
-  
-  createCollection() {
-    return createUrl(this.baseUrl, "/api/v1/collections")
-  }
-  
-  editCollection(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/collections/${id}`)
   }
   
   providerMyAnimeListGetAnime(id: string) {
