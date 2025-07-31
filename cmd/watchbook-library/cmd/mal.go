@@ -133,7 +133,8 @@ var malGetCmd = &cobra.Command{
 				logger.Warn("entry with id already exists", "path", m.Path, "id", malId)
 
 				if move && outputDir != "" {
-					err := os.Rename(m.Path, outputDir)
+					b := path.Base(m.Path)
+					err := os.Rename(m.Path, path.Join(outputDir, b))
 					if err != nil {
 						logger.Warn("failed to move entry to output dir", "err", err, "path", m.Path, "outputDir", outputDir)
 					}
