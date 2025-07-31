@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/watchbook/cmd/watchbook-library/config"
 	"github.com/nanoteck137/watchbook/library"
 	"github.com/nanoteck137/watchbook/provider/myanimelist"
@@ -44,10 +43,10 @@ func (d LibraryDir) MalDownloadDir() string {
 func ensureMalDirs(libraryDir LibraryDir) error {
 	dirs := []string{
 		libraryDir.MalDir(),
-		libraryDir.MalAnimesDir(), 
-		libraryDir.MalMangasDir(), 
-		libraryDir.MalSeriesDir(), 
-		libraryDir.MalDownloadDir(), 
+		libraryDir.MalAnimesDir(),
+		libraryDir.MalMangasDir(),
+		libraryDir.MalSeriesDir(),
+		libraryDir.MalDownloadDir(),
 	}
 
 	for _, dir := range dirs {
@@ -107,11 +106,9 @@ var malCmd = &cobra.Command{
 }
 
 var malGetCmd = &cobra.Command{
-	Use:  "get <MAL_ID>",
-	Args: cobra.ExactArgs(1),
+	Use:  "get <...MAL_ID>",
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		malId := args[0]
-
 		outputDir, _ := cmd.Flags().GetString("output")
 
 		cfg := config.LoadedConfig
@@ -130,95 +127,96 @@ var malGetCmd = &cobra.Command{
 
 		entries := prepareLibraryMal(search)
 
-		if m, exists := entries[malId]; exists {
-			logger.Fatal("entry with id already exists", "id", malId, "path", m.Path)
-		}
+		for _, malId := range args {
+			if m, exists := entries[malId]; exists {
+				logger.Warn("entry with id already exists", "path", m.Path, "id", malId)
+				continue
+			}
 
-		data, err := myanimelist.RawGetAnime(malId)
-		if err != nil {
-			logger.Fatal("failed to get anime data", "err", err)
-		}
+			data, err := myanimelist.RawGetAnime(malId)
+			if err != nil {
+				logger.Fatal("failed to get anime data", "err", err, "id", malId)
+			}
 
-		title := data.Title
-		if data.TitleEnglish != "" {
-			title = data.TitleEnglish
-		}
+			title := data.Title
+			if data.TitleEnglish != "" {
+				title = data.TitleEnglish
+			}
 
-		score := 0.0
-		if data.Score != nil {
-			score = *data.Score
-		}
+			score := 0.0
+			if data.Score != nil {
+				score = *data.Score
+			}
 
-		startDate := ""
-		if data.StartDate != nil {
-			startDate = *data.StartDate
-		}
+			startDate := ""
+			if data.StartDate != nil {
+				startDate = *data.StartDate
+			}
 
-		endDate := ""
-		if data.EndDate != nil {
-			endDate = *data.EndDate
-		}
+			endDate := ""
+			if data.EndDate != nil {
+				endDate = *data.EndDate
+			}
 
-		media := library.Media{
-			Id:        utils.CreateMediaId(),
-			MediaType: data.Type,
-			Ids: library.MediaIds{
-				MyAnimeList: malId,
-			},
-			General: library.MediaGeneral{
-				Title:        title,
-				Description:  data.Description,
-				Score:        score,
-				Status:       data.Status,
-				Rating:       data.Rating,
-				AiringSeason: data.AiringSeason,
-				StartDate:    startDate,
-				EndDate:      endDate,
-				Studios:      data.Studios,
-				Tags:         data.Tags,
-			},
-			Images: library.Images{},
-			Parts:  []library.MediaPart{},
-		}
-
-		if media.MediaType.IsMovie() {
-			media.Parts = []library.MediaPart{
-				{
-					Name: media.General.Title,
+			media := library.Media{
+				Id:        utils.CreateMediaId(),
+				MediaType: data.Type,
+				Ids: library.MediaIds{
+					MyAnimeList: malId,
 				},
+				General: library.MediaGeneral{
+					Title:        title,
+					Description:  data.Description,
+					Score:        score,
+					Status:       data.Status,
+					Rating:       data.Rating,
+					AiringSeason: data.AiringSeason,
+					StartDate:    startDate,
+					EndDate:      endDate,
+					Studios:      data.Studios,
+					Tags:         data.Tags,
+				},
+				Images: library.Images{},
+				Parts:  []library.MediaPart{},
 			}
-		} else if data.EpisodeCount != nil {
-			media.Parts = make([]library.MediaPart, 0, *data.EpisodeCount)
-			for i := range *data.EpisodeCount {
-				media.Parts = append(media.Parts, library.MediaPart{
-					Name: fmt.Sprintf("Episode %d", i+1),
-				})
+
+			if media.MediaType.IsMovie() {
+				media.Parts = []library.MediaPart{
+					{
+						Name: media.General.Title,
+					},
+				}
+			} else if data.EpisodeCount != nil {
+				media.Parts = make([]library.MediaPart, 0, *data.EpisodeCount)
+				for i := range *data.EpisodeCount {
+					media.Parts = append(media.Parts, library.MediaPart{
+						Name: fmt.Sprintf("Episode %d", i+1),
+					})
+				}
+			}
+
+			if outputDir == "" {
+				outputDir = libraryDir.MalDownloadDir()
+			}
+
+			out := path.Join(outputDir, malId+"-"+utils.Slug(media.General.Title))
+			err = os.Mkdir(out, 0755)
+			if err != nil {
+				logger.Fatal("failed to create dir for anime", "err", err, "id", malId, "title", media.General.Title)
+			}
+
+			p, err := utils.DownloadImage(data.CoverImageUrl, out, "cover")
+			if err != nil {
+				logger.Fatal("failed to download image", "err", err, "id", malId)
+			}
+
+			media.Images.Cover = path.Base(p)
+
+			err = saveMedia(out, media)
+			if err != nil {
+				logger.Fatal("failed to save media", "err", err, "id", malId, "title", media.General.Title)
 			}
 		}
-
-		if outputDir == "" {
-			outputDir = libraryDir.MalDownloadDir()
-		}
-
-		out := path.Join(outputDir, malId+"-"+utils.Slug(media.General.Title))
-		err = os.Mkdir(out, 0755)
-		if err != nil {
-			logger.Fatal("failed to create dir for anime", "err", err, "title", media.General.Title)
-		}
-
-		p, err := utils.DownloadImage(data.CoverImageUrl, out, "cover")
-		if err != nil {
-			logger.Fatal("failed to download image", "err", err)
-		}
-
-		media.Images.Cover = path.Base(p)
-
-		err = saveMedia(out, media)
-		if err != nil {
-			logger.Fatal("failed to save media", "err", err, "title", media.General.Title)
-		}
-
-		pretty.Println(media)
 	},
 }
 
