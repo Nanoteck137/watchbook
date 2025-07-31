@@ -440,23 +440,27 @@ func (helper *SyncHelper) syncCollection(ctx context.Context, collection *librar
 		return fmt.Errorf("failed to remove all media items from collection: %w", err)
 	}
 
-	for _, entry := range collection.Entries {
-		p := path.Join(collection.Path, entry.Path)
-		mediaId, ok := helper.mediaPathMapping[p]
-		if !ok {
-			return fmt.Errorf("failed to map path to media: %v", p)
-		}
+	for _, group := range collection.Groups {
+		for _, entry := range group.Entries {
+			p := path.Join(collection.Path, entry.Path)
+			mediaId, ok := helper.mediaPathMapping[p]
+			if !ok {
+				return fmt.Errorf("failed to map path to media: %v", p)
+			}
 
-		err := db.CreateCollectionMediaItem(ctx, database.CreateCollectionMediaItemParams{
-			CollectionId:   dbCollection.Id,
-			MediaId:        mediaId,
-			Name:           entry.Name,
-			OrderNumber:    int64(entry.Order),
-			SubOrderNumber: int64(entry.SubOrder),
-			SearchSlug:     entry.SearchSlug,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to add media to collection: %w", err)
+			err := db.CreateCollectionMediaItem(ctx, database.CreateCollectionMediaItemParams{
+				CollectionId:   dbCollection.Id,
+				MediaId:        mediaId,
+				GroupName:      group.Name,
+				GroupOrder:     int64(group.Order),
+				Name:           entry.Name,
+				OrderNumber:    int64(entry.Order),
+				SubOrderNumber: int64(0),
+				SearchSlug:     entry.SearchSlug,
+			})
+			if err != nil {
+				return fmt.Errorf("failed to add media to collection: %w", err)
+			}
 		}
 	}
 

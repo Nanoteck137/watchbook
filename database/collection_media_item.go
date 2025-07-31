@@ -16,6 +16,9 @@ type CollectionMediaItem struct {
 	CollectionId string `db:"collection_id"`
 	MediaId      string `db:"media_id"`
 
+	GroupName  string `db:"group_name"`
+	GroupOrder int64  `db:"group_order"`
+
 	Name           string `db:"name"`
 	SearchSlug     string `db:"search_slug"`
 	OrderNumber    int64  `db:"order_number"`
@@ -30,6 +33,9 @@ type FullCollectionMediaItem struct {
 
 	CollectionId string `db:"collection_id"`
 	MediaId      string `db:"media_id"`
+
+	GroupName  string `db:"group_name"`
+	GroupOrder int64  `db:"group_order"`
 
 	CollectionName string `db:"collection_name"`
 	SearchSlug     string `db:"search_slug"`
@@ -81,6 +87,9 @@ func CollectionMediaItemQuery(userId *string) *goqu.SelectDataset {
 			"collection_media_items.collection_id",
 			"collection_media_items.media_id",
 
+			"collection_media_items.group_name",
+			"collection_media_items.group_order",
+
 			"collection_media_items.name",
 			"collection_media_items.search_slug",
 			"collection_media_items.order_number",
@@ -103,6 +112,9 @@ func FullCollectionMediaItemQuery(userId *string) *goqu.SelectDataset {
 
 			"collection_media_items.collection_id",
 			"collection_media_items.media_id",
+
+			"collection_media_items.group_name",
+			"collection_media_items.group_order",
 
 			goqu.I("collection_media_items.name").As("collection_name"),
 			"collection_media_items.search_slug",
@@ -176,6 +188,9 @@ type CreateCollectionMediaItemParams struct {
 	CollectionId string
 	MediaId      string
 
+	GroupName  string
+	GroupOrder int64
+
 	Name           string
 	SearchSlug     string
 	OrderNumber    int64
@@ -196,6 +211,9 @@ func (db *Database) CreateCollectionMediaItem(ctx context.Context, params Create
 		"collection_id": params.CollectionId,
 		"media_id":      params.MediaId,
 
+		"group_name":  params.GroupName,
+		"group_order": params.GroupOrder,
+
 		"name":            params.Name,
 		"search_slug":     params.SearchSlug,
 		"order_number":    params.OrderNumber,
@@ -214,6 +232,9 @@ func (db *Database) CreateCollectionMediaItem(ctx context.Context, params Create
 }
 
 type CollectionMediaItemChanges struct {
+	GroupName  Change[string]
+	GroupOrder Change[int64]
+
 	Name           Change[string]
 	SearchSlug     Change[string]
 	OrderNumber    Change[int64]
@@ -224,6 +245,9 @@ type CollectionMediaItemChanges struct {
 
 func (db *Database) UpdateCollectionMediaItem(ctx context.Context, collectionId, mediaId string, changes CollectionMediaItemChanges) error {
 	record := goqu.Record{}
+
+	addToRecord(record, "group_name", changes.GroupName)
+	addToRecord(record, "group_order", changes.GroupOrder)
 
 	addToRecord(record, "name", changes.Name)
 	addToRecord(record, "search_slug", changes.SearchSlug)

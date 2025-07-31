@@ -17,6 +17,9 @@ CREATE TABLE collection_media_items (
     collection_id TEXT NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
     media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE,
 
+    group_name TEXT NOT NULL,
+    group_order INTEGER NOT NULL,
+
     name TEXT NOT NULL,
     search_slug TEXT NOT NULL,
     order_number INTEGER NOT NULL,

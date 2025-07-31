@@ -159,8 +159,15 @@ func ConvertDBCollectionItem(c pyrin.Context, hasUser bool, item database.FullCo
 	}
 }
 
+type CollectionGroup struct {
+	Name  string `json:"name"`
+	Order int    `json:"order"`
+
+	Entries []CollectionItem
+}
+
 type GetCollectionItems struct {
-	Items [][]CollectionItem `json:"items"`
+	Groups []CollectionGroup `json:"groups"`
 }
 
 func InstallCollectionHandlers(app core.App, group pyrin.Group) {
@@ -253,34 +260,36 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				order := make(map[int64][]CollectionItem)
+				groups := make(map[string][]database.FullCollectionMediaItem)
 
 				for _, item := range items {
-					i := ConvertDBCollectionItem(c, userId != nil, item)
-					order[item.OrderNumber] = append(order[item.OrderNumber], i)
+					groups[item.GroupName] = append(groups[item.GroupName], item)
 				}
-
-				keys := make([]int64, 0, len(order))
-
-				for k := range order {
-					keys = append(keys, k)
-				}
-
-				sort.SliceStable(keys, func(i, j int) bool {
-					return keys[i] < keys[j]
-				})
 
 				res := GetCollectionItems{}
 
-				for _, k := range keys {
-					items := order[k]
+				for _, group := range groups {
+					entries := make([]CollectionItem, 0, len(group))
 
-					sort.SliceStable(items, func(i, j int) bool {
-						return items[i].SubOrder < items[j].SubOrder
+					for _, entry := range group {
+						i := ConvertDBCollectionItem(c, userId != nil, entry)
+						entries = append(entries, i)
+					}
+
+					sort.SliceStable(entries, func(i, j int) bool {
+						return entries[i].Order < entries[j].Order
 					})
 
-					res.Items = append(res.Items, items)
+					res.Groups = append(res.Groups, CollectionGroup{
+						Name:    group[0].GroupName,
+						Order:   int(group[0].GroupOrder),
+						Entries: entries,
+					})
 				}
+
+				sort.SliceStable(res.Groups, func(i, j int) bool {
+					return res.Groups[i].Order < res.Groups[j].Order
+				})
 
 				return res, nil
 			},
