@@ -110,6 +110,7 @@ var malGetCmd = &cobra.Command{
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		outputDir, _ := cmd.Flags().GetString("output")
+		move, _ := cmd.Flags().GetBool("move")
 
 		cfg := config.LoadedConfig
 
@@ -130,6 +131,14 @@ var malGetCmd = &cobra.Command{
 		for _, malId := range args {
 			if m, exists := entries[malId]; exists {
 				logger.Warn("entry with id already exists", "path", m.Path, "id", malId)
+
+				if move && outputDir != "" {
+					err := os.Rename(m.Path, outputDir)
+					if err != nil {
+						logger.Warn("failed to move entry to output dir", "err", err, "path", m.Path, "outputDir", outputDir)
+					}
+				}
+
 				continue
 			}
 
@@ -413,6 +422,7 @@ var malTestCmd = &cobra.Command{
 
 func init() {
 	malGetCmd.Flags().StringP("output", "o", "", "Set the output directory")
+	malGetCmd.Flags().BoolP("move", "m", false, "If the ID already exists then allow to move it to output dir")
 
 	malCmd.AddCommand(malGetCmd)
 	malCmd.AddCommand(malTestCmd)
