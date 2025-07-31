@@ -112,6 +112,8 @@ var malGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		malId := args[0]
 
+		outputDir, _ := cmd.Flags().GetString("output")
+
 		cfg := config.LoadedConfig
 
 		libraryDir := LibraryDir(cfg.LibraryDir)
@@ -194,7 +196,11 @@ var malGetCmd = &cobra.Command{
 			}
 		}
 
-		out := path.Join(libraryDir.MalDownloadDir(), malId+"-"+utils.Slug(media.General.Title))
+		if outputDir == "" {
+			outputDir = libraryDir.MalDownloadDir()
+		}
+
+		out := path.Join(outputDir, malId+"-"+utils.Slug(media.General.Title))
 		err = os.Mkdir(out, 0755)
 		if err != nil {
 			logger.Fatal("failed to create dir for anime", "err", err, "title", media.General.Title)
@@ -408,6 +414,8 @@ var malTestCmd = &cobra.Command{
 // }
 
 func init() {
+	malGetCmd.Flags().StringP("output", "o", "", "Set the output directory")
+
 	malCmd.AddCommand(malGetCmd)
 	malCmd.AddCommand(malTestCmd)
 
