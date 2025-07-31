@@ -86,20 +86,29 @@ type CollectionGeneral struct {
 }
 
 type CollectionEntry struct {
-	Path       string `toml:"path"`
+	Path string `toml:"path"`
+
 	Name       string `toml:"name"`
 	SearchSlug string `toml:"searchSlug"`
-	Order      int    `toml:"order"`
-	SubOrder   int    `toml:"subOrder"`
+
+	Order int `toml:"order"`
+}
+
+type CollectionGroup struct {
+	Name  string `toml:"name"`
+	Order int    `toml:"order"`
+
+	Entries []CollectionEntry `toml:"entries"`
 }
 
 type Collection struct {
-	Id string `toml:"id"`
+	Type types.CollectionType `toml:"type"`
+	Id   string               `toml:"id"`
 
 	General CollectionGeneral `toml:"general"`
 	Images  Images            `toml:"images"`
 
-	Entries []CollectionEntry `toml:"entries"`
+	Groups []CollectionGroup `toml:"groups"`
 
 	Path string `toml:"-"`
 }
@@ -134,7 +143,7 @@ type LibrarySearch struct {
 	Errors      map[string]error
 }
 
-func readMedia(p string) (Media, error) {
+func ReadMedia(p string) (Media, error) {
 	metadataPath := path.Join(p, "media.toml")
 	data, err := os.ReadFile(metadataPath)
 	if err != nil {
@@ -152,7 +161,21 @@ func readMedia(p string) (Media, error) {
 	return media, nil
 }
 
-func readCollection(p string) (Collection, error) {
+func WriteMedia(p string, media Media) error {
+	d, err := toml.Marshal(media)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(path.Join(p, "media.toml"), d, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ReadCollection(p string) (Collection, error) {
 	metadataPath := path.Join(p, "collection.toml")
 	data, err := os.ReadFile(metadataPath)
 	if err != nil {
@@ -168,6 +191,20 @@ func readCollection(p string) (Collection, error) {
 	collection.Path = p
 
 	return collection, nil
+}
+
+func WriteCollection(p string, col Collection) error {
+	d, err := toml.Marshal(col)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(path.Join(p, "collection.toml"), d, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func SearchLibrary(p string) (*LibrarySearch, error) {
@@ -208,7 +245,7 @@ func SearchLibrary(p string) (*LibrarySearch, error) {
 	collections := make([]Collection, 0, len(collectionPaths))
 
 	for _, p := range mediaPaths {
-		m, err := readMedia(p)
+		m, err := ReadMedia(p)
 		if err != nil {
 			errors[p] = err
 			continue
@@ -218,7 +255,7 @@ func SearchLibrary(p string) (*LibrarySearch, error) {
 	}
 
 	for _, p := range collectionPaths {
-		collection, err := readCollection(p)
+		collection, err := ReadCollection(p)
 		if err != nil {
 			errors[p] = err
 			continue

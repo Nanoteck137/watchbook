@@ -200,9 +200,9 @@ var malGetCmd = &cobra.Command{
 			logger.Fatal("failed to create dir for anime", "err", err, "title", media.General.Title)
 		}
 
-		p, err := downloadImage(data.CoverImageUrl, out, "cover")
+		p, err := utils.DownloadImage(data.CoverImageUrl, out, "cover")
 		if err != nil {
-			logger.Fatal("failed to donwload image")
+			logger.Fatal("failed to download image", "err", err)
 		}
 
 		media.Images.Cover = path.Base(p)
@@ -310,9 +310,9 @@ var malTestCmd = &cobra.Command{
 				logger.Fatal("failed to create dir for anime", "err", err, "title", media.General.Title)
 			}
 
-			p, err := downloadImage(anime.CoverImageUrl, out, "cover")
+			p, err := utils.DownloadImage(anime.CoverImageUrl, out, "cover")
 			if err != nil {
-				logger.Fatal("failed to donwload image")
+				logger.Fatal("failed to download image", "err", err)
 			}
 
 			media.Images.Cover = path.Base(p)

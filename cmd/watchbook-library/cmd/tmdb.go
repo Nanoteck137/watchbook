@@ -3,8 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"mime"
 	"net/http"
 	"net/url"
 	"os"
@@ -141,48 +139,6 @@ type TmdbMovieDetails struct {
 	VoteCount           int                     `json:"vote_count"`            //: 9313
 }
 
-func downloadImage(url, outDir, name string) (string, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", fmt.Errorf("downloadImage: failed http get request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("downloadImage: download unsuccessfull: %s", resp.Status)
-	}
-
-	contentType := resp.Header.Get("Content-Type")
-	mediaType, _, err := mime.ParseMediaType(contentType)
-	if err != nil {
-		return "", fmt.Errorf("downloadImage: failed to parse Content-Type: %w", err)
-	}
-
-	ext := ""
-	switch mediaType {
-	case "image/png":
-		ext = ".png"
-	case "image/jpeg":
-		ext = ".jpeg"
-	default:
-		return "", fmt.Errorf("downloadImage: unsupported media type: %s", mediaType)
-	}
-
-	out := path.Join(outDir, name+ext)
-
-	f, err := os.OpenFile(out, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		return "", fmt.Errorf("downloadImage: failed to open output file: %w", err)
-	}
-	defer f.Close()
-
-	_, err = io.Copy(f, resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("downloadImage: failed io.Copy: %w", err)
-	}
-
-	return out, nil
-}
 
 var tmdbMovieCmd = &cobra.Command{
 	Use:  "movie <ID>",
@@ -278,7 +234,7 @@ var tmdbMovieCmd = &cobra.Command{
 
 		{
 			url := "http://image.tmdb.org/t/p/original" + decodedRes.PosterPath
-			out, err := downloadImage(url, out, "cover")
+			out, err := utils.DownloadImage(url, out, "cover")
 			if err != nil {
 				logger.Fatal("failed to download cover image", "err", err, "title", media.General.Title)
 			}
@@ -288,7 +244,7 @@ var tmdbMovieCmd = &cobra.Command{
 
 		{
 			url := "http://image.tmdb.org/t/p/original" + decodedRes.BackdropPath
-			out, err := downloadImage(url, out, "banner")
+			out, err := utils.DownloadImage(url, out, "banner")
 			if err != nil {
 				logger.Fatal("failed to download banner image", "err", err, "title", media.General.Title)
 			}
@@ -484,7 +440,7 @@ var tmdbTvCmd = &cobra.Command{
 
 			{
 				url := "http://image.tmdb.org/t/p/original" + season.PosterPath
-				out, err := downloadImage(url, out, "cover")
+				out, err := utils.DownloadImage(url, out, "cover")
 				if err != nil {
 					logger.Fatal("failed to download cover image", "err", err, "title", media.General.Title)
 				}
@@ -520,7 +476,6 @@ var tmdbTvCmd = &cobra.Command{
 				SearchSlug: fmt.Sprintf("season-%d", season.SeasonNumber),
 				Order:      season.SeasonNumber,
 				Name:       entryName,
-				SubOrder:   0,
 			})
 		}
 
@@ -530,12 +485,18 @@ var tmdbTvCmd = &cobra.Command{
 				Name: decodedRes.Name,
 			},
 			Images:  library.Images{},
-			Entries: collectionEntries,
+			Groups: []library.CollectionGroup{
+				{
+					Name:    "TV Seasons",
+					Order:   0,
+					Entries: collectionEntries,
+				},
+			},
 		}
 
 		{
 			url := "http://image.tmdb.org/t/p/original" + decodedRes.PosterPath
-			out, err := downloadImage(url, out, "cover")
+			out, err := utils.DownloadImage(url, out, "cover")
 			if err != nil {
 				logger.Fatal("failed to download cover image", "err", err, "name", collection.General.Name)
 			}
@@ -545,7 +506,7 @@ var tmdbTvCmd = &cobra.Command{
 
 		{
 			url := "http://image.tmdb.org/t/p/original" + decodedRes.BackdropPath
-			out, err := downloadImage(url, out, "banner")
+			out, err := utils.DownloadImage(url, out, "banner")
 			if err != nil {
 				logger.Fatal("failed to download banner image", "err", err, "name", collection.General.Name)
 			}

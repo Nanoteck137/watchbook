@@ -7,11 +7,16 @@ import (
 	"io"
 	"log"
 	"math"
+	"mime"
+	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"unicode"
+
+	"slices"
 
 	"github.com/gosimple/slug"
 	"github.com/nanoteck137/watchbook/types"
@@ -260,4 +265,67 @@ func ExtractNumber(s string) int {
 	}
 
 	return int(i)
+}
+
+// NOTE(patrik): From https://stackoverflow.com/questions/19374219/how-to-find-the-difference-between-two-slices-of-strings
+func SliceDifference[S ~[]E, E comparable](slice1 S, slice2 S) S {
+	var diff S
+
+	for i := range 2 {
+		for _, s1 := range slice1 {
+			found := slices.Contains(slice2, s1)
+			if !found {
+				diff = append(diff, s1)
+			}
+		}
+
+		if i == 0 {
+			slice1, slice2 = slice2, slice1
+		}
+	}
+
+	return diff
+}
+
+func DownloadImage(url, outDir, name string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("failed to send http get request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("download unsuccessful: %s", resp.Status)
+	}
+
+	contentType := resp.Header.Get("Content-Type")
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse Content-Type: %w", err)
+	}
+
+	ext := ""
+	switch mediaType {
+	case "image/png":
+		ext = ".png"
+	case "image/jpeg":
+		ext = ".jpeg"
+	default:
+		return "", fmt.Errorf("unsupported media type: %s", mediaType)
+	}
+
+	out := path.Join(outDir, name+ext)
+
+	f, err := os.OpenFile(out, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return "", fmt.Errorf("failed to open output file: %w", err)
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to copy response body to file: %w", err)
+	}
+
+	return out, nil
 }
