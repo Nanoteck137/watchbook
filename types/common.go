@@ -19,6 +19,24 @@ func (d WorkDir) SetupFile() string {
 	return path.Join(d.String(), "setup")
 }
 
+func (d WorkDir) MediaDir() string {
+	return path.Join(d.String(), "media")
+}
+
+func (d WorkDir) MediaDirById(id string) MediaDir {
+	return MediaDir(path.Join(d.MediaDir(), id))
+}
+
+type MediaDir string
+
+func (d MediaDir) String() string {
+	return string(d)
+}
+
+func (d MediaDir) Images() string {
+	return path.Join(d.String(), "images")
+}
+
 type AdminStatus string
 
 const (

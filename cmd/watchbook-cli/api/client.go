@@ -243,6 +243,54 @@ func (c *Client) SetMediaUserData(id string, body SetMediaUserData, options Opti
 	return Request[any](data, body)
 }
 
+func (c *Client) CreateMedia(body CreateMediaBody, options Options) (*CreateMedia, error) {
+	path := "/api/v1/media"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[CreateMedia](data, body)
+}
+
+func (c *Client) EditMedia(id string, body EditMediaBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) ChangeImages(id string, boundary string, body Reader, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/images", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return RequestForm[any](data, boundary, body)
+}
+
 func (c *Client) GetCollections(options Options) (*GetCollections, error) {
 	path := "/api/v1/collections"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -389,6 +437,21 @@ func (c *ClientUrls) SetMediaUserData(id string) (*URL, error) {
 	return c.getUrl(path)
 }
 
+func (c *ClientUrls) CreateMedia() (*URL, error) {
+	path := "/api/v1/media"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditMedia(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) ChangeImages(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/images", id)
+	return c.getUrl(path)
+}
+
 func (c *ClientUrls) GetCollections() (*URL, error) {
 	path := "/api/v1/collections"
 	return c.getUrl(path)
@@ -409,8 +472,8 @@ func (c *ClientUrls) ProviderMyAnimeListGetAnime(id string) (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) GetMediaImage(id string, image string) (*URL, error) {
-	path := Sprintf("/files/media/%v/%v", id, image)
+func (c *ClientUrls) GetMediaImage(id string, file string) (*URL, error) {
+	path := Sprintf("/files/media/%v/images/%v", id, file)
 	return c.getUrl(path)
 }
 

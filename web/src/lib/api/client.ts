@@ -72,6 +72,18 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/media/${id}/user`, "POST", z.undefined(), z.any(), body, options)
   }
   
+  createMedia(body: api.CreateMediaBody, options?: ExtraOptions) {
+    return this.request("/api/v1/media", "POST", api.CreateMedia, z.any(), body, options)
+  }
+  
+  editMedia(id: string, body: api.EditMediaBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/${id}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  changeImages(id: string, body: FormData, options?: ExtraOptions) {
+    return this.requestForm(`/api/v1/media/${id}/images`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
   getCollections(options?: ExtraOptions) {
     return this.request("/api/v1/collections", "GET", api.GetCollections, z.any(), undefined, options)
   }
@@ -162,6 +174,18 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/media/${id}/user`)
   }
   
+  createMedia() {
+    return createUrl(this.baseUrl, "/api/v1/media")
+  }
+  
+  editMedia(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}`)
+  }
+  
+  changeImages(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}/images`)
+  }
+  
   getCollections() {
     return createUrl(this.baseUrl, "/api/v1/collections")
   }
@@ -178,8 +202,8 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/provider/myanimelist/anime/${id}`)
   }
   
-  getMediaImage(id: string, image: string) {
-    return createUrl(this.baseUrl, `/files/media/${id}/${image}`)
+  getMediaImage(id: string, file: string) {
+    return createUrl(this.baseUrl, `/files/media/${id}/images/${file}`)
   }
   
   getCollectionImage(id: string, image: string) {

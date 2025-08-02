@@ -28,22 +28,16 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 		pyrin.NormalHandler{
 			Name:        "GetMediaImage",
 			Method:      http.MethodGet,
-			Path:        "/media/:id/:image",
+			Path:        "/media/:id/images/:file",
 			HandlerFunc: func(c pyrin.Context) error {
 				id := c.Param("id")
-				image := c.Param("image")
+				file := c.Param("file")
 
-				media, err := app.DB().GetMediaById(c.Request().Context(), nil, id)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return pyrin.NoContentNotFound()
-					}
-				}
-
-				p := path.Dir(media.CoverFile.String)
-
+				mediaDir := app.WorkDir().MediaDirById(id)
+				p := mediaDir.Images()
 				f := os.DirFS(p)
-				return pyrin.ServeFile(c, f, image)
+
+				return pyrin.ServeFile(c, f, file)
 			},
 		},
 
