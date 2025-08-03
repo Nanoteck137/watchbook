@@ -291,6 +291,70 @@ func (c *Client) ChangeImages(id string, boundary string, body Reader, options O
 	return RequestForm[any](data, boundary, body)
 }
 
+func (c *Client) AddPart(id string, body AddPartBody, options Options) (*AddPart, error) {
+	path := Sprintf("/api/v1/media/%v/single/parts", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[AddPart](data, body)
+}
+
+func (c *Client) EditPart(id string, index string, body EditPartBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) RemovePart(id string, index string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "DELETE",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
+func (c *Client) SetParts(id string, body SetPartsBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/parts", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
 func (c *Client) GetCollections(options Options) (*GetCollections, error) {
 	path := "/api/v1/collections"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -337,6 +401,54 @@ func (c *Client) GetCollectionItems(id string, options Options) (*GetCollectionI
 		Headers: options.Header,
 	}
 	return Request[GetCollectionItems](data, nil)
+}
+
+func (c *Client) CreateCollection(body CreateCollectionBody, options Options) (*CreateCollection, error) {
+	path := "/api/v1/collections"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[CreateCollection](data, body)
+}
+
+func (c *Client) EditCollection(id string, body EditCollectionBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/collections/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) AddCollectionItem(id string, body AddCollectionItemBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/collections/%v/items", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
 }
 
 func (c *Client) ProviderMyAnimeListGetAnime(id string, options Options) (*ProviderMyAnimeListAnime, error) {
@@ -452,6 +564,26 @@ func (c *ClientUrls) ChangeImages(id string) (*URL, error) {
 	return c.getUrl(path)
 }
 
+func (c *ClientUrls) AddPart(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/single/parts", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditPart(id string, index string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) RemovePart(id string, index string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) SetParts(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/parts", id)
+	return c.getUrl(path)
+}
+
 func (c *ClientUrls) GetCollections() (*URL, error) {
 	path := "/api/v1/collections"
 	return c.getUrl(path)
@@ -463,6 +595,21 @@ func (c *ClientUrls) GetCollectionById(id string) (*URL, error) {
 }
 
 func (c *ClientUrls) GetCollectionItems(id string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v/items", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) CreateCollection() (*URL, error) {
+	path := "/api/v1/collections"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditCollection(id string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) AddCollectionItem(id string) (*URL, error) {
 	path := Sprintf("/api/v1/collections/%v/items", id)
 	return c.getUrl(path)
 }

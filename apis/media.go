@@ -184,10 +184,10 @@ type CreateMedia struct {
 type CreateMediaBody struct {
 	MediaType string `json:"mediaType"`
 
-	TmdbId    string `json:"tmdbId"`
-	ImdbId    string `json:"imdbId"`
+	TmdbId string `json:"tmdbId"`
+	ImdbId string `json:"imdbId"`
 	// TODO(patrik): Add validation for this, should start with 'anime@' or 'manga@'
-	MalId     string `json:"malId"`
+	MalId string `json:"malId"`
 	// TODO(patrik): Add validation for this, should start with 'anime@' or 'manga@'
 	AnilistId string `json:"anilistId"`
 
@@ -255,10 +255,10 @@ func (b CreateMediaBody) Validate() error {
 type EditMediaBody struct {
 	MediaType *string `json:"mediaType,omitempty"`
 
-	TmdbId    *string `json:"tmdbId,omitempty"`
-	ImdbId    *string `json:"imdbId,omitempty"`
+	TmdbId *string `json:"tmdbId,omitempty"`
+	ImdbId *string `json:"imdbId,omitempty"`
 	// TODO(patrik): Add validation for this, should start with 'anime@' or 'manga@'
-	MalId     *string `json:"malId,omitempty"`
+	MalId *string `json:"malId,omitempty"`
 	// TODO(patrik): Add validation for this, should start with 'anime@' or 'manga@'
 	AnilistId *string `json:"anilistId,omitempty"`
 
@@ -318,6 +318,64 @@ func (b EditMediaBody) Validate() error {
 		validate.Field(&b.EndDate, validate.Date(types.MediaDateLayout)),
 
 		validate.Field(&b.AdminStatus, validate.Required.When(b.AdminStatus != nil), validate.By(types.ValidateAdminStatus)),
+	)
+}
+
+type AddPart struct {
+	Index int64 `json:"index"`
+}
+
+type AddPartBody struct {
+	Index int64  `json:"index"`
+	Name  string `json:"name"`
+}
+
+func (b *AddPartBody) Transform() {
+	b.Name = anvil.String(b.Name)
+	b.Index = utils.Min(b.Index, 0)
+}
+
+type EditPartBody struct {
+	Name *string `json:"name"`
+}
+
+func (b *EditPartBody) Transform() {
+	b.Name = anvil.StringPtr(b.Name)
+}
+
+func (b EditPartBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
+	)
+}
+
+type PartBody struct {
+	Name string `json:"name"`
+}
+
+func (b *PartBody) Transform() {
+	b.Name = anvil.String(b.Name)
+}
+
+func (b PartBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.Name, validate.Required),
+	)
+}
+
+type SetPartsBody struct {
+	Parts []PartBody `json:"parts"`
+}
+
+func (b *SetPartsBody) Transform() {
+	for i := range b.Parts {
+		b.Parts[i].Transform()
+	}
+}
+
+func (b SetPartsBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.Parts),
 	)
 }
 
@@ -934,7 +992,6 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			Path:         "/media/:id/images",
 			ResponseType: nil,
 			Spec: pyrin.FormSpec{
-				BodyType: nil,
 				Files: map[string]pyrin.FormFileSpec{
 					"cover": {
 						NumExpected: 0,
@@ -963,8 +1020,6 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				_ = dbMedia
-
 				mediaDir := app.WorkDir().MediaDirById(dbMedia.Id)
 				dirs := []string{
 					mediaDir.String(),
@@ -980,6 +1035,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 				changes := database.MediaChanges{}
 
+				// TODO(patrik): Change name
 				test := func(name string) (database.Change[sql.NullString], error) {
 					coverFiles, err := pyrin.FormFiles(c, name)
 					if err != nil {
@@ -1059,6 +1115,213 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				err = app.DB().UpdateMedia(ctx, dbMedia.Id, changes)
 				if err != nil {
 					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "AddPart",
+			Method:       http.MethodPost,
+			Path:         "/media/:id/single/parts",
+			ResponseType: AddPart{},
+			BodyType:     AddPartBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				// TODO(patrik): Add admin check
+
+				id := c.Param("id")
+
+				body, err := pyrin.Body[AddPartBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, MediaNotFound()
+					}
+
+					return nil, err
+				}
+
+				index := body.Index
+
+				if index == 0 {
+					// TODO(patrik): A better implementation would be getting
+					// the last part from the database
+					parts, err := app.DB().GetMediaPartsByMediaId(ctx, dbMedia.Id)
+					if err != nil {
+						return nil, err
+					}
+
+					if len(parts) > 0 {
+						part := parts[len(parts)-1]
+						index = part.Index + 1
+					}
+				}
+
+				// TODO(patrik): Change this
+				name := body.Name
+				if name == "" {
+					name = fmt.Sprintf("Episode %d", index)
+				}
+
+				err = app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
+					Index:   index,
+					MediaId: dbMedia.Id,
+					Name:    name,
+				})
+				if err != nil {
+					if errors.Is(err, database.ErrItemAlreadyExists) {
+						return nil, PartAlreadyExists()
+					}
+
+					return nil, err
+				}
+
+				return AddPart{
+					Index: index,
+				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "EditPart",
+			Method:       http.MethodPatch,
+			Path:         "/media/:id/parts/:index",
+			ResponseType: nil,
+			BodyType:     EditPartBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				// TODO(patrik): Add admin check
+
+				id := c.Param("id")
+				index, err := strconv.ParseInt(c.Param("index"), 10, 64)
+				if err != nil {
+					// TODO(patrik): Handle error better
+					return nil, errors.New("failed to parse 'index' path param as integer")
+				}
+
+				body, err := pyrin.Body[EditPartBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, MediaNotFound()
+					}
+
+					return nil, err
+				}
+
+				dbPart, err := app.DB().GetMediaPartByIndexMediaId(ctx, index, dbMedia.Id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, PartNotFound()
+					}
+
+					return nil, err
+				}
+
+				changes := database.MediaPartChanges{}
+
+				if body.Name != nil {
+					changes.Name = database.Change[string]{
+						Value:   *body.Name,
+						Changed: *body.Name != dbPart.Name,
+					}
+				}
+
+				err = app.DB().UpdateMediaPart(ctx, dbPart.Index, dbPart.MediaId, changes)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "RemovePart",
+			Method:       http.MethodDelete,
+			Path:         "/media/:id/parts/:index",
+			ResponseType: nil,
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				// TODO(patrik): Add admin check
+
+				id := c.Param("id")
+				index, err := strconv.ParseInt(c.Param("index"), 10, 64)
+				if err != nil {
+					// TODO(patrik): Handle error better
+					return nil, errors.New("failed to parse 'index' path param as integer")
+				}
+
+				ctx := context.Background()
+
+				dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, MediaNotFound()
+					}
+
+					return nil, err
+				}
+
+				err = app.DB().RemoveMediaPart(ctx, index, dbMedia.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "SetParts",
+			Method:       http.MethodPost,
+			Path:         "/media/:id/parts",
+			ResponseType: nil,
+			BodyType:     SetPartsBody{},
+			HandlerFunc:  func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				body, err := pyrin.Body[SetPartsBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, MediaNotFound()
+					}
+
+					return nil, err
+				}
+
+				err = app.DB().RemoveAllMediaParts(ctx, dbMedia.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				for i, part := range body.Parts {
+					err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
+						Index:   int64(i),
+						MediaId: id,
+						Name:    part.Name,
+					})
+					if err != nil {
+						return nil, err
+					}
 				}
 
 				return nil, nil
