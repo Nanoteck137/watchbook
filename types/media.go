@@ -18,13 +18,13 @@ func GetAiringSeason(d string) string {
 
 	switch t.Month() {
 	case time.January, time.February, time.March:
-		return "winter-"+strconv.Itoa(year)
+		return "winter-" + strconv.Itoa(year)
 	case time.April, time.May, time.June:
-		return "spring-"+strconv.Itoa(year)
+		return "spring-" + strconv.Itoa(year)
 	case time.July, time.August, time.September:
-		return "summer-"+strconv.Itoa(year)
+		return "summer-" + strconv.Itoa(year)
 	case time.October, time.November, time.December:
-		return "winter-"+strconv.Itoa(year)
+		return "winter-" + strconv.Itoa(year)
 	}
 
 	return ""
@@ -44,10 +44,13 @@ type MediaType string
 
 const (
 	MediaTypeUnknown     MediaType = "unknown"
-	MediaTypeSeason      MediaType = "season"
+	MediaTypeTV          MediaType = "tv"
 	MediaTypeMovie       MediaType = "movie"
 	MediaTypeAnimeSeason MediaType = "anime-season"
 	MediaTypeAnimeMovie  MediaType = "anime-movie"
+	MediaTypeGame        MediaType = "game"
+	MediaTypeManga       MediaType = "manga"
+	MediaTypeComic       MediaType = "comic"
 )
 
 func (t MediaType) IsMovie() bool {
@@ -57,10 +60,13 @@ func (t MediaType) IsMovie() bool {
 func IsValidMediaType(t MediaType) bool {
 	switch t {
 	case MediaTypeUnknown,
-		MediaTypeSeason,
+		MediaTypeTV,
 		MediaTypeMovie,
 		MediaTypeAnimeSeason,
-		MediaTypeAnimeMovie:
+		MediaTypeAnimeMovie,
+		MediaTypeGame,
+		MediaTypeManga,
+		MediaTypeComic:
 		return true
 	}
 
