@@ -2,9 +2,12 @@ package apis
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"path"
 	"sort"
 
@@ -44,17 +47,17 @@ func ConvertDBCollection(c pyrin.Context, hasUser bool, collection database.Coll
 	var logoUrl *string
 
 	if collection.CoverFile.Valid {
-		url := ConvertURL(c, fmt.Sprintf("/files/collections/%s/%s", collection.Id, path.Base(collection.CoverFile.String)))
+		url := ConvertURL(c, fmt.Sprintf("/files/collections/%s/images/%s", collection.Id, path.Base(collection.CoverFile.String)))
 		coverUrl = &url
 	}
 
 	if collection.LogoFile.Valid {
-		url := ConvertURL(c, fmt.Sprintf("/files/collections/%s/%s", collection.Id, path.Base(collection.LogoFile.String)))
+		url := ConvertURL(c, fmt.Sprintf("/files/collections/%s/images/%s", collection.Id, path.Base(collection.LogoFile.String)))
 		logoUrl = &url
 	}
 
 	if collection.BannerFile.Valid {
-		url := ConvertURL(c, fmt.Sprintf("/files/collections/%s/%s", collection.Id, path.Base(collection.BannerFile.String)))
+		url := ConvertURL(c, fmt.Sprintf("/files/collections/%s/images/%s", collection.Id, path.Base(collection.BannerFile.String)))
 		bannerUrl = &url
 	}
 
@@ -329,7 +332,9 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 					groups[item.GroupName] = append(groups[item.GroupName], item)
 				}
 
-				res := GetCollectionItems{}
+				res := GetCollectionItems{
+					Groups: []CollectionGroup{},
+				}
 
 				for _, group := range groups {
 					entries := make([]CollectionItem, 0, len(group))
@@ -382,6 +387,19 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 				})
 				if err != nil {
 					return nil, err
+				}
+
+				collectionDir := app.WorkDir().CollectionDirById(id)
+				dirs := []string{
+					collectionDir.String(),
+					collectionDir.Images(),
+				}
+
+				for _, dir := range dirs {
+					err = os.Mkdir(dir, 0755)
+					if err != nil && !os.IsExist(err) {
+						return nil, err
+					}
 				}
 
 				return CreateCollection{
@@ -444,6 +462,141 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
+		pyrin.FormApiHandler{
+			Name:         "ChangeCollectionImages",
+			Method:       http.MethodPatch,
+			Path:         "/collections/:id/images",
+			ResponseType: nil,
+			Spec: pyrin.FormSpec{
+				Files: map[string]pyrin.FormFileSpec{
+					"cover": {
+						NumExpected: 0,
+					},
+					"logo": {
+						NumExpected: 0,
+					},
+					"banner": {
+						NumExpected: 0,
+					},
+				},
+			},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				// TODO(patrik): Add admin check
+
+				ctx := context.Background()
+
+				dbCollection, err := app.DB().GetCollectionById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, CollectionNotFound()
+					}
+
+					return nil, err
+				}
+
+				collectionDir := app.WorkDir().CollectionDirById(id)
+				dirs := []string{
+					collectionDir.String(),
+					collectionDir.Images(),
+				}
+
+				for _, dir := range dirs {
+					err = os.Mkdir(dir, 0755)
+					if err != nil && !os.IsExist(err) {
+						return nil, err
+					}
+				}
+
+				changes := database.CollectionChanges{}
+
+				// TODO(patrik): Change name
+				test := func(old sql.NullString, name string) (database.Change[sql.NullString], error) {
+					files, err := pyrin.FormFiles(c, name)
+					if err != nil {
+						return database.Change[sql.NullString]{}, err
+					}
+
+					if len(files) > 0 {
+						file := files[0]
+
+						// TODO(patrik): Add better size limiting
+						if file.Size > 25*1024*1024 {
+							return database.Change[sql.NullString]{}, errors.New("file too big")
+						}
+
+						contentType := file.Header.Get("Content-Type")
+						ext, err := utils.GetImageExtFromContentType(contentType)
+						// TODO(patrik): Better error
+						if err != nil {
+							return database.Change[sql.NullString]{}, err
+						}
+
+						if old.Valid {
+							p := path.Join(collectionDir.Images(), old.String)
+							err = os.Remove(p)
+							if err != nil {
+								return database.Change[sql.NullString]{}, err
+							}
+						}
+
+						f, err := file.Open()
+						// TODO(patrik): Better error
+						if err != nil {
+							return database.Change[sql.NullString]{}, err
+						}
+						defer f.Close()
+
+						outFile, err := os.OpenFile(path.Join(collectionDir.Images(), name+ext), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+						// TODO(patrik): Better error
+						if err != nil {
+							return database.Change[sql.NullString]{}, err
+						}
+						defer outFile.Close()
+
+						_, err = io.Copy(outFile, f)
+						// TODO(patrik): Better error
+						if err != nil {
+							return database.Change[sql.NullString]{}, err
+						}
+
+						return database.Change[sql.NullString]{
+							Value: sql.NullString{
+								String: name + ext,
+								Valid:  true,
+							},
+							Changed: true,
+						}, nil
+					}
+
+					return database.Change[sql.NullString]{}, nil
+				}
+
+				changes.CoverFile, err = test(dbCollection.CoverFile, "cover")
+				if err != nil {
+					return nil, err
+				}
+
+				changes.LogoFile, err = test(dbCollection.LogoFile, "logo")
+				if err != nil {
+					return nil, err
+				}
+
+				changes.BannerFile, err = test(dbCollection.BannerFile, "banner")
+				if err != nil {
+					return nil, err
+				}
+
+				err = app.DB().UpdateCollection(ctx, dbCollection.Id, changes)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
 		pyrin.ApiHandler{
 			Name:         "AddCollectionItem",
 			Method:       http.MethodPost,
@@ -471,16 +624,23 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				// TODO(patrik): Check for media item
+				dbMedia, err := app.DB().GetMediaById(ctx, nil, body.MediaId)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, MediaNotFound()
+					}
+
+					return nil, err
+				}
 
 				err = app.DB().CreateCollectionMediaItem(ctx, database.CreateCollectionMediaItemParams{
-					CollectionId:   dbCollection.Id,
-					MediaId:        body.MediaId,
+					CollectionId: dbCollection.Id,
+					MediaId:      dbMedia.Id,
 					// GroupName:      "",
 					// GroupOrder:     0,
-					Name:           body.Name,
-					SearchSlug:     body.SearchSlug,
-					OrderNumber:    int64(body.Order),
+					Name:        body.Name,
+					SearchSlug:  body.SearchSlug,
+					OrderNumber: int64(body.Order),
 					// SubOrderNumber: 0,
 					// Created:        0,
 					// Updated:        0,

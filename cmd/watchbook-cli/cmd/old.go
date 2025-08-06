@@ -21,6 +21,78 @@ var oldCmd = &cobra.Command{
 	Use: "old",
 }
 
+type ImageRes struct {
+	Buf      bytes.Buffer
+	Boundary string
+}
+
+func createImageForm(coverPath, logoPath, bannerPath string) (ImageRes, error) {
+	var b bytes.Buffer
+	w := multipart.NewWriter(&b)
+
+	createFileField := func(fieldname, filename, contentType string) (io.Writer, error) {
+		h := make(textproto.MIMEHeader)
+		h.Set("Content-Disposition",
+			fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
+				escapeQuotes(fieldname), escapeQuotes(filename)))
+		h.Set("Content-Type", contentType)
+		return w.CreatePart(h)
+	}
+
+	createFormPart := func(p, name string) error {
+		f, err := os.Open(p)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		contentType, err := utils.ImageExtToContentType(path.Ext(p))
+		if err != nil {
+			return err
+		}
+
+		formFile, err := createFileField(name, path.Base(p), contentType)
+		if err != nil {
+			return err
+		}
+
+		_, err = io.Copy(formFile, f)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	if coverPath != "" {
+		err := createFormPart(coverPath, "cover")
+		if err != nil {
+			return ImageRes{}, err
+		}
+	}
+
+	if logoPath != "" {
+		err := createFormPart(logoPath, "logo")
+		if err != nil {
+			return ImageRes{}, err
+		}
+	}
+
+	if bannerPath != "" {
+		err := createFormPart(bannerPath, "banner")
+		if err != nil {
+			return ImageRes{}, err
+		}
+	}
+
+	w.Close()
+
+	return ImageRes{
+		Buf:      b,
+		Boundary: w.Boundary(),
+	}, nil
+}
+
 var oldImportCmd = &cobra.Command{
 	Use: "import",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -83,62 +155,12 @@ var oldImportCmd = &cobra.Command{
 
 			fmt.Printf("id: %v\n", id)
 
-			var b bytes.Buffer
-			w := multipart.NewWriter(&b)
-
-			createFileField := func(fieldname, filename, contentType string) (io.Writer, error) {
-				h := make(textproto.MIMEHeader)
-				h.Set("Content-Disposition",
-					fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
-						escapeQuotes(fieldname), escapeQuotes(filename)))
-				h.Set("Content-Type", contentType)
-				return w.CreatePart(h)
+			images, err := createImageForm(m.GetCoverPath(), m.GetLogoPath(), m.GetBannerPath())
+			if err != nil {
+				logger.Fatal("failed", "err", err)
 			}
 
-			createFormPart := func(p, name string) {
-				f, err := os.Open(p)
-				if err != nil {
-					logger.Fatal("failed", "err", err)
-				}
-				defer f.Close()
-
-				contentType, err := utils.ImageExtToContentType(path.Ext(p))
-				if err != nil {
-					logger.Fatal("failed", "err", err)
-				}
-
-				formFile, err := createFileField(name, path.Base(p), contentType)
-				if err != nil {
-					logger.Fatal("failed", "err", err)
-				}
-
-				_, err = io.Copy(formFile, f)
-				if err != nil {
-					logger.Fatal("failed", "err", err)
-				}
-
-			}
-
-			_ = createFormPart
-
-			coverPath := m.GetCoverPath()
-			if coverPath != "" {
-				createFormPart(coverPath, "cover")
-			}
-
-			logoPath := m.GetLogoPath()
-			if logoPath != "" {
-				createFormPart(logoPath, "logo")
-			}
-
-			bannerPath := m.GetLogoPath()
-			if bannerPath != "" {
-				createFormPart(bannerPath, "banner")
-			}
-
-			w.Close()
-
-			_, err = client.ChangeImages(id, w.Boundary(), &b, api.Options{})
+			_, err = client.ChangeMediaImages(id, images.Boundary, &images.Buf, api.Options{})
 			if err != nil {
 				logger.Fatal("failed", "err", err)
 			}
@@ -164,8 +186,108 @@ var oldImportCmd = &cobra.Command{
 	},
 }
 
+var oldColCmd = &cobra.Command{
+	Use: "col",
+	Run: func(cmd *cobra.Command, args []string) {
+		client := api.New("http://localhost:3000")
+
+		dir := "/Volumes/media/watch/mal/series"
+		lib, err := library.SearchLibrary(dir)
+		if err != nil {
+			logger.Fatal("failed to read media", "err", err)
+		}
+
+		_ = lib
+		_ = client
+
+		mediaPathMapping := make(map[string]library.Media)
+
+		for _, m := range lib.Media {
+			mediaPathMapping[m.Path] = m
+		}
+
+		for _, col := range lib.Collections {
+			pretty.Println(col)
+			// col.General.Name
+
+			c, err := client.CreateCollection(api.CreateCollectionBody{
+				CollectionType: string(col.Type),
+				Name:           col.General.Name,
+			}, api.Options{})
+			if err != nil {
+				logger.Fatal("failed", "err", err)
+			}
+
+			images, err := createImageForm(col.GetCoverPath(), col.GetLogoPath(), col.GetBannerPath())
+			if err != nil {
+				logger.Fatal("failed", "err", err)
+			}
+
+			_, err = client.ChangeCollectionImages(c.Id, images.Boundary, &images.Buf, api.Options{})
+			if err != nil {
+				logger.Fatal("failed", "err", err)
+			}
+
+			for _, group := range col.Groups {
+				for _, entry := range group.Entries {
+					p := path.Join(col.Path, entry.Path)
+					fmt.Printf("p: %v\n", p)
+					media, ok := mediaPathMapping[p]
+					if !ok {
+						logger.Fatal("failed to map path to media", "path", p)
+					}
+
+					fmt.Printf("media.Ids.MyAnimeList: %v\n", media.Ids.MyAnimeList)
+
+					lel, err := client.GetMedia(api.Options{
+						Query: url.Values{
+							"filter": {fmt.Sprintf(`malId=="anime@%s"`, media.Ids.MyAnimeList)},
+						},
+					})
+					if err != nil {
+						logger.Fatal("failed to get media", "err", err)
+					}
+
+					pretty.Println(lel)
+
+					if len(lel.Media) > 0 {
+						cm := lel.Media[0]
+
+						_, err = client.AddCollectionItem(c.Id, api.AddCollectionItemBody{
+							MediaId:    cm.Id,
+							Name:       entry.Name,
+							SearchSlug: entry.SearchSlug,
+							Order:      entry.Order,
+						}, api.Options{})
+						if err != nil {
+							logger.Fatal("failed", "err", err)
+						}
+					}
+
+					//
+					// err := db.CreateCollectionMediaItem(ctx, database.CreateCollectionMediaItemParams{
+					// 	CollectionId:   dbCollection.Id,
+					// 	MediaId:        mediaId,
+					// 	GroupName:      group.Name,
+					// 	GroupOrder:     int64(group.Order),
+					// 	Name:           entry.Name,
+					// 	OrderNumber:    int64(entry.Order),
+					// 	SubOrderNumber: int64(0),
+					// 	SearchSlug:     entry.SearchSlug,
+					// })
+					// if err != nil {
+					// 	return fmt.Errorf("failed to add media to collection: %w", err)
+					// }
+				}
+			}
+
+		}
+	},
+}
+
 func init() {
 	oldCmd.AddCommand(oldImportCmd)
+	oldCmd.AddCommand(oldColCmd)
 
 	rootCmd.AddCommand(oldCmd)
 }

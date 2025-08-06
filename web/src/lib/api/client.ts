@@ -80,7 +80,7 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/media/${id}`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
-  changeImages(id: string, body: FormData, options?: ExtraOptions) {
+  changeMediaImages(id: string, body: FormData, options?: ExtraOptions) {
     return this.requestForm(`/api/v1/media/${id}/images`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
@@ -118,6 +118,10 @@ export class ApiClient extends BaseApiClient {
   
   editCollection(id: string, body: api.EditCollectionBody, options?: ExtraOptions) {
     return this.request(`/api/v1/collections/${id}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  changeCollectionImages(id: string, body: FormData, options?: ExtraOptions) {
+    return this.requestForm(`/api/v1/collections/${id}/images`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
   addCollectionItem(id: string, body: api.AddCollectionItemBody, options?: ExtraOptions) {
@@ -210,7 +214,7 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/media/${id}`)
   }
   
-  changeImages(id: string) {
+  changeMediaImages(id: string) {
     return createUrl(this.baseUrl, `/api/v1/media/${id}/images`)
   }
   
@@ -248,6 +252,10 @@ export class ClientUrls {
   
   editCollection(id: string) {
     return createUrl(this.baseUrl, `/api/v1/collections/${id}`)
+  }
+  
+  changeCollectionImages(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/collections/${id}/images`)
   }
   
   addCollectionItem(id: string) {

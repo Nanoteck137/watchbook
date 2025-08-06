@@ -987,7 +987,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.FormApiHandler{
-			Name:         "ChangeImages",
+			Name:         "ChangeMediaImages",
 			Method:       http.MethodPatch,
 			Path:         "/media/:id/images",
 			ResponseType: nil,
@@ -1036,14 +1036,14 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				changes := database.MediaChanges{}
 
 				// TODO(patrik): Change name
-				test := func(name string) (database.Change[sql.NullString], error) {
-					coverFiles, err := pyrin.FormFiles(c, name)
+				test := func(old sql.NullString, name string) (database.Change[sql.NullString], error) {
+					files, err := pyrin.FormFiles(c, name)
 					if err != nil {
 						return database.Change[sql.NullString]{}, err
 					}
 
-					if len(coverFiles) > 0 {
-						file := coverFiles[0]
+					if len(files) > 0 {
+						file := files[0]
 
 						// TODO(patrik): Add better size limiting
 						if file.Size > 25*1024*1024 {
@@ -1054,35 +1054,35 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 						ext, err := utils.GetImageExtFromContentType(contentType)
 						// TODO(patrik): Better error
 						if err != nil {
-							return database.Change[sql.NullString]{}, errors.New("file too big")
+							return database.Change[sql.NullString]{}, err
 						}
 
-						if dbMedia.CoverFile.Valid {
-							p := path.Join(mediaDir.Images(), dbMedia.CoverFile.String)
+						if old.Valid {
+							p := path.Join(mediaDir.Images(), old.String)
 							err = os.Remove(p)
 							if err != nil {
-								return database.Change[sql.NullString]{}, errors.New("file too big")
+								return database.Change[sql.NullString]{}, err
 							}
 						}
 
 						f, err := file.Open()
 						// TODO(patrik): Better error
 						if err != nil {
-							return database.Change[sql.NullString]{}, errors.New("file too big")
+							return database.Change[sql.NullString]{}, err
 						}
 						defer f.Close()
 
 						outFile, err := os.OpenFile(path.Join(mediaDir.Images(), name+ext), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 						// TODO(patrik): Better error
 						if err != nil {
-							return database.Change[sql.NullString]{}, errors.New("file too big")
+							return database.Change[sql.NullString]{}, err
 						}
 						defer outFile.Close()
 
 						_, err = io.Copy(outFile, f)
 						// TODO(patrik): Better error
 						if err != nil {
-							return database.Change[sql.NullString]{}, errors.New("file too big")
+							return database.Change[sql.NullString]{}, err
 						}
 
 						return database.Change[sql.NullString]{
@@ -1097,17 +1097,17 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return database.Change[sql.NullString]{}, nil
 				}
 
-				changes.CoverFile, err = test("cover")
+				changes.CoverFile, err = test(dbMedia.CoverFile, "cover")
 				if err != nil {
 					return nil, err
 				}
 
-				changes.LogoFile, err = test("logo")
+				changes.LogoFile, err = test(dbMedia.LogoFile, "logo")
 				if err != nil {
 					return nil, err
 				}
 
-				changes.BannerFile, err = test("banner")
+				changes.BannerFile, err = test(dbMedia.BannerFile, "banner")
 				if err != nil {
 					return nil, err
 				}

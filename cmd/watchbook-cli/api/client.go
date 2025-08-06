@@ -275,7 +275,7 @@ func (c *Client) EditMedia(id string, body EditMediaBody, options Options) (*any
 	return Request[any](data, body)
 }
 
-func (c *Client) ChangeImages(id string, boundary string, body Reader, options Options) (*any, error) {
+func (c *Client) ChangeMediaImages(id string, boundary string, body Reader, options Options) (*any, error) {
 	path := Sprintf("/api/v1/media/%v/images", id)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
@@ -435,6 +435,22 @@ func (c *Client) EditCollection(id string, body EditCollectionBody, options Opti
 	return Request[any](data, body)
 }
 
+func (c *Client) ChangeCollectionImages(id string, boundary string, body Reader, options Options) (*any, error) {
+	path := Sprintf("/api/v1/collections/%v/images", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return RequestForm[any](data, boundary, body)
+}
+
 func (c *Client) AddCollectionItem(id string, body AddCollectionItemBody, options Options) (*any, error) {
 	path := Sprintf("/api/v1/collections/%v/items", id)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -559,7 +575,7 @@ func (c *ClientUrls) EditMedia(id string) (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) ChangeImages(id string) (*URL, error) {
+func (c *ClientUrls) ChangeMediaImages(id string) (*URL, error) {
 	path := Sprintf("/api/v1/media/%v/images", id)
 	return c.getUrl(path)
 }
@@ -606,6 +622,11 @@ func (c *ClientUrls) CreateCollection() (*URL, error) {
 
 func (c *ClientUrls) EditCollection(id string) (*URL, error) {
 	path := Sprintf("/api/v1/collections/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) ChangeCollectionImages(id string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v/images", id)
 	return c.getUrl(path)
 }
 
