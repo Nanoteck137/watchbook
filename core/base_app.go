@@ -41,20 +41,17 @@ func (app *BaseApp) Bootstrap() error {
 
 	workDir := app.config.WorkDir()
 
-	// dirs := []string{
-	// 	workDir.MediaDir().String(),
-	// 	workDir.MediaDir().ImagesDir(),
-	//
-	// 	workDir.CacheDir(),
-	// 	workDir.CacheProvidersDir(),
-	// }
-	//
-	// for _, dir := range dirs {
-	// 	err = os.Mkdir(dir, 0755)
-	// 	if err != nil && !os.IsExist(err) {
-	// 		return err
-	// 	}
-	// }
+	dirs := []string{
+		workDir.MediaDir(),
+		workDir.CollectionsDir(),
+	}
+
+	for _, dir := range dirs {
+		err = os.Mkdir(dir, 0755)
+		if err != nil && !os.IsExist(err) {
+			return err
+		}
+	}
 
 	app.db, err = database.Open(workDir.DatabaseFile())
 	if err != nil {

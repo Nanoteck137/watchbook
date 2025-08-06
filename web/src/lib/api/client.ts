@@ -72,6 +72,34 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/media/${id}/user`, "POST", z.undefined(), z.any(), body, options)
   }
   
+  createMedia(body: api.CreateMediaBody, options?: ExtraOptions) {
+    return this.request("/api/v1/media", "POST", api.CreateMedia, z.any(), body, options)
+  }
+  
+  editMedia(id: string, body: api.EditMediaBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/${id}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  changeMediaImages(id: string, body: FormData, options?: ExtraOptions) {
+    return this.requestForm(`/api/v1/media/${id}/images`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  addPart(id: string, body: api.AddPartBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/${id}/single/parts`, "POST", api.AddPart, z.any(), body, options)
+  }
+  
+  editPart(id: string, index: string, body: api.EditPartBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/${id}/parts/${index}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  removePart(id: string, index: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/${id}/parts/${index}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  }
+  
+  setParts(id: string, body: api.SetPartsBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/${id}/parts`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
   getCollections(options?: ExtraOptions) {
     return this.request("/api/v1/collections", "GET", api.GetCollections, z.any(), undefined, options)
   }
@@ -82,6 +110,22 @@ export class ApiClient extends BaseApiClient {
   
   getCollectionItems(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/collections/${id}/items`, "GET", api.GetCollectionItems, z.any(), undefined, options)
+  }
+  
+  createCollection(body: api.CreateCollectionBody, options?: ExtraOptions) {
+    return this.request("/api/v1/collections", "POST", api.CreateCollection, z.any(), body, options)
+  }
+  
+  editCollection(id: string, body: api.EditCollectionBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/collections/${id}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  changeCollectionImages(id: string, body: FormData, options?: ExtraOptions) {
+    return this.requestForm(`/api/v1/collections/${id}/images`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  addCollectionItem(id: string, body: api.AddCollectionItemBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/collections/${id}/items`, "POST", z.undefined(), z.any(), body, options)
   }
   
   providerMyAnimeListGetAnime(id: string, options?: ExtraOptions) {
@@ -162,6 +206,34 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/media/${id}/user`)
   }
   
+  createMedia() {
+    return createUrl(this.baseUrl, "/api/v1/media")
+  }
+  
+  editMedia(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}`)
+  }
+  
+  changeMediaImages(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}/images`)
+  }
+  
+  addPart(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}/single/parts`)
+  }
+  
+  editPart(id: string, index: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}/parts/${index}`)
+  }
+  
+  removePart(id: string, index: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}/parts/${index}`)
+  }
+  
+  setParts(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}/parts`)
+  }
+  
   getCollections() {
     return createUrl(this.baseUrl, "/api/v1/collections")
   }
@@ -174,12 +246,28 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/collections/${id}/items`)
   }
   
+  createCollection() {
+    return createUrl(this.baseUrl, "/api/v1/collections")
+  }
+  
+  editCollection(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/collections/${id}`)
+  }
+  
+  changeCollectionImages(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/collections/${id}/images`)
+  }
+  
+  addCollectionItem(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/collections/${id}/items`)
+  }
+  
   providerMyAnimeListGetAnime(id: string) {
     return createUrl(this.baseUrl, `/api/v1/provider/myanimelist/anime/${id}`)
   }
   
-  getMediaImage(id: string, image: string) {
-    return createUrl(this.baseUrl, `/files/media/${id}/${image}`)
+  getMediaImage(id: string, file: string) {
+    return createUrl(this.baseUrl, `/files/media/${id}/images/${file}`)
   }
   
   getCollectionImage(id: string, image: string) {

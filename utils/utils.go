@@ -287,6 +287,35 @@ func SliceDifference[S ~[]E, E comparable](slice1 S, slice2 S) S {
 	return diff
 }
 
+func ImageExtToContentType(ext string) (string, error) {
+	// TODO(patrik): Add support for more exts
+	switch ext {
+	case ".png":
+		return "image/png", nil
+	case ".jpg", ".jpeg":
+		return "image/jpeg", nil
+	default:
+		return "", fmt.Errorf("unsupported ext: %s", ext)
+	}
+}
+
+func GetImageExtFromContentType(contentType string) (string, error) {
+	mediaType, _, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse content type: %w", err)
+	}
+
+	// TODO(patrik): Add support for more exts
+	switch mediaType {
+	case "image/png":
+		return ".png", nil
+	case "image/jpeg":
+		return ".jpeg", nil
+	default:
+		return "", fmt.Errorf("unsupported media type: %s", mediaType)
+	}
+}
+
 func DownloadImage(url, outDir, name string) (string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -299,19 +328,9 @@ func DownloadImage(url, outDir, name string) (string, error) {
 	}
 
 	contentType := resp.Header.Get("Content-Type")
-	mediaType, _, err := mime.ParseMediaType(contentType)
+	ext, err := GetImageExtFromContentType(contentType)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse Content-Type: %w", err)
-	}
-
-	ext := ""
-	switch mediaType {
-	case "image/png":
-		ext = ".png"
-	case "image/jpeg":
-		ext = ".jpeg"
-	default:
-		return "", fmt.Errorf("unsupported media type: %s", mediaType)
+		return "", err
 	}
 
 	out := path.Join(outDir, name+ext)
