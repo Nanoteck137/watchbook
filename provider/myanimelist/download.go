@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/nanoteck137/watchbook/downloader"
+	"github.com/nanoteck137/watchbook/provider/downloader"
 )
 
 var ErrCheckFailed = errors.New("entry check failed")

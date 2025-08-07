@@ -12,7 +12,7 @@ import (
 
 	"github.com/kr/pretty"
 	"github.com/nanoteck137/watchbook/cmd/watchbook-cli/api"
-	"github.com/nanoteck137/watchbook/library"
+	"github.com/nanoteck137/watchbook/cmd/watchbook-cli/library"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 	"github.com/spf13/cobra"

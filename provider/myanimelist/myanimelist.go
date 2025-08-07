@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/kr/pretty"
-	"github.com/nanoteck137/watchbook/downloader"
+	"github.com/nanoteck137/watchbook/provider/downloader"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 	"golang.org/x/time/rate"

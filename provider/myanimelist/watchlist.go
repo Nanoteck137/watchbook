@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/nanoteck137/watchbook/downloader"
+	"github.com/nanoteck137/watchbook/provider/downloader"
 )
 
 type WatchlistStatus int
