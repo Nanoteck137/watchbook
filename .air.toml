@@ -3,9 +3,9 @@ tmp_dir = "tmp"
 
 [build]
   bin = "./tmp/watchbook serve"
-  cmd = "go build -tags \"fts5\" -o ./tmp/watchbook ./cmd/watchbook/main.go"
+  cmd = "go build -o ./tmp/watchbook ./cmd/watchbook/main.go"
   delay = 1000
-  exclude_dir = ["tmp", "vendor", "mockdata", "work", "web"]
+  exclude_dir = ["tmp", "vendor", "mockdata", "work", "web", "cmd/watchbook-cli"]
   exclude_file = []
   exclude_regex = [".*_templ.go"]
   exclude_unchanged = false
