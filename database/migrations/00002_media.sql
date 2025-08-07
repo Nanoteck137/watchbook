@@ -45,7 +45,7 @@ CREATE TABLE media_user_data (
     media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
-    list TEXT,
+    list TEXT NOT NULL,
 
     part INTEGER,
     revisit_count INTEGER,

@@ -72,6 +72,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/media/${id}/user`, "POST", z.undefined(), z.any(), body, options)
   }
   
+  deleteMediaUserData(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/${id}/user`, "DELETE", z.undefined(), z.any(), undefined, options)
+  }
+  
   createMedia(body: api.CreateMediaBody, options?: ExtraOptions) {
     return this.request("/api/v1/media", "POST", api.CreateMedia, z.any(), body, options)
   }
@@ -203,6 +207,10 @@ export class ClientUrls {
   }
   
   setMediaUserData(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}/user`)
+  }
+  
+  deleteMediaUserData(id: string) {
     return createUrl(this.baseUrl, `/api/v1/media/${id}/user`)
   }
   

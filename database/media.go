@@ -14,11 +14,11 @@ import (
 )
 
 type MediaUserData struct {
-	List         *types.MediaUserList `json:"list"`
-	Score        *int64               `json:"score"`
-	Part         *int64               `json:"part"`
-	RevisitCount *int64               `json:"revisit_count"`
-	IsRevisiting int                  `json:"is_revisiting"`
+	List         types.MediaUserList `json:"list"`
+	Score        *int64              `json:"score"`
+	Part         *int64              `json:"part"`
+	RevisitCount *int64              `json:"revisit_count"`
+	IsRevisiting int                 `json:"is_revisiting"`
 }
 
 type MediaImageJson struct {
@@ -559,7 +559,7 @@ const (
 )
 
 type SetMediaUserData struct {
-	List         sql.NullString
+	List         types.MediaUserList
 	Part         sql.NullInt64
 	RevisitCount sql.NullInt64
 	IsRevisiting bool
@@ -568,10 +568,8 @@ type SetMediaUserData struct {
 
 func (db *Database) SetMediaUserData(ctx context.Context, mediaId, userId string, data SetMediaUserData) error {
 
-	if data.List.Valid {
-		if !types.IsValidMediaUserList(types.MediaUserList(data.List.String)) {
-			data.List.String = string(DefaultMediaUserList)
-		}
+	if data.List == "" {
+		data.List = DefaultMediaUserList
 	}
 
 	if data.Score.Valid {
@@ -597,6 +595,21 @@ func (db *Database) SetMediaUserData(ctx context.Context, mediaId, userId string
 				"is_revisiting": data.IsRevisiting,
 				"score":         data.Score,
 			}),
+		)
+
+	_, err := db.db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *Database) DeleteMediaUserData(ctx context.Context, mediaId, userId string) error {
+	query := dialect.Delete("media_user_data").
+		Where(
+			goqu.I("media_user_data.media_id").Eq(mediaId), 
+			goqu.I("media_user_data.user_id").Eq(userId), 
 		)
 
 	_, err := db.db.Exec(ctx, query)

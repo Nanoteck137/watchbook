@@ -22,11 +22,12 @@ import (
 )
 
 type MediaUser struct {
-	List         *types.MediaUserList `json:"list"`
-	Score        *int64               `json:"score"`
-	CurrentPart  *int64               `json:"currentPart"`
-	RevisitCount *int64               `json:"revisitCount"`
-	IsRevisiting bool                 `json:"isRevisiting"`
+	HasData      bool                `json:"hasData"`
+	List         types.MediaUserList `json:"list"`
+	Score        *int64              `json:"score"`
+	CurrentPart  *int64              `json:"currentPart"`
+	RevisitCount *int64              `json:"revisitCount"`
+	IsRevisiting bool                `json:"isRevisiting"`
 }
 
 type Media struct {
@@ -124,6 +125,7 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 			user.RevisitCount = val.RevisitCount
 			user.Score = val.Score
 			user.IsRevisiting = val.IsRevisiting > 0
+			user.HasData = true
 		}
 	}
 
@@ -534,17 +536,14 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				val := media.UserData.Data
 
 				data := database.SetMediaUserData{
-					List:         utils.MediaUserListPtrToSqlNull(val.List),
+					List:         val.List,
 					Part:         utils.Int64PtrToSqlNull(val.Part),
 					IsRevisiting: val.IsRevisiting > 0,
 					Score:        utils.Int64PtrToSqlNull(val.Score),
 				}
 
 				if body.List != nil {
-					data.List = sql.NullString{
-						String: string(*body.List),
-						Valid:  *body.List != "",
-					}
+					data.List = *body.List
 				}
 
 				if body.CurrentPart != nil {
@@ -573,6 +572,39 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				}
 
 				err = app.DB().SetMediaUserData(ctx, media.Id, user.Id, data)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "DeleteMediaUserData",
+			Method:       http.MethodDelete,
+			Path:         "/media/:id/user",
+			ResponseType: nil,
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				ctx := context.TODO()
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				media, err := app.DB().GetMediaById(ctx, &user.Id, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, MediaNotFound()
+					}
+
+					return nil, err
+				}
+
+				err = app.DB().DeleteMediaUserData(ctx, media.Id, user.Id)
 				if err != nil {
 					return nil, err
 				}

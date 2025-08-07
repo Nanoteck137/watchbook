@@ -243,6 +243,22 @@ func (c *Client) SetMediaUserData(id string, body SetMediaUserData, options Opti
 	return Request[any](data, body)
 }
 
+func (c *Client) DeleteMediaUserData(id string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/user", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "DELETE",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
 func (c *Client) CreateMedia(body CreateMediaBody, options Options) (*CreateMedia, error) {
 	path := "/api/v1/media"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -561,6 +577,11 @@ func (c *ClientUrls) GetMediaParts(id string) (*URL, error) {
 }
 
 func (c *ClientUrls) SetMediaUserData(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/user", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) DeleteMediaUserData(id string) (*URL, error) {
 	path := Sprintf("/api/v1/media/%v/user", id)
 	return c.getUrl(path)
 }

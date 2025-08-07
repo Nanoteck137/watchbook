@@ -15,7 +15,7 @@
     Input,
     Label,
   } from "@nanoteck137/nano-ui";
-  import { ChevronDown, Eye, Star } from "lucide-svelte";
+  import { ChevronDown, Delete, Eye, Star, Trash } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
 
   const { data } = $props();
@@ -135,43 +135,61 @@
 <Spacer size="lg" />
 
 <div class="flex flex-col justify-around gap-2">
-  <DropdownMenu.Root>
-    <DropdownMenu.Trigger
-      class="relative flex items-center justify-center rounded bg-primary py-1 text-primary-foreground"
-    >
-      <Star size={18} class="fill-primary-foreground" />
-      <Spacer horizontal size="sm" />
-      <p class="text-base">{formatList()}</p>
-      <ChevronDown class="absolute right-4" size={20} />
-    </DropdownMenu.Trigger>
-    <DropdownMenu.Content class="w-40">
-      <DropdownMenu.Group>
-        <DropdownMenu.GroupHeading>Select Category</DropdownMenu.GroupHeading>
-        <DropdownMenu.Separator />
-        <DropdownMenu.Item onclick={() => updateList("in-progress")}>
-          In-Progress
-        </DropdownMenu.Item>
-        <DropdownMenu.Item onclick={() => updateList("completed")}>
-          Completed
-        </DropdownMenu.Item>
-        <DropdownMenu.Item onclick={() => updateList("on-hold")}>
-          On-Hold
-        </DropdownMenu.Item>
-        <DropdownMenu.Item onclick={() => updateList("dropped")}>
-          Dropped
-        </DropdownMenu.Item>
-        <DropdownMenu.Item onclick={() => updateList("backlog")}>
-          Backlog
-        </DropdownMenu.Item>
-        {#if !!data.media.user?.list}
+  <div class="flex gap-2">
+    {#if !!data.media.user?.hasData}
+      <Button
+        onclick={async () => {
+          const res = await apiClient.deleteMediaUserData(data.media.id);
+          if (!res.success) {
+            return handleApiError(res.error);
+          }
+
+          invalidateAll();
+        }}
+      >
+        <Trash />
+      </Button>
+    {/if}
+
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger
+        class="relative flex flex-1 items-center justify-center rounded bg-primary py-1 text-primary-foreground"
+      >
+        <Star size={18} class="fill-primary-foreground" />
+        <Spacer horizontal size="sm" />
+        <p class="text-base">{formatList()}</p>
+        <ChevronDown class="absolute right-4" size={20} />
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Content class="w-40">
+        <DropdownMenu.Group>
+          <DropdownMenu.GroupHeading>Select Category</DropdownMenu.GroupHeading
+          >
           <DropdownMenu.Separator />
-          <DropdownMenu.Item onclick={() => updateList(null)}>
-            Remove
+          <DropdownMenu.Item onclick={() => updateList("in-progress")}>
+            In-Progress
           </DropdownMenu.Item>
-        {/if}
-      </DropdownMenu.Group>
-    </DropdownMenu.Content>
-  </DropdownMenu.Root>
+          <DropdownMenu.Item onclick={() => updateList("completed")}>
+            Completed
+          </DropdownMenu.Item>
+          <DropdownMenu.Item onclick={() => updateList("on-hold")}>
+            On-Hold
+          </DropdownMenu.Item>
+          <DropdownMenu.Item onclick={() => updateList("dropped")}>
+            Dropped
+          </DropdownMenu.Item>
+          <DropdownMenu.Item onclick={() => updateList("backlog")}>
+            Backlog
+          </DropdownMenu.Item>
+          {#if !!data.media.user?.list}
+            <DropdownMenu.Separator />
+            <DropdownMenu.Item onclick={() => updateList(null)}>
+              Remove
+            </DropdownMenu.Item>
+          {/if}
+        </DropdownMenu.Group>
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
+  </div>
 
   <DropdownMenu.Root>
     <DropdownMenu.Trigger
