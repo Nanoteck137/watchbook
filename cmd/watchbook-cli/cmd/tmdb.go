@@ -142,7 +142,8 @@ var tmdbMovieCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		movieId := args[0]
 
-		client := api.New("http://localhost:3000")
+		apiAddress, _ := cmd.Flags().GetString("api-address")
+		client := api.New(apiAddress)
 
 		tempDir, err := os.MkdirTemp("", "watchbook-cli-*")
 		if err != nil {
@@ -324,7 +325,8 @@ var tmdbTvCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		tvId := args[0]
 
-		client := api.New("http://localhost:3000")
+		apiAddress, _ := cmd.Flags().GetString("api-address")
+		client := api.New(apiAddress)
 
 		tempDir, err := os.MkdirTemp("", "watchbook-cli-*")
 		if err != nil {
