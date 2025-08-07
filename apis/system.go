@@ -164,7 +164,7 @@ func (helper *SyncHelper) setMediaTags(ctx context.Context, db *database.Databas
 }
 
 func (helper *SyncHelper) setMediaStudios(ctx context.Context, db *database.Database, mediaId string, studios []string) error {
-	err := db.RemoveAllStudiosFromMedia(ctx, mediaId)
+	err := db.RemoveAllCreatorsFromMedia(ctx, mediaId)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (helper *SyncHelper) setMediaStudios(ctx context.Context, db *database.Data
 			return err
 		}
 
-		err = db.AddStudioToMedia(ctx, mediaId, studio)
+		err = db.AddCreatorToMedia(ctx, mediaId, studio)
 		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 			return err
 		}

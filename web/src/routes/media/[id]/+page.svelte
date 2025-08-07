@@ -369,12 +369,12 @@
   {/if}
   <p>
     Studios:
-    {#each data.media.studios as studio, i}
+    {#each data.media.creators as creator, i}
       {#if i != 0}
         <span>, </span>
       {/if}
-      <a class="text-blue-500 hover:underline" href="/studios/{studio}">
-        {studio}
+      <a class="text-blue-500 hover:underline" href="/creators/{creator}">
+        {creator}
       </a>
     {/each}
   </p>

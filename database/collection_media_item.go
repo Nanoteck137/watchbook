@@ -71,9 +71,9 @@ type FullCollectionMediaItem struct {
 
 	MediaPartCount sql.NullInt64 `db:"media_part_count"`
 
-	MediaStudios JsonColumn[[]string]         `db:"media_studios"`
-	MediaTags    JsonColumn[[]string]         `db:"media_tags"`
-	MediaImages  JsonColumn[[]MediaImageJson] `db:"media_images"`
+	MediaCreators JsonColumn[[]string]         `db:"media_creators"`
+	MediaTags     JsonColumn[[]string]         `db:"media_tags"`
+	MediaImages   JsonColumn[[]MediaImageJson] `db:"media_images"`
 
 	MediaUserData JsonColumn[MediaUserData] `db:"media_user_data"`
 }
@@ -150,7 +150,7 @@ func FullCollectionMediaItemQuery(userId *string) *goqu.SelectDataset {
 
 			goqu.I("media.part_count").As("media_part_count"),
 
-			goqu.I("media.studios").As("media_studios"),
+			goqu.I("media.creators").As("media_creators"),
 			goqu.I("media.tags").As("media_tags"),
 
 			goqu.I("media.user_data").As("media_user_data"),

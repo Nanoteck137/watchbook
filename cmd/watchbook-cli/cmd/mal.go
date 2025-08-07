@@ -59,7 +59,7 @@ func createMediaFromMalId(client *api.Client, tempDir, malId string) (string, er
 		// CoverUrl:       "",
 		// BannerUrl:      "",
 		// LogoUrl:        "",
-		Studios: data.Studios,
+		Creators: data.Studios,
 		Tags:    data.Tags,
 		// CollectionId:   "",
 		// CollectionName: "",

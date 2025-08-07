@@ -645,7 +645,7 @@ func (c *ClientUrls) GetMediaImage(id string, file string) (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) GetCollectionImage(id string, image string) (*URL, error) {
-	path := Sprintf("/files/collections/%v/%v", id, image)
+func (c *ClientUrls) GetCollectionImage(id string, file string) (*URL, error) {
+	path := Sprintf("/files/collections/%v/images/%v", id, file)
 	return c.getUrl(path)
 }

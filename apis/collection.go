@@ -93,8 +93,8 @@ type CollectionItem struct {
 	StartDate *string `json:"startDate"`
 	EndDate   *string `json:"endDate"`
 
-	Studios []string `json:"studios"`
-	Tags    []string `json:"tags"`
+	Creators []string `json:"creators"`
+	Tags     []string `json:"tags"`
 
 	CoverUrl  *string `json:"coverUrl"`
 	LogoUrl   *string `json:"logoUrl"`
@@ -151,7 +151,7 @@ func ConvertDBCollectionItem(c pyrin.Context, hasUser bool, item database.FullCo
 		AiringSeason:   utils.SqlNullToStringPtr(item.MediaAiringSeason),
 		StartDate:      utils.SqlNullToStringPtr(item.MediaStartDate),
 		EndDate:        utils.SqlNullToStringPtr(item.MediaEndDate),
-		Studios:        utils.FixNilArrayToEmpty(item.MediaStudios.Data),
+		Creators:       utils.FixNilArrayToEmpty(item.MediaCreators.Data),
 		Tags:           utils.FixNilArrayToEmpty(item.MediaTags.Data),
 		CoverUrl:       coverUrl,
 		LogoUrl:        logoUrl,

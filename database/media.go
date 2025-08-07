@@ -57,8 +57,8 @@ type Media struct {
 
 	PartCount sql.NullInt64 `db:"part_count"`
 
-	Studios JsonColumn[[]string] `db:"studios"`
-	Tags    JsonColumn[[]string] `db:"tags"`
+	Creators JsonColumn[[]string] `db:"creators"`
+	Tags     JsonColumn[[]string] `db:"tags"`
 
 	UserData JsonColumn[MediaUserData] `db:"user_data"`
 }
@@ -97,8 +97,8 @@ func MediaTagQuery() *goqu.SelectDataset {
 		GroupBy(tbl.Col("media_id"))
 }
 
-func MediaStudioQuery() *goqu.SelectDataset {
-	tbl := goqu.T("media_studios")
+func MediaCreatorQuery() *goqu.SelectDataset {
+	tbl := goqu.T("media_creators")
 
 	return dialect.From(tbl).
 		Select(
@@ -167,7 +167,7 @@ func MediaPartCountQuery() *goqu.SelectDataset {
 // TODO(patrik): Use goqu.T more
 func MediaQuery(userId *string) *goqu.SelectDataset {
 	partCountQuery := MediaPartCountQuery()
-	studiosQuery := MediaStudioQuery()
+	creatorsQuery := MediaCreatorQuery()
 	tagsQuery := MediaTagQuery()
 
 	userDataQuery := MediaUserDataQuery(userId)
@@ -204,7 +204,7 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 
 			goqu.I("part_count.data").As("part_count"),
 
-			goqu.I("studios.data").As("studios"),
+			goqu.I("creators.data").As("creators"),
 			goqu.I("tags.data").As("tags"),
 
 			goqu.I("user_data.data").As("user_data"),
@@ -214,8 +214,8 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 			goqu.On(goqu.I("media.id").Eq(goqu.I("part_count.id"))),
 		).
 		LeftJoin(
-			studiosQuery.As("studios"),
-			goqu.On(goqu.I("media.id").Eq(goqu.I("studios.id"))),
+			creatorsQuery.As("creators"),
+			goqu.On(goqu.I("media.id").Eq(goqu.I("creators.id"))),
 		).
 		LeftJoin(
 			tagsQuery.As("tags"),
@@ -509,8 +509,8 @@ func (db *Database) RemoveAllTagsFromMedia(ctx context.Context, mediaId string) 
 	return nil
 }
 
-func (db *Database) AddStudioToMedia(ctx context.Context, mediaId, tagSlug string) error {
-	query := dialect.Insert("media_studios").
+func (db *Database) AddCreatorToMedia(ctx context.Context, mediaId, tagSlug string) error {
+	query := dialect.Insert("media_creators").
 		Rows(goqu.Record{
 			"media_id": mediaId,
 			"tag_slug": tagSlug,
@@ -524,9 +524,9 @@ func (db *Database) AddStudioToMedia(ctx context.Context, mediaId, tagSlug strin
 	return nil
 }
 
-func (db *Database) RemoveAllStudiosFromMedia(ctx context.Context, mediaId string) error {
-	query := dialect.Delete("media_studios").
-		Where(goqu.I("media_studios.media_id").Eq(mediaId))
+func (db *Database) RemoveAllCreatorsFromMedia(ctx context.Context, mediaId string) error {
+	query := dialect.Delete("media_creators").
+		Where(goqu.I("media_creators.media_id").Eq(mediaId))
 
 	_, err := db.db.Exec(ctx, query)
 	if err != nil {

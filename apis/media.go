@@ -50,8 +50,8 @@ type Media struct {
 	StartDate *string `json:"startDate"`
 	EndDate   *string `json:"endDate"`
 
-	Studios []string `json:"studios"`
-	Tags    []string `json:"tags"`
+	Creators []string `json:"creators"`
+	Tags     []string `json:"tags"`
 
 	CoverUrl  *string `json:"coverUrl"`
 	BannerUrl *string `json:"bannerUrl"`
@@ -140,7 +140,7 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 		Status:       media.Status,
 		Rating:       media.Rating,
 		PartCount:    media.PartCount.Int64,
-		Studios:      utils.FixNilArrayToEmpty(media.Studios.Data),
+		Creators:     utils.FixNilArrayToEmpty(media.Creators.Data),
 		Tags:         utils.FixNilArrayToEmpty(media.Tags.Data),
 		AiringSeason: utils.SqlNullToStringPtr(media.AiringSeason),
 		StartDate:    utils.SqlNullToStringPtr(media.StartDate),
@@ -208,8 +208,8 @@ type CreateMediaBody struct {
 	BannerUrl string `json:"bannerUrl"`
 	LogoUrl   string `json:"logoUrl"`
 
-	Tags    []string `json:"tags"`
-	Studios []string `json:"studios"`
+	Tags     []string `json:"tags"`
+	Creators []string `json:"creators"`
 
 	CollectionId   string `json:"collectionId,omitempty"`
 	CollectionName string `json:"collectionName,omitempty"`
@@ -233,7 +233,7 @@ func (b *CreateMediaBody) Transform() {
 	b.EndDate = anvil.String(b.EndDate)
 
 	b.Tags = utils.TransformSlugArray(b.Tags)
-	b.Studios = utils.TransformSlugArray(b.Studios)
+	b.Creators = utils.TransformSlugArray(b.Creators)
 }
 
 func (b CreateMediaBody) Validate() error {
@@ -275,8 +275,8 @@ type EditMediaBody struct {
 
 	AdminStatus *string `json:"adminStatus,omitempty"`
 
-	Tags    *[]string `json:"tags,omitempty"`
-	Studios *[]string `json:"studios,omitempty"`
+	Tags     *[]string `json:"tags,omitempty"`
+	Creators *[]string `json:"creators,omitempty"`
 }
 
 func (b *EditMediaBody) Transform() {
@@ -300,8 +300,8 @@ func (b *EditMediaBody) Transform() {
 		*b.Tags = utils.TransformSlugArray(*b.Tags)
 	}
 
-	if b.Studios != nil {
-		*b.Studios = utils.TransformSlugArray(*b.Studios)
+	if b.Creators != nil {
+		*b.Creators = utils.TransformSlugArray(*b.Creators)
 	}
 }
 
@@ -709,15 +709,15 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				for _, tag := range body.Studios {
+				for _, tag := range body.Creators {
 					err := app.DB().CreateTag(ctx, tag, tag)
 					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 						return nil, err
 					}
 				}
 
-				for _, tag := range body.Studios {
-					err := app.DB().AddStudioToMedia(ctx, id, tag)
+				for _, tag := range body.Creators {
+					err := app.DB().AddCreatorToMedia(ctx, id, tag)
 					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 						return nil, err
 					}
@@ -959,23 +959,23 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				if body.Studios != nil {
-					err := app.DB().RemoveAllStudiosFromMedia(ctx, dbMedia.Id)
+				if body.Creators != nil {
+					err := app.DB().RemoveAllCreatorsFromMedia(ctx, dbMedia.Id)
 					if err != nil {
 						return nil, err
 					}
 
-					studios := *body.Studios
+					creators := *body.Creators
 
-					for _, tag := range studios {
+					for _, tag := range creators {
 						err := app.DB().CreateTag(ctx, tag, tag)
 						if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 							return nil, err
 						}
 					}
 
-					for _, tag := range studios {
-						err := app.DB().AddStudioToMedia(ctx, id, tag)
+					for _, tag := range creators {
+						err := app.DB().AddCreatorToMedia(ctx, id, tag)
 						if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 							return nil, err
 						}
@@ -1289,7 +1289,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			Path:         "/media/:id/parts",
 			ResponseType: nil,
 			BodyType:     SetPartsBody{},
-			HandlerFunc:  func(c pyrin.Context) (any, error) {
+			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
 				body, err := pyrin.Body[SetPartsBody](c)

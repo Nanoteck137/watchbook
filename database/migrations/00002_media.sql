@@ -34,7 +34,7 @@ CREATE TABLE media_tags (
     PRIMARY KEY(media_id, tag_slug)
 );
 
-CREATE TABLE media_studios (
+CREATE TABLE media_creators (
     media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE,
     tag_slug TEXT NOT NULL REFERENCES tags(slug) ON DELETE CASCADE,
 
@@ -71,6 +71,6 @@ CREATE TABLE media_parts (
 -- +goose Down
 DROP TABLE media_parts;
 DROP TABLE media_user_data;
-DROP TABLE media_studios;
+DROP TABLE media_creators;
 DROP TABLE media_tags;
 DROP TABLE media;

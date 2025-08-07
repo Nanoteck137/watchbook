@@ -229,7 +229,7 @@ var tmdbMovieCmd = &cobra.Command{
 				AiringSeason: airingSeason,
 				StartDate:    decodedRes.ReleaseDate,
 				EndDate:      decodedRes.ReleaseDate,
-				Studios:      studios,
+				Creators:     studios,
 				Tags:         tags,
 			}, api.Options{})
 			if err != nil {
@@ -438,7 +438,7 @@ var tmdbTvCmd = &cobra.Command{
 			airingSeason := types.GetAiringSeason(season.AirDate)
 
 			res, err := client.CreateMedia(api.CreateMediaBody{
-				MediaType:    string(types.MediaTypeSeason),
+				MediaType:    string(types.MediaTypeTV),
 				TmdbId:       id,
 				Title:        name,
 				Description:  season.Overview,
@@ -448,7 +448,7 @@ var tmdbTvCmd = &cobra.Command{
 				AiringSeason: airingSeason,
 				StartDate:    season.AirDate,
 				EndDate:      season.AirDate,
-				Studios:      studios,
+				Creators:     studios,
 				Tags:         tags,
 			}, api.Options{})
 			if err != nil {

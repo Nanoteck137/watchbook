@@ -270,7 +270,7 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/files/media/${id}/images/${file}`)
   }
   
-  getCollectionImage(id: string, image: string) {
-    return createUrl(this.baseUrl, `/files/collections/${id}/${image}`)
+  getCollectionImage(id: string, file: string) {
+    return createUrl(this.baseUrl, `/files/collections/${id}/images/${file}`)
   }
 }

@@ -24,11 +24,6 @@ CREATE TABLE tags (
     name TEXT NOT NULL CHECK(name<>'')
 );
 
-CREATE TABLE studios (
-    slug TEXT PRIMARY KEY CHECK(slug<>''),
-    name TEXT NOT NULL CHECK(name<>'')
-);
-
 CREATE TABLE users_settings (
     id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     display_name TEXT
@@ -37,7 +32,6 @@ CREATE TABLE users_settings (
 -- +goose Down
 DROP TABLE users_settings;
 
-DROP TABLE studios;
 DROP TABLE tags;
 
 DROP TABLE api_tokens;
