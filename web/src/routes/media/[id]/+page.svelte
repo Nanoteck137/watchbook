@@ -368,7 +368,7 @@
     <p>End Date: {data.media.endDate}</p>
   {/if}
   <p>
-    Studios:
+    Creators:
     {#each data.media.creators as creator, i}
       {#if i != 0}
         <span>, </span>
