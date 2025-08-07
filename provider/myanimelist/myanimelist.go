@@ -269,7 +269,7 @@ func RawGetAnime(malId string) (AnimeEntry, error) {
 // TODO(patrik): Remove
 func GetAnime(workDir types.WorkDir, malId string, useCache bool) (AnimeEntry, error) {
 	panic("REMOVE")
-	cacheDir := "" 
+	cacheDir := ""
 
 	err := os.Mkdir(cacheDir, 0755)
 	if err != nil && !os.IsExist(err) {
@@ -346,11 +346,11 @@ func ConvertAnimeType(typ string) types.MediaType {
 func ConvertAnimeStatus(status string) types.MediaStatus {
 	switch status {
 	case "Currently Airing":
-		return types.MediaStatusAiring
+		return types.MediaStatusOngoing
 	case "Finished Airing":
-		return types.MediaStatusFinished
+		return types.MediaStatusCompleted
 	case "Not yet aired":
-		return types.MediaStatusNotAired
+		return types.MediaStatusUpcoming
 	case "":
 		return types.MediaStatusUnknown
 	default:

@@ -85,16 +85,16 @@
     if (!category) return "Not Added";
 
     switch (category) {
-      case "watching":
-        return "Watching";
+      case "in-progress":
+        return "In-Progress";
       case "completed":
         return "Completed";
       case "on-hold":
         return "On-Hold";
       case "dropped":
         return "Dropped";
-      case "plan-to-watch":
-        return "Plan to Watch";
+      case "backlog":
+        return "Backlog";
     }
 
     return category;
@@ -148,8 +148,8 @@
       <DropdownMenu.Group>
         <DropdownMenu.GroupHeading>Select Category</DropdownMenu.GroupHeading>
         <DropdownMenu.Separator />
-        <DropdownMenu.Item onclick={() => updateList("watching")}>
-          Watching
+        <DropdownMenu.Item onclick={() => updateList("in-progress")}>
+          In-Progress
         </DropdownMenu.Item>
         <DropdownMenu.Item onclick={() => updateList("completed")}>
           Completed
@@ -160,8 +160,8 @@
         <DropdownMenu.Item onclick={() => updateList("dropped")}>
           Dropped
         </DropdownMenu.Item>
-        <DropdownMenu.Item onclick={() => updateList("plan-to-watch")}>
-          Plan to Watch
+        <DropdownMenu.Item onclick={() => updateList("backlog")}>
+          Backlog
         </DropdownMenu.Item>
         {#if !!data.media.user?.list}
           <DropdownMenu.Separator />

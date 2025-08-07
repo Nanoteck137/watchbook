@@ -196,10 +196,10 @@ var tmdbMovieCmd = &cobra.Command{
 
 		pretty.Println(decodedRes)
 
-		status := types.MediaStatusNotAired
+		status := types.MediaStatusUpcoming
 		switch decodedRes.Status {
 		case "Released":
-			status = types.MediaStatusFinished
+			status = types.MediaStatusCompleted
 		}
 
 		studios := make([]string, len(decodedRes.ProductionCompanies))
@@ -414,9 +414,9 @@ var tmdbTvCmd = &cobra.Command{
 				entryName = fmt.Sprintf("Season %d", season.SeasonNumber)
 			}
 
-			status := types.MediaStatusNotAired
+			status := types.MediaStatusUpcoming
 			if types.IsReleased(season.AirDate) {
-				status = types.MediaStatusFinished
+				status = types.MediaStatusCompleted
 			}
 
 			studios := make([]string, 0, len(decodedRes.ProductionCompanies)+len(decodedRes.Networks))

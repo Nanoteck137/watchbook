@@ -551,7 +551,7 @@ func (db *Database) RemoveMediaUserList(ctx context.Context, mediaId, userId str
 	return nil
 }
 
-const DefaultMediaUserList = types.MediaUserListWatching
+const DefaultMediaUserList = types.MediaUserListBacklog
 
 const (
 	MediaScoreMin = 1

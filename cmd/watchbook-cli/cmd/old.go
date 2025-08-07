@@ -13,6 +13,7 @@ import (
 	"github.com/kr/pretty"
 	"github.com/nanoteck137/watchbook/cmd/watchbook-cli/api"
 	"github.com/nanoteck137/watchbook/library"
+	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 	"github.com/spf13/cobra"
 )
@@ -98,7 +99,7 @@ var oldImportCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := api.New("http://localhost:3000")
 
-		lib, err := library.SearchLibrary("/Volumes/media/watch")
+		lib, err := library.SearchLibrary("/Volumes/media/watch/mal/entries")
 		if err != nil {
 			logger.Fatal("failed to read media", "err", err)
 		}
@@ -113,7 +114,17 @@ var oldImportCmd = &cobra.Command{
 				logger.Fatal("failed to get media", "err", err)
 			}
 
-			pretty.Println(lel)
+			status := types.MediaStatusUnknown
+			switch m.General.Status {
+			case "finished":
+				status = types.MediaStatusCompleted
+			case "not-aired":
+				status = types.MediaStatusUpcoming
+			case "airing":
+				status = types.MediaStatusOngoing
+			default:
+				logger.Warn("unknown status", "status", m.General.Status)
+			}
 
 			id := ""
 
@@ -128,19 +139,13 @@ var oldImportCmd = &cobra.Command{
 					Title:        m.General.Title,
 					Description:  m.General.Description,
 					Score:        float32(m.General.Score),
-					Status:       string(m.General.Status),
+					Status:       string(status),
 					Rating:       string(m.General.Rating),
 					AiringSeason: m.General.AiringSeason,
 					StartDate:    m.General.StartDate,
 					EndDate:      m.General.EndDate,
-					// PartCount:    len(m.Parts),
-					// CoverUrl:       "",
-					// BannerUrl:      "",
-					// LogoUrl:        "",
-					Tags:    m.General.Tags,
-					Studios: m.General.Studios,
-					// CollectionId:   "",
-					// CollectionName: "",
+					Tags:         m.General.Tags,
+					Creators:     m.General.Studios,
 				}, api.Options{})
 
 				if err != nil {

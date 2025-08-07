@@ -122,18 +122,18 @@ func ValidateMediaType(val any) error {
 type MediaStatus string
 
 const (
-	MediaStatusUnknown  MediaStatus = "unknown"
-	MediaStatusAiring   MediaStatus = "airing"
-	MediaStatusFinished MediaStatus = "finished"
-	MediaStatusNotAired MediaStatus = "not-aired"
+	MediaStatusUnknown   MediaStatus = "unknown"
+	MediaStatusOngoing   MediaStatus = "ongoing"
+	MediaStatusCompleted MediaStatus = "completed"
+	MediaStatusUpcoming  MediaStatus = "upcoming"
 )
 
 func IsValidMediaStatus(s MediaStatus) bool {
 	switch s {
 	case MediaStatusUnknown,
-		MediaStatusAiring,
-		MediaStatusFinished,
-		MediaStatusNotAired:
+		MediaStatusOngoing,
+		MediaStatusCompleted,
+		MediaStatusUpcoming:
 		return true
 	}
 
@@ -232,26 +232,27 @@ func ValidateMediaRating(val any) error {
 type MediaUserList string
 
 const (
-	MediaUserListWatching    MediaUserList = "watching"
-	MediaUserListCompleted   MediaUserList = "completed"
-	MediaUserListOnHold      MediaUserList = "on-hold"
-	MediaUserListDropped     MediaUserList = "dropped"
-	MediaUserListPlanToWatch MediaUserList = "plan-to-watch"
+	MediaUserListInProgress MediaUserList = "in-progress"
+	MediaUserListCompleted  MediaUserList = "completed"
+	MediaUserListOnHold     MediaUserList = "on-hold"
+	MediaUserListDropped    MediaUserList = "dropped"
+	MediaUserListBacklog    MediaUserList = "backlog"
 )
 
 func IsValidMediaUserList(l MediaUserList) bool {
 	switch l {
-	case MediaUserListWatching,
+	case MediaUserListInProgress,
 		MediaUserListCompleted,
 		MediaUserListOnHold,
 		MediaUserListDropped,
-		MediaUserListPlanToWatch:
+		MediaUserListBacklog:
 		return true
 	}
 
 	return false
 }
 
+// TODO(patrik): Remove
 type MediaImageType string
 
 const (

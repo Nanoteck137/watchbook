@@ -1,6 +1,6 @@
 export type UserList =
-  | "watching"
+  | "in-progress"
   | "completed"
   | "on-hold"
   | "dropped"
-  | "plan-to-watch";
+  | "backlog";
