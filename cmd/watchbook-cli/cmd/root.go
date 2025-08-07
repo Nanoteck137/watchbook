@@ -5,7 +5,6 @@ import (
 
 	"github.com/nanoteck137/pyrin/trail"
 	"github.com/nanoteck137/watchbook"
-	"github.com/nanoteck137/watchbook/config"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +24,6 @@ func Execute() {
 func init() {
 	rootCmd.SetVersionTemplate(watchbook.VersionTemplate(watchbook.CliAppName))
 
-	cobra.OnInitialize(config.InitConfig)
-
-	rootCmd.PersistentFlags().StringVarP(&config.ConfigFile, "config", "c", "", "Config File")
+	rootCmd.PersistentFlags().StringP("api-address", "a", "", "address of the API")
+	rootCmd.MarkPersistentFlagRequired("api-address")
 }

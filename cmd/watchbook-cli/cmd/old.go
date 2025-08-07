@@ -97,7 +97,8 @@ func createImageForm(coverPath, logoPath, bannerPath string) (ImageRes, error) {
 var oldImportCmd = &cobra.Command{
 	Use: "import",
 	Run: func(cmd *cobra.Command, args []string) {
-		client := api.New("http://localhost:3000")
+		apiAddress, _ := cmd.Flags().GetString("api-address")
+		client := api.New(apiAddress)
 
 		lib, err := library.SearchLibrary("/Volumes/media/watch/mal/entries")
 		if err != nil {
@@ -194,7 +195,8 @@ var oldImportCmd = &cobra.Command{
 var oldColCmd = &cobra.Command{
 	Use: "col",
 	Run: func(cmd *cobra.Command, args []string) {
-		client := api.New("http://localhost:3000")
+		apiAddress, _ := cmd.Flags().GetString("api-address")
+		client := api.New(apiAddress)
 
 		dir := "/Volumes/media/watch/mal/series"
 		lib, err := library.SearchLibrary(dir)

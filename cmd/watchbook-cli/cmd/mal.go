@@ -60,7 +60,7 @@ func createMediaFromMalId(client *api.Client, tempDir, malId string) (string, er
 		// BannerUrl:      "",
 		// LogoUrl:        "",
 		Creators: data.Studios,
-		Tags:    data.Tags,
+		Tags:     data.Tags,
 		// CollectionId:   "",
 		// CollectionName: "",
 	}, api.Options{})
@@ -121,7 +121,8 @@ var malGetCmd = &cobra.Command{
 	Use:  "get",
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := api.New("http://localhost:3000")
+		apiAddress, _ := cmd.Flags().GetString("api-address")
+		client := api.New(apiAddress)
 
 		dir, err := os.MkdirTemp("", "watchbook-cli-*")
 		if err != nil {
@@ -159,7 +160,8 @@ var malCreateCollectionCmd = &cobra.Command{
 		name := args[0]
 		ids := args[1:]
 
-		client := api.New("http://localhost:3000")
+		apiAddress, _ := cmd.Flags().GetString("api-address")
+		client := api.New(apiAddress)
 
 		dir, err := os.MkdirTemp("", "watchbook-cli-*")
 		if err != nil {
@@ -253,7 +255,7 @@ var malCreateCollectionCmd = &cobra.Command{
 			searchSlug := utils.Slug(entry.SearchSlug)
 			if searchSlug == "" {
 				searchSlug = utils.Slug(entry.Name)
-			} 
+			}
 
 			order, _ := strconv.Atoi(entry.Order)
 
