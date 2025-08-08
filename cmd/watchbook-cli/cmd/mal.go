@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/huh"
@@ -258,20 +259,47 @@ var malGetCmd = &cobra.Command{
 }
 
 var malCreateCollectionCmd = &cobra.Command{
-	Use:  "create-collection",
-	Args: cobra.MinimumNArgs(2),
+	Use: "create-collection",
 	Run: func(cmd *cobra.Command, args []string) {
-		name := args[0]
-		ids := args[1:]
-
 		apiAddress, _ := cmd.Flags().GetString("api-address")
 		client := api.New(apiAddress)
 
-		dir, err := os.MkdirTemp("", "watchbook-cli-*")
+		tempDir, err := os.MkdirTemp("", "watchbook-cli-*")
 		if err != nil {
 			logger.Fatal("failed to create temp dir", "err", err)
 		}
-		defer os.RemoveAll(dir)
+		defer os.RemoveAll(tempDir)
+
+		var name string
+		var idsString string
+		form := huh.NewForm(
+			huh.NewGroup(
+				huh.NewInput().
+					Title("Collection Name").
+					Validate(huh.ValidateNotEmpty()).
+					Value(&name),
+				huh.NewInput().
+					Title("MAL IDs").
+					Validate(huh.ValidateNotEmpty()).
+					Value(&idsString),
+			),
+		)
+
+		err = form.Run()
+		if err != nil {
+			logger.Fatal("failed to run form", "err", err)
+		}
+
+		var ids []string
+
+		splits := strings.Split(idsString, ",")
+
+		for _, id := range splits {
+			id = strings.TrimSpace(id)
+			if id != "" {
+				ids = append(ids, id)
+			}
+		}
 
 		res, err := client.CreateCollection(api.CreateCollectionBody{
 			CollectionType: "anime",
@@ -280,8 +308,6 @@ var malCreateCollectionCmd = &cobra.Command{
 		if err != nil {
 			logger.Fatal("failed to create collection", "err", err)
 		}
-
-		_ = res
 
 		var media []api.GetMediaById
 
@@ -298,7 +324,7 @@ var malCreateCollectionCmd = &cobra.Command{
 			realId := ""
 
 			if len(search.Media) <= 0 {
-				realId, err = createMediaFromMalId(client, dir, id)
+				realId, err = createMediaFromMalId(client, tempDir, id)
 				if err != nil {
 					logger.Warn("failed to create media", "err", err, "id", id)
 				}
@@ -346,7 +372,7 @@ var malCreateCollectionCmd = &cobra.Command{
 			entries = append(entries, entry)
 		}
 
-		form := huh.NewForm(
+		form = huh.NewForm(
 			groups...,
 		)
 		err = form.Run()
@@ -354,7 +380,6 @@ var malCreateCollectionCmd = &cobra.Command{
 			logger.Fatal("failed to run form", "err", err)
 		}
 
-		pretty.Println(entries)
 		for _, entry := range entries {
 			searchSlug := utils.Slug(entry.SearchSlug)
 			if searchSlug == "" {
@@ -372,6 +397,62 @@ var malCreateCollectionCmd = &cobra.Command{
 			if err != nil {
 				logger.Fatal("failed to add media to collection", "err", err, "entry", entry.Media.Title)
 			}
+		}
+
+		var coverUrl string
+		var logoUrl string
+		var bannerUrl string
+		form = huh.NewForm(
+			huh.NewGroup(
+				huh.NewInput().
+					Title("Cover URL").
+					Value(&coverUrl),
+				huh.NewInput().
+					Title("Logo URL").
+					Value(&logoUrl),
+				huh.NewInput().
+					Title("Banner URL").
+					Value(&bannerUrl),
+			),
+		)
+		err = form.Run()
+		if err != nil {
+			logger.Fatal("failed to run form", "err", err)
+		}
+
+		var coverPath string
+		var logoPath string
+		var bannerPath string
+
+		if coverPath != "" {
+			coverPath, err = utils.DownloadImage(coverUrl, tempDir, "cover")
+			if err != nil {
+				logger.Fatal("failed to download cover image", "err", err)
+			}
+		}
+
+		if logoPath != "" {
+			logoPath, err = utils.DownloadImage(logoUrl, tempDir, "logo")
+			if err != nil {
+				logger.Fatal("failed to download logo image", "err", err)
+			}
+		}
+
+		if bannerPath != "" {
+			bannerPath, err = utils.DownloadImage(bannerUrl, tempDir, "banner")
+			if err != nil {
+				logger.Fatal("failed to download banner image", "err", err)
+			}
+		}
+
+		images, err := createImageForm(coverPath, logoPath, bannerPath)
+		if err != nil {
+			logger.Fatal("failed to create image form", "err", err)
+		}
+
+		_, err = client.ChangeCollectionImages(res.Id, images.Boundary, &images.Buf, api.Options{})
+		if err != nil {
+			logger.Fatal("failed to set images", "err", err, "id")
 		}
 	},
 }
@@ -420,7 +501,7 @@ var malImportFromWatchlistCmd = &cobra.Command{
 }
 
 var malImportSeasonYearCmd = &cobra.Command{
-	Use: "import-season-year <year>",
+	Use:  "import-season-year <year>",
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		yearStr := args[0]
