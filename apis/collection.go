@@ -488,6 +488,12 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
+				dir := app.WorkDir().CollectionDirById(dbCollection.Id)
+				err = os.RemoveAll(dir.String())
+				if err != nil {
+					return nil, err
+				}
+
 				return nil, nil
 			},
 		},
