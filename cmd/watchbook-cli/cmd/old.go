@@ -100,7 +100,7 @@ var oldImportCmd = &cobra.Command{
 		apiAddress, _ := cmd.Flags().GetString("api-address")
 		client := api.New(apiAddress)
 
-		lib, err := library.SearchLibrary("/Volumes/media/watch/mal/entries")
+		lib, err := library.SearchLibrary("/Volumes/media/watch/mal")
 		if err != nil {
 			logger.Fatal("failed to read media", "err", err)
 		}

@@ -19,6 +19,7 @@
 
 <Spacer size="sm" />
 
+<p>Num entries: {data.page.totalItems}</p>
 <div class="flex flex-col gap-4">
   {#each data.media as media}
     <div class="flex justify-between border-b py-2">

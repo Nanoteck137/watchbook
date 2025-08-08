@@ -5,11 +5,13 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/charmbracelet/huh"
 	"github.com/kr/pretty"
 	"github.com/nanoteck137/watchbook/cmd/watchbook-cli/api"
 	"github.com/nanoteck137/watchbook/provider/myanimelist"
+	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 	"github.com/spf13/cobra"
 )
@@ -82,6 +84,108 @@ func createMediaFromMalId(client *api.Client, tempDir, malId string) (string, er
 	} else if data.EpisodeCount != nil {
 		parts := make([]api.PartBody, 0, *data.EpisodeCount)
 		for i := range *data.EpisodeCount {
+			parts = append(parts, api.PartBody{
+				Name: fmt.Sprintf("Episode %d", i+1),
+			})
+		}
+
+		_, err := client.SetParts(res.Id, api.SetPartsBody{
+			Parts: parts,
+		}, api.Options{})
+		if err != nil {
+			logger.Fatal("failed to set parts", "err", err, "id", malId)
+		}
+	}
+
+	p, err := utils.DownloadImage(data.CoverImageUrl, tempDir, "cover")
+	if err != nil {
+		logger.Fatal("failed to download image", "err", err, "id", malId)
+	}
+
+	images, err := createImageForm(p, "", "")
+	if err != nil {
+		logger.Fatal("failed to create image form", "err", err, "id", malId)
+	}
+
+	_, err = client.ChangeMediaImages(res.Id, images.Boundary, &images.Buf, api.Options{})
+	if err != nil {
+		logger.Fatal("failed to set images", "err", err, "id", malId)
+	}
+
+	return res.Id, nil
+}
+
+func createMediaFromSeasonalAnime(client *api.Client, tempDir string, data myanimelist.SeasonalAnime) (string, error) {
+	malId := data.Id
+
+	title := data.Title
+	if data.TitleEnglish != "" {
+		title = data.TitleEnglish
+	}
+
+	airingSeason := types.GetAiringSeason(data.StartDate)
+
+	var tags []string
+
+	for _, genre := range data.Genres {
+		tags = append(tags, genre)
+	}
+
+	for _, theme := range data.Themes {
+		tags = append(tags, theme)
+	}
+
+	for _, demographic := range data.Demographics {
+		tags = append(tags, demographic)
+	}
+
+	typ := myanimelist.ConvertAnimeType(data.Type)
+
+	startDate := data.StartDate
+	_, err := time.Parse(types.MediaDateLayout, startDate)
+	if err != nil {
+		startDate = ""
+	}
+
+	endDate := data.EndDate
+	_, err = time.Parse(types.MediaDateLayout, endDate)
+	if err != nil {
+		endDate = ""
+	}
+
+	res, err := client.CreateMedia(api.CreateMediaBody{
+		MediaType:    string(typ),
+		MalId:        fmt.Sprintf("anime@%s", malId),
+		Title:        title,
+		Description:  data.Description,
+		Score:        float32(data.Score),
+		Status:       string(myanimelist.ConvertAnimeStatus(data.Status)),
+		Rating:       string(myanimelist.ConvertAnimeRating(data.Rating)),
+		AiringSeason: airingSeason,
+		StartDate:    startDate,
+		EndDate:      endDate,
+		Creators:     data.Studios,
+		Tags:         tags,
+	}, api.Options{})
+	if err != nil {
+		pretty.Println(err)
+		logger.Fatal("failed to create media", "err", err, "id", malId)
+	}
+
+	if typ.IsMovie() {
+		_, err := client.SetParts(res.Id, api.SetPartsBody{
+			Parts: []api.PartBody{
+				{
+					Name: title,
+				},
+			},
+		}, api.Options{})
+		if err != nil {
+			logger.Fatal("failed to set parts", "err", err, "id", malId)
+		}
+	} else {
+		parts := make([]api.PartBody, 0, data.EpisodeCount)
+		for i := range data.EpisodeCount {
 			parts = append(parts, api.PartBody{
 				Name: fmt.Sprintf("Episode %d", i+1),
 			})
@@ -272,9 +376,107 @@ var malCreateCollectionCmd = &cobra.Command{
 	},
 }
 
+var malImportFromWatchlistCmd = &cobra.Command{
+	Use:  "import-from-watchlist <username>",
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		username := args[0]
+
+		apiAddress, _ := cmd.Flags().GetString("api-address")
+		client := api.New(apiAddress)
+
+		tempDir, err := os.MkdirTemp("", "watchbook-cli-*")
+		if err != nil {
+			logger.Fatal("failed to create temp dir", "err", err)
+		}
+		defer os.RemoveAll(tempDir)
+
+		watchlist, err := myanimelist.GetUserWatchlist(username)
+		if err != nil {
+			logger.Fatal("failed to get user watchlist", "err", err)
+		}
+
+		for _, entry := range watchlist {
+			id := strconv.Itoa(entry.AnimeId)
+
+			search, err := client.GetMedia(api.Options{
+				Query: url.Values{
+					"filter": {fmt.Sprintf(`malId=="anime@%s"`, id)},
+				},
+			})
+			if err != nil {
+				logger.Fatal("failed to get media", "err", err)
+			}
+
+			if len(search.Media) <= 0 {
+				logger.Warn("missing entry", "id", id, "title", entry.AnimeTitle)
+				_, err := createMediaFromMalId(client, tempDir, id)
+				if err != nil {
+					logger.Fatal("failed to create media", "err", err, "id", id)
+				}
+			}
+		}
+	},
+}
+
+var malImportSeasonYearCmd = &cobra.Command{
+	Use: "import-season-year <year>",
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		yearStr := args[0]
+		year, err := strconv.ParseInt(yearStr, 10, 64)
+		if err != nil {
+			logger.Fatal("failed to parse year as integer", "err", err, "str", yearStr)
+		}
+
+		apiAddress, _ := cmd.Flags().GetString("api-address")
+		client := api.New(apiAddress)
+
+		tempDir, err := os.MkdirTemp("", "watchbook-cli-*")
+		if err != nil {
+			logger.Fatal("failed to create temp dir", "err", err)
+		}
+		defer os.RemoveAll(tempDir)
+
+		seasons := []string{
+			"winter", "spring", "summer", "fall",
+		}
+
+		for _, season := range seasons {
+			seasonal, err := myanimelist.FetchSeasonal(season, int(year))
+			if err != nil {
+				logger.Fatal("failed", "err", err)
+			}
+
+			for _, anime := range seasonal.Animes {
+				search, err := client.GetMedia(api.Options{
+					Query: url.Values{
+						"filter": {fmt.Sprintf(`malId=="anime@%s"`, anime.Id)},
+					},
+				})
+				if err != nil {
+					logger.Fatal("failed to get media", "err", err)
+				}
+
+				if len(search.Media) > 0 {
+					logger.Warn("entry with id already exists", "id", anime.Id, "title", anime.Title)
+					continue
+				}
+
+				_, err = createMediaFromSeasonalAnime(client, tempDir, anime)
+				if err != nil {
+					logger.Warn("failed to create media from seasonal anime", "err", err, "id", anime.Id, "title", anime.Title)
+				}
+			}
+		}
+	},
+}
+
 func init() {
 	malCmd.AddCommand(malGetCmd)
 	malCmd.AddCommand(malCreateCollectionCmd)
+	malCmd.AddCommand(malImportFromWatchlistCmd)
+	malCmd.AddCommand(malImportSeasonYearCmd)
 
 	rootCmd.AddCommand(malCmd)
 }
