@@ -31,15 +31,6 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/system/info", "GET", api.GetSystemInfo, z.any(), undefined, options)
   }
   
-  syncLibrary(options?: ExtraOptions) {
-    return this.request("/api/v1/system/library", "POST", z.undefined(), z.any(), undefined, options)
-  }
-  
-  cleanupLibrary(options?: ExtraOptions) {
-    return this.request("/api/v1/system/library/cleanup", "POST", z.undefined(), z.any(), undefined, options)
-  }
-  
-  
   updateUserSettings(body: api.UpdateUserSettingsBody, options?: ExtraOptions) {
     return this.request("/api/v1/user/settings", "PATCH", z.undefined(), z.any(), body, options)
   }
@@ -124,6 +115,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/collections/${id}`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
+  deleteCollection(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/collections/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  }
+  
   changeCollectionImages(id: string, body: FormData, options?: ExtraOptions) {
     return this.requestForm(`/api/v1/collections/${id}/images`, "PATCH", z.undefined(), z.any(), body, options)
   }
@@ -164,18 +159,6 @@ export class ClientUrls {
   
   getSystemInfo() {
     return createUrl(this.baseUrl, "/api/v1/system/info")
-  }
-  
-  syncLibrary() {
-    return createUrl(this.baseUrl, "/api/v1/system/library")
-  }
-  
-  cleanupLibrary() {
-    return createUrl(this.baseUrl, "/api/v1/system/library/cleanup")
-  }
-  
-  sseHandler() {
-    return createUrl(this.baseUrl, "/api/v1/system/library/sse")
   }
   
   updateUserSettings() {
@@ -259,6 +242,10 @@ export class ClientUrls {
   }
   
   editCollection(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/collections/${id}`)
+  }
+  
+  deleteCollection(id: string) {
     return createUrl(this.baseUrl, `/api/v1/collections/${id}`)
   }
   

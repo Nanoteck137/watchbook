@@ -462,6 +462,36 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
+		pyrin.ApiHandler{
+			Name:         "DeleteCollection",
+			Method:       http.MethodDelete,
+			Path:         "/collections/:id",
+			ResponseType: nil,
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				// TODO(patrik): Add admin check
+
+				ctx := context.Background()
+
+				dbCollection, err := app.DB().GetCollectionById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, CollectionNotFound()
+					}
+
+					return nil, err
+				}
+
+				err = app.DB().RemoveCollection(ctx, dbCollection.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
 		pyrin.FormApiHandler{
 			Name:         "ChangeCollectionImages",
 			Method:       http.MethodPatch,

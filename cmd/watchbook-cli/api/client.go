@@ -82,39 +82,6 @@ func (c *Client) GetSystemInfo(options Options) (*GetSystemInfo, error) {
 	return Request[GetSystemInfo](data, nil)
 }
 
-func (c *Client) SyncLibrary(options Options) (*any, error) {
-	path := "/api/v1/system/library"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, nil)
-}
-
-func (c *Client) CleanupLibrary(options Options) (*any, error) {
-	path := "/api/v1/system/library/cleanup"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, nil)
-}
-
-
 func (c *Client) UpdateUserSettings(body UpdateUserSettingsBody, options Options) (*any, error) {
 	path := "/api/v1/user/settings"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -451,6 +418,22 @@ func (c *Client) EditCollection(id string, body EditCollectionBody, options Opti
 	return Request[any](data, body)
 }
 
+func (c *Client) DeleteCollection(id string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/collections/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "DELETE",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
 func (c *Client) ChangeCollectionImages(id string, boundary string, body Reader, options Options) (*any, error) {
 	path := Sprintf("/api/v1/collections/%v/images", id)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -523,21 +506,6 @@ func (c *ClientUrls) GetMe() (*URL, error) {
 
 func (c *ClientUrls) GetSystemInfo() (*URL, error) {
 	path := "/api/v1/system/info"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) SyncLibrary() (*URL, error) {
-	path := "/api/v1/system/library"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) CleanupLibrary() (*URL, error) {
-	path := "/api/v1/system/library/cleanup"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) SseHandler() (*URL, error) {
-	path := "/api/v1/system/library/sse"
 	return c.getUrl(path)
 }
 
@@ -642,6 +610,11 @@ func (c *ClientUrls) CreateCollection() (*URL, error) {
 }
 
 func (c *ClientUrls) EditCollection(id string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) DeleteCollection(id string) (*URL, error) {
 	path := Sprintf("/api/v1/collections/%v", id)
 	return c.getUrl(path)
 }
