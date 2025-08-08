@@ -97,22 +97,29 @@ func createImageForm(coverPath, logoPath, bannerPath string) (ImageRes, error) {
 var oldImportCmd = &cobra.Command{
 	Use: "import",
 	Run: func(cmd *cobra.Command, args []string) {
+		dir, _ := cmd.Flags().GetString("dir")
+
 		apiAddress, _ := cmd.Flags().GetString("api-address")
 		client := api.New(apiAddress)
 
-		lib, err := library.SearchLibrary("/Volumes/media/watch/mal")
+		lib, err := library.SearchLibrary(dir)
 		if err != nil {
 			logger.Fatal("failed to read media", "err", err)
 		}
 
 		for _, m := range lib.Media {
-			lel, err := client.GetMedia(api.Options{
+			search, err := client.GetMedia(api.Options{
 				Query: url.Values{
 					"filter": {fmt.Sprintf(`malId=="anime@%s"`, m.Ids.MyAnimeList)},
 				},
 			})
 			if err != nil {
 				logger.Fatal("failed to get media", "err", err)
+			}
+
+			if len(search.Media) > 0 {
+				logger.Warn("entry with id already exists", "id", m.Ids.MyAnimeList)
+				continue
 			}
 
 			status := types.MediaStatusUnknown
@@ -127,48 +134,35 @@ var oldImportCmd = &cobra.Command{
 				logger.Warn("unknown status", "status", m.General.Status)
 			}
 
-			id := ""
+			res, err := client.CreateMedia(api.CreateMediaBody{
+				MediaType:    string(m.MediaType),
+				TmdbId:       "",
+				MalId:        "anime@" + m.Ids.MyAnimeList,
+				AnilistId:    "",
+				Title:        m.General.Title,
+				Description:  m.General.Description,
+				Score:        float32(m.General.Score),
+				Status:       string(status),
+				Rating:       string(m.General.Rating),
+				AiringSeason: m.General.AiringSeason,
+				StartDate:    m.General.StartDate,
+				EndDate:      m.General.EndDate,
+				Tags:         m.General.Tags,
+				Creators:     m.General.Studios,
+			}, api.Options{})
 
-			if len(lel.Media) <= 0 {
-				logger.Info("media not found, creating new entry", "title", m.General.Title)
-
-				res, err := client.CreateMedia(api.CreateMediaBody{
-					MediaType:    string(m.MediaType),
-					TmdbId:       "",
-					MalId:        "anime@" + m.Ids.MyAnimeList,
-					AnilistId:    "",
-					Title:        m.General.Title,
-					Description:  m.General.Description,
-					Score:        float32(m.General.Score),
-					Status:       string(status),
-					Rating:       string(m.General.Rating),
-					AiringSeason: m.General.AiringSeason,
-					StartDate:    m.General.StartDate,
-					EndDate:      m.General.EndDate,
-					Tags:         m.General.Tags,
-					Creators:     m.General.Studios,
-				}, api.Options{})
-
-				if err != nil {
-					logger.Fatal("failed to create media", "err", err)
-				}
-
-				pretty.Println(res)
-				id = res.Id
-			} else {
-				id = lel.Media[0].Id
+			if err != nil {
+				logger.Fatal("failed to create media", "err", err)
 			}
-
-			fmt.Printf("id: %v\n", id)
 
 			images, err := createImageForm(m.GetCoverPath(), m.GetLogoPath(), m.GetBannerPath())
 			if err != nil {
-				logger.Fatal("failed", "err", err)
+				logger.Fatal("failed create image form", "err", err)
 			}
 
-			_, err = client.ChangeMediaImages(id, images.Boundary, &images.Buf, api.Options{})
+			_, err = client.ChangeMediaImages(res.Id, images.Boundary, &images.Buf, api.Options{})
 			if err != nil {
-				logger.Fatal("failed", "err", err)
+				logger.Fatal("failed to change images", "err", err)
 			}
 
 			numEpisodes := len(m.Parts)
@@ -180,12 +174,11 @@ var oldImportCmd = &cobra.Command{
 				})
 			}
 
-			_, err = client.SetParts(id, api.SetPartsBody{
+			_, err = client.SetParts(res.Id, api.SetPartsBody{
 				Parts: parts,
 			}, api.Options{})
 			if err != nil {
-				pretty.Println(err)
-				logger.Fatal("failed", "err", err)
+				logger.Fatal("failed to set parts", "err", err)
 			}
 		}
 
@@ -228,7 +221,7 @@ var oldColCmd = &cobra.Command{
 				p := path.Join(col.Path, entry.Path)
 
 				media, err := library.ReadMedia(p)
-				if err != nil  {
+				if err != nil {
 					logger.Fatal("failed to read media", "path", p)
 				}
 
@@ -251,7 +244,7 @@ var oldColCmd = &cobra.Command{
 						Order:      entry.Order,
 					}, api.Options{})
 					if err != nil {
-						logger.Fatal("failed", "err", err)
+						logger.Fatal("failed to add item to collection", "err", err)
 					}
 				}
 			}
@@ -260,11 +253,11 @@ var oldColCmd = &cobra.Command{
 }
 
 func init() {
+	oldImportCmd.Flags().StringP("dir", "d", ".", "directory to import")
 	oldColCmd.Flags().StringP("dir", "d", ".", "directory to import")
 
 	oldCmd.AddCommand(oldImportCmd)
 	oldCmd.AddCommand(oldColCmd)
-
 
 	rootCmd.AddCommand(oldCmd)
 }
