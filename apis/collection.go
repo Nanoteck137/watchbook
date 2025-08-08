@@ -110,17 +110,17 @@ func ConvertDBCollectionItem(c pyrin.Context, hasUser bool, item database.FullCo
 	var logoUrl *string
 
 	if item.MediaCoverFile.Valid {
-		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", item.MediaId, path.Base(item.MediaCoverFile.String)))
+		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/images/%s", item.MediaId, path.Base(item.MediaCoverFile.String)))
 		coverUrl = &url
 	}
 
 	if item.MediaLogoFile.Valid {
-		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", item.MediaId, path.Base(item.MediaLogoFile.String)))
+		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/images/%s", item.MediaId, path.Base(item.MediaLogoFile.String)))
 		logoUrl = &url
 	}
 
 	if item.MediaBannerFile.Valid {
-		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/%s", item.MediaId, path.Base(item.MediaBannerFile.String)))
+		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/images/%s", item.MediaId, path.Base(item.MediaBannerFile.String)))
 		bannerUrl = &url
 	}
 
