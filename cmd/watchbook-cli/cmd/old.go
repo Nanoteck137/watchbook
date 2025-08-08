@@ -195,106 +195,76 @@ var oldImportCmd = &cobra.Command{
 var oldColCmd = &cobra.Command{
 	Use: "col",
 	Run: func(cmd *cobra.Command, args []string) {
+		dir, _ := cmd.Flags().GetString("dir")
+
 		apiAddress, _ := cmd.Flags().GetString("api-address")
 		client := api.New(apiAddress)
 
-		dir := "/Volumes/media/watch/mal/series"
-		lib, err := library.SearchLibrary(dir)
+		col, err := library.ReadCollection(dir)
 		if err != nil {
-			logger.Fatal("failed to read media", "err", err)
+			logger.Fatal("failed to read collection", "err", err)
 		}
 
-		_ = lib
-		_ = client
-
-		mediaPathMapping := make(map[string]library.Media)
-
-		for _, m := range lib.Media {
-			mediaPathMapping[m.Path] = m
+		c, err := client.CreateCollection(api.CreateCollectionBody{
+			CollectionType: string(col.Type),
+			Name:           col.General.Name,
+		}, api.Options{})
+		if err != nil {
+			logger.Fatal("failed", "err", err)
 		}
 
-		for _, col := range lib.Collections {
-			pretty.Println(col)
-			// col.General.Name
+		images, err := createImageForm(col.GetCoverPath(), col.GetLogoPath(), col.GetBannerPath())
+		if err != nil {
+			logger.Fatal("failed", "err", err)
+		}
 
-			c, err := client.CreateCollection(api.CreateCollectionBody{
-				CollectionType: string(col.Type),
-				Name:           col.General.Name,
-			}, api.Options{})
-			if err != nil {
-				logger.Fatal("failed", "err", err)
-			}
+		_, err = client.ChangeCollectionImages(c.Id, images.Boundary, &images.Buf, api.Options{})
+		if err != nil {
+			logger.Fatal("failed", "err", err)
+		}
 
-			images, err := createImageForm(col.GetCoverPath(), col.GetLogoPath(), col.GetBannerPath())
-			if err != nil {
-				logger.Fatal("failed", "err", err)
-			}
+		for _, group := range col.Groups {
+			for _, entry := range group.Entries {
+				p := path.Join(col.Path, entry.Path)
 
-			_, err = client.ChangeCollectionImages(c.Id, images.Boundary, &images.Buf, api.Options{})
-			if err != nil {
-				logger.Fatal("failed", "err", err)
-			}
+				media, err := library.ReadMedia(p)
+				if err != nil  {
+					logger.Fatal("failed to read media", "path", p)
+				}
 
-			for _, group := range col.Groups {
-				for _, entry := range group.Entries {
-					p := path.Join(col.Path, entry.Path)
-					fmt.Printf("p: %v\n", p)
-					media, ok := mediaPathMapping[p]
-					if !ok {
-						logger.Fatal("failed to map path to media", "path", p)
-					}
+				search, err := client.GetMedia(api.Options{
+					Query: url.Values{
+						"filter": {fmt.Sprintf(`malId=="anime@%s"`, media.Ids.MyAnimeList)},
+					},
+				})
+				if err != nil {
+					logger.Fatal("failed to get media", "err", err)
+				}
 
-					fmt.Printf("media.Ids.MyAnimeList: %v\n", media.Ids.MyAnimeList)
+				if len(search.Media) > 0 {
+					cm := search.Media[0]
 
-					lel, err := client.GetMedia(api.Options{
-						Query: url.Values{
-							"filter": {fmt.Sprintf(`malId=="anime@%s"`, media.Ids.MyAnimeList)},
-						},
-					})
+					_, err = client.AddCollectionItem(c.Id, api.AddCollectionItemBody{
+						MediaId:    cm.Id,
+						Name:       entry.Name,
+						SearchSlug: entry.SearchSlug,
+						Order:      entry.Order,
+					}, api.Options{})
 					if err != nil {
-						logger.Fatal("failed to get media", "err", err)
+						logger.Fatal("failed", "err", err)
 					}
-
-					pretty.Println(lel)
-
-					if len(lel.Media) > 0 {
-						cm := lel.Media[0]
-
-						_, err = client.AddCollectionItem(c.Id, api.AddCollectionItemBody{
-							MediaId:    cm.Id,
-							Name:       entry.Name,
-							SearchSlug: entry.SearchSlug,
-							Order:      entry.Order,
-						}, api.Options{})
-						if err != nil {
-							logger.Fatal("failed", "err", err)
-						}
-					}
-
-					//
-					// err := db.CreateCollectionMediaItem(ctx, database.CreateCollectionMediaItemParams{
-					// 	CollectionId:   dbCollection.Id,
-					// 	MediaId:        mediaId,
-					// 	GroupName:      group.Name,
-					// 	GroupOrder:     int64(group.Order),
-					// 	Name:           entry.Name,
-					// 	OrderNumber:    int64(entry.Order),
-					// 	SubOrderNumber: int64(0),
-					// 	SearchSlug:     entry.SearchSlug,
-					// })
-					// if err != nil {
-					// 	return fmt.Errorf("failed to add media to collection: %w", err)
-					// }
 				}
 			}
-
 		}
 	},
 }
 
 func init() {
+	oldColCmd.Flags().StringP("dir", "d", ".", "directory to import")
+
 	oldCmd.AddCommand(oldImportCmd)
 	oldCmd.AddCommand(oldColCmd)
+
 
 	rootCmd.AddCommand(oldCmd)
 }
