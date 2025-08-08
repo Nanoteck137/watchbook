@@ -424,21 +424,21 @@ var malCreateCollectionCmd = &cobra.Command{
 		var logoPath string
 		var bannerPath string
 
-		if coverPath != "" {
+		if coverUrl != "" {
 			coverPath, err = utils.DownloadImage(coverUrl, tempDir, "cover")
 			if err != nil {
 				logger.Fatal("failed to download cover image", "err", err)
 			}
 		}
 
-		if logoPath != "" {
+		if logoUrl != "" {
 			logoPath, err = utils.DownloadImage(logoUrl, tempDir, "logo")
 			if err != nil {
 				logger.Fatal("failed to download logo image", "err", err)
 			}
 		}
 
-		if bannerPath != "" {
+		if bannerUrl != "" {
 			bannerPath, err = utils.DownloadImage(bannerUrl, tempDir, "banner")
 			if err != nil {
 				logger.Fatal("failed to download banner image", "err", err)
