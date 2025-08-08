@@ -10,7 +10,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/watchbook/cmd/watchbook-cli/api"
 	"github.com/nanoteck137/watchbook/cmd/watchbook-cli/library"
 	"github.com/nanoteck137/watchbook/types"
