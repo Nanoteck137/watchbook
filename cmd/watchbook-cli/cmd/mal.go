@@ -553,11 +553,86 @@ var malImportSeasonYearCmd = &cobra.Command{
 	},
 }
 
+var malImportWatchlistToUserCmd = &cobra.Command{
+	Use:  "import-watchlist-to-user <username>",
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		username := args[0]
+
+		apiAddress, _ := cmd.Flags().GetString("api-address")
+		client := api.New(apiAddress)
+
+		token, _ := cmd.Flags().GetString("token")
+
+		client.Headers.Set("X-Api-Token", token)
+
+		watchlist, err := myanimelist.GetUserWatchlist(username)
+		if err != nil {
+			logger.Fatal("failed to get user watchlist", "err", err)
+		}
+
+		for _, entry := range watchlist {
+			id := strconv.Itoa(entry.AnimeId)
+
+			search, err := client.GetMedia(api.Options{
+				Query: url.Values{
+					"filter": {fmt.Sprintf(`malId=="anime@%s"`, id)},
+				},
+			})
+			if err != nil {
+				logger.Fatal("failed to get media", "err", err)
+			}
+
+			var list types.MediaUserList
+			switch entry.Status {
+			case myanimelist.WatchlistStatusCurrentlyWatching:
+				list = types.MediaUserListInProgress
+			case myanimelist.WatchlistStatusCompleted:
+				list = types.MediaUserListCompleted
+			case myanimelist.WatchlistStatusOnHold:
+				list = types.MediaUserListOnHold
+			case myanimelist.WatchlistStatusDropped:
+				list = types.MediaUserListDropped
+			case myanimelist.WatchlistStatusPlanToWatch:
+				list = types.MediaUserListBacklog
+			default:
+				logger.Fatal("unknown status", "status", entry.Status)
+			}
+
+			if len(search.Media) > 0 {
+				for _, m := range search.Media {
+					l := string(list)
+					score := entry.Score
+					currentPart := entry.NumWatchedEpisodes
+					isRevisiting := entry.IsRewatching > 0
+
+					_, err := client.SetMediaUserData(m.Id, api.SetMediaUserData{
+						List:        &l,
+						Score:       &score,
+						CurrentPart: &currentPart,
+						// RevisitCount: new(int),
+						IsRevisiting: &isRevisiting,
+					}, api.Options{})
+					if err != nil {
+						logger.Fatal("failed to set user data to media", "err", err, "title", entry.AnimeTitle)
+					}
+				}
+			} else {
+				logger.Warn("missing entry", "id", entry.AnimeId, "title", entry.AnimeTitle)
+			}
+		}
+	},
+}
+
 func init() {
+	malImportWatchlistToUserCmd.Flags().String("token", "", "user token")
+	malImportWatchlistToUserCmd.MarkFlagRequired("token")
+
 	malCmd.AddCommand(malGetCmd)
 	malCmd.AddCommand(malCreateCollectionCmd)
 	malCmd.AddCommand(malImportFromWatchlistCmd)
 	malCmd.AddCommand(malImportSeasonYearCmd)
+	malCmd.AddCommand(malImportWatchlistToUserCmd)
 
 	rootCmd.AddCommand(malCmd)
 }
