@@ -18,6 +18,10 @@
   ];
 </script>
 
+{#if data.user?.id === data.userId}
+  <Button href="/account">Account</Button>
+{/if}
+
 <ScrollArea orientation="horizontal">
   <div class="flex gap-2 py-2">
     {#each buttons as button}

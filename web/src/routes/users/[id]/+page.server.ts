@@ -27,5 +27,6 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
   return {
     page: animes.data.page,
     media: animes.data.media,
+    userId: params.id,
   };
 };

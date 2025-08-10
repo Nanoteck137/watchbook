@@ -6,6 +6,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
   const query = getPagedQueryOptions(url.searchParams);
   // query["sort"] = "sort=-score";
   // query["filter"] = 'status == "ongoing"';
+  // query["filter"] = "userList == null";
 
   const media = await locals.apiClient.getMedia({ query });
   if (!media.success) {
