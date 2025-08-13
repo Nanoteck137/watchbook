@@ -1,7 +1,7 @@
 import { env } from "$env/dynamic/private";
 import { setApiClientAuth } from "$lib";
 import { ApiClient } from "$lib/api/client";
-import { error, redirect, type Handle } from "@sveltejs/kit";
+import { redirect, type Handle } from "@sveltejs/kit";
 
 const apiAddress = env.API_ADDRESS ? env.API_ADDRESS : "";
 
@@ -20,23 +20,6 @@ export const handle: Handle = async ({ event, resolve }) => {
     const obj = JSON.parse(auth);
     setApiClientAuth(client, obj.token);
     event.locals.token = obj.token;
-
-    let failed = false;
-    try {
-      const me = await client.getMe();
-      if (!me.success) {
-        event.cookies.delete("auth", { path: "/" });
-        failed = true;
-      } else {
-        event.locals.user = me.data;
-      }
-    } catch {
-      throw error(500, { message: "Failed to communicate with api server" });
-    }
-
-    if (failed) {
-      throw redirect(301, "/");
-    }
   }
 
   event.locals.apiClient = client;
