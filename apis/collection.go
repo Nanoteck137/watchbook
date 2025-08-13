@@ -77,8 +77,7 @@ type CollectionItem struct {
 
 	CollectionName string `json:"collectionName"`
 	SearchSlug     string `json:"searchSlug"`
-	Order          int64  `json:"order"`
-	SubOrder       int64  `json:"subOrder"`
+	Order          int    `json:"order"`
 
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
@@ -159,20 +158,12 @@ func ConvertDBCollectionItem(c pyrin.Context, hasUser bool, item database.FullCo
 		User:           user,
 		CollectionName: item.CollectionName,
 		SearchSlug:     item.SearchSlug,
-		Order:          item.OrderNumber,
-		SubOrder:       item.SubOrderNumber,
+		Order:          int(item.OrderNumber),
 	}
 }
 
-type CollectionGroup struct {
-	Name  string `json:"name"`
-	Order int    `json:"order"`
-
-	Entries []CollectionItem `json:"entries"`
-}
-
 type GetCollectionItems struct {
-	Groups []CollectionGroup `json:"groups"`
+	Items []CollectionItem `json:"items"`
 }
 
 type CreateCollection struct {
@@ -326,37 +317,16 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				groups := make(map[string][]database.FullCollectionMediaItem)
+				res := GetCollectionItems{
+					Items: make([]CollectionItem, 0, len(items)),
+				}
 
 				for _, item := range items {
-					groups[item.GroupName] = append(groups[item.GroupName], item)
+					res.Items = append(res.Items, ConvertDBCollectionItem(c, userId != nil, item))
 				}
 
-				res := GetCollectionItems{
-					Groups: []CollectionGroup{},
-				}
-
-				for _, group := range groups {
-					entries := make([]CollectionItem, 0, len(group))
-
-					for _, entry := range group {
-						i := ConvertDBCollectionItem(c, userId != nil, entry)
-						entries = append(entries, i)
-					}
-
-					sort.SliceStable(entries, func(i, j int) bool {
-						return entries[i].Order < entries[j].Order
-					})
-
-					res.Groups = append(res.Groups, CollectionGroup{
-						Name:    group[0].GroupName,
-						Order:   int(group[0].GroupOrder),
-						Entries: entries,
-					})
-				}
-
-				sort.SliceStable(res.Groups, func(i, j int) bool {
-					return res.Groups[i].Order < res.Groups[j].Order
+				sort.SliceStable(res.Items, func(i, j int) bool {
+					return res.Items[i].Order < res.Items[j].Order
 				})
 
 				return res, nil
