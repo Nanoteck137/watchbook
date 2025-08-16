@@ -3,8 +3,17 @@
   import { page } from "$app/stores";
   import Image from "$lib/components/Image.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
-  import { Button, Pagination, ScrollArea } from "@nanoteck137/nano-ui";
-  import { Star } from "lucide-svelte";
+  import UserMediaCard from "$lib/components/UserMediaCard.svelte";
+  import {
+    Button,
+    buttonVariants,
+    DropdownMenu,
+    Pagination,
+    ScrollArea,
+  } from "@nanoteck137/nano-ui";
+  import { ArrowUpDown, ChevronDown, Star } from "lucide-svelte";
+  import HeaderButton from "./HeaderButton.svelte";
+  import { cn } from "$lib/utils";
 
   const { data } = $props();
 
@@ -17,6 +26,94 @@
     "backlog",
   ];
 </script>
+
+<!-- Header Section -->
+<div class="mb-6">
+  <!-- Title -->
+  <h1 class="mb-4 text-3xl font-bold text-white">My Watchlist</h1>
+
+  <!-- Status Buttons with Strips -->
+  <div class="grid grid-cols-6 gap-2 text-center">
+    <HeaderButton
+      href="?list=all"
+      name="All"
+      stripClass="bg-white"
+      active={data.list === "all"}
+    />
+    <HeaderButton
+      href="?list=in-progress"
+      name="Watching"
+      stripClass="bg-blue-500"
+      active={data.list === "in-progress"}
+    />
+    <HeaderButton
+      href="?list=backlog"
+      name="Plan to Watch"
+      stripClass="bg-gray-600"
+      active={data.list === "backlog"}
+    />
+    <HeaderButton
+      href="?list=dropped"
+      name="Dropped"
+      stripClass="bg-red-600"
+      active={data.list === "dropped"}
+    />
+    <HeaderButton
+      href="?list=on-hold"
+      name="On Hold"
+      stripClass="bg-yellow-500"
+      active={data.list === "on-hold"}
+    />
+    <HeaderButton
+      href="?list=completed"
+      name="Completed"
+      stripClass="bg-green-600"
+      active={data.list === "completed"}
+    />
+  </div>
+
+  <Spacer />
+
+  <DropdownMenu.Root>
+    <DropdownMenu.Trigger class={cn(buttonVariants({ variant: "outline" }))}>
+      <ArrowUpDown />
+      Sort
+    </DropdownMenu.Trigger>
+    <DropdownMenu.Content align="start">
+      <DropdownMenu.Group>
+        <DropdownMenu.GroupHeading>Select Category</DropdownMenu.GroupHeading>
+        <DropdownMenu.Separator />
+        <DropdownMenu.Item>Title</DropdownMenu.Item>
+        <DropdownMenu.Item>User Score</DropdownMenu.Item>
+        <DropdownMenu.Item>Media Score</DropdownMenu.Item>
+      </DropdownMenu.Group>
+    </DropdownMenu.Content>
+  </DropdownMenu.Root>
+</div>
+
+<!-- Media Grid -->
+
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <div
+    class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] items-center justify-items-center gap-6"
+  >
+    <!-- <div
+    class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"
+  > -->
+
+    {#each data.media as media}
+      <UserMediaCard
+        href="/media/{media.id}"
+        title={media.title}
+        coverUrl={media.coverUrl}
+        score={media.user?.score}
+        list={media.user?.list}
+        currentPart={media.user?.currentPart}
+        partCount={media.partCount}
+      />
+    {/each}
+  </div>
+</div>
 
 {#if data.user?.id === data.userId}
   <Button href="/account">Account</Button>
