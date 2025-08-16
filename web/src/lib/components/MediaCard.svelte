@@ -36,7 +36,7 @@
 
 <a
   {href}
-  class="relative block aspect-[75/106] max-w-[240px] transform cursor-pointer overflow-hidden rounded-lg bg-gray-900 shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
+  class="group relative block aspect-[75/106] max-w-[240px] transform cursor-pointer overflow-hidden rounded bg-gray-900 shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
 >
   <!-- Badge -->
   {#if userList}
@@ -54,7 +54,7 @@
       <Image
         src={coverUrl}
         alt="Cover image"
-        class="aspect-[75/106] h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+        class="aspect-[75/106] h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
       />
     {:else}
       <!-- TODO(patrik): Fix this -->

@@ -10,9 +10,7 @@
 
 <a
   {href}
-  class="relative block aspect-[75/106] max-w-[280px] transform cursor-pointer
-              overflow-hidden rounded-lg bg-gray-900 shadow-md transition-transform
-              duration-300 hover:-translate-y-1 hover:shadow-lg"
+  class="group relative block aspect-[75/106] max-w-[280px] transform cursor-pointer overflow-hidden rounded bg-gray-900 shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
 >
   <div
     class="flex min-w-[280px] items-center justify-center overflow-hidden bg-gray-800 text-gray-400"
@@ -22,7 +20,7 @@
       <img
         src={coverUrl}
         alt="Cover image"
-        class="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+        class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
       />
     {:else}
       <!-- TODO(patrik): Fix this -->
