@@ -25,6 +25,12 @@
     "dropped",
     "backlog",
   ];
+
+  function gotoSort(sort: string) {
+    const params = $page.url.searchParams;
+    params.set("sort", sort);
+    goto("?" + params.toString(), { invalidateAll: true });
+  }
 </script>
 
 <!-- Header Section -->
@@ -41,22 +47,16 @@
       active={data.list === "all"}
     />
     <HeaderButton
+      href="?list=completed"
+      name="Completed"
+      stripClass="bg-green-600"
+      active={data.list === "completed"}
+    />
+    <HeaderButton
       href="?list=in-progress"
-      name="Watching"
+      name="In Progress"
       stripClass="bg-blue-500"
       active={data.list === "in-progress"}
-    />
-    <HeaderButton
-      href="?list=backlog"
-      name="Plan to Watch"
-      stripClass="bg-gray-600"
-      active={data.list === "backlog"}
-    />
-    <HeaderButton
-      href="?list=dropped"
-      name="Dropped"
-      stripClass="bg-red-600"
-      active={data.list === "dropped"}
     />
     <HeaderButton
       href="?list=on-hold"
@@ -65,10 +65,16 @@
       active={data.list === "on-hold"}
     />
     <HeaderButton
-      href="?list=completed"
-      name="Completed"
-      stripClass="bg-green-600"
-      active={data.list === "completed"}
+      href="?list=dropped"
+      name="Dropped"
+      stripClass="bg-red-600"
+      active={data.list === "dropped"}
+    />
+    <HeaderButton
+      href="?list=backlog"
+      name="Backlog"
+      stripClass="bg-gray-600"
+      active={data.list === "backlog"}
     />
   </div>
 
@@ -81,11 +87,26 @@
     </DropdownMenu.Trigger>
     <DropdownMenu.Content align="start">
       <DropdownMenu.Group>
-        <DropdownMenu.GroupHeading>Select Category</DropdownMenu.GroupHeading>
+        <DropdownMenu.GroupHeading>Sorting</DropdownMenu.GroupHeading>
         <DropdownMenu.Separator />
-        <DropdownMenu.Item>Title</DropdownMenu.Item>
-        <DropdownMenu.Item>User Score</DropdownMenu.Item>
-        <DropdownMenu.Item>Media Score</DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => gotoSort("titleAsc")}>
+          Title (A-Z)
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => gotoSort("titleDesc")}>
+          Title (Z-A)
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => gotoSort("userScoreDesc")}>
+          User Score (+)
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => gotoSort("userScoreAsc")}>
+          User Score (-)
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => gotoSort("scoreDesc")}>
+          Score (+)
+        </DropdownMenu.Item>
+        <DropdownMenu.Item onclick={() => gotoSort("scoreAsc")}>
+          Score (-)
+        </DropdownMenu.Item>
       </DropdownMenu.Group>
     </DropdownMenu.Content>
   </DropdownMenu.Root>

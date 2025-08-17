@@ -45,6 +45,12 @@ func (a *MediaResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 			Name: "user_data.list",
 			Nullable: true,
 		}, true
+	case "userScore":
+		return filter.Name{
+			Kind: filter.NameKindString,
+			Name: "user_data.score",
+			Nullable: true,
+		}, true
 	case "airingSeason":
 		return filter.Name{
 			Kind: filter.NameKindString,

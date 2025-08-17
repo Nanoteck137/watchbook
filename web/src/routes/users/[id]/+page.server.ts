@@ -17,6 +17,31 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
     query["filter"] = `userList == "${list}"`;
   }
 
+  delete query["sort"];
+  const sort = queryParams.get("sort");
+  if (sort) {
+    switch (sort) {
+      case "titleAsc":
+        query["sort"] = "sort=+title";
+        break;
+      case "titleDesc":
+        query["sort"] = "sort=-title";
+        break;
+      case "userScoreAsc":
+        query["sort"] = "sort=+userScore,+title";
+        break;
+      case "userScoreDesc":
+        query["sort"] = "sort=-userScore,+title";
+        break;
+      case "scoreAsc":
+        query["sort"] = "sort=+score,+title";
+        break;
+      case "scoreDesc":
+        query["sort"] = "sort=-score,+title";
+        break;
+    }
+  }
+
   const animes = await locals.apiClient.getMedia({
     query,
   });
