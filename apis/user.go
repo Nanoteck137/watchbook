@@ -11,7 +11,18 @@ import (
 	"github.com/nanoteck137/validate"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
+	"github.com/nanoteck137/watchbook/utils"
 )
+
+type UserData struct {
+	Id          string  `json:"id"`
+	Username    string  `json:"username"`
+	DisplayName *string `json:"displayName"`
+}
+
+type GetUser struct {
+	UserData
+}
 
 type UpdateUserSettingsBody struct {
 	DisplayName *string `json:"displayName,omitempty"`
@@ -58,6 +69,35 @@ type GetAllApiTokens struct {
 
 func InstallUserHandlers(app core.App, group pyrin.Group) {
 	group.Register(
+		pyrin.ApiHandler{
+			Name:         "GetUser",
+			Method:       http.MethodGet,
+			Path:         "/users/:id",
+			ResponseType: GetUser{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				ctx := context.TODO()
+
+				user, err := app.DB().GetUserById(ctx, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, UserNotFound()
+					}
+
+					return nil, err
+				}
+
+				return GetUser{
+					UserData: UserData{
+						Id:          user.Id,
+						Username:    user.Username,
+						DisplayName: utils.SqlNullToStringPtr(user.DisplayName),
+					},
+				}, nil
+			},
+		},
+
 		pyrin.ApiHandler{
 			Name:     "UpdateUserSettings",
 			Method:   http.MethodPatch,

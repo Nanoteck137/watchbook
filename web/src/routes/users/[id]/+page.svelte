@@ -31,12 +31,19 @@
     params.set("sort", sort);
     goto("?" + params.toString(), { invalidateAll: true });
   }
+
+  function getName() {
+    if (data.userData.displayName) return data.userData.displayName;
+    return data.userData.username;
+  }
 </script>
 
 <!-- Header Section -->
 <div class="mb-6">
   <!-- Title -->
-  <h1 class="mb-4 text-3xl font-bold text-white">My Watchlist</h1>
+  <h1 class="mb-4 text-3xl font-bold text-white">
+    {getName()} Watchlist
+  </h1>
 
   <!-- Status Buttons with Strips -->
   <div class="grid grid-cols-6 gap-2 text-center">

@@ -82,6 +82,22 @@ func (c *Client) GetSystemInfo(options Options) (*GetSystemInfo, error) {
 	return Request[GetSystemInfo](data, nil)
 }
 
+func (c *Client) GetUser(id string, options Options) (*GetUser, error) {
+	path := Sprintf("/api/v1/users/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetUser](data, nil)
+}
+
 func (c *Client) UpdateUserSettings(body UpdateUserSettingsBody, options Options) (*any, error) {
 	path := "/api/v1/user/settings"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -506,6 +522,11 @@ func (c *ClientUrls) GetMe() (*URL, error) {
 
 func (c *ClientUrls) GetSystemInfo() (*URL, error) {
 	path := "/api/v1/system/info"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetUser(id string) (*URL, error) {
+	path := Sprintf("/api/v1/users/%v", id)
 	return c.getUrl(path)
 }
 
