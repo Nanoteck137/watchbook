@@ -19,6 +19,7 @@ type MediaUserData struct {
 	Part         *int64              `json:"part"`
 	RevisitCount *int64              `json:"revisit_count"`
 	IsRevisiting int                 `json:"is_revisiting"`
+	Updated      int                 `json:"updated"`
 }
 
 type MediaImageJson struct {
@@ -123,6 +124,7 @@ func MediaUserDataQuery(userId *string) *goqu.SelectDataset {
 			tbl.Col("revisit_count"),
 			tbl.Col("is_revisiting"),
 			tbl.Col("score"),
+			tbl.Col("updated"),
 
 			goqu.Func(
 				"json_object",
@@ -141,6 +143,9 @@ func MediaUserDataQuery(userId *string) *goqu.SelectDataset {
 
 				"score",
 				tbl.Col("score"),
+
+				"updated",
+				tbl.Col("updated"),
 			).As("data"),
 		)
 
@@ -576,6 +581,8 @@ func (db *Database) SetMediaUserData(ctx context.Context, mediaId, userId string
 		data.Score.Int64 = utils.Clamp(data.Score.Int64, MediaScoreMin, MediaScoreMax)
 	}
 
+	updated := time.Now().UnixMilli()
+
 	query := dialect.Insert("media_user_data").
 		Rows(goqu.Record{
 			"media_id": mediaId,
@@ -586,6 +593,8 @@ func (db *Database) SetMediaUserData(ctx context.Context, mediaId, userId string
 			"revisit_count": data.RevisitCount,
 			"is_revisiting": data.IsRevisiting,
 			"score":         data.Score,
+
+			"updated": updated,
 		}).
 		OnConflict(
 			goqu.DoUpdate("media_id, user_id", goqu.Record{
@@ -594,6 +603,8 @@ func (db *Database) SetMediaUserData(ctx context.Context, mediaId, userId string
 				"revisit_count": data.RevisitCount,
 				"is_revisiting": data.IsRevisiting,
 				"score":         data.Score,
+
+				"updated": updated,
 			}),
 		)
 
@@ -608,8 +619,8 @@ func (db *Database) SetMediaUserData(ctx context.Context, mediaId, userId string
 func (db *Database) DeleteMediaUserData(ctx context.Context, mediaId, userId string) error {
 	query := dialect.Delete("media_user_data").
 		Where(
-			goqu.I("media_user_data.media_id").Eq(mediaId), 
-			goqu.I("media_user_data.user_id").Eq(userId), 
+			goqu.I("media_user_data.media_id").Eq(mediaId),
+			goqu.I("media_user_data.user_id").Eq(userId),
 		)
 
 	_, err := db.db.Exec(ctx, query)
