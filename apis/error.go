@@ -13,10 +13,11 @@ const (
 	ErrTypeApiTokenNotFound   pyrin.ErrorType = "API_TOKEN_NOT_FOUND"
 	ErrTypeInvalidCredentials pyrin.ErrorType = "INVALID_CREDENTIALS"
 
-	ErrTypeMediaNotFound      pyrin.ErrorType = "MEDIA_NOT_FOUND"
-	ErrTypeCollectionNotFound pyrin.ErrorType = "COLLECTION_NOT_FOUND"
-	ErrTypePartNotFound       pyrin.ErrorType = "PART_NOT_FOUND"
-	ErrTypeImageNotFound      pyrin.ErrorType = "IMAGE_NOT_FOUND"
+	ErrTypeMediaNotFound        pyrin.ErrorType = "MEDIA_NOT_FOUND"
+	ErrTypeCollectionNotFound   pyrin.ErrorType = "COLLECTION_NOT_FOUND"
+	ErrTypePartNotFound         pyrin.ErrorType = "PART_NOT_FOUND"
+	ErrTypeImageNotFound        pyrin.ErrorType = "IMAGE_NOT_FOUND"
+	ErrTypeNotificationNotFound pyrin.ErrorType = "NOTIFICATION_NOT_FOUND"
 
 	ErrTypePartAlreadyExists pyrin.ErrorType = "PART_ALREADY_EXISTS"
 )
@@ -58,6 +59,14 @@ func ImageNotFound() *pyrin.Error {
 		Code:    http.StatusNotFound,
 		Type:    ErrTypeImageNotFound,
 		Message: "Image not found",
+	}
+}
+
+func NotificationNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeNotificationNotFound,
+		Message: "Notification not found",
 	}
 }
 

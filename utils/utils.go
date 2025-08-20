@@ -29,6 +29,8 @@ var CreateSmallId = createIdGenerator(8)
 var CreateMediaId = createIdGenerator(12)
 var CreateCollectionId = createIdGenerator(8)
 
+var CreateNotificationId = createIdGenerator(32)
+
 var CreateApiTokenId = createIdGenerator(32)
 
 func createIdGenerator(length int) func() string {
