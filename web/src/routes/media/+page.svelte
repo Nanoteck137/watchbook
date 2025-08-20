@@ -34,13 +34,10 @@
   </button>
 </div>
 
-<!-- Basic Filters Section -->
-<div class="hidden" id="basicSection">
-  <!-- Search, Sort & Filter Controls -->
+<div class="" id="basicSection">
   <div
     class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
   >
-    <!-- Search Bar -->
     <div class="flex-grow">
       <label for="search" class="sr-only">Search Collections</label>
       <input
@@ -53,7 +50,6 @@
       />
     </div>
 
-    <!-- Sort Select -->
     <div>
       <label for="sort" class="sr-only">Sort Collections</label>
       <select
@@ -91,12 +87,12 @@
   </div>
 </div>
 
-<!-- Advanced Filters Section (hidden by default) -->
-<div id="advancedSection" class="">
+<div id="advancedSection" class="hidden">
   <div class="mb-6">
-    <label for="customFilter" class="mb-2 block font-semibold text-gray-300"
-      >Advanced Filter</label
-    >
+    <label for="customFilter" class="mb-2 block font-semibold text-gray-300">
+      Advanced Filter
+    </label>
+
     <input
       type="text"
       id="customFilter"
@@ -106,9 +102,10 @@
   </div>
 
   <div>
-    <label for="customSort" class="mb-2 block font-semibold text-gray-300"
-      >Advanced Sort</label
-    >
+    <label for="customSort" class="mb-2 block font-semibold text-gray-300">
+      Advanced Sort
+    </label>
+
     <input
       type="text"
       id="customSort"

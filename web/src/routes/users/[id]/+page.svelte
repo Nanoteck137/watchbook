@@ -11,9 +11,9 @@
     Pagination,
     ScrollArea,
   } from "@nanoteck137/nano-ui";
-  import { ArrowUpDown, ChevronDown, Star } from "lucide-svelte";
+  import { ArrowUpDown, Star } from "lucide-svelte";
   import HeaderButton from "./HeaderButton.svelte";
-  import { cn } from "$lib/utils";
+  import { cn, userListClass } from "$lib/utils";
 
   const { data } = $props();
 
@@ -56,31 +56,31 @@
     <HeaderButton
       href="?list=completed"
       name="Completed"
-      stripClass="bg-green-600"
+      stripClass={userListClass("completed")}
       active={data.list === "completed"}
     />
     <HeaderButton
       href="?list=in-progress"
       name="In Progress"
-      stripClass="bg-blue-500"
+      stripClass={userListClass("in-progress")}
       active={data.list === "in-progress"}
     />
     <HeaderButton
       href="?list=on-hold"
       name="On Hold"
-      stripClass="bg-yellow-500"
+      stripClass={userListClass("on-hold")}
       active={data.list === "on-hold"}
     />
     <HeaderButton
       href="?list=dropped"
       name="Dropped"
-      stripClass="bg-red-600"
+      stripClass={userListClass("dropped")}
       active={data.list === "dropped"}
     />
     <HeaderButton
       href="?list=backlog"
       name="Backlog"
-      stripClass="bg-gray-600"
+      stripClass={userListClass("backlog")}
       active={data.list === "backlog"}
     />
   </div>

@@ -1,5 +1,6 @@
+import type { UserList } from "$lib/types";
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { twMerge, type ClassNameValue } from "tailwind-merge";
 
 export function capitilize(s: string) {
   if (s.length === 0) return "";
@@ -60,4 +61,19 @@ export function pickTitle(entity: {
   if (entity.titleEnglish) return entity.titleEnglish;
 
   return entity.title;
+}
+
+export function userListClass(list: UserList): ClassNameValue {
+  switch (list) {
+    case "in-progress":
+      return "bg-blue-500 text-white";
+    case "completed":
+      return "bg-green-600 text-white";
+    case "dropped":
+      return "bg-red-600 text-white";
+    case "on-hold":
+      return "bg-yellow-500 text-white";
+    case "backlog":
+      return "bg-gray-600 text-white";
+  }
 }

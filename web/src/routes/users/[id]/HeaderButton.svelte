@@ -1,12 +1,13 @@
 <script lang="ts">
   import { cn } from "$lib/utils";
+  import type { ClassNameValue } from "tailwind-merge";
 
   type Props = {
     href: string;
     name: string;
     active?: boolean;
     class?: string;
-    stripClass?: string;
+    stripClass?: ClassNameValue;
   };
 
   const { href, name, active, class: className, stripClass }: Props = $props();
