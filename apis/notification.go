@@ -113,6 +113,47 @@ func InstallNotificationHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
+		pyrin.ApiHandler{
+			Name:         "MarkNotificationRead",
+			Method:       http.MethodPost,
+			Path:         "/notifications/:id/read",
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				ctx := context.TODO()
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				notification, err := app.DB().GetNotificationById(ctx, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, NotificationNotFound()
+					}
+
+					return nil, err
+				}
+
+				if notification.UserId != user.Id {
+					return nil, NotificationNotFound()
+				}
+
+				err = app.DB().UpdateNotification(ctx, notification.Id, database.NotificationChanges{
+					IsRead:   database.Change[int]{
+						Value:   1,
+						Changed: true,
+					},
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
 		// pyrin.ApiHandler{
 		// 	Name:         "CreateNotification",
 		// 	Method:       http.MethodPost,
