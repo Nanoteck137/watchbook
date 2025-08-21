@@ -3,7 +3,9 @@ package apis
 import (
 	"context"
 	"errors"
+	"math/rand"
 	"net/http"
+	"strconv"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/watchbook/core"
@@ -61,7 +63,9 @@ func InstallNotificationHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				notifications, page, err := app.DB().GetPagedNotifications(ctx, user.Id, opts)
+				filterStr := q.Get("filter")
+				sortStr := q.Get("sort")
+				notifications, page, err := app.DB().GetPagedNotifications(ctx, user.Id, filterStr, sortStr, opts)
 				if err != nil {
 					return nil, err
 				}
@@ -311,7 +315,7 @@ func InstallNotificationHandlers(app core.App, group pyrin.Group) {
 						Message:  "Super cool message",
 						Metadata: "",
 						IsRead:   0,
-						DedupKey: "",
+						DedupKey: strconv.Itoa(rand.Int()),
 					})
 					if err != nil {
 						return nil, err

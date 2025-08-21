@@ -22,7 +22,7 @@ func InvalidSort(err error) error {
 	return fmt.Errorf("%w: %w", ErrInvalidSort, err)
 }
 
-func applyFilter(query *goqu.SelectDataset, resolver *filter.Resolver, filterStr string) (*goqu.SelectDataset, error) {
+func applyFilter(query *goqu.SelectDataset, resolver *filter.Resolver, filterStr string, extra ...exp.Expression) (*goqu.SelectDataset, error) {
 	if filterStr == "" {
 		return query, nil
 	}
@@ -31,6 +31,10 @@ func applyFilter(query *goqu.SelectDataset, resolver *filter.Resolver, filterStr
 	expr, err := fullParseFilter(resolver, filterStr)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(extra) > 0 {
+		return query.Where(expr, extra[0]), nil
 	}
 
 	return query.Where(expr), nil
