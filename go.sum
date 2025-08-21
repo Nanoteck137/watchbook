@@ -205,6 +205,10 @@ github.com/muesli/termenv v0.16.0 h1:S5AlUN9dENB57rsbnkPyfdGuWIlkmzJjbFf0Tf5FWUc
 github.com/muesli/termenv v0.16.0/go.mod h1:ZRfOIKPFDYQoDFF4Olj7/QJbW60Ol/kL1pU3VfY/Cnk=
 github.com/nanoteck137/pyrin v0.15.3-0.20250709125342-036f69d0fe08 h1:d0WoWzzMv0OieaKAYr8fZuSatXTWG7JVhvRAgi/KqcU=
 github.com/nanoteck137/pyrin v0.15.3-0.20250709125342-036f69d0fe08/go.mod h1:n0CnFvINVSILZ+nW/JFuCQhK8iMB9T1tOUTIny3jT0w=
+github.com/nanoteck137/pyrin v0.15.3-0.20250821080242-3fc87d291a45 h1:P/xjjegdAPZV8rtxWUIsbEzLb8ZvahNHSqWl9EERZac=
+github.com/nanoteck137/pyrin v0.15.3-0.20250821080242-3fc87d291a45/go.mod h1:n0CnFvINVSILZ+nW/JFuCQhK8iMB9T1tOUTIny3jT0w=
+github.com/nanoteck137/pyrin v0.15.3-0.20250821080749-7c8836341627 h1:MqPUR5wdkWZgpvPfxiGe5MD4ixgThD/qM7UcE3Q9Ap8=
+github.com/nanoteck137/pyrin v0.15.3-0.20250821080749-7c8836341627/go.mod h1:n0CnFvINVSILZ+nW/JFuCQhK8iMB9T1tOUTIny3jT0w=
 github.com/nanoteck137/validate v0.0.0-20241129211421-90ceb11de343 h1:EjWdC/+BXfC4YTKxdslWV8rFZXlZ48VAKpDTQs4Lo2U=
 github.com/nanoteck137/validate v0.0.0-20241129211421-90ceb11de343/go.mod h1:+21LcVRcjVhpx5vU3qJZpsJwV4NzAk2MH87WMvhG/sk=
 github.com/nrednav/cuid2 v1.0.0 h1:27dn1oGiG+23Wa8XJ2DHeMoMa18Zs9u1+UHI9IlcGKM=

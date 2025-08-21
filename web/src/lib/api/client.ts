@@ -135,6 +135,26 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/provider/myanimelist/anime/${id}`, "GET", api.ProviderMyAnimeListAnime, z.any(), undefined, options)
   }
   
+  getNotifications(options?: ExtraOptions) {
+    return this.request("/api/v1/notifications", "GET", api.GetNotifications, z.any(), undefined, options)
+  }
+  
+  getNotificationById(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/notifications/${id}`, "GET", api.GetNotificationById, z.any(), undefined, options)
+  }
+  
+  markNotificationRead(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/notifications/${id}/read`, "POST", z.undefined(), z.any(), undefined, options)
+  }
+  
+  deleteNotification(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/notifications/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  }
+  
+  testNotification(options?: ExtraOptions) {
+    return this.request("/api/v1/notifications/test", "POST", z.undefined(), z.any(), undefined, options)
+  }
+  
   
 }
 
@@ -267,6 +287,26 @@ export class ClientUrls {
   
   providerMyAnimeListGetAnime(id: string) {
     return createUrl(this.baseUrl, `/api/v1/provider/myanimelist/anime/${id}`)
+  }
+  
+  getNotifications() {
+    return createUrl(this.baseUrl, "/api/v1/notifications")
+  }
+  
+  getNotificationById(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/notifications/${id}`)
+  }
+  
+  markNotificationRead(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/notifications/${id}/read`)
+  }
+  
+  deleteNotification(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/notifications/${id}`)
+  }
+  
+  testNotification() {
+    return createUrl(this.baseUrl, "/api/v1/notifications/test")
   }
   
   getMediaImage(id: string, file: string) {

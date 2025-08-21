@@ -10,6 +10,7 @@ import (
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
+	"github.com/nanoteck137/watchbook/kvstore"
 	"github.com/nanoteck137/watchbook/types"
 )
 
@@ -17,10 +18,10 @@ type Notification struct {
 	Id     string `json:"id"`
 	UserId string `json:"userId"`
 
-	Type     types.NotificationType `json:"type"`
+	Type     types.NotificationType `json:"notificationType"`
 	Title    string                 `json:"title"`
 	Message  string                 `json:"message"`
-	Metadata string                 `json:"metadata"`
+	Metadata map[string]string      `json:"metadata"`
 	IsRead   bool                   `json:"isRead"`
 }
 
@@ -118,9 +119,9 @@ func InstallNotificationHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "MarkNotificationRead",
-			Method:       http.MethodPost,
-			Path:         "/notifications/:id/read",
+			Name:   "MarkNotificationRead",
+			Method: http.MethodPost,
+			Path:   "/notifications/:id/read",
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
@@ -145,7 +146,7 @@ func InstallNotificationHandlers(app core.App, group pyrin.Group) {
 				}
 
 				err = app.DB().UpdateNotification(ctx, notification.Id, database.NotificationChanges{
-					IsRead:   database.Change[int]{
+					IsRead: database.Change[int]{
 						Value:   1,
 						Changed: true,
 					},
@@ -309,11 +310,13 @@ func InstallNotificationHandlers(app core.App, group pyrin.Group) {
 
 				for _, user := range users {
 					_, err := app.DB().CreateNotification(ctx, database.CreateNotificationParams{
-						UserId:   user.Id,
-						Type:     types.NotificationTypeGeneric,
-						Title:    "Test Notification",
-						Message:  "Super cool message",
-						Metadata: "",
+						UserId:  user.Id,
+						Type:    types.NotificationTypeGeneric,
+						Title:   "Test Notification",
+						Message: "Super cool message",
+						Metadata: kvstore.Store{
+							"lel": "wot",
+						},
 						IsRead:   0,
 						DedupKey: strconv.Itoa(rand.Int()),
 					})

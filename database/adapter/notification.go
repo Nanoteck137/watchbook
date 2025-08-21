@@ -32,7 +32,7 @@ func (a *NotificationResolverAdapter) ResolveVariableName(name string) (filter.N
 			Kind: filter.NameKindString,
 			Name: "notifications.title",
 		}, true
-	case "is_read":
+	case "isRead":
 		return filter.Name{
 			Kind: filter.NameKindNumber,
 			Name: "notifications.is_read",

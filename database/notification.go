@@ -8,6 +8,7 @@ import (
 	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/watchbook/database/adapter"
 	"github.com/nanoteck137/watchbook/filter"
+	"github.com/nanoteck137/watchbook/kvstore"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
@@ -21,7 +22,7 @@ type Notification struct {
 	Type     types.NotificationType `db:"type"`
 	Title    string                 `db:"title"`
 	Message  string                 `db:"message"`
-	Metadata string                 `db:"metadata"`
+	Metadata kvstore.Store          `db:"metadata"`
 	IsRead   int                    `db:"is_read"`
 
 	DedupKey string `db:"dedup_key"`
@@ -122,7 +123,7 @@ type CreateNotificationParams struct {
 	Type     types.NotificationType
 	Title    string
 	Message  string
-	Metadata string
+	Metadata kvstore.Store
 	IsRead   int
 
 	DedupKey string
@@ -171,7 +172,7 @@ type NotificationChanges struct {
 
 	Title    Change[string]
 	Message  Change[string]
-	Metadata Change[string]
+	Metadata Change[kvstore.Store]
 	IsRead   Change[int]
 
 	DedupKey Change[string]

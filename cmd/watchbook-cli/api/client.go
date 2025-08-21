@@ -498,6 +498,86 @@ func (c *Client) ProviderMyAnimeListGetAnime(id string, options Options) (*Provi
 	return Request[ProviderMyAnimeListAnime](data, nil)
 }
 
+func (c *Client) GetNotifications(options Options) (*GetNotifications, error) {
+	path := "/api/v1/notifications"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetNotifications](data, nil)
+}
+
+func (c *Client) GetNotificationById(id string, options Options) (*GetNotificationById, error) {
+	path := Sprintf("/api/v1/notifications/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetNotificationById](data, nil)
+}
+
+func (c *Client) MarkNotificationRead(id string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/notifications/%v/read", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
+func (c *Client) DeleteNotification(id string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/notifications/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "DELETE",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
+func (c *Client) TestNotification(options Options) (*any, error) {
+	path := "/api/v1/notifications/test"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
 
 
 func (c *ClientUrls) Signup() (*URL, error) {
@@ -652,6 +732,31 @@ func (c *ClientUrls) AddCollectionItem(id string) (*URL, error) {
 
 func (c *ClientUrls) ProviderMyAnimeListGetAnime(id string) (*URL, error) {
 	path := Sprintf("/api/v1/provider/myanimelist/anime/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetNotifications() (*URL, error) {
+	path := "/api/v1/notifications"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetNotificationById(id string) (*URL, error) {
+	path := Sprintf("/api/v1/notifications/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) MarkNotificationRead(id string) (*URL, error) {
+	path := Sprintf("/api/v1/notifications/%v/read", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) DeleteNotification(id string) (*URL, error) {
+	path := Sprintf("/api/v1/notifications/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) TestNotification() (*URL, error) {
+	path := "/api/v1/notifications/test"
 	return c.getUrl(path)
 }
 
