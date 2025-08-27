@@ -27,6 +27,14 @@ type MediaImageJson struct {
 	Type     types.MediaImageType `json:"type"`
 }
 
+type MediaRelease struct {
+	NumExpectedParts int    `json:"num_expected_parts"`
+	CurrentPart      int    `json:"current_part"`
+	NextAiring       string `json:"next_airing"`
+	IntervalDays     int    `json:"interval_days"`
+	IsActive         int    `json:"is_active"`
+}
+
 type Media struct {
 	RowId int `db:"rowid"`
 
@@ -62,6 +70,8 @@ type Media struct {
 	Tags     JsonColumn[[]string] `db:"tags"`
 
 	UserData JsonColumn[MediaUserData] `db:"user_data"`
+
+	Release JsonColumn[MediaRelease] `db:"release"`
 }
 
 func MediaAiringSeasonQuery() *goqu.SelectDataset {
@@ -158,6 +168,42 @@ func MediaUserDataQuery(userId *string) *goqu.SelectDataset {
 	return query
 }
 
+func MediaReleaseQuery() *goqu.SelectDataset {
+	tbl := goqu.T("media_part_release")
+
+	query := dialect.From(tbl).
+		Select(
+			tbl.Col("media_id").As("id"),
+
+			tbl.Col("num_expected_parts"),
+			tbl.Col("current_part"),
+			tbl.Col("next_airing"),
+			tbl.Col("interval_days"),
+			tbl.Col("is_active"),
+
+			goqu.Func(
+				"json_object",
+
+				"num_expected_parts",
+				tbl.Col("num_expected_parts"),
+
+				"current_part",
+				tbl.Col("current_part"),
+
+				"next_airing",
+				tbl.Col("next_airing"),
+
+				"interval_days",
+				tbl.Col("interval_days"),
+
+				"is_active",
+				tbl.Col("is_active"),
+			).As("data"),
+		)
+
+	return query
+}
+
 func MediaPartCountQuery() *goqu.SelectDataset {
 	tbl := goqu.T("media_parts")
 
@@ -176,6 +222,7 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 	tagsQuery := MediaTagQuery()
 
 	userDataQuery := MediaUserDataQuery(userId)
+	releaseQuery := MediaReleaseQuery()
 
 	query := dialect.From("media").
 		Select(
@@ -213,6 +260,8 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 			goqu.I("tags.data").As("tags"),
 
 			goqu.I("user_data.data").As("user_data"),
+
+			goqu.I("release.data").As("release"),
 		).
 		LeftJoin(
 			partCountQuery.As("part_count"),
@@ -229,6 +278,10 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 		LeftJoin(
 			userDataQuery.As("user_data"),
 			goqu.On(goqu.I("media.id").Eq(goqu.I("user_data.id"))),
+		).
+		LeftJoin(
+			releaseQuery.As("release"),
+			goqu.On(goqu.I("media.id").Eq(goqu.I("release.id"))),
 		)
 
 	return query
@@ -296,6 +349,12 @@ func (db *Database) GetPagedMedia(ctx context.Context, userId *string, filterStr
 
 func (db *Database) GetAllMedia(ctx context.Context) ([]Media, error) {
 	query := MediaQuery(nil)
+	return ember.Multiple[Media](db.db, ctx, query)
+}
+
+func (db *Database) GetAllMediaForPartPredict(ctx context.Context) ([]Media, error) {
+	query := MediaQuery(nil).
+		Where(goqu.I("media.release_interval").Gt(0))
 	return ember.Multiple[Media](db.db, ctx, query)
 }
 

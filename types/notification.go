@@ -5,16 +5,16 @@ import "errors"
 type NotificationType string
 
 const (
-	NotificationTypeUnknown        NotificationType = "unknown"
-	NotificationTypeGeneric        NotificationType = "generic"
-	NotificationTypeEpisodeRelease NotificationType = "episode-release"
+	NotificationTypeUnknown     NotificationType = "unknown"
+	NotificationTypeGeneric     NotificationType = "generic"
+	NotificationTypePartRelease NotificationType = "part-release"
 )
 
 func IsValidNotificationType(t NotificationType) bool {
 	switch t {
 	case NotificationTypeUnknown,
 		NotificationTypeGeneric,
-		NotificationTypeEpisodeRelease:
+		NotificationTypePartRelease:
 		return true
 	}
 
