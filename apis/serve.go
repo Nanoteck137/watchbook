@@ -19,6 +19,7 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 	InstallCollectionHandlers(app, g)
 	InstallProviderHandlers(app, g)
 	InstallNotificationHandlers(app, g)
+	InstallReleaseHandlers(app, g)
 
 	g = router.Group("/files")
 	g.Register(
