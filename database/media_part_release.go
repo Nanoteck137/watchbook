@@ -7,7 +7,10 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/nanoteck137/pyrin/ember"
+	"github.com/nanoteck137/watchbook/database/adapter"
+	"github.com/nanoteck137/watchbook/filter"
 	"github.com/nanoteck137/watchbook/types"
+	"github.com/nanoteck137/watchbook/utils"
 )
 
 type MediaPartRelease struct {
@@ -149,6 +152,54 @@ func FullMediaPartReleaseQuery(userId *string) *goqu.SelectDataset {
 		)
 
 	return query
+}
+
+func (db *Database) GetPagedFullMediaPartReleases(ctx context.Context, userId *string, filterStr, sortStr string, opts FetchOptions) ([]FullMediaPartRelease, types.Page, error) {
+	query := FullMediaPartReleaseQuery(userId)
+
+	var err error
+
+	a := adapter.ReleaseResolverAdapter{}
+	resolver := filter.New(&a)
+
+	query, err = applyFilter(query, resolver, filterStr)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	query, err = applySort(query, resolver, sortStr)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	countQuery := query.
+		Select(goqu.COUNT("media.id"))
+
+	if opts.PerPage > 0 {
+		query = query.
+			Limit(uint(opts.PerPage)).
+			Offset(uint(opts.Page * opts.PerPage))
+	}
+
+	totalItems, err := ember.Single[int](db.db, ctx, countQuery)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	totalPages := utils.TotalPages(opts.PerPage, totalItems)
+	page := types.Page{
+		Page:       opts.Page,
+		PerPage:    opts.PerPage,
+		TotalItems: totalItems,
+		TotalPages: totalPages,
+	}
+
+	items, err := ember.Multiple[FullMediaPartRelease](db.db, ctx, query)
+	if err != nil {
+		return nil, types.Page{}, err
+	}
+
+	return items, page, nil
 }
 
 func (db *Database) GetAllMediaPartReleases(ctx context.Context) ([]MediaPartRelease, error) {

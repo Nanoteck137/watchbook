@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"path"
-	"time"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/watchbook/core"
@@ -27,11 +26,11 @@ type ReleaseUser struct {
 type Release struct {
 	MediaId string `json:"mediaId"`
 
-	NumExpectedParts int       `json:"numExpectedParts"`
-	CurrentPart      int       `json:"currentPart"`
-	NextAiring       time.Time `json:"nextAiring"`
-	IntervalDays     int       `json:"intervalDays"`
-	IsActive         int       `json:"isActive"`
+	NumExpectedParts int    `json:"numExpectedParts"`
+	CurrentPart      int    `json:"currentPart"`
+	NextAiring       string `json:"nextAiring"`
+	IntervalDays     int    `json:"intervalDays"`
+	IsActive         int    `json:"isActive"`
 
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
@@ -63,7 +62,7 @@ type Release struct {
 
 type GetReleases struct {
 	Page     types.Page `json:"page"`
-	Releases []Release  `json:"release"`
+	Releases []Release  `json:"releases"`
 }
 
 type GetReleaseById struct {
@@ -106,7 +105,13 @@ func ConvertDBRelease(c pyrin.Context, hasUser bool, media database.FullMediaPar
 		}
 	}
 
-	nextAiring, _ := time.Parse(types.MediaDateLayout, media.NextAiring)
+	// nextAiring, _ := time.Parse(types.MediaDateLayout, media.NextAiring)
+	//
+	// // d, _ := nextAiring.MarshalText()
+	//
+	// // d := media.NextAiring
+	// d := nextAiring.Format(types.MediaDateLayout)
+
 
 	return Release{
 		MediaId:     media.MediaId,
@@ -133,7 +138,7 @@ func ConvertDBRelease(c pyrin.Context, hasUser bool, media database.FullMediaPar
 		User:             user,
 		NumExpectedParts: media.NumExpectedParts,
 		CurrentPart:      media.CurrentPart,
-		NextAiring:       nextAiring,
+		NextAiring:       media.NextAiring,
 		IntervalDays:     media.IntervalDays,
 		IsActive:         media.IsActive,
 	}
@@ -148,7 +153,7 @@ func InstallReleaseHandlers(app core.App, group pyrin.Group) {
 			ResponseType: GetReleases{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				q := c.Request().URL.Query()
-				// opts := getPageOptions(q)
+				opts := getPageOptions(q)
 
 				ctx := context.TODO()
 
@@ -173,15 +178,15 @@ func InstallReleaseHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				// filterStr := q.Get("filter")
-				// sortStr := q.Get("sort")
-				releases, err := app.DB().GetAllFullMediaPartReleases(ctx, userId)
+				filterStr := q.Get("filter")
+				sortStr := q.Get("sort")
+				releases, p, err := app.DB().GetPagedFullMediaPartReleases(ctx, userId, filterStr, sortStr, opts)
 				if err != nil {
 					return nil, err
 				}
 
 				res := GetReleases{
-					// Page:  p,
+					Page:     p,
 					Releases: make([]Release, len(releases)),
 				}
 

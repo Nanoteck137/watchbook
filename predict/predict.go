@@ -17,7 +17,7 @@ func RunPredict(ctx context.Context, app core.App) error {
 
 	now := time.Now()
 	for _, m := range media {
-		next, err := time.Parse(types.MediaDateLayout, m.NextAiring)
+		next, err := time.Parse(time.RFC3339, m.NextAiring)
 		if err != nil {
 			return err
 		}
@@ -42,7 +42,7 @@ func RunPredict(ctx context.Context, app core.App) error {
 						Changed: true,
 					},
 					NextAiring: database.Change[string]{
-						Value:   newNext.Format(types.MediaDateLayout),
+						Value:   newNext.Format(time.RFC3339),
 						Changed: true,
 					},
 					// IntervalDays: database.Change[int]{},

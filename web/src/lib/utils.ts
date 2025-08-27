@@ -2,6 +2,12 @@ import type { UserList } from "$lib/types";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge, type ClassNameValue } from "tailwind-merge";
 
+export function clamp<T extends number | bigint>(value: T, min: T, max: T): T {
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
+}
+
 export function capitilize(s: string) {
   if (s.length === 0) return "";
   return s[0].toUpperCase() + s.substring(1);

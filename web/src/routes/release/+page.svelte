@@ -1,67 +1,98 @@
-<script>
+<script lang="ts">
+  import Badge from "$lib/components/Badge.svelte";
   import Image from "$lib/components/Image.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
+  import { parseUserList } from "$lib/types";
+  import { clamp } from "$lib/utils";
+
+  const { data } = $props();
+
+  function getTimeDifference(fromDate: Date, toDate: Date): string {
+    // Difference in milliseconds
+    let diffMs = toDate.getTime() - fromDate.getTime();
+
+    // Determine the sign
+    const sign = diffMs < 0 ? -1 : 1;
+    diffMs = Math.abs(diffMs);
+
+    const totalMinutes = Math.floor(diffMs / (1000 * 60));
+    const days = Math.floor(totalMinutes / (60 * 24)) * sign;
+    const hours = Math.floor((totalMinutes % (60 * 24)) / 60) * sign;
+    const minutes = (totalMinutes % 60) * sign;
+
+    // return { days, hours, minutes };
+
+    return `${days}d ${hours}h ${minutes}m`;
+  }
+
+  const now = new Date();
 </script>
 
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
   <div
     class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] items-center justify-items-center gap-6"
   >
-    <!-- svelte-ignore a11y_missing_attribute -->
-    <!-- svelte-ignore a11y_invalid_attribute -->
-    <a
-      class="group relative aspect-[75/106] max-w-[240px] transform cursor-pointer overflow-hidden rounded-3xl bg-gray-800 shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
-      href="#"
-    >
-      <!-- Badge -->
-      <!-- {#if userList}
-        {@const list = parseUserList(userList)}
-        {#if list}
-          <Badge class="absolute left-2 top-2 z-10" {list} />
+    {#each data.releases as release}
+      {@const percent = release.currentPart / release.numExpectedParts}
+      {@const time = getTimeDifference(now, new Date(release.nextAiring))}
+      <!-- svelte-ignore a11y_missing_attribute -->
+      <!-- svelte-ignore a11y_invalid_attribute -->
+      <a
+        class="group relative aspect-[75/106] max-w-[240px] transform cursor-pointer overflow-hidden rounded-3xl bg-gray-800 shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
+        href="/media/{release.mediaId}"
+      >
+        <!-- Badge -->
+        {#if !!release.user?.list}
+          {@const list = parseUserList(release.user.list)}
+          {#if list}
+            <Badge class="absolute left-2 top-2 z-10" {list} />
+          {/if}
         {/if}
-      {/if} -->
 
-      <div
-        class="flex min-w-[240px] items-center justify-center bg-gray-800 text-gray-400"
-      >
-        <Image
-          src="http://localhost:3000/files/collections/ohtm567u/images/cover.jpeg"
-          alt="Cover image"
-          class="aspect-[75/106] h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-      </div>
-
-      <div
-        class="absolute bottom-0 left-0 right-0 rounded-t-lg bg-black/80 p-3 text-center backdrop-blur-md"
-      >
-        <h2
-          class="line-clamp-2 text-ellipsis text-base font-semibold"
-          title="Alya Sometimes Hides Her Feelings in Russian"
+        <div
+          class="flex min-w-[240px] items-center justify-center bg-gray-800 text-gray-400"
         >
-          Alya Sometimes Hides Her Feelings in Russian
-        </h2>
+          <Image
+            src={release.coverUrl}
+            alt="Cover image"
+            class="aspect-[75/106] h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </div>
 
-        <Spacer size="xs" />
+        <div
+          class="absolute bottom-0 left-0 right-0 rounded-t-lg bg-black/80 p-3 text-center backdrop-blur-md"
+        >
+          <h2
+            class="line-clamp-2 text-ellipsis text-base font-semibold"
+            title={release.title}
+          >
+            {release.title}
+          </h2>
 
-        <div class="flex flex-col gap-2">
-          <div class="flex flex-col gap-1">
-            <p class="text-xs text-gray-400">5 / 12 eps</p>
+          <Spacer size="xs" />
 
-            <div class="h-1 w-full rounded-full bg-gray-700">
-              <div
-                class="h-1 rounded-full bg-blue-500"
-                style="width: 42%;"
-              ></div>
+          <div class="flex flex-col gap-2">
+            <div class="flex flex-col gap-1">
+              <p class="text-xs text-gray-400">
+                {release.currentPart} / {release.numExpectedParts} eps
+              </p>
+
+              <div class="h-1 w-full rounded-full bg-gray-700">
+                <div
+                  class="h-1 rounded-full bg-blue-500"
+                  style={`width: ${clamp(percent * 100, 0, 100).toFixed(0)}%;`}
+                ></div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1">
+              <p class="text-xs text-gray-300">Next in:</p>
+              <p class="text-sm font-bold text-blue-400">{time}</p>
             </div>
           </div>
-
-          <div class="flex items-center gap-1">
-            <p class="text-xs text-gray-300">Next in:</p>
-            <p class="text-sm font-bold text-blue-400">3d 12h</p>
-          </div>
         </div>
-      </div>
-    </a>
+      </a>
+    {/each}
 
     <div
       class="flex w-36 flex-col overflow-hidden rounded-lg bg-gray-800 shadow transition-shadow hover:shadow-lg"

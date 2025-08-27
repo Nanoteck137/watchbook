@@ -578,6 +578,38 @@ func (c *Client) TestNotification(options Options) (*any, error) {
 	return Request[any](data, nil)
 }
 
+func (c *Client) GetReleases(options Options) (*GetReleases, error) {
+	path := "/api/v1/releases"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetReleases](data, nil)
+}
+
+func (c *Client) GetReleaseById(id string, options Options) (*GetReleaseById, error) {
+	path := Sprintf("/api/v1/releases/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetReleaseById](data, nil)
+}
+
 
 
 func (c *ClientUrls) Signup() (*URL, error) {
@@ -757,6 +789,16 @@ func (c *ClientUrls) DeleteNotification(id string) (*URL, error) {
 
 func (c *ClientUrls) TestNotification() (*URL, error) {
 	path := "/api/v1/notifications/test"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetReleases() (*URL, error) {
+	path := "/api/v1/releases"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetReleaseById(id string) (*URL, error) {
+	path := Sprintf("/api/v1/releases/%v", id)
 	return c.getUrl(path)
 }
 

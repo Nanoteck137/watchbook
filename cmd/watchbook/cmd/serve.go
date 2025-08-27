@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/nanoteck137/watchbook/apis"
@@ -9,7 +10,6 @@ import (
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
 	"github.com/nanoteck137/watchbook/predict"
-	"github.com/nanoteck137/watchbook/types"
 	"github.com/robfig/cron"
 	"github.com/spf13/cobra"
 )
@@ -18,10 +18,10 @@ func test(app core.App) error {
 	testId := "cka7s522p9zt"
 
 	{
-		t := time.Now().Truncate(24 * time.Hour)
+		t := time.Now()
+		t = t.AddDate(0, 0, -7)
 
-		t = t.AddDate(0, 0, -1)
-		// t.Round()
+		fmt.Printf("t: %v\n", t)
 
 		app.DB().RemoveMediaPartRelease(context.Background(), testId)
 
@@ -29,7 +29,7 @@ func test(app core.App) error {
 			MediaId:          testId,
 			NumExpectedParts: 12,
 			CurrentPart:      11,
-			NextAiring:       t.Format(types.MediaDateLayout),
+			NextAiring:       t.Format(time.RFC3339),
 			IntervalDays:     7,
 			IsActive:         1,
 		})

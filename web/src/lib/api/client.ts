@@ -155,6 +155,14 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/notifications/test", "POST", z.undefined(), z.any(), undefined, options)
   }
   
+  getReleases(options?: ExtraOptions) {
+    return this.request("/api/v1/releases", "GET", api.GetReleases, z.any(), undefined, options)
+  }
+  
+  getReleaseById(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/releases/${id}`, "GET", api.GetReleaseById, z.any(), undefined, options)
+  }
+  
   
 }
 
@@ -307,6 +315,14 @@ export class ClientUrls {
   
   testNotification() {
     return createUrl(this.baseUrl, "/api/v1/notifications/test")
+  }
+  
+  getReleases() {
+    return createUrl(this.baseUrl, "/api/v1/releases")
+  }
+  
+  getReleaseById(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/releases/${id}`)
   }
   
   getMediaImage(id: string, file: string) {
