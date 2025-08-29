@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/nanoteck137/watchbook/apis"
@@ -18,21 +17,33 @@ func test(app core.App) error {
 	testId := "cka7s522p9zt"
 
 	{
-		t := time.Now()
-		t = t.AddDate(0, 0, -7)
+		// t := time.Now()
+		// t = t.AddDate(0, 0, 0)
 
-		fmt.Printf("t: %v\n", t)
+		// t, _ := time.Parse(time.RFC3339, "2025-07-03T16:00:00Z")
+		t, _ := time.Parse(time.RFC3339, "2025-08-30T16:00:00Z")
 
 		app.DB().RemoveMediaPartRelease(context.Background(), testId)
 
 		err := app.DB().CreateMediaPartRelease(context.Background(), database.CreateMediaPartReleaseParams{
 			MediaId:          testId,
+			StartDate:        t,
 			NumExpectedParts: 12,
-			CurrentPart:      11,
-			NextAiring:       t.Format(time.RFC3339),
+			CurrentPart:      9,
+			NextAiring:       t,
 			IntervalDays:     7,
-			IsActive:         1,
+			DelayDays:        7,
 		})
+		if err != nil {
+			return err
+		}
+
+		m, err := app.DB().GetMediaPartReleaseById(context.Background(), testId)
+		if err != nil {
+			return err
+		}
+
+		err = predict.UpdateRelease(app.DB(), m, time.Now())
 		if err != nil {
 			return err
 		}

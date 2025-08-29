@@ -28,6 +28,7 @@ type CollectionMediaItem struct {
 	Updated int64 `db:"updated"`
 }
 
+// TODO(patrik): Update this to match Media
 type FullCollectionMediaItem struct {
 	RowId int `db:"rowid"`
 
@@ -73,7 +74,6 @@ type FullCollectionMediaItem struct {
 
 	MediaCreators JsonColumn[[]string]         `db:"media_creators"`
 	MediaTags     JsonColumn[[]string]         `db:"media_tags"`
-	MediaImages   JsonColumn[[]MediaImageJson] `db:"media_images"`
 
 	MediaUserData JsonColumn[MediaUserData] `db:"media_user_data"`
 }

@@ -85,10 +85,14 @@
               </div>
             </div>
 
-            <div class="flex items-center gap-1">
-              <p class="text-xs text-gray-300">Next in:</p>
-              <p class="text-sm font-bold text-blue-400">{time}</p>
-            </div>
+            {#if release.releaseStatus !== "completed"}
+              <div class="flex items-center gap-1">
+                <p class="text-xs text-gray-300">Next in:</p>
+                <p class="text-sm font-bold text-blue-400">{time}</p>
+              </div>
+            {/if}
+
+            <p>{release.releaseStatus}</p>
           </div>
         </div>
       </a>

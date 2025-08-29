@@ -2,11 +2,13 @@
 CREATE TABLE media_part_release (
     media_id TEXT NOT NULL PRIMARY KEY REFERENCES media(id) ON DELETE CASCADE,
 
+    status TEXT NOT NULL,
+    start_date DATETIME NOT NULL,
     num_expected_parts INTEGER NOT NULL,
     current_part INTEGER NOT NULL,
-    next_airing TEXT NOT NULL,
+    next_airing DATETIME NOT NULL,
     interval_days INTEGER NOT NULL,
-    is_active INTEGER NOT NULL,
+    delay_days INTEGER NOT NULL,
 
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL

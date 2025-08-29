@@ -252,37 +252,36 @@ func IsValidMediaUserList(l MediaUserList) bool {
 	return false
 }
 
-// TODO(patrik): Remove
-type MediaImageType string
+type MediaPartReleaseStatus string
 
 const (
-	MediaImageTypeUnknown MediaImageType = "unknown"
-	MediaImageTypeCover   MediaImageType = "cover"
-	MediaImageTypeBanner  MediaImageType = "banner"
-	MediaImageTypeLogo    MediaImageType = "logo"
+	MediaPartReleaseStatusUnknown   MediaPartReleaseStatus = "unknown"
+	MediaPartReleaseStatusWaiting   MediaPartReleaseStatus = "waiting"
+	MediaPartReleaseStatusRunning   MediaPartReleaseStatus = "running"
+	MediaPartReleaseStatusCompleted MediaPartReleaseStatus = "completed"
 )
 
-func IsValidMediaImageType(l MediaImageType) bool {
+func IsValidMediaPartReleaseStatus(l MediaPartReleaseStatus) bool {
 	switch l {
-	case MediaImageTypeUnknown,
-		MediaImageTypeCover,
-		MediaImageTypeBanner,
-		MediaImageTypeLogo:
+	case MediaPartReleaseStatusUnknown, 
+		MediaPartReleaseStatusWaiting,
+		MediaPartReleaseStatusRunning,
+		MediaPartReleaseStatusCompleted:
 		return true
 	}
 
 	return false
 }
 
-func ValidateMediaImageType(val any) error {
+func ValidateMediaPartReleaseStatus(val any) error {
 	if s, ok := val.(string); ok {
 		if s == "" {
 			return nil
 		}
 
-		t := MediaImageType(s)
-		if !IsValidMediaImageType(t) {
-			return errors.New("invalid media image type")
+		t := MediaPartReleaseStatus(s)
+		if !IsValidMediaPartReleaseStatus(t) {
+			return errors.New("invalid media part release status")
 		}
 	} else if p, ok := val.(*string); ok {
 		if p == nil {
@@ -294,9 +293,9 @@ func ValidateMediaImageType(val any) error {
 			return nil
 		}
 
-		t := MediaImageType(s)
-		if !IsValidMediaImageType(t) {
-			return errors.New("invalid media image type")
+		t := MediaPartReleaseStatus(s)
+		if !IsValidMediaPartReleaseStatus(t) {
+			return errors.New("invalid media part release status")
 		}
 	} else {
 		return errors.New("expected string")

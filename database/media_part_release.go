@@ -18,26 +18,31 @@ type MediaPartRelease struct {
 
 	MediaId string `db:"media_id"`
 
-	NumExpectedParts int    `db:"num_expected_parts"`
-	CurrentPart      int    `db:"current_part"`
-	NextAiring       string `db:"next_airing"`
-	IntervalDays     int    `db:"interval_days"`
-	IsActive         int    `db:"is_active"`
+	Status           types.MediaPartReleaseStatus `db:"status"`
+	StartDate        time.Time                       `db:"start_date"`
+	NumExpectedParts int                          `db:"num_expected_parts"`
+	CurrentPart      int                          `db:"current_part"`
+	NextAiring       time.Time                       `db:"next_airing"`
+	IntervalDays     int                          `db:"interval_days"`
+	DelayDays        int                          `db:"delay_days"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
 }
 
+// TODO(patrik): Update this to match Media
 type FullMediaPartRelease struct {
 	RowId int `db:"rowid"`
 
 	MediaId string `db:"media_id"`
 
-	NumExpectedParts int    `db:"num_expected_parts"`
-	CurrentPart      int    `db:"current_part"`
-	NextAiring       string `db:"next_airing"`
-	IntervalDays     int    `db:"interval_days"`
-	IsActive         int    `db:"is_active"`
+	Status           types.MediaPartReleaseStatus `db:"status"`
+	StartDate        time.Time                    `db:"start_date"`
+	NumExpectedParts int                          `db:"num_expected_parts"`
+	CurrentPart      int                          `db:"current_part"`
+	NextAiring       time.Time                    `db:"next_airing"`
+	IntervalDays     int                          `db:"interval_days"`
+	DelayDays        int                          `db:"delay_days"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -68,9 +73,8 @@ type FullMediaPartRelease struct {
 
 	MediaPartCount sql.NullInt64 `db:"media_part_count"`
 
-	MediaCreators JsonColumn[[]string]         `db:"media_creators"`
-	MediaTags     JsonColumn[[]string]         `db:"media_tags"`
-	MediaImages   JsonColumn[[]MediaImageJson] `db:"media_images"`
+	MediaCreators JsonColumn[[]string] `db:"media_creators"`
+	MediaTags     JsonColumn[[]string] `db:"media_tags"`
 
 	MediaUserData JsonColumn[MediaUserData] `db:"media_user_data"`
 }
@@ -83,11 +87,13 @@ func MediaPartReleaseQuery() *goqu.SelectDataset {
 
 			"media_part_release.media_id",
 
+			"media_part_release.status",
+			"media_part_release.start_date",
 			"media_part_release.num_expected_parts",
 			"media_part_release.current_part",
 			"media_part_release.next_airing",
 			"media_part_release.interval_days",
-			"media_part_release.is_active",
+			"media_part_release.delay_days",
 
 			"media_part_release.created",
 			"media_part_release.updated",
@@ -106,11 +112,13 @@ func FullMediaPartReleaseQuery(userId *string) *goqu.SelectDataset {
 
 			"media_part_release.media_id",
 
+			"media_part_release.status",
+			"media_part_release.start_date",
 			"media_part_release.num_expected_parts",
 			"media_part_release.current_part",
 			"media_part_release.next_airing",
 			"media_part_release.interval_days",
-			"media_part_release.is_active",
+			"media_part_release.delay_days",
 
 			"media_part_release.created",
 			"media_part_release.updated",
@@ -233,11 +241,13 @@ func (db *Database) GetFullMediaPartReleaseById(ctx context.Context, userId *str
 type CreateMediaPartReleaseParams struct {
 	MediaId string
 
+	Status           types.MediaPartReleaseStatus
+	StartDate        time.Time
 	NumExpectedParts int
 	CurrentPart      int
-	NextAiring       string
+	NextAiring       time.Time
 	IntervalDays     int
-	IsActive         int
+	DelayDays        int
 
 	Created int64
 	Updated int64
@@ -250,14 +260,20 @@ func (db *Database) CreateMediaPartRelease(ctx context.Context, params CreateMed
 		params.Updated = t
 	}
 
+	if !types.IsValidMediaPartReleaseStatus(params.Status) {
+		params.Status = types.MediaPartReleaseStatusUnknown
+	}
+
 	query := dialect.Insert("media_part_release").Rows(goqu.Record{
 		"media_id": params.MediaId,
 
+		"status":             params.Status,
+		"start_date":         params.StartDate,
 		"num_expected_parts": params.NumExpectedParts,
 		"current_part":       params.CurrentPart,
 		"next_airing":        params.NextAiring,
 		"interval_days":      params.IntervalDays,
-		"is_active":          params.IsActive,
+		"delay_days":         params.DelayDays,
 
 		"created": params.Created,
 		"updated": params.Updated,
@@ -272,11 +288,13 @@ func (db *Database) CreateMediaPartRelease(ctx context.Context, params CreateMed
 }
 
 type MediaPartReleaseChanges struct {
+	Status           Change[types.MediaPartReleaseStatus]
+	StartDate        Change[time.Time]
 	NumExpectedParts Change[int]
 	CurrentPart      Change[int]
-	NextAiring       Change[string]
+	NextAiring       Change[time.Time]
 	IntervalDays     Change[int]
-	IsActive         Change[int]
+	DelayDays        Change[int]
 
 	Created Change[int64]
 }
@@ -284,11 +302,13 @@ type MediaPartReleaseChanges struct {
 func (db *Database) UpdateMediaPartRelease(ctx context.Context, mediaId string, changes MediaPartReleaseChanges) error {
 	record := goqu.Record{}
 
+	addToRecord(record, "status", changes.Status)
+	addToRecord(record, "start_date", changes.StartDate)
 	addToRecord(record, "num_expected_parts", changes.NumExpectedParts)
 	addToRecord(record, "current_part", changes.CurrentPart)
 	addToRecord(record, "next_airing", changes.NextAiring)
 	addToRecord(record, "interval_days", changes.IntervalDays)
-	addToRecord(record, "is_active", changes.IsActive)
+	addToRecord(record, "delay_days", changes.IntervalDays)
 
 	addToRecord(record, "created", changes.Created)
 

@@ -22,11 +22,6 @@ type MediaUserData struct {
 	Updated      int                 `json:"updated"`
 }
 
-type MediaImageJson struct {
-	Filename string               `json:"filename"`
-	Type     types.MediaImageType `json:"type"`
-}
-
 type MediaRelease struct {
 	NumExpectedParts int    `json:"num_expected_parts"`
 	CurrentPart      int    `json:"current_part"`
@@ -179,7 +174,7 @@ func MediaReleaseQuery() *goqu.SelectDataset {
 			tbl.Col("current_part"),
 			tbl.Col("next_airing"),
 			tbl.Col("interval_days"),
-			tbl.Col("is_active"),
+			// tbl.Col("is_active"),
 
 			goqu.Func(
 				"json_object",
@@ -196,8 +191,8 @@ func MediaReleaseQuery() *goqu.SelectDataset {
 				"interval_days",
 				tbl.Col("interval_days"),
 
-				"is_active",
-				tbl.Col("is_active"),
+				// "is_active",
+				// tbl.Col("is_active"),
 			).As("data"),
 		)
 

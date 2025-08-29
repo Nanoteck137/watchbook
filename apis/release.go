@@ -6,31 +6,26 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"time"
 
 	"github.com/nanoteck137/pyrin"
+	"github.com/nanoteck137/validate"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
 
-type ReleaseUser struct {
-	HasData      bool                `json:"hasData"`
-	List         types.MediaUserList `json:"list"`
-	Score        *int64              `json:"score"`
-	CurrentPart  *int64              `json:"currentPart"`
-	RevisitCount *int64              `json:"revisitCount"`
-	IsRevisiting bool                `json:"isRevisiting"`
-}
-
 type Release struct {
 	MediaId string `json:"mediaId"`
 
-	NumExpectedParts int    `json:"numExpectedParts"`
-	CurrentPart      int    `json:"currentPart"`
-	NextAiring       string `json:"nextAiring"`
-	IntervalDays     int    `json:"intervalDays"`
-	IsActive         int    `json:"isActive"`
+	ReleaseStatus    types.MediaPartReleaseStatus `json:"releaseStatus"`
+	StartDate        string                       `json:"startDate"`
+	NumExpectedParts int                          `json:"numExpectedParts"`
+	CurrentPart      int                          `json:"currentPart"`
+	NextAiring       string                       `json:"nextAiring"`
+	IntervalDays     int                          `json:"intervalDays"`
+	DelayDays        int                          `json:"delayDays"`
 
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
@@ -47,8 +42,8 @@ type Release struct {
 	PartCount    int64             `json:"partCount"`
 	AiringSeason *string           `json:"airingSeason"`
 
-	StartDate *string `json:"startDate"`
-	EndDate   *string `json:"endDate"`
+	// StartDate *string `json:"startDate"`
+	// EndDate   *string `json:"endDate"`
 
 	Creators []string `json:"creators"`
 	Tags     []string `json:"tags"`
@@ -69,24 +64,61 @@ type GetReleaseById struct {
 	Release
 }
 
-func ConvertDBRelease(c pyrin.Context, hasUser bool, media database.FullMediaPartRelease) Release {
+func NextAiringDate(start time.Time, delayDays, intervalDays int) time.Time {
+	effectiveStart := start.Add(time.Duration(delayDays) * 24 * time.Hour)
+	now := time.Now().UTC()
+
+	// If the show hasn't started yet, return the effective start date
+	if now.Before(effectiveStart) {
+		return effectiveStart
+	}
+
+	// Calculate how many intervals have passed
+	diff := now.Sub(effectiveStart)
+	intervalsPassed := int(diff.Hours() / (24 * float64(intervalDays)))
+
+	// Next airing date = effectiveStart + (intervalsPassed + 1) * interval
+	nextAiring := effectiveStart.Add(time.Duration(intervalsPassed+1) * time.Duration(intervalDays) * 24 * time.Hour)
+	return nextAiring
+}
+
+func CurrentEpisode(start time.Time, delayDays, intervalDays int) int {
+	effectiveStart := start.Add(time.Duration(delayDays) * 24 * time.Hour)
+	now := time.Now().UTC()
+
+	// If current time is before start, episode = 0
+	if now.Before(effectiveStart) {
+		return 0
+	}
+
+	// Calculate elapsed time since effective start
+	elapsed := now.Sub(effectiveStart)
+
+	// Calculate how many full intervals have passed (including the first episode at start)
+	episodesPassed := int(elapsed.Hours() / (24 * float64(intervalDays)))
+
+	// Current episode = episodesPassed + 1 (because first episode is at start)
+	return episodesPassed + 1
+}
+
+func ConvertDBRelease(c pyrin.Context, hasUser bool, release database.FullMediaPartRelease) Release {
 	// TODO(patrik): Add default cover
 	var coverUrl *string
 	var bannerUrl *string
 	var logoUrl *string
 
-	if media.MediaCoverFile.Valid {
-		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/images/%s", media.MediaId, path.Base(media.MediaCoverFile.String)))
+	if release.MediaCoverFile.Valid {
+		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/images/%s", release.MediaId, path.Base(release.MediaCoverFile.String)))
 		coverUrl = &url
 	}
 
-	if media.MediaLogoFile.Valid {
-		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/images/%s", media.MediaId, path.Base(media.MediaLogoFile.String)))
+	if release.MediaLogoFile.Valid {
+		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/images/%s", release.MediaId, path.Base(release.MediaLogoFile.String)))
 		logoUrl = &url
 	}
 
-	if media.MediaBannerFile.Valid {
-		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/images/%s", media.MediaId, path.Base(media.MediaBannerFile.String)))
+	if release.MediaBannerFile.Valid {
+		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/images/%s", release.MediaId, path.Base(release.MediaBannerFile.String)))
 		bannerUrl = &url
 	}
 
@@ -94,8 +126,8 @@ func ConvertDBRelease(c pyrin.Context, hasUser bool, media database.FullMediaPar
 	if hasUser {
 		user = &MediaUser{}
 
-		if media.MediaUserData.Valid {
-			val := media.MediaUserData.Data
+		if release.MediaUserData.Valid {
+			val := release.MediaUserData.Data
 			user.List = val.List
 			user.CurrentPart = val.Part
 			user.RevisitCount = val.RevisitCount
@@ -112,36 +144,109 @@ func ConvertDBRelease(c pyrin.Context, hasUser bool, media database.FullMediaPar
 	// // d := media.NextAiring
 	// d := nextAiring.Format(types.MediaDateLayout)
 
+	t := time.Now()
+
+	status := types.MediaPartReleaseStatusUnknown
+
+	var nextAiring time.Time
+	currentPart := CurrentEpisode(release.StartDate, release.DelayDays, release.IntervalDays)
+
+	if t.Before(release.StartDate) {
+		status = types.MediaPartReleaseStatusWaiting
+		nextAiring = release.StartDate
+	} else {
+		status = types.MediaPartReleaseStatusRunning
+
+		if release.NumExpectedParts > 0 && currentPart >= release.NumExpectedParts {
+			currentPart = release.NumExpectedParts
+			status = types.MediaPartReleaseStatusCompleted
+		}
+
+		nextAiring = NextAiringDate(release.StartDate, release.DelayDays, release.IntervalDays)
+	}
 
 	return Release{
-		MediaId:     media.MediaId,
-		Title:       media.MediaTitle,
-		Description: utils.SqlNullToStringPtr(media.MediaDescription),
-		TmdbId:      media.MediaTmdbId.String,
+		MediaId:     release.MediaId,
+		Title:       release.MediaTitle,
+		Description: utils.SqlNullToStringPtr(release.MediaDescription),
+		TmdbId:      release.MediaTmdbId.String,
 		// TODO(patrik): Fix
 		// ImdbId:           media.MediaImdbId.String,
-		MalId:            media.MediaMalId.String,
-		AnilistId:        media.MediaAnilistId.String,
-		MediaType:        media.MediaType,
-		Score:            utils.SqlNullToFloat64Ptr(media.MediaScore),
-		Status:           media.MediaStatus,
-		Rating:           media.MediaRating,
-		PartCount:        media.MediaPartCount.Int64,
-		Creators:         utils.FixNilArrayToEmpty(media.MediaCreators.Data),
-		Tags:             utils.FixNilArrayToEmpty(media.MediaTags.Data),
-		AiringSeason:     utils.SqlNullToStringPtr(media.MediaAiringSeason),
-		StartDate:        utils.SqlNullToStringPtr(media.MediaStartDate),
-		EndDate:          utils.SqlNullToStringPtr(media.MediaEndDate),
+		MalId:        release.MediaMalId.String,
+		AnilistId:    release.MediaAnilistId.String,
+		MediaType:    release.MediaType,
+		Score:        utils.SqlNullToFloat64Ptr(release.MediaScore),
+		Status:       release.MediaStatus,
+		Rating:       release.MediaRating,
+		PartCount:    release.MediaPartCount.Int64,
+		Creators:     utils.FixNilArrayToEmpty(release.MediaCreators.Data),
+		Tags:         utils.FixNilArrayToEmpty(release.MediaTags.Data),
+		AiringSeason: utils.SqlNullToStringPtr(release.MediaAiringSeason),
+		// StartDate:        utils.SqlNullToStringPtr(release.MediaStartDate),
+		// EndDate:          utils.SqlNullToStringPtr(release.MediaEndDate),
 		CoverUrl:         coverUrl,
 		BannerUrl:        bannerUrl,
 		LogoUrl:          logoUrl,
 		User:             user,
-		NumExpectedParts: media.NumExpectedParts,
-		CurrentPart:      media.CurrentPart,
-		NextAiring:       media.NextAiring,
-		IntervalDays:     media.IntervalDays,
-		IsActive:         media.IsActive,
+		NumExpectedParts: release.NumExpectedParts,
+		CurrentPart:      currentPart,
+		NextAiring:       nextAiring.Format(time.RFC3339),
+		IntervalDays:     release.IntervalDays,
+		// IsActive:         release.IsActive,
+		ReleaseStatus: status,
+		// TODO(patrik): Add
+		ImdbId:    "",
+		StartDate: release.StartDate.Format(time.RFC3339),
+		DelayDays: release.DelayDays,
 	}
+}
+
+type CreateReleaseBody struct {
+	MediaId          string `json:"mediaId"`
+	StartDate        string `json:"startDate"`
+	NumExpectedParts int    `json:"numExpectedParts"`
+	IntervalDays     int    `json:"intervalDays"`
+	DelayDays        int    `json:"delayDays"`
+}
+
+func (b *CreateReleaseBody) Transform() {
+	b.NumExpectedParts = utils.Min(b.NumExpectedParts, 0)
+	b.IntervalDays = utils.Min(b.IntervalDays, 0)
+	b.DelayDays = utils.Min(b.DelayDays, 0)
+}
+
+func (b CreateReleaseBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.MediaId, validate.Required),
+		validate.Field(&b.StartDate, validate.Required, validate.Date(time.RFC3339)),
+	)
+}
+
+type EditReleaseBody struct {
+	StartDate        *string `json:"startDate,omitempty"`
+	NumExpectedParts *int    `json:"numExpectedParts,omitempty"`
+	IntervalDays     *int    `json:"intervalDays,omitempty"`
+	DelayDays        *int    `json:"delayDays,omitempty"`
+}
+
+func (b *EditReleaseBody) Transform() {
+	if b.NumExpectedParts != nil {
+		*b.NumExpectedParts = utils.Min(*b.NumExpectedParts, 0)
+	}
+
+	if b.IntervalDays != nil {
+		*b.IntervalDays = utils.Min(*b.IntervalDays, 0)
+	}
+
+	if b.DelayDays != nil {
+		*b.DelayDays = utils.Min(*b.DelayDays, 0)
+	}
+}
+
+func (b EditReleaseBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.StartDate, validate.Required.When(b.StartDate != nil), validate.Date(time.RFC3339)),
+	)
 }
 
 func InstallReleaseHandlers(app core.App, group pyrin.Group) {
@@ -225,6 +330,118 @@ func InstallReleaseHandlers(app core.App, group pyrin.Group) {
 				return GetMediaById{
 					Media: ConvertDBMedia(c, userId != nil, media),
 				}, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "CreateRelease",
+			Method:       http.MethodPost,
+			Path:         "/releases",
+			ResponseType: nil,
+			BodyType:     CreateReleaseBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				body, err := pyrin.Body[CreateReleaseBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := c.Request().Context()
+
+				media, err := app.DB().GetMediaById(ctx, nil, body.MediaId)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, MediaNotFound()
+					}
+
+					return nil, err
+				}
+
+				t, err := time.Parse(time.RFC3339, body.StartDate)
+				if err != nil {
+					return nil, err
+				}
+
+				err = app.DB().CreateMediaPartRelease(ctx, database.CreateMediaPartReleaseParams{
+					MediaId:          media.Id,
+					StartDate:        t,
+					NumExpectedParts: body.NumExpectedParts,
+					IntervalDays:     body.IntervalDays,
+					DelayDays:        body.DelayDays,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "EditRelease",
+			Method:       http.MethodPatch,
+			Path:         "/releases/:id",
+			ResponseType: nil,
+			BodyType:     EditReleaseBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				body, err := pyrin.Body[EditReleaseBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := c.Request().Context()
+
+				release, err := app.DB().GetMediaPartReleaseById(ctx, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, MediaPartReleaseNotFound()
+					}
+
+					return nil, err
+				}
+
+				changes := database.MediaPartReleaseChanges{}
+
+				if body.StartDate != nil {
+					t, err := time.Parse(time.RFC3339, *body.StartDate)
+					if err != nil {
+						return nil, err
+					}
+
+					changes.StartDate = database.Change[time.Time]{
+						Value:   t,
+						Changed: t != release.StartDate,
+					}
+				}
+
+				if body.NumExpectedParts != nil {
+					changes.NumExpectedParts = database.Change[int]{
+						Value:   *body.NumExpectedParts,
+						Changed: *body.NumExpectedParts != release.NumExpectedParts,
+					}
+				}
+
+				if body.IntervalDays != nil {
+					changes.IntervalDays = database.Change[int]{
+						Value:   *body.IntervalDays,
+						Changed: *body.IntervalDays != release.IntervalDays,
+					}
+				}
+
+				if body.DelayDays != nil {
+					changes.DelayDays = database.Change[int]{
+						Value:   *body.DelayDays,
+						Changed: *body.DelayDays != release.DelayDays,
+					}
+				}
+
+				err = app.DB().UpdateMediaPartRelease(ctx, release.MediaId, changes)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
 			},
 		},
 	)
