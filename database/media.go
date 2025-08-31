@@ -170,27 +170,27 @@ func MediaReleaseQuery() *goqu.SelectDataset {
 		Select(
 			tbl.Col("media_id").As("id"),
 
-			tbl.Col("num_expected_parts"),
-			tbl.Col("current_part"),
-			tbl.Col("next_airing"),
-			tbl.Col("interval_days"),
+			// tbl.Col("num_expected_parts"),
+			// tbl.Col("current_part"),
+			// tbl.Col("next_airing"),
+			// tbl.Col("interval_days"),
 			// tbl.Col("is_active"),
 
 			goqu.Func(
 				"json_object",
 
-				"num_expected_parts",
-				tbl.Col("num_expected_parts"),
-
-				"current_part",
-				tbl.Col("current_part"),
-
-				"next_airing",
-				tbl.Col("next_airing"),
-
-				"interval_days",
-				tbl.Col("interval_days"),
-
+				// "num_expected_parts",
+				// tbl.Col("num_expected_parts"),
+				//
+				// "current_part",
+				// tbl.Col("current_part"),
+				//
+				// "next_airing",
+				// tbl.Col("next_airing"),
+				//
+				// "interval_days",
+				// tbl.Col("interval_days"),
+				//
 				// "is_active",
 				// tbl.Col("is_active"),
 			).As("data"),

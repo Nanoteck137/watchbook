@@ -19,10 +19,9 @@ type MediaPartRelease struct {
 	MediaId string `db:"media_id"`
 
 	Status           types.MediaPartReleaseStatus `db:"status"`
-	StartDate        time.Time                       `db:"start_date"`
+	StartDate        time.Time                    `db:"start_date"`
 	NumExpectedParts int                          `db:"num_expected_parts"`
-	CurrentPart      int                          `db:"current_part"`
-	NextAiring       time.Time                       `db:"next_airing"`
+	PartOffset       int                          `db:"part_offset"`
 	IntervalDays     int                          `db:"interval_days"`
 	DelayDays        int                          `db:"delay_days"`
 
@@ -39,8 +38,7 @@ type FullMediaPartRelease struct {
 	Status           types.MediaPartReleaseStatus `db:"status"`
 	StartDate        time.Time                    `db:"start_date"`
 	NumExpectedParts int                          `db:"num_expected_parts"`
-	CurrentPart      int                          `db:"current_part"`
-	NextAiring       time.Time                    `db:"next_airing"`
+	PartOffset       int                          `db:"part_offset"`
 	IntervalDays     int                          `db:"interval_days"`
 	DelayDays        int                          `db:"delay_days"`
 
@@ -90,8 +88,7 @@ func MediaPartReleaseQuery() *goqu.SelectDataset {
 			"media_part_release.status",
 			"media_part_release.start_date",
 			"media_part_release.num_expected_parts",
-			"media_part_release.current_part",
-			"media_part_release.next_airing",
+			"media_part_release.part_offset",
 			"media_part_release.interval_days",
 			"media_part_release.delay_days",
 
@@ -115,8 +112,7 @@ func FullMediaPartReleaseQuery(userId *string) *goqu.SelectDataset {
 			"media_part_release.status",
 			"media_part_release.start_date",
 			"media_part_release.num_expected_parts",
-			"media_part_release.current_part",
-			"media_part_release.next_airing",
+			"media_part_release.part_offset",
 			"media_part_release.interval_days",
 			"media_part_release.delay_days",
 
@@ -244,8 +240,7 @@ type CreateMediaPartReleaseParams struct {
 	Status           types.MediaPartReleaseStatus
 	StartDate        time.Time
 	NumExpectedParts int
-	CurrentPart      int
-	NextAiring       time.Time
+	PartOffset       int
 	IntervalDays     int
 	DelayDays        int
 
@@ -270,8 +265,7 @@ func (db *Database) CreateMediaPartRelease(ctx context.Context, params CreateMed
 		"status":             params.Status,
 		"start_date":         params.StartDate,
 		"num_expected_parts": params.NumExpectedParts,
-		"current_part":       params.CurrentPart,
-		"next_airing":        params.NextAiring,
+		"part_offset":        params.PartOffset,
 		"interval_days":      params.IntervalDays,
 		"delay_days":         params.DelayDays,
 
@@ -291,8 +285,7 @@ type MediaPartReleaseChanges struct {
 	Status           Change[types.MediaPartReleaseStatus]
 	StartDate        Change[time.Time]
 	NumExpectedParts Change[int]
-	CurrentPart      Change[int]
-	NextAiring       Change[time.Time]
+	PartOffset      Change[int]
 	IntervalDays     Change[int]
 	DelayDays        Change[int]
 
@@ -305,8 +298,7 @@ func (db *Database) UpdateMediaPartRelease(ctx context.Context, mediaId string, 
 	addToRecord(record, "status", changes.Status)
 	addToRecord(record, "start_date", changes.StartDate)
 	addToRecord(record, "num_expected_parts", changes.NumExpectedParts)
-	addToRecord(record, "current_part", changes.CurrentPart)
-	addToRecord(record, "next_airing", changes.NextAiring)
+	addToRecord(record, "part_offset", changes.PartOffset)
 	addToRecord(record, "interval_days", changes.IntervalDays)
 	addToRecord(record, "delay_days", changes.IntervalDays)
 
@@ -336,6 +328,52 @@ func (db *Database) RemoveMediaPartRelease(ctx context.Context, mediaId string) 
 	query := dialect.Delete("media_part_release").
 		Where(
 			goqu.I("media_part_release.media_id").Eq(mediaId),
+		)
+
+	_, err := db.db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *Database) SetMediaPartRelease(ctx context.Context, params CreateMediaPartReleaseParams) error {
+	if params.Created == 0 && params.Updated == 0 {
+		t := time.Now().UnixMilli()
+		params.Created = t
+		params.Updated = t
+	}
+
+	if !types.IsValidMediaPartReleaseStatus(params.Status) {
+		params.Status = types.MediaPartReleaseStatusUnknown
+	}
+
+	query := dialect.Insert("media_part_release").
+		Rows(goqu.Record{
+			"media_id": params.MediaId,
+
+			"status":             params.Status,
+			"start_date":         params.StartDate,
+			"num_expected_parts": params.NumExpectedParts,
+			"part_offset":        params.PartOffset,
+			"interval_days":      params.IntervalDays,
+			"delay_days":         params.DelayDays,
+
+			"created": params.Created,
+			"updated": params.Updated,
+		}).
+		OnConflict(
+			goqu.DoUpdate("media_id", goqu.Record{
+				"status":             params.Status,
+				"start_date":         params.StartDate,
+				"num_expected_parts": params.NumExpectedParts,
+				"part_offset":        params.PartOffset,
+				"interval_days":      params.IntervalDays,
+				"delay_days":         params.DelayDays,
+
+				"updated": params.Updated,
+			}),
 		)
 
 	_, err := db.db.Exec(ctx, query)

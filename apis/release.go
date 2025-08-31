@@ -82,11 +82,11 @@ func NextAiringDate(start time.Time, delayDays, intervalDays int) time.Time {
 	return nextAiring
 }
 
-func CurrentEpisode(start time.Time, delayDays, intervalDays int) int {
+func CurrentPart(start time.Time, delayDays, intervalDays int) int {
 	effectiveStart := start.Add(time.Duration(delayDays) * 24 * time.Hour)
 	now := time.Now().UTC()
 
-	// If current time is before start, episode = 0
+	// If current time is before start, part = 0
 	if now.Before(effectiveStart) {
 		return 0
 	}
@@ -94,11 +94,11 @@ func CurrentEpisode(start time.Time, delayDays, intervalDays int) int {
 	// Calculate elapsed time since effective start
 	elapsed := now.Sub(effectiveStart)
 
-	// Calculate how many full intervals have passed (including the first episode at start)
-	episodesPassed := int(elapsed.Hours() / (24 * float64(intervalDays)))
+	// Calculate how many full intervals have passed (including the first part at start)
+	partsPassed := int(elapsed.Hours() / (24 * float64(intervalDays)))
 
-	// Current episode = episodesPassed + 1 (because first episode is at start)
-	return episodesPassed + 1
+	// Current part = partsPassed + 1 (because first part is at start)
+	return partsPassed + 1
 }
 
 func ConvertDBRelease(c pyrin.Context, hasUser bool, release database.FullMediaPartRelease) Release {
@@ -149,7 +149,8 @@ func ConvertDBRelease(c pyrin.Context, hasUser bool, release database.FullMediaP
 	status := types.MediaPartReleaseStatusUnknown
 
 	var nextAiring time.Time
-	currentPart := CurrentEpisode(release.StartDate, release.DelayDays, release.IntervalDays)
+	currentPart := CurrentPart(release.StartDate, release.DelayDays, release.IntervalDays)
+	currentPart += release.PartOffset
 
 	if t.Before(release.StartDate) {
 		status = types.MediaPartReleaseStatusWaiting
@@ -246,6 +247,27 @@ func (b *EditReleaseBody) Transform() {
 func (b EditReleaseBody) Validate() error {
 	return validate.ValidateStruct(&b,
 		validate.Field(&b.StartDate, validate.Required.When(b.StartDate != nil), validate.Date(time.RFC3339)),
+	)
+}
+
+type SetReleaseBody struct {
+	MediaId          string `json:"mediaId"`
+	StartDate        string `json:"startDate"`
+	NumExpectedParts int    `json:"numExpectedParts"`
+	IntervalDays     int    `json:"intervalDays"`
+	DelayDays        int    `json:"delayDays"`
+}
+
+func (b *SetReleaseBody) Transform() {
+	b.NumExpectedParts = utils.Min(b.NumExpectedParts, 0)
+	b.IntervalDays = utils.Min(b.IntervalDays, 0)
+	b.DelayDays = utils.Min(b.DelayDays, 0)
+}
+
+func (b SetReleaseBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.MediaId, validate.Required),
+		validate.Field(&b.StartDate, validate.Required, validate.Date(time.RFC3339)),
 	)
 }
 
@@ -377,6 +399,49 @@ func InstallReleaseHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
+			Name:         "SetRelease",
+			Method:       http.MethodPost,
+			Path:         "/releases/set",
+			ResponseType: nil,
+			BodyType:     SetReleaseBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				body, err := pyrin.Body[SetReleaseBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := c.Request().Context()
+
+				media, err := app.DB().GetMediaById(ctx, nil, body.MediaId)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, MediaNotFound()
+					}
+
+					return nil, err
+				}
+
+				t, err := time.Parse(time.RFC3339, body.StartDate)
+				if err != nil {
+					return nil, err
+				}
+
+				err = app.DB().SetMediaPartRelease(ctx, database.CreateMediaPartReleaseParams{
+					MediaId:          media.Id,
+					StartDate:        t,
+					NumExpectedParts: body.NumExpectedParts,
+					IntervalDays:     body.IntervalDays,
+					DelayDays:        body.DelayDays,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
 			Name:         "EditRelease",
 			Method:       http.MethodPatch,
 			Path:         "/releases/:id",
@@ -434,6 +499,22 @@ func InstallReleaseHandlers(app core.App, group pyrin.Group) {
 						Value:   *body.DelayDays,
 						Changed: *body.DelayDays != release.DelayDays,
 					}
+				}
+
+				changes.NumExpectedParts = database.Change[int]{
+					Value:   0,
+					Changed: true,
+				}
+
+				t, _ := time.Parse(time.RFC3339, "2025-08-28T18:30:00Z")
+				changes.StartDate = database.Change[time.Time]{
+					Value:   t,
+					Changed: true,
+				}
+
+				changes.PartOffset = database.Change[int]{
+					Value:   1130,
+					Changed: true,
 				}
 
 				err = app.DB().UpdateMediaPartRelease(ctx, release.MediaId, changes)

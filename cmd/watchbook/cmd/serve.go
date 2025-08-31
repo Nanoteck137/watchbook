@@ -29,8 +29,7 @@ func test(app core.App) error {
 			MediaId:          testId,
 			StartDate:        t,
 			NumExpectedParts: 12,
-			CurrentPart:      9,
-			NextAiring:       t,
+			PartOffset:       9,
 			IntervalDays:     7,
 			DelayDays:        7,
 		})
