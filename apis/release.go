@@ -64,43 +64,6 @@ type GetReleaseById struct {
 	Release
 }
 
-func NextAiringDate(start time.Time, delayDays, intervalDays int) time.Time {
-	effectiveStart := start.Add(time.Duration(delayDays) * 24 * time.Hour)
-	now := time.Now().UTC()
-
-	// If the show hasn't started yet, return the effective start date
-	if now.Before(effectiveStart) {
-		return effectiveStart
-	}
-
-	// Calculate how many intervals have passed
-	diff := now.Sub(effectiveStart)
-	intervalsPassed := int(diff.Hours() / (24 * float64(intervalDays)))
-
-	// Next airing date = effectiveStart + (intervalsPassed + 1) * interval
-	nextAiring := effectiveStart.Add(time.Duration(intervalsPassed+1) * time.Duration(intervalDays) * 24 * time.Hour)
-	return nextAiring
-}
-
-func CurrentPart(start time.Time, delayDays, intervalDays int) int {
-	effectiveStart := start.Add(time.Duration(delayDays) * 24 * time.Hour)
-	now := time.Now().UTC()
-
-	// If current time is before start, part = 0
-	if now.Before(effectiveStart) {
-		return 0
-	}
-
-	// Calculate elapsed time since effective start
-	elapsed := now.Sub(effectiveStart)
-
-	// Calculate how many full intervals have passed (including the first part at start)
-	partsPassed := int(elapsed.Hours() / (24 * float64(intervalDays)))
-
-	// Current part = partsPassed + 1 (because first part is at start)
-	return partsPassed + 1
-}
-
 func ConvertDBRelease(c pyrin.Context, hasUser bool, release database.FullMediaPartRelease) Release {
 	// TODO(patrik): Add default cover
 	var coverUrl *string
@@ -149,7 +112,7 @@ func ConvertDBRelease(c pyrin.Context, hasUser bool, release database.FullMediaP
 	status := types.MediaPartReleaseStatusUnknown
 
 	var nextAiring time.Time
-	currentPart := CurrentPart(release.StartDate, release.DelayDays, release.IntervalDays)
+	currentPart := utils.CurrentPart(release.StartDate, release.DelayDays, release.IntervalDays)
 	currentPart += release.PartOffset
 
 	if t.Before(release.StartDate) {
@@ -163,7 +126,7 @@ func ConvertDBRelease(c pyrin.Context, hasUser bool, release database.FullMediaP
 			status = types.MediaPartReleaseStatusCompleted
 		}
 
-		nextAiring = NextAiringDate(release.StartDate, release.DelayDays, release.IntervalDays)
+		nextAiring = utils.NextAiringDate(release.StartDate, release.DelayDays, release.IntervalDays)
 	}
 
 	return Release{
@@ -247,27 +210,6 @@ func (b *EditReleaseBody) Transform() {
 func (b EditReleaseBody) Validate() error {
 	return validate.ValidateStruct(&b,
 		validate.Field(&b.StartDate, validate.Required.When(b.StartDate != nil), validate.Date(time.RFC3339)),
-	)
-}
-
-type SetReleaseBody struct {
-	MediaId          string `json:"mediaId"`
-	StartDate        string `json:"startDate"`
-	NumExpectedParts int    `json:"numExpectedParts"`
-	IntervalDays     int    `json:"intervalDays"`
-	DelayDays        int    `json:"delayDays"`
-}
-
-func (b *SetReleaseBody) Transform() {
-	b.NumExpectedParts = utils.Min(b.NumExpectedParts, 0)
-	b.IntervalDays = utils.Min(b.IntervalDays, 0)
-	b.DelayDays = utils.Min(b.DelayDays, 0)
-}
-
-func (b SetReleaseBody) Validate() error {
-	return validate.ValidateStruct(&b,
-		validate.Field(&b.MediaId, validate.Required),
-		validate.Field(&b.StartDate, validate.Required, validate.Date(time.RFC3339)),
 	)
 }
 
@@ -403,9 +345,9 @@ func InstallReleaseHandlers(app core.App, group pyrin.Group) {
 			Method:       http.MethodPost,
 			Path:         "/releases/set",
 			ResponseType: nil,
-			BodyType:     SetReleaseBody{},
+			BodyType:     SetMediaReleaseBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				body, err := pyrin.Body[SetReleaseBody](c)
+				body, err := pyrin.Body[SetMediaReleaseBody](c)
 				if err != nil {
 					return nil, err
 				}

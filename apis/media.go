@@ -11,7 +11,9 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"time"
 
+	"github.com/kr/pretty"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
 	"github.com/nanoteck137/validate"
@@ -94,6 +96,8 @@ func getPageOptions(q url.Values) database.FetchOptions {
 }
 
 func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
+	pretty.Println(media)
+
 	// TODO(patrik): Add default cover
 	var coverUrl *string
 	var bannerUrl *string
@@ -381,6 +385,27 @@ func (b SetPartsBody) Validate() error {
 	)
 }
 
+type SetMediaReleaseBody struct {
+	MediaId          string `json:"mediaId"`
+	StartDate        string `json:"startDate"`
+	NumExpectedParts int    `json:"numExpectedParts"`
+	IntervalDays     int    `json:"intervalDays"`
+	DelayDays        int    `json:"delayDays"`
+}
+
+func (b *SetMediaReleaseBody) Transform() {
+	b.NumExpectedParts = utils.Min(b.NumExpectedParts, 0)
+	b.IntervalDays = utils.Min(b.IntervalDays, 0)
+	b.DelayDays = utils.Min(b.DelayDays, 0)
+}
+
+func (b SetMediaReleaseBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.MediaId, validate.Required),
+		validate.Field(&b.StartDate, validate.Required, validate.Date(time.RFC3339)),
+	)
+}
+
 func InstallMediaHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -500,116 +525,6 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				return GetMediaParts{
 					Parts: res,
 				}, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "SetMediaUserData",
-			Method:       http.MethodPost,
-			Path:         "/media/:id/user",
-			ResponseType: nil,
-			BodyType:     SetMediaUserData{},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				id := c.Param("id")
-
-				ctx := context.TODO()
-
-				body, err := pyrin.Body[SetMediaUserData](c)
-				if err != nil {
-					return nil, err
-				}
-
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				media, err := app.DB().GetMediaById(ctx, &user.Id, id)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, MediaNotFound()
-					}
-
-					return nil, err
-				}
-
-				val := media.UserData.Data
-
-				data := database.SetMediaUserData{
-					List:         val.List,
-					Part:         utils.Int64PtrToSqlNull(val.Part),
-					IsRevisiting: val.IsRevisiting > 0,
-					Score:        utils.Int64PtrToSqlNull(val.Score),
-				}
-
-				if body.List != nil {
-					data.List = *body.List
-				}
-
-				if body.CurrentPart != nil {
-					data.Part = sql.NullInt64{
-						Int64: *body.CurrentPart,
-						Valid: *body.CurrentPart != 0,
-					}
-				}
-
-				if body.RevisitCount != nil {
-					data.RevisitCount = sql.NullInt64{
-						Int64: *body.RevisitCount,
-						Valid: *body.RevisitCount != 0,
-					}
-				}
-
-				if body.IsRevisiting != nil {
-					data.IsRevisiting = *body.IsRevisiting
-				}
-
-				if body.Score != nil {
-					data.Score = sql.NullInt64{
-						Int64: *body.Score,
-						Valid: *body.Score != 0,
-					}
-				}
-
-				err = app.DB().SetMediaUserData(ctx, media.Id, user.Id, data)
-				if err != nil {
-					return nil, err
-				}
-
-				return nil, nil
-			},
-		},
-
-		pyrin.ApiHandler{
-			Name:         "DeleteMediaUserData",
-			Method:       http.MethodDelete,
-			Path:         "/media/:id/user",
-			ResponseType: nil,
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				id := c.Param("id")
-
-				ctx := context.TODO()
-
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
-				media, err := app.DB().GetMediaById(ctx, &user.Id, id)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, MediaNotFound()
-					}
-
-					return nil, err
-				}
-
-				err = app.DB().DeleteMediaUserData(ctx, media.Id, user.Id)
-				if err != nil {
-					return nil, err
-				}
-
-				return nil, nil
 			},
 		},
 
@@ -1354,6 +1269,189 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					if err != nil {
 						return nil, err
 					}
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "SetMediaUserData",
+			Method:       http.MethodPost,
+			Path:         "/media/:id/user",
+			ResponseType: nil,
+			BodyType:     SetMediaUserData{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				ctx := context.TODO()
+
+				body, err := pyrin.Body[SetMediaUserData](c)
+				if err != nil {
+					return nil, err
+				}
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				media, err := app.DB().GetMediaById(ctx, &user.Id, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, MediaNotFound()
+					}
+
+					return nil, err
+				}
+
+				val := media.UserData.Data
+
+				data := database.SetMediaUserData{
+					List:         val.List,
+					Part:         utils.Int64PtrToSqlNull(val.Part),
+					IsRevisiting: val.IsRevisiting > 0,
+					Score:        utils.Int64PtrToSqlNull(val.Score),
+				}
+
+				if body.List != nil {
+					data.List = *body.List
+				}
+
+				if body.CurrentPart != nil {
+					data.Part = sql.NullInt64{
+						Int64: *body.CurrentPart,
+						Valid: *body.CurrentPart != 0,
+					}
+				}
+
+				if body.RevisitCount != nil {
+					data.RevisitCount = sql.NullInt64{
+						Int64: *body.RevisitCount,
+						Valid: *body.RevisitCount != 0,
+					}
+				}
+
+				if body.IsRevisiting != nil {
+					data.IsRevisiting = *body.IsRevisiting
+				}
+
+				if body.Score != nil {
+					data.Score = sql.NullInt64{
+						Int64: *body.Score,
+						Valid: *body.Score != 0,
+					}
+				}
+
+				err = app.DB().SetMediaUserData(ctx, media.Id, user.Id, data)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "DeleteMediaUserData",
+			Method:       http.MethodDelete,
+			Path:         "/media/:id/user",
+			ResponseType: nil,
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				ctx := context.TODO()
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				media, err := app.DB().GetMediaById(ctx, &user.Id, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, MediaNotFound()
+					}
+
+					return nil, err
+				}
+
+				err = app.DB().DeleteMediaUserData(ctx, media.Id, user.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "SetMediaRelease",
+			Method:       http.MethodPost,
+			Path:         "/media/:id/release",
+			ResponseType: nil,
+			BodyType:     SetMediaReleaseBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				ctx := context.TODO()
+
+				body, err := pyrin.Body[SetMediaReleaseBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				media, err := app.DB().GetMediaById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, MediaNotFound()
+					}
+
+					return nil, err
+				}
+
+				t, err := time.Parse(time.RFC3339, body.StartDate)
+				if err != nil {
+					return nil, err
+				}
+
+				err = app.DB().SetMediaPartRelease(ctx, database.CreateMediaPartReleaseParams{
+					MediaId:          media.Id,
+					StartDate:        t,
+					NumExpectedParts: body.NumExpectedParts,
+					IntervalDays:     body.IntervalDays,
+					DelayDays:        body.DelayDays,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "DeleteMediaRelease",
+			Method:       http.MethodDelete,
+			Path:         "/media/:id/release",
+			ResponseType: nil,
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				ctx := context.TODO()
+
+				media, err := app.DB().GetMediaById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, MediaNotFound()
+					}
+
+					return nil, err
+				}
+
+				err = app.DB().RemoveMediaPartRelease(ctx, media.Id)
+				if err != nil {
+					return nil, err
 				}
 
 				return nil, nil

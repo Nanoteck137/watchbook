@@ -23,11 +23,11 @@ type MediaUserData struct {
 }
 
 type MediaRelease struct {
-	NumExpectedParts int    `json:"num_expected_parts"`
-	CurrentPart      int    `json:"current_part"`
-	NextAiring       string `json:"next_airing"`
-	IntervalDays     int    `json:"interval_days"`
-	IsActive         int    `json:"is_active"`
+	StartDate        string `json:"start_date"`
+	NumExpectedParts int       `json:"num_expected_parts"`
+	PartOffset       int       `json:"part_offset"`
+	IntervalDays     int       `json:"interval_days"`
+	DelayDays        int       `json:"delay_days"`
 }
 
 type Media struct {
@@ -170,29 +170,29 @@ func MediaReleaseQuery() *goqu.SelectDataset {
 		Select(
 			tbl.Col("media_id").As("id"),
 
-			// tbl.Col("num_expected_parts"),
-			// tbl.Col("current_part"),
-			// tbl.Col("next_airing"),
-			// tbl.Col("interval_days"),
-			// tbl.Col("is_active"),
+			tbl.Col("start_date"),
+			tbl.Col("num_expected_parts"),
+			tbl.Col("part_offset"),
+			tbl.Col("interval_days"),
+			tbl.Col("delay_days"),
 
 			goqu.Func(
 				"json_object",
 
-				// "num_expected_parts",
-				// tbl.Col("num_expected_parts"),
-				//
-				// "current_part",
-				// tbl.Col("current_part"),
-				//
-				// "next_airing",
-				// tbl.Col("next_airing"),
-				//
-				// "interval_days",
-				// tbl.Col("interval_days"),
-				//
-				// "is_active",
-				// tbl.Col("is_active"),
+				"start_date",
+				tbl.Col("start_date"),
+
+				"num_expected_parts",
+				tbl.Col("num_expected_parts"),
+
+				"part_offset",
+				tbl.Col("part_offset"),
+
+				"interval_days",
+				tbl.Col("interval_days"),
+
+				"delay_days",
+				tbl.Col("delay_days"),
 			).As("data"),
 		)
 

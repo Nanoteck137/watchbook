@@ -14,6 +14,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	"slices"
@@ -349,4 +350,41 @@ func DownloadImage(url, outDir, name string) (string, error) {
 	}
 
 	return out, nil
+}
+
+func NextAiringDate(start time.Time, delayDays, intervalDays int) time.Time {
+	effectiveStart := start.Add(time.Duration(delayDays) * 24 * time.Hour)
+	now := time.Now().UTC()
+
+	// If the show hasn't started yet, return the effective start date
+	if now.Before(effectiveStart) {
+		return effectiveStart
+	}
+
+	// Calculate how many intervals have passed
+	diff := now.Sub(effectiveStart)
+	intervalsPassed := int(diff.Hours() / (24 * float64(intervalDays)))
+
+	// Next airing date = effectiveStart + (intervalsPassed + 1) * interval
+	nextAiring := effectiveStart.Add(time.Duration(intervalsPassed+1) * time.Duration(intervalDays) * 24 * time.Hour)
+	return nextAiring
+}
+
+func CurrentPart(start time.Time, delayDays, intervalDays int) int {
+	effectiveStart := start.Add(time.Duration(delayDays) * 24 * time.Hour)
+	now := time.Now().UTC()
+
+	// If current time is before start, part = 0
+	if now.Before(effectiveStart) {
+		return 0
+	}
+
+	// Calculate elapsed time since effective start
+	elapsed := now.Sub(effectiveStart)
+
+	// Calculate how many full intervals have passed (including the first part at start)
+	partsPassed := int(elapsed.Hours() / (24 * float64(intervalDays)))
+
+	// Current part = partsPassed + 1 (because first part is at start)
+	return partsPassed + 1
 }
