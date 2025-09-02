@@ -1,18 +1,13 @@
 <script lang="ts">
   import {
-    DiscAlbum,
-    FileMusic,
     Home,
-    ListMusic,
     LogIn,
     LogOut,
     Menu,
     Origami,
     Search,
     Server,
-    Tags,
     User,
-    Users,
   } from "lucide-svelte";
   import "../app.css";
   import Link from "$lib/components/Link.svelte";
@@ -69,10 +64,6 @@
     <div class="flex-grow"></div>
 
     <div class="flex items-center gap-2">
-      {#if !!data.notifications}
-        <p>{data.notifications.length}</p>
-      {/if}
-
       <Button href="/search" size="icon" variant="ghost">
         <Search />
       </Button>
