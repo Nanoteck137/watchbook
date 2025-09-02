@@ -117,6 +117,7 @@
         icon={Origami}
         onClick={close}
       />
+      <Link title="Releases" href="/release" icon={Origami} onClick={close} />
     </div>
     <div class="flex-grow"></div>
     <div class="flex flex-col gap-2 px-4 py-2">
