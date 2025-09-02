@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
 	"github.com/nanoteck137/validate"
@@ -109,8 +108,6 @@ func getPageOptions(q url.Values) database.FetchOptions {
 }
 
 func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
-	pretty.Println(media)
-
 	// TODO(patrik): Add default cover
 	var coverUrl *string
 	var bannerUrl *string
@@ -150,20 +147,14 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 	if media.Release.Valid {
 		data := media.Release.Data
 
-		pretty.Println(data)
-
 		status := types.MediaPartReleaseStatusUnknown
 		startDate, _ := time.Parse(time.RFC3339, data.StartDate)
 		startDate = startDate.UTC()
-
-		fmt.Printf("startDate: %v\n", startDate)
 
 		t := time.Now()
 
 		currentPart := utils.CurrentPart(startDate, data.DelayDays, data.IntervalDays)
 		currentPart += data.PartOffset
-
-		fmt.Printf("currentPart: %v\n", currentPart)
 
 		var nextAiring *time.Time
 
@@ -182,8 +173,6 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 				nextAiring = nil
 			}
 		}
-
-		fmt.Printf("nextAiring: %v\n", nextAiring)
 
 		formatNextTime := func() *string {
 			if nextAiring != nil {
