@@ -24,10 +24,10 @@ type MediaUserData struct {
 
 type MediaRelease struct {
 	StartDate        string `json:"start_date"`
-	NumExpectedParts int       `json:"num_expected_parts"`
-	PartOffset       int       `json:"part_offset"`
-	IntervalDays     int       `json:"interval_days"`
-	DelayDays        int       `json:"delay_days"`
+	NumExpectedParts int    `json:"num_expected_parts"`
+	PartOffset       int    `json:"part_offset"`
+	IntervalDays     int    `json:"interval_days"`
+	DelayDays        int    `json:"delay_days"`
 }
 
 type Media struct {
@@ -675,6 +675,71 @@ func (db *Database) DeleteMediaUserData(ctx context.Context, mediaId, userId str
 		Where(
 			goqu.I("media_user_data.media_id").Eq(mediaId),
 			goqu.I("media_user_data.user_id").Eq(userId),
+		)
+
+	_, err := db.db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type SetMediaPartRelease struct {
+	StartDate        string
+	NumExpectedParts int
+	PartOffset       int
+	IntervalDays     int
+	DelayDays        int
+
+	Created int64
+	Updated int64
+}
+
+func (db *Database) SetMediaPartRelease(ctx context.Context, mediaId string, data SetMediaPartRelease) error {
+	if data.Created == 0 && data.Updated == 0 {
+		t := time.Now().UnixMilli()
+		data.Created = t
+		data.Updated = t
+	}
+
+	query := dialect.Insert("media_part_release").
+		Rows(goqu.Record{
+			"media_id": mediaId,
+
+			"start_date":         data.StartDate,
+			"num_expected_parts": data.NumExpectedParts,
+			"part_offset":        data.PartOffset,
+			"interval_days":      data.IntervalDays,
+			"delay_days":         data.DelayDays,
+
+			"created": data.Created,
+			"updated": data.Updated,
+		}).
+		OnConflict(
+			goqu.DoUpdate("media_id", goqu.Record{
+				"start_date":         data.StartDate,
+				"num_expected_parts": data.NumExpectedParts,
+				"part_offset":        data.PartOffset,
+				"interval_days":      data.IntervalDays,
+				"delay_days":         data.DelayDays,
+
+				"updated": data.Updated,
+			}),
+		)
+
+	_, err := db.db.Exec(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *Database) RemoveMediaPartRelease(ctx context.Context, mediaId string) error {
+	query := dialect.Delete("media_part_release").
+		Where(
+			goqu.I("media_part_release.media_id").Eq(mediaId),
 		)
 
 	_, err := db.db.Exec(ctx, query)

@@ -173,14 +173,14 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 		} else {
 			status = types.MediaPartReleaseStatusRunning
 
-				t := utils.NextAiringDate(startDate, data.DelayDays, data.IntervalDays)
-				nextAiring = &t
+			t := utils.NextAiringDate(startDate, data.DelayDays, data.IntervalDays)
+			nextAiring = &t
 
 			if data.NumExpectedParts > 0 && currentPart >= data.NumExpectedParts {
 				currentPart = data.NumExpectedParts
 				status = types.MediaPartReleaseStatusCompleted
 				nextAiring = nil
-			} 
+			}
 		}
 
 		fmt.Printf("nextAiring: %v\n", nextAiring)
@@ -1489,8 +1489,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				err = app.DB().SetMediaPartRelease(ctx, database.CreateMediaPartReleaseParams{
-					MediaId:          media.Id,
+				err = app.DB().SetMediaPartRelease(ctx, media.Id, database.SetMediaPartRelease{
 					StartDate:        t.Format(time.RFC3339),
 					NumExpectedParts: body.NumExpectedParts,
 					IntervalDays:     body.IntervalDays,
