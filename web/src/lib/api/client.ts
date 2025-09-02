@@ -139,50 +139,6 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/collections/${id}/items`, "POST", z.undefined(), z.any(), body, options)
   }
   
-  providerMyAnimeListGetAnime(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/provider/myanimelist/anime/${id}`, "GET", api.ProviderMyAnimeListAnime, z.any(), undefined, options)
-  }
-  
-  getNotifications(options?: ExtraOptions) {
-    return this.request("/api/v1/notifications", "GET", api.GetNotifications, z.any(), undefined, options)
-  }
-  
-  getNotificationById(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/notifications/${id}`, "GET", api.GetNotificationById, z.any(), undefined, options)
-  }
-  
-  markNotificationRead(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/notifications/${id}/read`, "POST", z.undefined(), z.any(), undefined, options)
-  }
-  
-  deleteNotification(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/notifications/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
-  }
-  
-  testNotification(options?: ExtraOptions) {
-    return this.request("/api/v1/notifications/test", "POST", z.undefined(), z.any(), undefined, options)
-  }
-  
-  getReleases(options?: ExtraOptions) {
-    return this.request("/api/v1/releases", "GET", api.GetReleases, z.any(), undefined, options)
-  }
-  
-  getReleaseById(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/releases/${id}`, "GET", api.GetReleaseById, z.any(), undefined, options)
-  }
-  
-  createRelease(body: api.CreateReleaseBody, options?: ExtraOptions) {
-    return this.request("/api/v1/releases", "POST", z.undefined(), z.any(), body, options)
-  }
-  
-  setRelease(body: api.SetMediaReleaseBody, options?: ExtraOptions) {
-    return this.request("/api/v1/releases/set", "POST", z.undefined(), z.any(), body, options)
-  }
-  
-  editRelease(id: string, body: api.EditReleaseBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/releases/${id}`, "PATCH", z.undefined(), z.any(), body, options)
-  }
-  
   
 }
 
@@ -319,50 +275,6 @@ export class ClientUrls {
   
   addCollectionItem(id: string) {
     return createUrl(this.baseUrl, `/api/v1/collections/${id}/items`)
-  }
-  
-  providerMyAnimeListGetAnime(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/provider/myanimelist/anime/${id}`)
-  }
-  
-  getNotifications() {
-    return createUrl(this.baseUrl, "/api/v1/notifications")
-  }
-  
-  getNotificationById(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/notifications/${id}`)
-  }
-  
-  markNotificationRead(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/notifications/${id}/read`)
-  }
-  
-  deleteNotification(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/notifications/${id}`)
-  }
-  
-  testNotification() {
-    return createUrl(this.baseUrl, "/api/v1/notifications/test")
-  }
-  
-  getReleases() {
-    return createUrl(this.baseUrl, "/api/v1/releases")
-  }
-  
-  getReleaseById(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/releases/${id}`)
-  }
-  
-  createRelease() {
-    return createUrl(this.baseUrl, "/api/v1/releases")
-  }
-  
-  setRelease() {
-    return createUrl(this.baseUrl, "/api/v1/releases/set")
-  }
-  
-  editRelease(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/releases/${id}`)
   }
   
   getMediaImage(id: string, file: string) {
