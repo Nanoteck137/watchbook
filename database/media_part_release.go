@@ -19,7 +19,7 @@ type MediaPartRelease struct {
 	MediaId string `db:"media_id"`
 
 	Status           types.MediaPartReleaseStatus `db:"status"`
-	StartDate        time.Time                    `db:"start_date"`
+	StartDate        string `db:"start_date"`
 	NumExpectedParts int                          `db:"num_expected_parts"`
 	PartOffset       int                          `db:"part_offset"`
 	IntervalDays     int                          `db:"interval_days"`
@@ -36,7 +36,7 @@ type FullMediaPartRelease struct {
 	MediaId string `db:"media_id"`
 
 	Status           types.MediaPartReleaseStatus `db:"status"`
-	StartDate        time.Time                    `db:"start_date"`
+	StartDate        string `db:"start_date"`
 	NumExpectedParts int                          `db:"num_expected_parts"`
 	PartOffset       int                          `db:"part_offset"`
 	IntervalDays     int                          `db:"interval_days"`
@@ -238,7 +238,7 @@ type CreateMediaPartReleaseParams struct {
 	MediaId string
 
 	Status           types.MediaPartReleaseStatus
-	StartDate        time.Time
+	StartDate       string 
 	NumExpectedParts int
 	PartOffset       int
 	IntervalDays     int
@@ -283,7 +283,7 @@ func (db *Database) CreateMediaPartRelease(ctx context.Context, params CreateMed
 
 type MediaPartReleaseChanges struct {
 	Status           Change[types.MediaPartReleaseStatus]
-	StartDate        Change[time.Time]
+	StartDate        Change[string]
 	NumExpectedParts Change[int]
 	PartOffset      Change[int]
 	IntervalDays     Change[int]

@@ -32,6 +32,18 @@ type MediaUser struct {
 	IsRevisiting bool                `json:"isRevisiting"`
 }
 
+type MediaRelease struct {
+	StartDate        string `json:"startDate"`
+	NumExpectedParts int    `json:"numExpectedParts"`
+	PartOffset       int    `json:"partOffset"`
+	IntervalDays     int    `json:"intervalDays"`
+	DelayDays        int    `json:"delayDays"`
+
+	Status      types.MediaPartReleaseStatus `json:"status"`
+	CurrentPart int                          `json:"currentPart"`
+	NextAiring  *string                      `json:"nextAiring"`
+}
+
 type Media struct {
 	Id string `json:"id"`
 
@@ -60,7 +72,8 @@ type Media struct {
 	BannerUrl *string `json:"bannerUrl"`
 	LogoUrl   *string `json:"logoUrl"`
 
-	User *MediaUser `json:"user,omitempty"`
+	User    *MediaUser    `json:"user,omitempty"`
+	Release *MediaRelease `json:"release"`
 }
 
 type GetMedia struct {
@@ -133,6 +146,66 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 		}
 	}
 
+	var release *MediaRelease
+	if media.Release.Valid {
+		data := media.Release.Data
+
+		pretty.Println(data)
+
+		status := types.MediaPartReleaseStatusUnknown
+		startDate, _ := time.Parse(time.RFC3339, data.StartDate)
+		startDate = startDate.UTC()
+
+		fmt.Printf("startDate: %v\n", startDate)
+
+		t := time.Now()
+
+		currentPart := utils.CurrentPart(startDate, data.DelayDays, data.IntervalDays)
+		currentPart += data.PartOffset
+
+		fmt.Printf("currentPart: %v\n", currentPart)
+
+		var nextAiring *time.Time
+
+		if t.Before(startDate) {
+			status = types.MediaPartReleaseStatusWaiting
+			nextAiring = &startDate
+		} else {
+			status = types.MediaPartReleaseStatusRunning
+
+				t := utils.NextAiringDate(startDate, data.DelayDays, data.IntervalDays)
+				nextAiring = &t
+
+			if data.NumExpectedParts > 0 && currentPart >= data.NumExpectedParts {
+				currentPart = data.NumExpectedParts
+				status = types.MediaPartReleaseStatusCompleted
+				nextAiring = nil
+			} 
+		}
+
+		fmt.Printf("nextAiring: %v\n", nextAiring)
+
+		formatNextTime := func() *string {
+			if nextAiring != nil {
+				s := nextAiring.Format(time.RFC3339)
+				return &s
+			}
+
+			return nil
+		}
+
+		release = &MediaRelease{
+			StartDate:        startDate.Format(time.RFC3339),
+			NumExpectedParts: data.NumExpectedParts,
+			PartOffset:       data.PartOffset,
+			IntervalDays:     data.IntervalDays,
+			DelayDays:        data.DelayDays,
+			Status:           status,
+			CurrentPart:      currentPart,
+			NextAiring:       formatNextTime(),
+		}
+	}
+
 	return Media{
 		Id:           media.Id,
 		Title:        media.Title,
@@ -155,6 +228,7 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 		BannerUrl:    bannerUrl,
 		LogoUrl:      logoUrl,
 		User:         user,
+		Release:      release,
 	}
 }
 
@@ -1417,7 +1491,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 				err = app.DB().SetMediaPartRelease(ctx, database.CreateMediaPartReleaseParams{
 					MediaId:          media.Id,
-					StartDate:        t,
+					StartDate:        t.Format(time.RFC3339),
 					NumExpectedParts: body.NumExpectedParts,
 					IntervalDays:     body.IntervalDays,
 					DelayDays:        body.DelayDays,

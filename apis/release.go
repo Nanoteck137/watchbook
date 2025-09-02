@@ -107,27 +107,27 @@ func ConvertDBRelease(c pyrin.Context, hasUser bool, release database.FullMediaP
 	// // d := media.NextAiring
 	// d := nextAiring.Format(types.MediaDateLayout)
 
-	t := time.Now()
+	// t := time.Now()
 
 	status := types.MediaPartReleaseStatusUnknown
 
 	var nextAiring time.Time
-	currentPart := utils.CurrentPart(release.StartDate, release.DelayDays, release.IntervalDays)
-	currentPart += release.PartOffset
+	// currentPart := utils.CurrentPart(release.StartDate, release.DelayDays, release.IntervalDays)
+	// currentPart += release.PartOffset
 
-	if t.Before(release.StartDate) {
-		status = types.MediaPartReleaseStatusWaiting
-		nextAiring = release.StartDate
-	} else {
-		status = types.MediaPartReleaseStatusRunning
-
-		if release.NumExpectedParts > 0 && currentPart >= release.NumExpectedParts {
-			currentPart = release.NumExpectedParts
-			status = types.MediaPartReleaseStatusCompleted
-		}
-
-		nextAiring = utils.NextAiringDate(release.StartDate, release.DelayDays, release.IntervalDays)
-	}
+	// if t.Before(release.StartDate) {
+	// 	status = types.MediaPartReleaseStatusWaiting
+	// 	nextAiring = release.StartDate
+	// } else {
+	// 	status = types.MediaPartReleaseStatusRunning
+	//
+	// 	if release.NumExpectedParts > 0 && currentPart >= release.NumExpectedParts {
+	// 		currentPart = release.NumExpectedParts
+	// 		status = types.MediaPartReleaseStatusCompleted
+	// 	}
+	//
+	// 	nextAiring = utils.NextAiringDate(release.StartDate, release.DelayDays, release.IntervalDays)
+	// }
 
 	return Release{
 		MediaId:     release.MediaId,
@@ -153,14 +153,14 @@ func ConvertDBRelease(c pyrin.Context, hasUser bool, release database.FullMediaP
 		LogoUrl:          logoUrl,
 		User:             user,
 		NumExpectedParts: release.NumExpectedParts,
-		CurrentPart:      currentPart,
+		// CurrentPart:      currentPart,
 		NextAiring:       nextAiring.Format(time.RFC3339),
 		IntervalDays:     release.IntervalDays,
 		// IsActive:         release.IsActive,
 		ReleaseStatus: status,
 		// TODO(patrik): Add
 		ImdbId:    "",
-		StartDate: release.StartDate.Format(time.RFC3339),
+		// StartDate: release.StartDate.Format(time.RFC3339),
 		DelayDays: release.DelayDays,
 	}
 }
@@ -320,14 +320,14 @@ func InstallReleaseHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				t, err := time.Parse(time.RFC3339, body.StartDate)
-				if err != nil {
-					return nil, err
-				}
+				// t, err := time.Parse(time.RFC3339, body.StartDate)
+				// if err != nil {
+				// 	return nil, err
+				// }
 
 				err = app.DB().CreateMediaPartRelease(ctx, database.CreateMediaPartReleaseParams{
 					MediaId:          media.Id,
-					StartDate:        t,
+					// StartDate:        t,
 					NumExpectedParts: body.NumExpectedParts,
 					IntervalDays:     body.IntervalDays,
 					DelayDays:        body.DelayDays,
@@ -363,14 +363,14 @@ func InstallReleaseHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				t, err := time.Parse(time.RFC3339, body.StartDate)
-				if err != nil {
-					return nil, err
-				}
+				// t, err := time.Parse(time.RFC3339, body.StartDate)
+				// if err != nil {
+				// 	return nil, err
+				// }
 
 				err = app.DB().SetMediaPartRelease(ctx, database.CreateMediaPartReleaseParams{
 					MediaId:          media.Id,
-					StartDate:        t,
+					// StartDate:        t,
 					NumExpectedParts: body.NumExpectedParts,
 					IntervalDays:     body.IntervalDays,
 					DelayDays:        body.DelayDays,
@@ -411,15 +411,15 @@ func InstallReleaseHandlers(app core.App, group pyrin.Group) {
 				changes := database.MediaPartReleaseChanges{}
 
 				if body.StartDate != nil {
-					t, err := time.Parse(time.RFC3339, *body.StartDate)
-					if err != nil {
-						return nil, err
-					}
+					// t, err := time.Parse(time.RFC3339, *body.StartDate)
+					// if err != nil {
+					// 	return nil, err
+					// }
 
-					changes.StartDate = database.Change[time.Time]{
-						Value:   t,
-						Changed: t != release.StartDate,
-					}
+					// changes.StartDate = database.Change[time.Time]{
+					// 	Value:   t,
+					// 	Changed: t != release.StartDate,
+					// }
 				}
 
 				if body.NumExpectedParts != nil {
@@ -448,11 +448,11 @@ func InstallReleaseHandlers(app core.App, group pyrin.Group) {
 					Changed: true,
 				}
 
-				t, _ := time.Parse(time.RFC3339, "2025-08-28T18:30:00Z")
-				changes.StartDate = database.Change[time.Time]{
-					Value:   t,
-					Changed: true,
-				}
+				// t, _ := time.Parse(time.RFC3339, "2025-08-28T18:30:00Z")
+				// changes.StartDate = database.Change[time.Time]{
+				// 	Value:   t,
+				// 	Changed: true,
+				// }
 
 				changes.PartOffset = database.Change[int]{
 					Value:   1130,

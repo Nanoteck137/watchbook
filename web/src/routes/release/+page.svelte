@@ -32,18 +32,22 @@
   <div
     class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] items-center justify-items-center gap-6"
   >
-    {#each data.releases as release}
-      {@const percent = release.currentPart / release.numExpectedParts}
-      {@const time = getTimeDifference(now, new Date(release.nextAiring))}
+    {#each data.media as media}
+      {@const percent =
+        media.release!.currentPart / media.release!.numExpectedParts}
+      {@const time = getTimeDifference(
+        now,
+        new Date(media.release!.nextAiring ?? ""),
+      )}
       <!-- svelte-ignore a11y_missing_attribute -->
       <!-- svelte-ignore a11y_invalid_attribute -->
       <a
         class="group relative aspect-[75/106] max-w-[240px] transform cursor-pointer overflow-hidden rounded-3xl bg-gray-800 shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
-        href="/media/{release.mediaId}"
+        href="/media/{media.id}"
       >
         <!-- Badge -->
-        {#if !!release.user?.list}
-          {@const list = parseUserList(release.user.list)}
+        {#if !!media.user?.list}
+          {@const list = parseUserList(media.user.list)}
           {#if list}
             <Badge class="absolute left-2 top-2 z-10" {list} />
           {/if}
@@ -53,7 +57,7 @@
           class="flex min-w-[240px] items-center justify-center bg-gray-800 text-gray-400"
         >
           <Image
-            src={release.coverUrl}
+            src={media.coverUrl}
             alt="Cover image"
             class="aspect-[75/106] h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
@@ -64,9 +68,9 @@
         >
           <h2
             class="line-clamp-2 text-ellipsis text-base font-semibold"
-            title={release.title}
+            title={media.title}
           >
-            {release.title}
+            {media.title}
           </h2>
 
           <Spacer size="xs" />
@@ -74,7 +78,8 @@
           <div class="flex flex-col gap-2">
             <div class="flex flex-col gap-1">
               <p class="text-xs text-gray-400">
-                {release.currentPart} / {release.numExpectedParts} eps
+                {media.release!.currentPart} / {media.release!
+                  .numExpectedParts} eps
               </p>
 
               <div class="h-1 w-full rounded-full bg-gray-700">
@@ -85,14 +90,14 @@
               </div>
             </div>
 
-            {#if release.releaseStatus !== "completed"}
+            {#if media.release!.status !== "completed"}
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-300">Next in:</p>
                 <p class="text-sm font-bold text-blue-400">{time}</p>
               </div>
             {/if}
 
-            <p>{release.releaseStatus}</p>
+            <p>{media.release!.status}</p>
           </div>
         </div>
       </a>

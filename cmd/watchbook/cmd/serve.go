@@ -21,17 +21,19 @@ func test(app core.App) error {
 		// t = t.AddDate(0, 0, 0)
 
 		// t, _ := time.Parse(time.RFC3339, "2025-07-03T16:00:00Z")
-		t, _ := time.Parse(time.RFC3339, "2025-08-30T16:00:00Z")
+		// t, _ := time.Parse(time.RFC3339, "2025-09-03T2:00:00Z")
+		t, _ := time.Parse(time.RFC3339, "2025-09-03T00:00:00+02:00")
+
 
 		app.DB().RemoveMediaPartRelease(context.Background(), testId)
 
 		err := app.DB().CreateMediaPartRelease(context.Background(), database.CreateMediaPartReleaseParams{
 			MediaId:          testId,
-			StartDate:        t,
+			StartDate:        t.Format(time.RFC3339),
 			NumExpectedParts: 12,
-			PartOffset:       9,
+			PartOffset:       11,
 			IntervalDays:     7,
-			DelayDays:        7,
+			DelayDays:        0,
 		})
 		if err != nil {
 			return err

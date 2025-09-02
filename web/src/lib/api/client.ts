@@ -63,14 +63,6 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/media/${id}/parts`, "GET", api.GetMediaParts, z.any(), undefined, options)
   }
   
-  setMediaUserData(id: string, body: api.SetMediaUserData, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/${id}/user`, "POST", z.undefined(), z.any(), body, options)
-  }
-  
-  deleteMediaUserData(id: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/media/${id}/user`, "DELETE", z.undefined(), z.any(), undefined, options)
-  }
-  
   createMedia(body: api.CreateMediaBody, options?: ExtraOptions) {
     return this.request("/api/v1/media", "POST", api.CreateMedia, z.any(), body, options)
   }
@@ -97,6 +89,22 @@ export class ApiClient extends BaseApiClient {
   
   setParts(id: string, body: api.SetPartsBody, options?: ExtraOptions) {
     return this.request(`/api/v1/media/${id}/parts`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
+  setMediaUserData(id: string, body: api.SetMediaUserData, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/${id}/user`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
+  deleteMediaUserData(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/${id}/user`, "DELETE", z.undefined(), z.any(), undefined, options)
+  }
+  
+  setMediaRelease(id: string, body: api.SetMediaReleaseBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/${id}/release`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
+  deleteMediaRelease(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/${id}/release`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
   getCollections(options?: ExtraOptions) {
@@ -163,6 +171,18 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/releases/${id}`, "GET", api.GetReleaseById, z.any(), undefined, options)
   }
   
+  createRelease(body: api.CreateReleaseBody, options?: ExtraOptions) {
+    return this.request("/api/v1/releases", "POST", z.undefined(), z.any(), body, options)
+  }
+  
+  setRelease(body: api.SetMediaReleaseBody, options?: ExtraOptions) {
+    return this.request("/api/v1/releases/set", "POST", z.undefined(), z.any(), body, options)
+  }
+  
+  editRelease(id: string, body: api.EditReleaseBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/releases/${id}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
   
 }
 
@@ -225,14 +245,6 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/media/${id}/parts`)
   }
   
-  setMediaUserData(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/${id}/user`)
-  }
-  
-  deleteMediaUserData(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/${id}/user`)
-  }
-  
   createMedia() {
     return createUrl(this.baseUrl, "/api/v1/media")
   }
@@ -259,6 +271,22 @@ export class ClientUrls {
   
   setParts(id: string) {
     return createUrl(this.baseUrl, `/api/v1/media/${id}/parts`)
+  }
+  
+  setMediaUserData(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}/user`)
+  }
+  
+  deleteMediaUserData(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}/user`)
+  }
+  
+  setMediaRelease(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}/release`)
+  }
+  
+  deleteMediaRelease(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}/release`)
   }
   
   getCollections() {
@@ -322,6 +350,18 @@ export class ClientUrls {
   }
   
   getReleaseById(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/releases/${id}`)
+  }
+  
+  createRelease() {
+    return createUrl(this.baseUrl, "/api/v1/releases")
+  }
+  
+  setRelease() {
+    return createUrl(this.baseUrl, "/api/v1/releases/set")
+  }
+  
+  editRelease(id: string) {
     return createUrl(this.baseUrl, `/api/v1/releases/${id}`)
   }
   

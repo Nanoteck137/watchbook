@@ -5,13 +5,18 @@ import type { PageServerLoad } from "./$types";
 export const load: PageServerLoad = async ({ locals, url }) => {
   const query = getPagedQueryOptions(url.searchParams);
 
-  const releases = await locals.apiClient.getReleases({ query });
-  if (!releases.success) {
-    throw error(releases.error.code, { message: releases.error.message });
+  delete query["sort"];
+  delete query["filter"];
+
+  query["filter"] = "release != null";
+
+  const media = await locals.apiClient.getMedia({ query });
+  if (!media.success) {
+    throw error(media.error.code, { message: media.error.message });
   }
 
   return {
-    page: releases.data.page,
-    releases: releases.data.releases,
+    page: media.data.page,
+    media: media.data.media,
   };
 };

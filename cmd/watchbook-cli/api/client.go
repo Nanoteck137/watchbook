@@ -210,38 +210,6 @@ func (c *Client) GetMediaParts(id string, options Options) (*GetMediaParts, erro
 	return Request[GetMediaParts](data, nil)
 }
 
-func (c *Client) SetMediaUserData(id string, body SetMediaUserData, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/%v/user", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
-}
-
-func (c *Client) DeleteMediaUserData(id string, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/%v/user", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "DELETE",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, nil)
-}
-
 func (c *Client) CreateMedia(body CreateMediaBody, options Options) (*CreateMedia, error) {
 	path := "/api/v1/media"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -352,6 +320,70 @@ func (c *Client) SetParts(id string, body SetPartsBody, options Options) (*any, 
 		Headers: options.Header,
 	}
 	return Request[any](data, body)
+}
+
+func (c *Client) SetMediaUserData(id string, body SetMediaUserData, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/user", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) DeleteMediaUserData(id string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/user", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "DELETE",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
+func (c *Client) SetMediaRelease(id string, body SetMediaReleaseBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/release", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) DeleteMediaRelease(id string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/release", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "DELETE",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
 }
 
 func (c *Client) GetCollections(options Options) (*GetCollections, error) {
@@ -610,6 +642,54 @@ func (c *Client) GetReleaseById(id string, options Options) (*GetReleaseById, er
 	return Request[GetReleaseById](data, nil)
 }
 
+func (c *Client) CreateRelease(body CreateReleaseBody, options Options) (*any, error) {
+	path := "/api/v1/releases"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) SetRelease(body SetMediaReleaseBody, options Options) (*any, error) {
+	path := "/api/v1/releases/set"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) EditRelease(id string, body EditReleaseBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/releases/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
 
 
 func (c *ClientUrls) Signup() (*URL, error) {
@@ -677,16 +757,6 @@ func (c *ClientUrls) GetMediaParts(id string) (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) SetMediaUserData(id string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/user", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) DeleteMediaUserData(id string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/user", id)
-	return c.getUrl(path)
-}
-
 func (c *ClientUrls) CreateMedia() (*URL, error) {
 	path := "/api/v1/media"
 	return c.getUrl(path)
@@ -719,6 +789,26 @@ func (c *ClientUrls) RemovePart(id string, index string) (*URL, error) {
 
 func (c *ClientUrls) SetParts(id string) (*URL, error) {
 	path := Sprintf("/api/v1/media/%v/parts", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) SetMediaUserData(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/user", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) DeleteMediaUserData(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/user", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) SetMediaRelease(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/release", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) DeleteMediaRelease(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/release", id)
 	return c.getUrl(path)
 }
 
@@ -798,6 +888,21 @@ func (c *ClientUrls) GetReleases() (*URL, error) {
 }
 
 func (c *ClientUrls) GetReleaseById(id string) (*URL, error) {
+	path := Sprintf("/api/v1/releases/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) CreateRelease() (*URL, error) {
+	path := "/api/v1/releases"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) SetRelease() (*URL, error) {
+	path := "/api/v1/releases/set"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditRelease(id string) (*URL, error) {
 	path := Sprintf("/api/v1/releases/%v", id)
 	return c.getUrl(path)
 }
