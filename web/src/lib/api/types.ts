@@ -8,26 +8,12 @@ export const SigninBody = z.object({
 
 export type SigninBody = z.infer<typeof SigninBody>;
 
-export const UserData = z.object({
-  id: z.string(),
-  username: z.string(),
-  displayName: z.string().nullable(),
-});
-
-export type UserData = z.infer<typeof UserData>;
-
 export const ApiToken = z.object({
   id: z.string(),
   name: z.string(),
 });
 
 export type ApiToken = z.infer<typeof ApiToken>;
-
-export const GetAllApiTokens = z.object({
-  tokens: z.array(ApiToken),
-});
-
-export type GetAllApiTokens = z.infer<typeof GetAllApiTokens>;
 
 export const MediaUser = z.object({
   hasData: z.boolean(),
@@ -41,6 +27,7 @@ export const MediaUser = z.object({
 export type MediaUser = z.infer<typeof MediaUser>;
 
 export const MediaRelease = z.object({
+  releaseType: z.string(),
   startDate: z.string(),
   numExpectedParts: z.number(),
   partOffset: z.number(),
@@ -53,7 +40,7 @@ export const MediaRelease = z.object({
 
 export type MediaRelease = z.infer<typeof MediaRelease>;
 
-export const GetMediaById = z.object({
+export const Media = z.object({
   id: z.string(),
   title: z.string(),
   description: z.string().nullable(),
@@ -78,7 +65,7 @@ export const GetMediaById = z.object({
   release: MediaRelease.nullable(),
 });
 
-export type GetMediaById = z.infer<typeof GetMediaById>;
+export type Media = z.infer<typeof Media>;
 
 export const MediaPart = z.object({
   index: z.number(),
@@ -100,130 +87,33 @@ export const EditPartBody = z.object({
 
 export type EditPartBody = z.infer<typeof EditPartBody>;
 
-export const ChangePasswordBody = z.object({
-  currentPassword: z.string(),
-  newPassword: z.string(),
-  newPasswordConfirm: z.string(),
-});
-
-export type ChangePasswordBody = z.infer<typeof ChangePasswordBody>;
-
-export const GetUser = z.object({
-  id: z.string(),
-  username: z.string(),
-  displayName: z.string().nullable(),
-});
-
-export type GetUser = z.infer<typeof GetUser>;
-
 export const UpdateUserSettingsBody = z.object({
   displayName: z.string().nullable().optional(),
 });
 
 export type UpdateUserSettingsBody = z.infer<typeof UpdateUserSettingsBody>;
 
-export const EditMediaBody = z.object({
-  mediaType: z.string().nullable().optional(),
-  tmdbId: z.string().nullable().optional(),
-  imdbId: z.string().nullable().optional(),
-  malId: z.string().nullable().optional(),
-  anilistId: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  score: z.number().nullable().optional(),
-  status: z.string().nullable().optional(),
-  rating: z.string().nullable().optional(),
-  airingSeason: z.string().nullable().optional(),
-  startDate: z.string().nullable().optional(),
-  endDate: z.string().nullable().optional(),
-  adminStatus: z.string().nullable().optional(),
-  tags: z.array(z.string()).nullable().optional(),
-  creators: z.array(z.string()).nullable().optional(),
+export const CreateApiToken = z.object({
+  token: z.string(),
 });
 
-export type EditMediaBody = z.infer<typeof EditMediaBody>;
+export type CreateApiToken = z.infer<typeof CreateApiToken>;
 
-export const Signup = z.object({
-  id: z.string(),
-  username: z.string(),
+export const Page = z.object({
+  page: z.number(),
+  perPage: z.number(),
+  totalItems: z.number(),
+  totalPages: z.number(),
 });
 
-export type Signup = z.infer<typeof Signup>;
+export type Page = z.infer<typeof Page>;
 
-export const GetMe = z.object({
-  id: z.string(),
-  username: z.string(),
-  role: z.string(),
-  displayName: z.string(),
+export const GetMedia = z.object({
+  page: Page,
+  media: z.array(Media),
 });
 
-export type GetMe = z.infer<typeof GetMe>;
-
-export const CreateApiTokenBody = z.object({
-  name: z.string(),
-});
-
-export type CreateApiTokenBody = z.infer<typeof CreateApiTokenBody>;
-
-export const CreateMediaBody = z.object({
-  mediaType: z.string(),
-  tmdbId: z.string(),
-  imdbId: z.string(),
-  malId: z.string(),
-  anilistId: z.string(),
-  title: z.string(),
-  description: z.string(),
-  score: z.number(),
-  status: z.string(),
-  rating: z.string(),
-  airingSeason: z.string(),
-  startDate: z.string(),
-  endDate: z.string(),
-  partCount: z.number(),
-  coverUrl: z.string(),
-  bannerUrl: z.string(),
-  logoUrl: z.string(),
-  tags: z.array(z.string()),
-  creators: z.array(z.string()),
-  collectionId: z.string().optional(),
-  collectionName: z.string().optional(),
-});
-
-export type CreateMediaBody = z.infer<typeof CreateMediaBody>;
-
-export const PartBody = z.object({
-  name: z.string(),
-});
-
-export type PartBody = z.infer<typeof PartBody>;
-
-export const CreateCollectionBody = z.object({
-  collectionType: z.string(),
-  name: z.string(),
-});
-
-export type CreateCollectionBody = z.infer<typeof CreateCollectionBody>;
-
-export const SetMediaUserData = z.object({
-  list: z.string().nullable().optional(),
-  score: z.number().nullable().optional(),
-  currentPart: z.number().nullable().optional(),
-  revisitCount: z.number().nullable().optional(),
-  isRevisiting: z.boolean().nullable().optional(),
-});
-
-export type SetMediaUserData = z.infer<typeof SetMediaUserData>;
-
-export const Collection = z.object({
-  id: z.string(),
-  collectionType: z.string(),
-  coverUrl: z.string().nullable(),
-  logoUrl: z.string().nullable(),
-  bannerUrl: z.string().nullable(),
-  name: z.string(),
-});
-
-export type Collection = z.infer<typeof Collection>;
+export type GetMedia = z.infer<typeof GetMedia>;
 
 export const GetCollectionById = z.object({
   id: z.string(),
@@ -262,33 +152,102 @@ export const CollectionItem = z.object({
 
 export type CollectionItem = z.infer<typeof CollectionItem>;
 
-export const GetCollectionItems = z.object({
-  items: z.array(CollectionItem),
-});
-
-export type GetCollectionItems = z.infer<typeof GetCollectionItems>;
-
-export const SignupBody = z.object({
-  username: z.string(),
-  password: z.string(),
-  passwordConfirm: z.string(),
-});
-
-export type SignupBody = z.infer<typeof SignupBody>;
-
-export const AddPart = z.object({
-  index: z.number(),
-});
-
-export type AddPart = z.infer<typeof AddPart>;
-
-export const CreateCollection = z.object({
+export const GetMe = z.object({
   id: z.string(),
+  username: z.string(),
+  role: z.string(),
+  displayName: z.string(),
 });
 
-export type CreateCollection = z.infer<typeof CreateCollection>;
+export type GetMe = z.infer<typeof GetMe>;
 
-export const Media = z.object({
+export const CreateMediaBody = z.object({
+  mediaType: z.string(),
+  tmdbId: z.string(),
+  imdbId: z.string(),
+  malId: z.string(),
+  anilistId: z.string(),
+  title: z.string(),
+  description: z.string(),
+  score: z.number(),
+  status: z.string(),
+  rating: z.string(),
+  airingSeason: z.string(),
+  startDate: z.string(),
+  endDate: z.string(),
+  partCount: z.number(),
+  coverUrl: z.string(),
+  bannerUrl: z.string(),
+  logoUrl: z.string(),
+  tags: z.array(z.string()),
+  creators: z.array(z.string()),
+  collectionId: z.string().optional(),
+  collectionName: z.string().optional(),
+});
+
+export type CreateMediaBody = z.infer<typeof CreateMediaBody>;
+
+export const EditMediaBody = z.object({
+  mediaType: z.string().nullable().optional(),
+  tmdbId: z.string().nullable().optional(),
+  imdbId: z.string().nullable().optional(),
+  malId: z.string().nullable().optional(),
+  anilistId: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  score: z.number().nullable().optional(),
+  status: z.string().nullable().optional(),
+  rating: z.string().nullable().optional(),
+  airingSeason: z.string().nullable().optional(),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
+  adminStatus: z.string().nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  creators: z.array(z.string()).nullable().optional(),
+});
+
+export type EditMediaBody = z.infer<typeof EditMediaBody>;
+
+export const SetMediaUserData = z.object({
+  list: z.string().nullable().optional(),
+  score: z.number().nullable().optional(),
+  currentPart: z.number().nullable().optional(),
+  revisitCount: z.number().nullable().optional(),
+  isRevisiting: z.boolean().nullable().optional(),
+});
+
+export type SetMediaUserData = z.infer<typeof SetMediaUserData>;
+
+export const AddCollectionItemBody = z.object({
+  mediaId: z.string(),
+  name: z.string(),
+  searchSlug: z.string(),
+  order: z.number(),
+});
+
+export type AddCollectionItemBody = z.infer<typeof AddCollectionItemBody>;
+
+export const GetAllApiTokens = z.object({
+  tokens: z.array(ApiToken),
+});
+
+export type GetAllApiTokens = z.infer<typeof GetAllApiTokens>;
+
+export const GetSystemInfo = z.object({
+  version: z.string(),
+});
+
+export type GetSystemInfo = z.infer<typeof GetSystemInfo>;
+
+export const UserData = z.object({
+  id: z.string(),
+  username: z.string(),
+  displayName: z.string().nullable(),
+});
+
+export type UserData = z.infer<typeof UserData>;
+
+export const GetMediaById = z.object({
   id: z.string(),
   title: z.string(),
   description: z.string().nullable(),
@@ -313,7 +272,82 @@ export const Media = z.object({
   release: MediaRelease.nullable(),
 });
 
-export type Media = z.infer<typeof Media>;
+export type GetMediaById = z.infer<typeof GetMediaById>;
+
+export const PartBody = z.object({
+  name: z.string(),
+});
+
+export type PartBody = z.infer<typeof PartBody>;
+
+export const CreateCollectionBody = z.object({
+  collectionType: z.string(),
+  name: z.string(),
+});
+
+export type CreateCollectionBody = z.infer<typeof CreateCollectionBody>;
+
+export const Signin = z.object({
+  token: z.string(),
+});
+
+export type Signin = z.infer<typeof Signin>;
+
+export const GetUser = z.object({
+  id: z.string(),
+  username: z.string(),
+  displayName: z.string().nullable(),
+});
+
+export type GetUser = z.infer<typeof GetUser>;
+
+export const SetPartsBody = z.object({
+  parts: z.array(PartBody),
+});
+
+export type SetPartsBody = z.infer<typeof SetPartsBody>;
+
+export const GetCollectionItems = z.object({
+  items: z.array(CollectionItem),
+});
+
+export type GetCollectionItems = z.infer<typeof GetCollectionItems>;
+
+export const EditCollectionBody = z.object({
+  collectionType: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  adminStatus: z.string().nullable().optional(),
+});
+
+export type EditCollectionBody = z.infer<typeof EditCollectionBody>;
+
+export const Signup = z.object({
+  id: z.string(),
+  username: z.string(),
+});
+
+export type Signup = z.infer<typeof Signup>;
+
+export const ChangePasswordBody = z.object({
+  currentPassword: z.string(),
+  newPassword: z.string(),
+  newPasswordConfirm: z.string(),
+});
+
+export type ChangePasswordBody = z.infer<typeof ChangePasswordBody>;
+
+export const CreateApiTokenBody = z.object({
+  name: z.string(),
+});
+
+export type CreateApiTokenBody = z.infer<typeof CreateApiTokenBody>;
+
+export const AddPartBody = z.object({
+  index: z.number(),
+  name: z.string(),
+});
+
+export type AddPartBody = z.infer<typeof AddPartBody>;
 
 export const SetMediaReleaseBody = z.object({
   mediaId: z.string(),
@@ -326,35 +360,16 @@ export const SetMediaReleaseBody = z.object({
 
 export type SetMediaReleaseBody = z.infer<typeof SetMediaReleaseBody>;
 
-export const AddCollectionItemBody = z.object({
-  mediaId: z.string(),
+export const Collection = z.object({
+  id: z.string(),
+  collectionType: z.string(),
+  coverUrl: z.string().nullable(),
+  logoUrl: z.string().nullable(),
+  bannerUrl: z.string().nullable(),
   name: z.string(),
-  searchSlug: z.string(),
-  order: z.number(),
 });
 
-export type AddCollectionItemBody = z.infer<typeof AddCollectionItemBody>;
-
-export const Signin = z.object({
-  token: z.string(),
-});
-
-export type Signin = z.infer<typeof Signin>;
-
-export const SetPartsBody = z.object({
-  parts: z.array(PartBody),
-});
-
-export type SetPartsBody = z.infer<typeof SetPartsBody>;
-
-export const Page = z.object({
-  page: z.number(),
-  perPage: z.number(),
-  totalItems: z.number(),
-  totalPages: z.number(),
-});
-
-export type Page = z.infer<typeof Page>;
+export type Collection = z.infer<typeof Collection>;
 
 export const GetCollections = z.object({
   page: Page,
@@ -363,32 +378,19 @@ export const GetCollections = z.object({
 
 export type GetCollections = z.infer<typeof GetCollections>;
 
-export const EditCollectionBody = z.object({
-  collectionType: z.string().nullable().optional(),
-  name: z.string().nullable().optional(),
-  adminStatus: z.string().nullable().optional(),
+export const CreateCollection = z.object({
+  id: z.string(),
 });
 
-export type EditCollectionBody = z.infer<typeof EditCollectionBody>;
+export type CreateCollection = z.infer<typeof CreateCollection>;
 
-export const GetSystemInfo = z.object({
-  version: z.string(),
+export const SignupBody = z.object({
+  username: z.string(),
+  password: z.string(),
+  passwordConfirm: z.string(),
 });
 
-export type GetSystemInfo = z.infer<typeof GetSystemInfo>;
-
-export const CreateApiToken = z.object({
-  token: z.string(),
-});
-
-export type CreateApiToken = z.infer<typeof CreateApiToken>;
-
-export const GetMedia = z.object({
-  page: Page,
-  media: z.array(Media),
-});
-
-export type GetMedia = z.infer<typeof GetMedia>;
+export type SignupBody = z.infer<typeof SignupBody>;
 
 export const CreateMedia = z.object({
   id: z.string(),
@@ -396,10 +398,9 @@ export const CreateMedia = z.object({
 
 export type CreateMedia = z.infer<typeof CreateMedia>;
 
-export const AddPartBody = z.object({
+export const AddPart = z.object({
   index: z.number(),
-  name: z.string(),
 });
 
-export type AddPartBody = z.infer<typeof AddPartBody>;
+export type AddPart = z.infer<typeof AddPart>;
 

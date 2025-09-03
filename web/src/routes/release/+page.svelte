@@ -190,6 +190,7 @@
             {/if}
 
             <p>{media.release!.status}</p>
+            <p>{media.release!.releaseType}</p>
           </div>
         </div>
       </a>

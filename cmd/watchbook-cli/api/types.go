@@ -6,19 +6,9 @@ type SigninBody struct {
 	Password string `json:"password"`
 }
 
-type UserData struct {
-	Id string `json:"id"`
-	Username string `json:"username"`
-	DisplayName *string `json:"displayName,omitempty"`
-}
-
 type ApiToken struct {
 	Id string `json:"id"`
 	Name string `json:"name"`
-}
-
-type GetAllApiTokens struct {
-	Tokens []ApiToken `json:"tokens"`
 }
 
 type MediaUser struct {
@@ -31,6 +21,7 @@ type MediaUser struct {
 }
 
 type MediaRelease struct {
+	ReleaseType string `json:"releaseType"`
 	StartDate string `json:"startDate"`
 	NumExpectedParts int `json:"numExpectedParts"`
 	PartOffset int `json:"partOffset"`
@@ -41,7 +32,7 @@ type MediaRelease struct {
 	NextAiring *string `json:"nextAiring,omitempty"`
 }
 
-type GetMediaById struct {
+type Media struct {
 	Id string `json:"id"`
 	Title string `json:"title"`
 	Description *string `json:"description,omitempty"`
@@ -80,105 +71,24 @@ type EditPartBody struct {
 	Name *string `json:"name,omitempty"`
 }
 
-type ChangePasswordBody struct {
-	CurrentPassword string `json:"currentPassword"`
-	NewPassword string `json:"newPassword"`
-	NewPasswordConfirm string `json:"newPasswordConfirm"`
-}
-
-type GetUser struct {
-	Id string `json:"id"`
-	Username string `json:"username"`
-	DisplayName *string `json:"displayName,omitempty"`
-}
-
 type UpdateUserSettingsBody struct {
 	DisplayName *string `json:"displayName,omitempty"`
 }
 
-type EditMediaBody struct {
-	MediaType *string `json:"mediaType,omitempty"`
-	TmdbId *string `json:"tmdbId,omitempty"`
-	ImdbId *string `json:"imdbId,omitempty"`
-	MalId *string `json:"malId,omitempty"`
-	AnilistId *string `json:"anilistId,omitempty"`
-	Title *string `json:"title,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Score *float32 `json:"score,omitempty"`
-	Status *string `json:"status,omitempty"`
-	Rating *string `json:"rating,omitempty"`
-	AiringSeason *string `json:"airingSeason,omitempty"`
-	StartDate *string `json:"startDate,omitempty"`
-	EndDate *string `json:"endDate,omitempty"`
-	AdminStatus *string `json:"adminStatus,omitempty"`
-	Tags *[]string `json:"tags,omitempty"`
-	Creators *[]string `json:"creators,omitempty"`
+type CreateApiToken struct {
+	Token string `json:"token"`
 }
 
-type Signup struct {
-	Id string `json:"id"`
-	Username string `json:"username"`
+type Page struct {
+	Page int `json:"page"`
+	PerPage int `json:"perPage"`
+	TotalItems int `json:"totalItems"`
+	TotalPages int `json:"totalPages"`
 }
 
-type GetMe struct {
-	Id string `json:"id"`
-	Username string `json:"username"`
-	Role string `json:"role"`
-	DisplayName string `json:"displayName"`
-}
-
-type CreateApiTokenBody struct {
-	Name string `json:"name"`
-}
-
-type CreateMediaBody struct {
-	MediaType string `json:"mediaType"`
-	TmdbId string `json:"tmdbId"`
-	ImdbId string `json:"imdbId"`
-	MalId string `json:"malId"`
-	AnilistId string `json:"anilistId"`
-	Title string `json:"title"`
-	Description string `json:"description"`
-	Score float32 `json:"score"`
-	Status string `json:"status"`
-	Rating string `json:"rating"`
-	AiringSeason string `json:"airingSeason"`
-	StartDate string `json:"startDate"`
-	EndDate string `json:"endDate"`
-	PartCount int `json:"partCount"`
-	CoverUrl string `json:"coverUrl"`
-	BannerUrl string `json:"bannerUrl"`
-	LogoUrl string `json:"logoUrl"`
-	Tags []string `json:"tags"`
-	Creators []string `json:"creators"`
-	CollectionId string `json:"collectionId"`
-	CollectionName string `json:"collectionName"`
-}
-
-type PartBody struct {
-	Name string `json:"name"`
-}
-
-type CreateCollectionBody struct {
-	CollectionType string `json:"collectionType"`
-	Name string `json:"name"`
-}
-
-type SetMediaUserData struct {
-	List *string `json:"list,omitempty"`
-	Score *int `json:"score,omitempty"`
-	CurrentPart *int `json:"currentPart,omitempty"`
-	RevisitCount *int `json:"revisitCount,omitempty"`
-	IsRevisiting *bool `json:"isRevisiting,omitempty"`
-}
-
-type Collection struct {
-	Id string `json:"id"`
-	CollectionType string `json:"collectionType"`
-	CoverUrl *string `json:"coverUrl,omitempty"`
-	LogoUrl *string `json:"logoUrl,omitempty"`
-	BannerUrl *string `json:"bannerUrl,omitempty"`
-	Name string `json:"name"`
+type GetMedia struct {
+	Page Page `json:"page"`
+	Media []Media `json:"media"`
 }
 
 type GetCollectionById struct {
@@ -214,25 +124,86 @@ type CollectionItem struct {
 	User *MediaUser `json:"user,omitempty"`
 }
 
-type GetCollectionItems struct {
-	Items []CollectionItem `json:"items"`
-}
-
-type SignupBody struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	PasswordConfirm string `json:"passwordConfirm"`
-}
-
-type AddPart struct {
-	Index int `json:"index"`
-}
-
-type CreateCollection struct {
+type GetMe struct {
 	Id string `json:"id"`
+	Username string `json:"username"`
+	Role string `json:"role"`
+	DisplayName string `json:"displayName"`
 }
 
-type Media struct {
+type CreateMediaBody struct {
+	MediaType string `json:"mediaType"`
+	TmdbId string `json:"tmdbId"`
+	ImdbId string `json:"imdbId"`
+	MalId string `json:"malId"`
+	AnilistId string `json:"anilistId"`
+	Title string `json:"title"`
+	Description string `json:"description"`
+	Score float32 `json:"score"`
+	Status string `json:"status"`
+	Rating string `json:"rating"`
+	AiringSeason string `json:"airingSeason"`
+	StartDate string `json:"startDate"`
+	EndDate string `json:"endDate"`
+	PartCount int `json:"partCount"`
+	CoverUrl string `json:"coverUrl"`
+	BannerUrl string `json:"bannerUrl"`
+	LogoUrl string `json:"logoUrl"`
+	Tags []string `json:"tags"`
+	Creators []string `json:"creators"`
+	CollectionId string `json:"collectionId"`
+	CollectionName string `json:"collectionName"`
+}
+
+type EditMediaBody struct {
+	MediaType *string `json:"mediaType,omitempty"`
+	TmdbId *string `json:"tmdbId,omitempty"`
+	ImdbId *string `json:"imdbId,omitempty"`
+	MalId *string `json:"malId,omitempty"`
+	AnilistId *string `json:"anilistId,omitempty"`
+	Title *string `json:"title,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Score *float32 `json:"score,omitempty"`
+	Status *string `json:"status,omitempty"`
+	Rating *string `json:"rating,omitempty"`
+	AiringSeason *string `json:"airingSeason,omitempty"`
+	StartDate *string `json:"startDate,omitempty"`
+	EndDate *string `json:"endDate,omitempty"`
+	AdminStatus *string `json:"adminStatus,omitempty"`
+	Tags *[]string `json:"tags,omitempty"`
+	Creators *[]string `json:"creators,omitempty"`
+}
+
+type SetMediaUserData struct {
+	List *string `json:"list,omitempty"`
+	Score *int `json:"score,omitempty"`
+	CurrentPart *int `json:"currentPart,omitempty"`
+	RevisitCount *int `json:"revisitCount,omitempty"`
+	IsRevisiting *bool `json:"isRevisiting,omitempty"`
+}
+
+type AddCollectionItemBody struct {
+	MediaId string `json:"mediaId"`
+	Name string `json:"name"`
+	SearchSlug string `json:"searchSlug"`
+	Order int `json:"order"`
+}
+
+type GetAllApiTokens struct {
+	Tokens []ApiToken `json:"tokens"`
+}
+
+type GetSystemInfo struct {
+	Version string `json:"version"`
+}
+
+type UserData struct {
+	Id string `json:"id"`
+	Username string `json:"username"`
+	DisplayName *string `json:"displayName,omitempty"`
+}
+
+type GetMediaById struct {
 	Id string `json:"id"`
 	Title string `json:"title"`
 	Description *string `json:"description,omitempty"`
@@ -257,6 +228,59 @@ type Media struct {
 	Release *MediaRelease `json:"release,omitempty"`
 }
 
+type PartBody struct {
+	Name string `json:"name"`
+}
+
+type CreateCollectionBody struct {
+	CollectionType string `json:"collectionType"`
+	Name string `json:"name"`
+}
+
+type Signin struct {
+	Token string `json:"token"`
+}
+
+type GetUser struct {
+	Id string `json:"id"`
+	Username string `json:"username"`
+	DisplayName *string `json:"displayName,omitempty"`
+}
+
+type SetPartsBody struct {
+	Parts []PartBody `json:"parts"`
+}
+
+type GetCollectionItems struct {
+	Items []CollectionItem `json:"items"`
+}
+
+type EditCollectionBody struct {
+	CollectionType *string `json:"collectionType,omitempty"`
+	Name *string `json:"name,omitempty"`
+	AdminStatus *string `json:"adminStatus,omitempty"`
+}
+
+type Signup struct {
+	Id string `json:"id"`
+	Username string `json:"username"`
+}
+
+type ChangePasswordBody struct {
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword string `json:"newPassword"`
+	NewPasswordConfirm string `json:"newPasswordConfirm"`
+}
+
+type CreateApiTokenBody struct {
+	Name string `json:"name"`
+}
+
+type AddPartBody struct {
+	Index int `json:"index"`
+	Name string `json:"name"`
+}
+
 type SetMediaReleaseBody struct {
 	MediaId string `json:"mediaId"`
 	ReleaseType string `json:"releaseType"`
@@ -266,26 +290,13 @@ type SetMediaReleaseBody struct {
 	DelayDays int `json:"delayDays"`
 }
 
-type AddCollectionItemBody struct {
-	MediaId string `json:"mediaId"`
+type Collection struct {
+	Id string `json:"id"`
+	CollectionType string `json:"collectionType"`
+	CoverUrl *string `json:"coverUrl,omitempty"`
+	LogoUrl *string `json:"logoUrl,omitempty"`
+	BannerUrl *string `json:"bannerUrl,omitempty"`
 	Name string `json:"name"`
-	SearchSlug string `json:"searchSlug"`
-	Order int `json:"order"`
-}
-
-type Signin struct {
-	Token string `json:"token"`
-}
-
-type SetPartsBody struct {
-	Parts []PartBody `json:"parts"`
-}
-
-type Page struct {
-	Page int `json:"page"`
-	PerPage int `json:"perPage"`
-	TotalItems int `json:"totalItems"`
-	TotalPages int `json:"totalPages"`
 }
 
 type GetCollections struct {
@@ -293,31 +304,21 @@ type GetCollections struct {
 	Collections []Collection `json:"collections"`
 }
 
-type EditCollectionBody struct {
-	CollectionType *string `json:"collectionType,omitempty"`
-	Name *string `json:"name,omitempty"`
-	AdminStatus *string `json:"adminStatus,omitempty"`
+type CreateCollection struct {
+	Id string `json:"id"`
 }
 
-type GetSystemInfo struct {
-	Version string `json:"version"`
-}
-
-type CreateApiToken struct {
-	Token string `json:"token"`
-}
-
-type GetMedia struct {
-	Page Page `json:"page"`
-	Media []Media `json:"media"`
+type SignupBody struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	PasswordConfirm string `json:"passwordConfirm"`
 }
 
 type CreateMedia struct {
 	Id string `json:"id"`
 }
 
-type AddPartBody struct {
+type AddPart struct {
 	Index int `json:"index"`
-	Name string `json:"name"`
 }
 

@@ -32,11 +32,12 @@ type MediaUser struct {
 }
 
 type MediaRelease struct {
-	StartDate        string `json:"startDate"`
-	NumExpectedParts int    `json:"numExpectedParts"`
-	PartOffset       int    `json:"partOffset"`
-	IntervalDays     int    `json:"intervalDays"`
-	DelayDays        int    `json:"delayDays"`
+	ReleaseType      types.MediaPartReleaseType `json:"releaseType"`
+	StartDate        string                     `json:"startDate"`
+	NumExpectedParts int                        `json:"numExpectedParts"`
+	PartOffset       int                        `json:"partOffset"`
+	IntervalDays     int                        `json:"intervalDays"`
+	DelayDays        int                        `json:"delayDays"`
 
 	Status      types.MediaPartReleaseStatus `json:"status"`
 	CurrentPart int                          `json:"currentPart"`
@@ -183,7 +184,13 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 			return nil
 		}
 
+		typ := types.MediaPartReleaseType(data.Type)
+		if !types.IsValidMediaPartReleaseType(typ) {
+			typ = types.MediaPartReleaseTypeNotConfirmed
+		}
+
 		release = &MediaRelease{
+			ReleaseType:      typ,
 			StartDate:        startDate.Format(time.RFC3339),
 			NumExpectedParts: data.NumExpectedParts,
 			PartOffset:       data.PartOffset,
