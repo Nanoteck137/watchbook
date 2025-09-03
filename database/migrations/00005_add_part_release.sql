@@ -2,6 +2,7 @@
 CREATE TABLE media_part_release (
     media_id TEXT NOT NULL PRIMARY KEY REFERENCES media(id) ON DELETE CASCADE,
 
+    type TEXT NOT NULL,
     start_date DATETIME NOT NULL,
     num_expected_parts INTEGER NOT NULL,
     part_offset INTEGER NOT NULL,

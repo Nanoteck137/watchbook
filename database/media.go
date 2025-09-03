@@ -23,11 +23,15 @@ type MediaUserData struct {
 }
 
 type MediaRelease struct {
+	Type             string `json:"type"`
 	StartDate        string `json:"start_date"`
 	NumExpectedParts int    `json:"num_expected_parts"`
 	PartOffset       int    `json:"part_offset"`
 	IntervalDays     int    `json:"interval_days"`
 	DelayDays        int    `json:"delay_days"`
+
+	Created int `json:"created"`
+	Updated int `json:"updated"`
 }
 
 type Media struct {
@@ -170,14 +174,21 @@ func MediaReleaseQuery() *goqu.SelectDataset {
 		Select(
 			tbl.Col("media_id").As("id"),
 
+			tbl.Col("type"),
 			tbl.Col("start_date"),
 			tbl.Col("num_expected_parts"),
 			tbl.Col("part_offset"),
 			tbl.Col("interval_days"),
 			tbl.Col("delay_days"),
 
+			tbl.Col("created"),
+			tbl.Col("updated"),
+
 			goqu.Func(
 				"json_object",
+
+				"type",
+				tbl.Col("type"),
 
 				"start_date",
 				tbl.Col("start_date"),
@@ -193,6 +204,12 @@ func MediaReleaseQuery() *goqu.SelectDataset {
 
 				"delay_days",
 				tbl.Col("delay_days"),
+
+				"created",
+				tbl.Col("created"),
+
+				"updated",
+				tbl.Col("updated"),
 			).As("data"),
 		)
 
@@ -686,6 +703,7 @@ func (db *Database) DeleteMediaUserData(ctx context.Context, mediaId, userId str
 }
 
 type SetMediaPartRelease struct {
+	Type             types.MediaPartReleaseType
 	StartDate        string
 	NumExpectedParts int
 	PartOffset       int
@@ -703,10 +721,15 @@ func (db *Database) SetMediaPartRelease(ctx context.Context, mediaId string, dat
 		data.Updated = t
 	}
 
+	if !types.IsValidMediaPartReleaseType(data.Type) {
+		data.Type = types.MediaPartReleaseTypeNotConfirmed
+	}
+
 	query := dialect.Insert("media_part_release").
 		Rows(goqu.Record{
 			"media_id": mediaId,
 
+			"type":               data.Type,
 			"start_date":         data.StartDate,
 			"num_expected_parts": data.NumExpectedParts,
 			"part_offset":        data.PartOffset,
@@ -718,6 +741,7 @@ func (db *Database) SetMediaPartRelease(ctx context.Context, mediaId string, dat
 		}).
 		OnConflict(
 			goqu.DoUpdate("media_id", goqu.Record{
+				"type":               data.Type,
 				"start_date":         data.StartDate,
 				"num_expected_parts": data.NumExpectedParts,
 				"part_offset":        data.PartOffset,

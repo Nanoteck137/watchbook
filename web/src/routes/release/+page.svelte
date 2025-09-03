@@ -3,30 +3,120 @@
   import Image from "$lib/components/Image.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
   import { parseUserList } from "$lib/types";
-  import { clamp } from "$lib/utils";
+  import { clamp, formatTimeDiff, getTimeDifference } from "$lib/utils";
 
   const { data } = $props();
 
-  function getTimeDifference(fromDate: Date, toDate: Date): string {
-    // Difference in milliseconds
-    let diffMs = toDate.getTime() - fromDate.getTime();
-
-    // Determine the sign
-    const sign = diffMs < 0 ? -1 : 1;
-    diffMs = Math.abs(diffMs);
-
-    const totalMinutes = Math.floor(diffMs / (1000 * 60));
-    const days = Math.floor(totalMinutes / (60 * 24)) * sign;
-    const hours = Math.floor((totalMinutes % (60 * 24)) / 60) * sign;
-    const minutes = (totalMinutes % 60) * sign;
-
-    // return { days, hours, minutes };
-
-    return `${days}d ${hours}h ${minutes}m`;
-  }
-
   const now = new Date();
 </script>
+
+<Spacer />
+
+<div class="mb-6 flex space-x-4 border-b border-gray-700 text-gray-400">
+  <button
+    id="tabBasic"
+    class="border-b-2 border-blue-500 px-4 py-2 font-semibold text-blue-400 focus:outline-none"
+    type="button"
+  >
+    Basic
+  </button>
+  <button
+    id="tabAdvanced"
+    class="border-b-2 border-transparent px-4 py-2 hover:text-blue-400 focus:outline-none"
+    type="button"
+  >
+    Advanced
+  </button>
+</div>
+
+<div class="" id="basicSection">
+  <div
+    class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+  >
+    <div class="flex-grow">
+      <!-- TODO(patrik): Fix -->
+      <label for="search" class="sr-only">Search Collections</label>
+      <input
+        type="search"
+        id="search"
+        name="search"
+        placeholder="Search collections..."
+        class="w-full rounded-md bg-gray-800 px-4 py-2 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-96"
+        autocomplete="off"
+      />
+    </div>
+
+    <div>
+      <!-- TODO(patrik): Fix -->
+      <label for="sort" class="sr-only">Sort Collections</label>
+      <select
+        id="sort"
+        name="sort"
+        class="w-full rounded-md bg-gray-800 px-4 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-auto"
+      >
+        <option value="title-asc">Title: A to Z</option>
+        <option value="title-desc">Title: Z to A</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Type Filters -->
+  <div class="mb-8 flex flex-wrap gap-4 text-gray-300">
+    <label class="inline-flex cursor-pointer items-center">
+      <input type="checkbox" class="type-filter" value="anime" checked />
+      <span class="ml-2 select-none">Anime</span>
+    </label>
+
+    <label class="inline-flex cursor-pointer items-center">
+      <input type="checkbox" class="type-filter" value="tv" checked />
+      <span class="ml-2 select-none">TV</span>
+    </label>
+
+    <label class="inline-flex cursor-pointer items-center">
+      <input type="checkbox" class="type-filter" value="game" checked />
+      <span class="ml-2 select-none">Game</span>
+    </label>
+
+    <label class="inline-flex cursor-pointer items-center">
+      <input type="checkbox" class="type-filter" value="more" checked />
+      <span class="ml-2 select-none">More</span>
+    </label>
+  </div>
+</div>
+
+<div id="advancedSection" class="hidden">
+  <div class="mb-6">
+    <label for="customFilter" class="mb-2 block font-semibold text-gray-300">
+      Advanced Filter
+    </label>
+
+    <input
+      type="text"
+      id="customFilter"
+      placeholder="Enter custom filter language..."
+      class="w-full rounded-md bg-gray-800 px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+  </div>
+
+  <div>
+    <label for="customSort" class="mb-2 block font-semibold text-gray-300">
+      Advanced Sort
+    </label>
+
+    <input
+      type="text"
+      id="customSort"
+      placeholder="Enter custom sort language..."
+      class="w-full rounded-md bg-gray-800 px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+  </div>
+</div>
+
+<Spacer />
+
+<p class="text-gray-400">Total: {data.page.totalItems}</p>
+
+<Spacer />
 
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
   <div
@@ -93,7 +183,9 @@
             {#if media.release!.status !== "completed"}
               <div class="flex items-center gap-1">
                 <p class="text-xs text-gray-300">Next in:</p>
-                <p class="text-sm font-bold text-blue-400">{time}</p>
+                <p class="text-sm font-bold text-blue-400">
+                  {formatTimeDiff(time)}
+                </p>
               </div>
             {/if}
 
@@ -102,134 +194,5 @@
         </div>
       </a>
     {/each}
-
-    <div
-      class="flex w-36 flex-col overflow-hidden rounded-lg bg-gray-800 shadow transition-shadow hover:shadow-lg"
-    >
-      <div class="aspect-[75/106] w-full overflow-hidden">
-        <img
-          src="http://localhost:3000/files/collections/ohtm567u/images/cover.jpeg"
-          alt="Show Cover"
-          class="h-full w-full object-cover"
-        />
-      </div>
-      <div class="flex flex-1 flex-col justify-between p-2 text-sm">
-        <div>
-          <h2 class="truncate text-base font-semibold leading-tight">
-            My Show
-          </h2>
-          <p class="text-xs text-gray-400">5 / 12 eps</p>
-          <!-- Progress bar -->
-          <div class="mt-1 h-1 w-full rounded-full bg-gray-700">
-            <div
-              class="h-1 rounded-full bg-blue-500"
-              style="width: 42%;"
-            ></div>
-          </div>
-        </div>
-        <div class="mt-2">
-          <p class="text-xs text-gray-300">Next in:</p>
-          <p class="text-sm font-bold text-blue-500">3d 12h</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="mx-auto min-h-screen max-w-6xl bg-gray-900 p-4 text-gray-100">
-  <h1 class="mb-6 text-center text-2xl font-bold">Release Calendar</h1>
-
-  <div
-    class="grid grid-cols-2 justify-items-center gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-  >
-    <!-- Show Card -->
-    <div
-      class="flex w-36 flex-col overflow-hidden rounded-lg bg-gray-800 shadow transition-shadow hover:shadow-lg"
-    >
-      <div class="aspect-[75/106] w-full overflow-hidden">
-        <img
-          src="http://localhost:3000/files/collections/ohtm567u/images/cover.jpeg"
-          alt="Show Cover"
-          class="h-full w-full object-cover"
-        />
-      </div>
-      <div class="flex flex-1 flex-col justify-between p-2 text-sm">
-        <div>
-          <h2 class="truncate text-base font-semibold leading-tight">
-            My Show
-          </h2>
-          <p class="text-xs text-gray-400">5 / 12 eps</p>
-          <!-- Progress bar -->
-          <div class="mt-1 h-1 w-full rounded-full bg-gray-700">
-            <div
-              class="h-1 rounded-full bg-blue-500"
-              style="width: 42%;"
-            ></div>
-          </div>
-        </div>
-        <div class="mt-2">
-          <p class="text-xs text-gray-300">Next in:</p>
-          <p class="text-sm font-bold text-blue-400">3d 12h</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Another Show -->
-    <div
-      class="flex w-36 flex-col overflow-hidden rounded-lg bg-gray-800 shadow transition-shadow hover:shadow-lg"
-    >
-      <div class="aspect-[75/106] w-full overflow-hidden">
-        <img
-          src="http://localhost:3000/files/collections/ohtm567u/images/cover.jpeg"
-          alt="Show Cover"
-          class="h-full w-full object-cover"
-        />
-      </div>
-      <div class="flex flex-1 flex-col justify-between p-2 text-sm">
-        <div>
-          <h2 class="truncate text-base font-semibold leading-tight">
-            Another Show
-          </h2>
-          <p class="text-xs text-gray-400">12 / 12 eps</p>
-          <div class="mt-1 h-1 w-full rounded-full bg-gray-700">
-            <div
-              class="h-1 rounded-full bg-green-500"
-              style="width: 100%;"
-            ></div>
-          </div>
-        </div>
-        <div class="mt-2">
-          <p class="text-sm font-bold text-green-400">Completed</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Upcoming Show -->
-    <div
-      class="flex w-36 flex-col overflow-hidden rounded-lg bg-gray-800 shadow transition-shadow hover:shadow-lg"
-    >
-      <div class="aspect-[75/106] w-full overflow-hidden">
-        <img
-          src="http://localhost:3000/files/collections/ohtm567u/images/cover.jpeg"
-          alt="Show Cover"
-          class="h-full w-full object-cover"
-        />
-      </div>
-      <div class="flex flex-1 flex-col justify-between p-2 text-sm">
-        <div>
-          <h2 class="truncate text-base font-semibold leading-tight">
-            Upcoming Show
-          </h2>
-          <p class="text-xs text-gray-400">0 / 10 eps</p>
-          <div class="mt-1 h-1 w-full rounded-full bg-gray-700">
-            <div class="h-1 rounded-full bg-gray-500" style="width: 0%;"></div>
-          </div>
-        </div>
-        <div class="mt-2">
-          <p class="text-xs text-yellow-400">Starts in:</p>
-          <p class="text-sm font-bold text-yellow-400">7d 4h</p>
-        </div>
-      </div>
-    </div>
   </div>
 </div>

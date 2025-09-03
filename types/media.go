@@ -263,7 +263,7 @@ const (
 
 func IsValidMediaPartReleaseStatus(l MediaPartReleaseStatus) bool {
 	switch l {
-	case MediaPartReleaseStatusUnknown, 
+	case MediaPartReleaseStatusUnknown,
 		MediaPartReleaseStatusWaiting,
 		MediaPartReleaseStatusRunning,
 		MediaPartReleaseStatusCompleted:
@@ -296,6 +296,54 @@ func ValidateMediaPartReleaseStatus(val any) error {
 		t := MediaPartReleaseStatus(s)
 		if !IsValidMediaPartReleaseStatus(t) {
 			return errors.New("invalid media part release status")
+		}
+	} else {
+		return errors.New("expected string")
+	}
+
+	return nil
+}
+
+type MediaPartReleaseType string
+
+const (
+	MediaPartReleaseTypeConfirmed    MediaPartReleaseType = "confirmed"
+	MediaPartReleaseTypeNotConfirmed MediaPartReleaseType = "not-confirmed"
+)
+
+func IsValidMediaPartReleaseType(l MediaPartReleaseType) bool {
+	switch l {
+	case MediaPartReleaseTypeConfirmed,
+		MediaPartReleaseTypeNotConfirmed:
+		return true
+	}
+
+	return false
+}
+
+func ValidateMediaPartReleaseType(val any) error {
+	if s, ok := val.(string); ok {
+		if s == "" {
+			return nil
+		}
+
+		t := MediaPartReleaseType(s)
+		if !IsValidMediaPartReleaseType(t) {
+			return errors.New("invalid media part release type")
+		}
+	} else if p, ok := val.(*string); ok {
+		if p == nil {
+			return nil
+		}
+
+		s := *p
+		if s == "" {
+			return nil
+		}
+
+		t := MediaPartReleaseType(s)
+		if !IsValidMediaPartReleaseType(t) {
+			return errors.New("invalid media part release type")
 		}
 	} else {
 		return errors.New("expected string")

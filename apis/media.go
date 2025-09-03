@@ -449,11 +449,12 @@ func (b SetPartsBody) Validate() error {
 }
 
 type SetMediaReleaseBody struct {
-	MediaId          string `json:"mediaId"`
-	StartDate        string `json:"startDate"`
-	NumExpectedParts int    `json:"numExpectedParts"`
-	IntervalDays     int    `json:"intervalDays"`
-	DelayDays        int    `json:"delayDays"`
+	MediaId          string                     `json:"mediaId"`
+	ReleaseType      types.MediaPartReleaseType `json:"releaseType"`
+	StartDate        string                     `json:"startDate"`
+	NumExpectedParts int                        `json:"numExpectedParts"`
+	IntervalDays     int                        `json:"intervalDays"`
+	DelayDays        int                        `json:"delayDays"`
 }
 
 func (b *SetMediaReleaseBody) Transform() {
@@ -465,6 +466,7 @@ func (b *SetMediaReleaseBody) Transform() {
 func (b SetMediaReleaseBody) Validate() error {
 	return validate.ValidateStruct(&b,
 		validate.Field(&b.MediaId, validate.Required),
+		validate.Field(&b.ReleaseType, validate.Required, validate.By(types.ValidateMediaPartReleaseType)),
 		validate.Field(&b.StartDate, validate.Required, validate.Date(time.RFC3339)),
 	)
 }
@@ -1479,6 +1481,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				}
 
 				err = app.DB().SetMediaPartRelease(ctx, media.Id, database.SetMediaPartRelease{
+					Type:             body.ReleaseType,
 					StartDate:        t.Format(time.RFC3339),
 					NumExpectedParts: body.NumExpectedParts,
 					IntervalDays:     body.IntervalDays,

@@ -39,6 +39,7 @@
     class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
   >
     <div class="flex-grow">
+      <!-- TODO(patrik): Fix -->
       <label for="search" class="sr-only">Search Collections</label>
       <input
         type="search"
@@ -51,6 +52,7 @@
     </div>
 
     <div>
+      <!-- TODO(patrik): Fix -->
       <label for="sort" class="sr-only">Sort Collections</label>
       <select
         id="sort"

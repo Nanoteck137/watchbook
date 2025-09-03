@@ -83,3 +83,29 @@ export function userListClass(list: UserList): ClassNameValue {
       return "bg-gray-600 text-white";
   }
 }
+
+export type TimeDiff = {
+  days: number;
+  hours: number;
+  minutes: number;
+};
+
+export function getTimeDifference(fromDate: Date, toDate: Date): TimeDiff {
+  // Difference in milliseconds
+  let diffMs = toDate.getTime() - fromDate.getTime();
+
+  // Determine the sign
+  const sign = diffMs < 0 ? -1 : 1;
+  diffMs = Math.abs(diffMs);
+
+  const totalMinutes = Math.floor(diffMs / (1000 * 60));
+  const days = Math.floor(totalMinutes / (60 * 24)) * sign;
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60) * sign;
+  const minutes = (totalMinutes % 60) * sign;
+
+  return { days, hours, minutes };
+}
+
+export function formatTimeDiff(time: TimeDiff) {
+  return `${time.days}d ${time.hours}h ${time.minutes}m`;
+}
