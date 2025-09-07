@@ -84,8 +84,6 @@ in
           User = cfg.user;
           Group = cfg.group;
 
-          StateDirectory = "watchbook";
-
           ExecStart = "${cfg.package}/bin/watchbook serve -c '${watchbookConfig}'";
 
           Restart = "on-failure";
