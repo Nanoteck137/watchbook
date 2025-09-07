@@ -5,8 +5,7 @@ with lib; let
 
   watchbookConfig = pkgs.writeText "config.toml" ''
     listen_addr = "${cfg.host}:${toString cfg.port}"
-    data_dir = "/var/lib/watchbook"
-    library_dir = "${cfg.libraryDir}"
+    data_dir = "${cfg.dataDir}"
     username = "${cfg.username}"
     initial_password = "${cfg.initialPassword}"
     jwt_secret = "${cfg.jwtSecret}"
@@ -28,9 +27,10 @@ in
       description = "hostname or address to listen on";
     };
 
-    libraryDir = mkOption {
+    dataDir = mkOption {
       type = types.path;
-      description = "path to library";
+      default = "/var/lib/watchbook";
+      description = "path to the data directory";
     };
 
     username = mkOption {
@@ -79,30 +79,40 @@ in
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
 
-      serviceConfig = {
-        User = cfg.user;
-        Group = cfg.group;
+      serviceConfig = mkMerge [
+        {
+          User = cfg.user;
+          Group = cfg.group;
 
-        StateDirectory = "watchbook";
+          StateDirectory = "watchbook";
 
-        ExecStart = "${cfg.package}/bin/watchbook serve -c '${watchbookConfig}'";
+          ExecStart = "${cfg.package}/bin/watchbook serve -c '${watchbookConfig}'";
 
-        Restart = "on-failure";
-        RestartSec = "5s";
+          Restart = "on-failure";
+          RestartSec = "5s";
 
-        PrivateTmp = true;
-        ProtectHome = true;
-        ProtectHostname = true;
-        ProtectKernelLogs = true;
-        ProtectKernelModules = true;
-        ProtectKernelTunables = true;
-        ProtectProc = "invisible";
-        ProtectSystem = "strict";
-        RestrictAddressFamilies = [ "AF_INET" "AF_INET6" "AF_UNIX" ];
-        RestrictNamespaces = true;
-        RestrictRealtime = true;
-        RestrictSUIDSGID = true;
-      };
+          PrivateTmp = true;
+          ProtectHome = true;
+          ProtectHostname = true;
+          ProtectKernelLogs = true;
+          ProtectKernelModules = true;
+          ProtectKernelTunables = true;
+          ProtectProc = "invisible";
+          ProtectSystem = "strict";
+          RestrictAddressFamilies = [ "AF_INET" "AF_INET6" "AF_UNIX" ];
+          RestrictNamespaces = true;
+          RestrictRealtime = true;
+          RestrictSUIDSGID = true;
+        }
+
+        (mkIf (cfg.dataDir != "/var/lib/watchbook") {
+          ReadWritePaths = [ cfg.dataDir ];
+        })
+
+        (mkIf (cfg.dataDir == "/var/lib/watchbook") {
+          StateDirectory = "watchbook";
+        })
+      ];
     };
 
     networking.firewall = lib.mkIf cfg.openFirewall {
@@ -113,6 +123,7 @@ in
       watchbook = {
         group = cfg.group;
         isSystemUser = true;
+        home = "${cfg.dataDir}";
       };
     };
 
