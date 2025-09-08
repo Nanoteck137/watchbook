@@ -24,11 +24,11 @@ type Collection struct {
 	Id             string               `json:"id"`
 	CollectionType types.CollectionType `json:"collectionType"`
 
+	Name string `json:"name"`
+
 	CoverUrl  *string `json:"coverUrl"`
 	LogoUrl   *string `json:"logoUrl"`
 	BannerUrl *string `json:"bannerUrl"`
-
-	Name string `json:"name"`
 }
 
 type GetCollections struct {
