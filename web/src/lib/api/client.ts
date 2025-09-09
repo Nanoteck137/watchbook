@@ -139,6 +139,14 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/collections/${id}/items`, "POST", z.undefined(), z.any(), body, options)
   }
   
+  removeCollectionItem(id: string, mediaId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/collections/${id}/items/${mediaId}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  }
+  
+  editCollectionItem(id: string, mediaId: string, body: api.EditCollectionItemBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/collections/${id}/items/${mediaId}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
   
 }
 
@@ -275,6 +283,14 @@ export class ClientUrls {
   
   addCollectionItem(id: string) {
     return createUrl(this.baseUrl, `/api/v1/collections/${id}/items`)
+  }
+  
+  removeCollectionItem(id: string, mediaId: string) {
+    return createUrl(this.baseUrl, `/api/v1/collections/${id}/items/${mediaId}`)
+  }
+  
+  editCollectionItem(id: string, mediaId: string) {
+    return createUrl(this.baseUrl, `/api/v1/collections/${id}/items/${mediaId}`)
   }
   
   getMediaImage(id: string, file: string) {

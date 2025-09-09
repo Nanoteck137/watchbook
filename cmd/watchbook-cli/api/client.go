@@ -514,6 +514,38 @@ func (c *Client) AddCollectionItem(id string, body AddCollectionItemBody, option
 	return Request[any](data, body)
 }
 
+func (c *Client) RemoveCollectionItem(id string, mediaId string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/collections/%v/items/%v", id, mediaId)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "DELETE",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
+func (c *Client) EditCollectionItem(id string, mediaId string, body EditCollectionItemBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/collections/%v/items/%v", id, mediaId)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
 
 
 func (c *ClientUrls) Signup() (*URL, error) {
@@ -673,6 +705,16 @@ func (c *ClientUrls) ChangeCollectionImages(id string) (*URL, error) {
 
 func (c *ClientUrls) AddCollectionItem(id string) (*URL, error) {
 	path := Sprintf("/api/v1/collections/%v/items", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) RemoveCollectionItem(id string, mediaId string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v/items/%v", id, mediaId)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditCollectionItem(id string, mediaId string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v/items/%v", id, mediaId)
 	return c.getUrl(path)
 }
 

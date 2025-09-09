@@ -1,6 +1,10 @@
 <script lang="ts">
   import {
+    AlarmClock,
+    Calendar,
+    Clapperboard,
     Home,
+    Library,
     LogIn,
     LogOut,
     Menu,
@@ -110,14 +114,14 @@
 
     <div class="flex flex-col gap-2 px-4 py-4">
       <Link title="Home" href="/" icon={Home} onClick={close} />
-      <Link title="Media" href="/media" icon={Origami} onClick={close} />
+      <Link title="Media" href="/media" icon={Clapperboard} onClick={close} />
       <Link
         title="Collections"
         href="/collections"
-        icon={Origami}
+        icon={Library}
         onClick={close}
       />
-      <Link title="Releases" href="/release" icon={Origami} onClick={close} />
+      <Link title="Releases" href="/release" icon={Calendar} onClick={close} />
     </div>
     <div class="flex-grow"></div>
     <div class="flex flex-col gap-2 px-4 py-2">

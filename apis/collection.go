@@ -219,11 +219,31 @@ type AddCollectionItemBody struct {
 
 func (b *AddCollectionItemBody) Transform() {
 	b.Name = anvil.String(b.Name)
+	b.SearchSlug = utils.Slug(b.SearchSlug)
 }
 
 func (b AddCollectionItemBody) Validate() error {
 	return validate.ValidateStruct(&b,
 		validate.Field(&b.Name, validate.Required),
+	)
+}
+
+type EditCollectionItemBody struct {
+	Name       *string `json:"name"`
+	SearchSlug *string `json:"searchSlug"`
+	Order      *int    `json:"order"`
+}
+
+func (b *EditCollectionItemBody) Transform() {
+	b.Name = anvil.StringPtr(b.Name)
+	if b.SearchSlug != nil {
+		*b.SearchSlug = utils.Slug(*b.SearchSlug)
+	}
+}
+
+func (b EditCollectionItemBody) Validate() error {
+	return validate.ValidateStruct(&b,
+		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
 	)
 }
 
@@ -639,13 +659,18 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
+				searchSlug := body.SearchSlug
+				if searchSlug == "" {
+					searchSlug = utils.Slug(body.Name)
+				}
+
 				err = app.DB().CreateCollectionMediaItem(ctx, database.CreateCollectionMediaItemParams{
 					CollectionId: dbCollection.Id,
 					MediaId:      dbMedia.Id,
 					// GroupName:      "",
 					// GroupOrder:     0,
 					Name:        body.Name,
-					SearchSlug:  body.SearchSlug,
+					SearchSlug:  searchSlug,
 					OrderNumber: int64(body.Order),
 					// SubOrderNumber: 0,
 					// Created:        0,
@@ -653,6 +678,97 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 				})
 				if err != nil {
 					// TODO(patrik): Better handling of error
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "RemoveCollectionItem",
+			Method:       http.MethodDelete,
+			Path:         "/collections/:id/items/:mediaId",
+			ResponseType: nil,
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+				mediaId := c.Param("mediaId")
+
+				// TODO(patrik): Add admin check
+
+				ctx := context.Background()
+
+				item, err := app.DB().GetCollectionMediaItemById(ctx, id, mediaId)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, CollectionItemNotFound()
+					}
+
+					return nil, err
+				}
+
+				err = app.DB().RemoveCollectionMediaItem(ctx, item.CollectionId, item.MediaId)
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "EditCollectionItem",
+			Method:       http.MethodPatch,
+			Path:         "/collections/:id/items/:mediaId",
+			ResponseType: nil,
+			BodyType:     EditCollectionItemBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+				mediaId := c.Param("mediaId")
+
+				// TODO(patrik): Add admin check
+
+				body, err := pyrin.Body[EditCollectionItemBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				item, err := app.DB().GetCollectionMediaItemById(ctx, id, mediaId)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, CollectionItemNotFound()
+					}
+
+					return nil, err
+				}
+
+				changes := database.CollectionMediaItemChanges{}
+
+				if body.Name != nil {
+					changes.Name = database.Change[string]{
+						Value:   *body.Name,
+						Changed: *body.Name != item.Name,
+					}
+				}
+
+				if body.SearchSlug != nil {
+					changes.SearchSlug = database.Change[string]{
+						Value:   *body.SearchSlug,
+						Changed: *body.SearchSlug != item.SearchSlug,
+					}
+				}
+
+				if body.Order != nil {
+					changes.OrderNumber = database.Change[int64]{
+						Value:   int64(*body.Order),
+						Changed: int64(*body.Order) != item.OrderNumber,
+					}
+				}
+
+				err = app.DB().UpdateCollectionMediaItem(ctx, id, mediaId, changes)
+				if err != nil {
 					return nil, err
 				}
 

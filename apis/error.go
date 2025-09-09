@@ -16,6 +16,7 @@ const (
 	ErrTypeMediaNotFound            pyrin.ErrorType = "MEDIA_NOT_FOUND"
 	ErrTypeMediaPartReleaseNotFound pyrin.ErrorType = "MEDIA_PART_RELEASE_NOT_FOUND"
 	ErrTypeCollectionNotFound       pyrin.ErrorType = "COLLECTION_NOT_FOUND"
+	ErrTypeCollectionItemNotFound       pyrin.ErrorType = "COLLECTION_ITEM_NOT_FOUND"
 	ErrTypePartNotFound             pyrin.ErrorType = "PART_NOT_FOUND"
 	ErrTypeImageNotFound            pyrin.ErrorType = "IMAGE_NOT_FOUND"
 	ErrTypeNotificationNotFound     pyrin.ErrorType = "NOTIFICATION_NOT_FOUND"
@@ -52,6 +53,14 @@ func CollectionNotFound() *pyrin.Error {
 		Code:    http.StatusNotFound,
 		Type:    ErrTypeCollectionNotFound,
 		Message: "Collection not found",
+	}
+}
+
+func CollectionItemNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeCollectionItemNotFound,
+		Message: "Collection Item not found",
 	}
 }
 
