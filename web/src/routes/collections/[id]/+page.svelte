@@ -1,22 +1,12 @@
 <script lang="ts">
   import MediaCard from "$lib/components/MediaCard.svelte";
-  import { Button, buttonVariants, DropdownMenu } from "@nanoteck137/nano-ui";
-  import {
-    ChevronDown,
-    EllipsisVertical,
-    Image,
-    Pencil,
-    Settings,
-    Star,
-    Trash,
-  } from "lucide-svelte";
+  import { Button, buttonVariants } from "@nanoteck137/nano-ui";
+  import { Image } from "lucide-svelte";
   import ShowLogoModal from "./ShowLogoModal.svelte";
   import { cn } from "$lib/utils";
-  import EditMediaItem from "./EditMediaItem.svelte";
   import { getApiClient, handleApiError } from "$lib";
   import toast from "svelte-5-french-toast";
   import { invalidateAll } from "$app/navigation";
-  import Spacer from "$lib/components/Spacer.svelte";
   import MediaItemDropdown from "./MediaItemDropdown.svelte";
   import AddMediaItem from "./AddMediaItem.svelte";
 
