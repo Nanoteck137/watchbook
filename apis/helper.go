@@ -27,6 +27,10 @@ func RequireAdmin(user *database.User) error {
 	return nil
 }
 
+func HasEditPrivilege(user *database.User) error {
+	return RequireAdmin(user)
+}
+
 func User(app core.App, c pyrin.Context, checks ...UserCheckFunc) (*database.User, error) {
 	user, err := getUser(app, c)
 	if err != nil {

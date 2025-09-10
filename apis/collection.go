@@ -360,7 +360,10 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 			ResponseType: CreateCollection{},
 			BodyType:     CreateCollectionBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				// TODO(patrik): Add admin check
+				_, err := User(app, c, HasEditPrivilege)
+				if err != nil {
+					return nil, err
+				}
 
 				body, err := pyrin.Body[CreateCollectionBody](c)
 				if err != nil {
@@ -407,9 +410,12 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
-				// TODO(patrik): Add admin check
-
 				body, err := pyrin.Body[EditCollectionBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				_, err = User(app, c, HasEditPrivilege)
 				if err != nil {
 					return nil, err
 				}
@@ -460,7 +466,10 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
-				// TODO(patrik): Add admin check
+				_, err := User(app, c, HasEditPrivilege)
+				if err != nil {
+					return nil, err
+				}
 
 				ctx := context.Background()
 
@@ -509,7 +518,10 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
-				// TODO(patrik): Add admin check
+				_, err := User(app, c, HasEditPrivilege)
+				if err != nil {
+					return nil, err
+				}
 
 				ctx := context.Background()
 
@@ -632,9 +644,12 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
-				// TODO(patrik): Add admin check
-
 				body, err := pyrin.Body[AddCollectionItemBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				_, err = User(app, c, HasEditPrivilege)
 				if err != nil {
 					return nil, err
 				}
@@ -694,7 +709,10 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 				id := c.Param("id")
 				mediaId := c.Param("mediaId")
 
-				// TODO(patrik): Add admin check
+				_, err := User(app, c, HasEditPrivilege)
+				if err != nil {
+					return nil, err
+				}
 
 				ctx := context.Background()
 
@@ -726,9 +744,12 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 				id := c.Param("id")
 				mediaId := c.Param("mediaId")
 
-				// TODO(patrik): Add admin check
-
 				body, err := pyrin.Body[EditCollectionItemBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				_, err = User(app, c, HasEditPrivilege)
 				if err != nil {
 					return nil, err
 				}

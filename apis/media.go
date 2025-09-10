@@ -607,7 +607,10 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			ResponseType: CreateMedia{},
 			BodyType:     CreateMediaBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				// TODO(patrik): Add admin check
+				_, err := User(app, c, HasEditPrivilege)
+				if err != nil {
+					return nil, err
+				}
 
 				body, err := pyrin.Body[CreateMediaBody](c)
 				if err != nil {
@@ -792,7 +795,10 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
-				// TODO(patrik): Add admin check
+				_, err := User(app, c, HasEditPrivilege)
+				if err != nil {
+					return nil, err
+				}
 
 				body, err := pyrin.Body[EditMediaBody](c)
 				if err != nil {
@@ -1026,7 +1032,10 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
-				// TODO(patrik): Add admin check
+				_, err := User(app, c, HasEditPrivilege)
+				if err != nil {
+					return nil, err
+				}
 
 				ctx := context.Background()
 
@@ -1147,7 +1156,10 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			ResponseType: AddPart{},
 			BodyType:     AddPartBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				// TODO(patrik): Add admin check
+				_, err := User(app, c, HasEditPrivilege)
+				if err != nil {
+					return nil, err
+				}
 
 				id := c.Param("id")
 
@@ -1215,7 +1227,10 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			ResponseType: nil,
 			BodyType:     EditPartBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				// TODO(patrik): Add admin check
+				_, err := User(app, c, HasEditPrivilege)
+				if err != nil {
+					return nil, err
+				}
 
 				id := c.Param("id")
 				index, err := strconv.ParseInt(c.Param("index"), 10, 64)
@@ -1273,7 +1288,10 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			Path:         "/media/:id/parts/:index",
 			ResponseType: nil,
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				// TODO(patrik): Add admin check
+				_, err := User(app, c, HasEditPrivilege)
+				if err != nil {
+					return nil, err
+				}
 
 				id := c.Param("id")
 				index, err := strconv.ParseInt(c.Param("index"), 10, 64)
@@ -1473,6 +1491,11 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
+				_, err = User(app, c, HasEditPrivilege)
+				if err != nil {
+					return nil, err
+				}
+
 				media, err := app.DB().GetMediaById(ctx, nil, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
@@ -1509,6 +1532,11 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			ResponseType: nil,
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
+
+				_, err := User(app, c, HasEditPrivilege)
+				if err != nil {
+					return nil, err
+				}
 
 				ctx := context.TODO()
 
