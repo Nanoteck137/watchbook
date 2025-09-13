@@ -387,9 +387,15 @@ func ConvertAnimeRating(rating string) types.MediaRating {
 	return types.MediaRatingUnknown
 }
 
+const AnimeProviderName string = "myanimelist-anime"
+
 var _ (provider.Provider) = (*MyAnimeListAnimeProvider)(nil)
 
 type MyAnimeListAnimeProvider struct {
+}
+
+func (m *MyAnimeListAnimeProvider) Name() string {
+	return AnimeProviderName
 }
 
 func (m *MyAnimeListAnimeProvider) GetCollection(ctx context.Context, id string) (provider.Collection, error) {
@@ -460,4 +466,3 @@ func (m *MyAnimeListAnimeProvider) SearchCollection(ctx context.Context, query s
 func (m *MyAnimeListAnimeProvider) SearchMedia(ctx context.Context, query string) ([]provider.Media, error) {
 	panic("unimplemented")
 }
-

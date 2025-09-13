@@ -2,11 +2,9 @@ package core
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"os"
 	"path"
-	"time"
 
 	"github.com/kr/pretty"
 	"github.com/nanoteck137/pyrin/trail"
@@ -77,38 +75,16 @@ func (app *BaseApp) Bootstrap() error {
 		return err
 	}
 
-	p := myanimelist.MyAnimeListAnimeProvider{}
+	pm := provider.NewProviderManager(cache)
 
-	media, err := p.GetMedia(context.Background(), "21")
+	pm.RegisterProvider(&myanimelist.MyAnimeListAnimeProvider{})
+
+	media, err := pm.GetMedia(context.Background(), myanimelist.AnimeProviderName, "21")
 	if err != nil {
 		return err
 	}
 
 	pretty.Println(media)
-
-	d, err := json.Marshal(media)
-	if err != nil {
-		return err
-	}
-
-	err = cache.Set("media:myanimelist-anime:21", d, time.Second*6)
-	if err != nil {
-		return err
-	}
-
-	{
-		d, hasData := cache.Get("media:myanimelist-anime:21")
-
-		if hasData {
-			var media provider.Media
-			err = json.Unmarshal(d, &media)
-			if err != nil {
-				return err
-			}
-
-			pretty.Println(media)
-		}
-	}
 
 	return nil
 

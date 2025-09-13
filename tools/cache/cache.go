@@ -2,6 +2,8 @@ package cache
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -83,4 +85,36 @@ func (c *Cache) Set(key string, value []byte, ttl time.Duration) error {
 
 	_, err := c.db.Exec(context.Background(), query)
 	return err
+}
+
+var ErrNoData = errors.New("no data in cache")
+
+func GetJson[T any](cache *Cache, key string) (T, error) {
+	var res T
+
+	d, hasData := cache.Get(key)
+	if !hasData {
+		return res, ErrNoData
+	}
+
+	err := json.Unmarshal(d, &res)
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func SetJson[T any](cache *Cache, key string, data T, ttl time.Duration) error {
+	d, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	err = cache.Set(key, d, ttl)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
