@@ -1,6 +1,7 @@
 package myanimelist
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/kr/pretty"
+	"github.com/nanoteck137/watchbook/provider"
 	"github.com/nanoteck137/watchbook/provider/downloader"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
@@ -384,3 +386,78 @@ func ConvertAnimeRating(rating string) types.MediaRating {
 
 	return types.MediaRatingUnknown
 }
+
+var _ (provider.Provider) = (*MyAnimeListAnimeProvider)(nil)
+
+type MyAnimeListAnimeProvider struct {
+}
+
+func (m *MyAnimeListAnimeProvider) GetCollection(ctx context.Context, id string) (provider.Collection, error) {
+	panic("unimplemented")
+}
+
+func (m *MyAnimeListAnimeProvider) GetMedia(ctx context.Context, id string) (provider.Media, error) {
+	anime, err := RawGetAnime(id)
+	if err != nil {
+		return provider.Media{}, err
+	}
+
+	var description *string
+	if anime.Description != "" {
+		description = &anime.Description
+	}
+
+	var airingSeason *string
+	if anime.AiringSeason != "" {
+		airingSeason = &anime.AiringSeason
+	}
+
+	var startDate *time.Time
+	if anime.StartDate != nil {
+		d, err := time.Parse(types.MediaDateLayout, *anime.StartDate)
+		if err == nil {
+			startDate = &d
+		}
+	}
+
+	var endDate *time.Time
+	if anime.StartDate != nil {
+		d, err := time.Parse(types.MediaDateLayout, *anime.StartDate)
+		if err == nil {
+			startDate = &d
+		}
+	}
+
+	var coverUrl *string
+	if anime.CoverImageUrl != "" {
+		coverUrl = &anime.CoverImageUrl
+	}
+
+	return provider.Media{
+		ProviderId:       id,
+		Type:             anime.Type,
+		Title:            anime.Title,
+		Description:      description,
+		Score:            anime.Score,
+		Status:           anime.Status,
+		Rating:           anime.Rating,
+		AiringSeason:     airingSeason,
+		StartDate:        startDate,
+		EndDate:          endDate,
+		CoverUrl:         coverUrl,
+		LogoUrl:          nil,
+		BannerUrl:        nil,
+		Creators:         anime.Studios,
+		Tags:             anime.Tags,
+		ExtraProviderIds: map[string]string{},
+	}, nil
+}
+
+func (m *MyAnimeListAnimeProvider) SearchCollection(ctx context.Context, query string) ([]provider.Collection, error) {
+	panic("unimplemented")
+}
+
+func (m *MyAnimeListAnimeProvider) SearchMedia(ctx context.Context, query string) ([]provider.Media, error) {
+	panic("unimplemented")
+}
+

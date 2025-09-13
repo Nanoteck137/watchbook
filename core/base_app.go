@@ -2,13 +2,20 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
+	"path"
+	"time"
 
+	"github.com/kr/pretty"
 	"github.com/nanoteck137/pyrin/trail"
 	"github.com/nanoteck137/watchbook"
 	"github.com/nanoteck137/watchbook/config"
 	"github.com/nanoteck137/watchbook/database"
+	"github.com/nanoteck137/watchbook/provider"
+	"github.com/nanoteck137/watchbook/provider/myanimelist"
+	"github.com/nanoteck137/watchbook/tools/cache"
 	"github.com/nanoteck137/watchbook/types"
 )
 
@@ -64,6 +71,46 @@ func (app *BaseApp) Bootstrap() error {
 			return err
 		}
 	}
+
+	cache, err := cache.Open(path.Join(workDir.String(), "cache.db"))
+	if err != nil {
+		return err
+	}
+
+	p := myanimelist.MyAnimeListAnimeProvider{}
+
+	media, err := p.GetMedia(context.Background(), "21")
+	if err != nil {
+		return err
+	}
+
+	pretty.Println(media)
+
+	d, err := json.Marshal(media)
+	if err != nil {
+		return err
+	}
+
+	err = cache.Set("media:myanimelist-anime:21", d, time.Second*6)
+	if err != nil {
+		return err
+	}
+
+	{
+		d, hasData := cache.Get("media:myanimelist-anime:21")
+
+		if hasData {
+			var media provider.Media
+			err = json.Unmarshal(d, &media)
+			if err != nil {
+				return err
+			}
+
+			pretty.Println(media)
+		}
+	}
+
+	return nil
 
 	_, err = os.Stat(workDir.SetupFile())
 	if errors.Is(err, os.ErrNotExist) && app.config.Username != "" {
