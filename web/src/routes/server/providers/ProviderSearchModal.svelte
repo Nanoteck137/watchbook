@@ -14,20 +14,20 @@
   import { Check, Search } from "lucide-svelte";
 
   export type Props = {
+    open: boolean;
     providerName: string;
+    providerDisplayName: string;
   };
 
-  const {
+  let {
+    open = $bindable(),
     providerName,
+    providerDisplayName,
 
-    class: className,
-    children,
     onResult,
   }: Props & Modal<ProviderSearchResult[]> = $props();
 
   const apiClient = getApiClient();
-
-  let open = $state(false);
 
   type SearchResult = {
     data: ProviderSearchResult;
@@ -36,6 +36,12 @@
 
   let results = $state<SearchResult[]>([]);
   let checkedItems = $derived(results.filter((i) => i.checked));
+
+  $effect(() => {
+    if (open) {
+      results = [];
+    }
+  });
 
   async function search(query: string) {
     const res = await apiClient.providerSearchMedia(providerName, {
@@ -52,13 +58,9 @@
 </script>
 
 <Dialog.Root bind:open>
-  <Dialog.Trigger class={className}>
-    {@render children?.()}
-  </Dialog.Trigger>
-
   <Dialog.Content>
     <Dialog.Header>
-      <Dialog.Title>Search media using '{providerName}' provider</Dialog.Title>
+      <Dialog.Title>{providerDisplayName}: Search</Dialog.Title>
     </Dialog.Header>
 
     <form
@@ -88,7 +90,7 @@
       <Label>Results</Label>
 
       <div class="flex flex-col gap-2">
-        {#each results as result, i}
+        {#each results as result}
           <button
             class="group flex justify-between border-b py-2"
             onclick={() => {
@@ -98,11 +100,13 @@
             <div class="flex">
               <div class="relative h-20 w-14">
                 <Image
-                  class="h-full w-full"
+                  class="min-h-20 min-w-14"
                   src={result.data.imageUrl}
                   alt="cover"
                 />
-                <div class="absolute inset-0 flex items-center justify-center">
+                <div
+                  class="absolute inset-0 flex items-center justify-center group-hover:bg-black/40"
+                >
                   {#if result.checked}
                     <div
                       class="flex h-8 w-8 items-center justify-center rounded-full bg-black/80"
@@ -114,7 +118,7 @@
               </div>
               <div class="flex flex-col gap-2 px-4 py-1">
                 <p
-                  class="line-clamp-2 text-ellipsis text-sm font-semibold"
+                  class="line-clamp-2 text-ellipsis text-start text-sm font-semibold"
                   title={result.data.title}
                 >
                   {result.data.title}

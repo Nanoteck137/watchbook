@@ -21,8 +21,18 @@ import (
 	"github.com/nanoteck137/watchbook/utils"
 )
 
+type ProviderSupports struct {
+	GetMedia    bool `json:"getMedia"`
+	SearchMedia bool `json:"searchMedia"`
+
+	GetCollection    bool `json:"getCollection"`
+	SearchCollection bool `json:"searchCollection"`
+}
+
 type Provider struct {
-	Name string `json:"name"`
+	Name        string           `json:"name"`
+	DisplayName string           `json:"displayName"`
+	Supports    ProviderSupports `json:"supports"`
 }
 
 type GetProviders struct {
@@ -30,10 +40,10 @@ type GetProviders struct {
 }
 
 type ProviderSearchResult struct {
-	Provider   string `json:"provider"`
-	ProviderId string `json:"providerId"`
-	Title      string `json:"title"`
-	ImageUrl   string `json:"imageUrl"`
+	ProviderName string `json:"providerName"`
+	ProviderId   string `json:"providerId"`
+	Title        string `json:"title"`
+	ImageUrl     string `json:"imageUrl"`
 }
 
 type GetProviderSearch struct {
@@ -84,8 +94,20 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 				}
 
 				for i, p := range providers {
+					displayName := p.DisplayName
+					if displayName == "" {
+						displayName = p.Name
+					}
+
 					res.Providers[i] = Provider{
-						Name: p.Name,
+						Name:        p.Name,
+						DisplayName: displayName,
+						Supports: ProviderSupports{
+							GetMedia:         p.SupportGetMedia,
+							SearchMedia:      p.SupportSearchMedia,
+							GetCollection:    p.SupportGetCollection,
+							SearchCollection: p.SupportSearchCollection,
+						},
 					}
 				}
 
@@ -121,10 +143,10 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 
 				for i, item := range items {
 					res.SearchResults[i] = ProviderSearchResult{
-						Provider:   providerName,
-						ProviderId: item.ProviderId,
-						Title:      item.Title,
-						ImageUrl:   item.ImageUrl,
+						ProviderName: providerName,
+						ProviderId:   item.ProviderId,
+						Title:        item.Title,
+						ImageUrl:     item.ImageUrl,
 					}
 				}
 

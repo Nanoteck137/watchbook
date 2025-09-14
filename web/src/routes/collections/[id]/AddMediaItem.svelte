@@ -107,7 +107,7 @@
             <div class="flex">
               <div class="relative h-20 w-14">
                 <Image
-                  class="h-full w-full"
+                  class="min-h-20 min-w-14"
                   src={result.imageUrl}
                   alt="cover"
                 />

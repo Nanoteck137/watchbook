@@ -66,8 +66,19 @@ type Media struct {
 
 type Collection struct{}
 
+type ProviderInfo struct {
+	Name        string
+	DisplayName string
+
+	SupportGetMedia    bool
+	SupportSearchMedia bool
+
+	SupportGetCollection    bool
+	SupportSearchCollection bool
+}
+
 type Provider interface {
-	Name() string
+	Info() ProviderInfo
 
 	GetMedia(ctx context.Context, id string) (Media, error)
 	SearchMedia(ctx context.Context, query string) ([]SearchResult, error)
@@ -77,15 +88,11 @@ type Provider interface {
 }
 
 const (
-	mediaTTL = 24 * time.Hour
+	mediaTTL  = 24 * time.Hour
 	searchTTL = 1 * time.Hour
 )
 
 var ErrNoProvider = errors.New("no provider")
-
-type ProviderInfo struct {
-	Name string
-}
 
 type ProviderManager struct {
 	providers map[string]Provider
@@ -100,7 +107,10 @@ func NewProviderManager(cache *cache.Provider) *ProviderManager {
 }
 
 func (p *ProviderManager) RegisterProvider(provider Provider) {
-	p.providers[provider.Name()] = provider
+	name := provider.Info().Name
+	if name != "" {
+		p.providers[provider.Info().Name] = provider
+	}
 }
 
 func (p *ProviderManager) IsValidProvider(name string) bool {
@@ -112,9 +122,7 @@ func (p *ProviderManager) GetProviders() []ProviderInfo {
 	res := make([]ProviderInfo, 0, len(p.providers))
 
 	for _, p := range p.providers {
-		res = append(res, ProviderInfo{
-			Name: p.Name(),
-		})
+		res = append(res, p.Info())
 	}
 
 	return res
@@ -126,7 +134,7 @@ func (p *ProviderManager) GetMedia(ctx context.Context, providerName, id string)
 	}
 
 	provider := p.providers[providerName]
-	cacheKey := fmt.Sprintf("%s:media:%s", provider.Name(), id)
+	cacheKey := fmt.Sprintf("%s:media:%s", providerName, id)
 
 	media, err := cache.GetProviderJson[Media](p.cache, cacheKey)
 	if err == nil {
@@ -156,7 +164,7 @@ func (p *ProviderManager) SearchMedia(ctx context.Context, providerName, query s
 	}
 
 	provider := p.providers[providerName]
-	cacheKey := fmt.Sprintf("%s:media-search:%s", provider.Name(), query)
+	cacheKey := fmt.Sprintf("%s:media-search:%s", providerName, query)
 
 	media, err := cache.GetProviderJson[[]SearchResult](p.cache, cacheKey)
 	if err == nil {

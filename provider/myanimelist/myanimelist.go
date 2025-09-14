@@ -228,12 +228,19 @@ var _ (provider.Provider) = (*MyAnimeListAnimeProvider)(nil)
 type MyAnimeListAnimeProvider struct {
 }
 
-func (m *MyAnimeListAnimeProvider) Name() string {
-	return AnimeProviderName
+func (m *MyAnimeListAnimeProvider) Info() provider.ProviderInfo {
+	return provider.ProviderInfo{
+		Name:                    AnimeProviderName,
+		DisplayName:             "MyAnimeList Anime",
+		SupportGetMedia:         true,
+		SupportSearchMedia:      true,
+		SupportGetCollection:    false,
+		SupportSearchCollection: false,
+	}
 }
 
 func (m *MyAnimeListAnimeProvider) GetCollection(ctx context.Context, id string) (provider.Collection, error) {
-	panic("unimplemented")
+	panic("unsupported")
 }
 
 func (m *MyAnimeListAnimeProvider) GetMedia(ctx context.Context, id string) (provider.Media, error) {
@@ -334,7 +341,7 @@ func (m *MyAnimeListAnimeProvider) GetMedia(ctx context.Context, id string) (pro
 }
 
 func (m *MyAnimeListAnimeProvider) SearchCollection(ctx context.Context, query string) ([]provider.SearchResult, error) {
-	panic("unimplemented")
+	panic("unsupported")
 }
 
 func (m *MyAnimeListAnimeProvider) SearchMedia(ctx context.Context, query string) ([]provider.SearchResult, error) {
