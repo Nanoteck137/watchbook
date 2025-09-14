@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 
+	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/pyrin/trail"
 	"github.com/nanoteck137/watchbook"
 	"github.com/nanoteck137/watchbook/config"
@@ -20,6 +21,7 @@ var _ App = (*BaseApp)(nil)
 type BaseApp struct {
 	logger          *trail.Logger
 	db              *database.Database
+	cacheDb         *ember.Database
 	providerManager *provider.ProviderManager
 	config          *config.Config
 }
@@ -73,7 +75,12 @@ func (app *BaseApp) Bootstrap() error {
 		}
 	}
 
-	cache, err := cache.Open(workDir.CacheDatabaseFile())
+	app.cacheDb, err = cache.OpenDatabase(workDir.CacheDatabaseFile())
+	if err != nil {
+		return err
+	}
+
+	cache, err := cache.NewProvider(app.cacheDb)
 	if err != nil {
 		return err
 	}

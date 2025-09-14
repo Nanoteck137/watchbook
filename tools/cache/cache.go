@@ -12,42 +12,45 @@ import (
 )
 
 var dialect = ember.SqliteDialect()
+var table = goqu.T("provider_cache")
 
-type Cache struct {
+type Provider struct {
 	db *ember.Database
 }
 
-func Open(dbFile string) (*Cache, error) {
+func OpenDatabase(dbFile string) (*ember.Database, error) {
 	dbUrl := fmt.Sprintf("file:%s?_busy_timeout=5000&_journal_mode=WAL&_synchronous=NORMAL&_temp_store=2&_cache_size=-2000", dbFile)
-	db, err := ember.OpenDatabase("sqlite3", dbUrl)
-	if err != nil {
-		return nil, err
-	}
+	return ember.OpenDatabase("sqlite3", dbUrl)
+}
 
-	db.Exec(context.Background(), ember.RawQuery{
+func NewProvider(db *ember.Database) (*Provider, error) {
+	_, err := db.Exec(context.Background(), ember.RawQuery{
 		Sql: `
-		CREATE TABLE IF NOT EXISTS cache (
+		CREATE TABLE IF NOT EXISTS provider_cache (
 			key TEXT PRIMARY KEY,
+			provider_name TEXT NOT NULL,
 			value BLOB NOT NULL,
 			expires_at TIMESTAMP NOT NULL
 		)
 		`,
 	})
+	if err != nil {
+		return nil, err
+	}
 	// db.ErrorHandler = handleErr
 
-	return &Cache{
+	return &Provider{
 		db: db,
 	}, nil
 }
 
-func (c *Cache) Get(key string) ([]byte, bool) {
+func (c *Provider) Get(key string) ([]byte, bool) {
 	var value []byte
 	var expiresAt time.Time
 
-	query := dialect.From("cache").
+	query := dialect.From(table).
 		Select("value", "expires_at").
-		Where(goqu.I("cache.key").Eq(key))
-	// err := c.db.QueryRow(context.Background(), `SELECT value, expires_at FROM cache WHERE key = ?`, key).Scan(&value, &expiresAt)
+		Where(table.Col("key").Eq(key))
 	row, err := c.db.QueryRow(context.Background(), query)
 	if err != nil {
 		return nil, false
@@ -59,7 +62,8 @@ func (c *Cache) Get(key string) ([]byte, bool) {
 	}
 
 	if time.Now().After(expiresAt) {
-		query := dialect.Delete("cache").Where(goqu.I("cache.key").Eq(key))
+		query := dialect.Delete(table).
+			Where(table.Col("cache.key").Eq(key))
 		c.db.Exec(context.Background(), query)
 
 		return nil, false
@@ -68,28 +72,43 @@ func (c *Cache) Get(key string) ([]byte, bool) {
 	return value, true
 }
 
-func (c *Cache) Set(key string, value []byte, ttl time.Duration) error {
+func (c *Provider) Set(key, providerName string, value []byte, ttl time.Duration) error {
 	expiresAt := time.Now().Add(ttl)
 
-	query := dialect.Insert("cache").Rows(goqu.Record{
-		"key": key,
-		"value": value,
-		"expires_at": expiresAt,
+	query := dialect.Insert(table).Rows(goqu.Record{
+		"key":           key,
+		"provider_name": providerName,
+		"value":         value,
+		"expires_at":    expiresAt,
 	}).
-	OnConflict(
-		goqu.DoUpdate("key", goqu.Record{
-			"value": value,
-			"expires_at": expiresAt,
-		}),
-	)
+		OnConflict(
+			goqu.DoUpdate("key", goqu.Record{
+				"value":         value,
+				"provider_name": providerName,
+				"expires_at":    expiresAt,
+			}),
+		)
 
+	_, err := c.db.Exec(context.Background(), query)
+	return err
+}
+
+func (c *Provider) ClearByProviderName(providerName string) error {
+	query := dialect.Delete(table).
+		Where(table.Col("provider_name").Eq(providerName))
+	_, err := c.db.Exec(context.Background(), query)
+	return err
+}
+
+func (c *Provider) Clear() error {
+	query := dialect.Delete(table)
 	_, err := c.db.Exec(context.Background(), query)
 	return err
 }
 
 var ErrNoData = errors.New("no data in cache")
 
-func GetJson[T any](cache *Cache, key string) (T, error) {
+func GetProviderJson[T any](cache *Provider, key string) (T, error) {
 	var res T
 
 	d, hasData := cache.Get(key)
@@ -105,13 +124,13 @@ func GetJson[T any](cache *Cache, key string) (T, error) {
 	return res, nil
 }
 
-func SetJson[T any](cache *Cache, key string, data T, ttl time.Duration) error {
+func SetProviderJson[T any](cache *Provider, key, providerName string, data T, ttl time.Duration) error {
 	d, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 
-	err = cache.Set(key, d, ttl)
+	err = cache.Set(key, providerName, d, ttl)
 	if err != nil {
 		return err
 	}

@@ -151,7 +151,6 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 				ctx := context.Background()
 
 				for _, id := range body.Ids {
-
 					_, err := app.DB().GetMediaByProviderId(ctx, nil, providerName, id)
 					if err == nil {
 						fmt.Printf("id already exists: %v\n", id)

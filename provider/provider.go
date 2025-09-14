@@ -76,6 +76,11 @@ type Provider interface {
 	SearchCollection(ctx context.Context, query string) ([]SearchResult, error)
 }
 
+const (
+	mediaTTL = 24 * time.Hour
+	searchTTL = 1 * time.Hour
+)
+
 var ErrNoProvider = errors.New("no provider")
 
 type ProviderInfo struct {
@@ -84,10 +89,10 @@ type ProviderInfo struct {
 
 type ProviderManager struct {
 	providers map[string]Provider
-	cache     *cache.Cache
+	cache     *cache.Provider
 }
 
-func NewProviderManager(cache *cache.Cache) *ProviderManager {
+func NewProviderManager(cache *cache.Provider) *ProviderManager {
 	return &ProviderManager{
 		providers: map[string]Provider{},
 		cache:     cache,
@@ -123,22 +128,18 @@ func (p *ProviderManager) GetMedia(ctx context.Context, providerName, id string)
 	provider := p.providers[providerName]
 	cacheKey := fmt.Sprintf("%s:media:%s", provider.Name(), id)
 
-	media, err := cache.GetJson[Media](p.cache, cacheKey)
+	media, err := cache.GetProviderJson[Media](p.cache, cacheKey)
 	if err == nil {
-		fmt.Println("Using the cached version")
 		return media, nil
 	}
 
 	if errors.Is(err, cache.ErrNoData) {
-		fmt.Println("Data not found in cache, fetching new data")
-
 		m, err := provider.GetMedia(ctx, id)
 		if err != nil {
 			return Media{}, err
 		}
 
-		// TODO(patrik): Make ttl to const
-		err = cache.SetJson(p.cache, cacheKey, m, 24*time.Hour)
+		err = cache.SetProviderJson(p.cache, cacheKey, providerName, m, mediaTTL)
 		if err != nil {
 			return Media{}, err
 		}
@@ -157,22 +158,18 @@ func (p *ProviderManager) SearchMedia(ctx context.Context, providerName, query s
 	provider := p.providers[providerName]
 	cacheKey := fmt.Sprintf("%s:media-search:%s", provider.Name(), query)
 
-	media, err := cache.GetJson[[]SearchResult](p.cache, cacheKey)
+	media, err := cache.GetProviderJson[[]SearchResult](p.cache, cacheKey)
 	if err == nil {
-		fmt.Println("Using the cached version")
 		return media, nil
 	}
 
 	if errors.Is(err, cache.ErrNoData) {
-		fmt.Println("Data not found in cache, fetching new data")
-
 		items, err := provider.SearchMedia(ctx, query)
 		if err != nil {
 			return nil, err
 		}
 
-		// TODO(patrik): Make ttl to const
-		err = cache.SetJson(p.cache, cacheKey, items, 1*time.Second)
+		err = cache.SetProviderJson(p.cache, cacheKey, providerName, items, searchTTL)
 		if err != nil {
 			return nil, err
 		}
