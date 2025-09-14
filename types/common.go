@@ -15,6 +15,10 @@ func (d WorkDir) DatabaseFile() string {
 	return path.Join(d.String(), "data.db")
 }
 
+func (d WorkDir) CacheDatabaseFile() string {
+	return path.Join(d.String(), "cache.db")
+}
+
 func (d WorkDir) SetupFile() string {
 	return path.Join(d.String(), "setup")
 }

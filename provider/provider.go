@@ -56,6 +56,10 @@ type Provider interface {
 
 var ErrNoProvider = errors.New("no provider")
 
+type ProviderInfo struct {
+	Name string
+}
+
 type ProviderManager struct {
 	providers map[string]Provider
 	cache     *cache.Cache
@@ -75,6 +79,18 @@ func (p *ProviderManager) RegisterProvider(provider Provider) {
 func (p *ProviderManager) IsValidProvider(name string) bool {
 	_, ok := p.providers[name]
 	return ok
+}
+
+func (p *ProviderManager) GetProviders() []ProviderInfo {
+	res := make([]ProviderInfo, 0, len(p.providers))
+
+	for _, p := range p.providers {
+		res = append(res, ProviderInfo{
+			Name: p.Name(),
+		})
+	}
+
+	return res
 }
 
 func (p *ProviderManager) GetMedia(ctx context.Context, providerName, id string) (Media, error) {

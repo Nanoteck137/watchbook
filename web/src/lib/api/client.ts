@@ -147,6 +147,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/collections/${id}/items/${mediaId}`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
+  getProviders(options?: ExtraOptions) {
+    return this.request("/api/v1/providers", "GET", api.GetProviders, z.any(), undefined, options)
+  }
+  
   
 }
 
@@ -291,6 +295,10 @@ export class ClientUrls {
   
   editCollectionItem(id: string, mediaId: string) {
     return createUrl(this.baseUrl, `/api/v1/collections/${id}/items/${mediaId}`)
+  }
+  
+  getProviders() {
+    return createUrl(this.baseUrl, "/api/v1/providers")
   }
   
   getMediaImage(id: string, file: string) {

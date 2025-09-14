@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
-	"path"
 
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/pyrin/trail"
 	"github.com/nanoteck137/watchbook"
 	"github.com/nanoteck137/watchbook/config"
@@ -20,9 +18,10 @@ import (
 var _ App = (*BaseApp)(nil)
 
 type BaseApp struct {
-	logger *trail.Logger
-	db     *database.Database
-	config *config.Config
+	logger          *trail.Logger
+	db              *database.Database
+	providerManager *provider.ProviderManager
+	config          *config.Config
 }
 
 func (app *BaseApp) Logger() *trail.Logger {
@@ -31,6 +30,10 @@ func (app *BaseApp) Logger() *trail.Logger {
 
 func (app *BaseApp) DB() *database.Database {
 	return app.db
+}
+
+func (app *BaseApp) ProviderManager() *provider.ProviderManager {
+	return app.providerManager
 }
 
 func (app *BaseApp) Config() *config.Config {
@@ -70,23 +73,15 @@ func (app *BaseApp) Bootstrap() error {
 		}
 	}
 
-	cache, err := cache.Open(path.Join(workDir.String(), "cache.db"))
+	cache, err := cache.Open(workDir.CacheDatabaseFile())
 	if err != nil {
 		return err
 	}
 
 	pm := provider.NewProviderManager(cache)
-
 	pm.RegisterProvider(&myanimelist.MyAnimeListAnimeProvider{})
 
-	media, err := pm.GetMedia(context.Background(), myanimelist.AnimeProviderName, "21")
-	if err != nil {
-		return err
-	}
-
-	pretty.Println(media)
-
-	return nil
+	app.providerManager = pm
 
 	_, err = os.Stat(workDir.SetupFile())
 	if errors.Is(err, os.ErrNotExist) && app.config.Username != "" {

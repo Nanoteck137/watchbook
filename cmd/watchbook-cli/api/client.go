@@ -546,6 +546,22 @@ func (c *Client) EditCollectionItem(id string, mediaId string, body EditCollecti
 	return Request[any](data, body)
 }
 
+func (c *Client) GetProviders(options Options) (*GetProviders, error) {
+	path := "/api/v1/providers"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetProviders](data, nil)
+}
+
 
 
 func (c *ClientUrls) Signup() (*URL, error) {
@@ -715,6 +731,11 @@ func (c *ClientUrls) RemoveCollectionItem(id string, mediaId string) (*URL, erro
 
 func (c *ClientUrls) EditCollectionItem(id string, mediaId string) (*URL, error) {
 	path := Sprintf("/api/v1/collections/%v/items/%v", id, mediaId)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetProviders() (*URL, error) {
+	path := "/api/v1/providers"
 	return c.getUrl(path)
 }
 
