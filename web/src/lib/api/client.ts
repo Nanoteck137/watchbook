@@ -151,6 +151,10 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/providers", "GET", api.GetProviders, z.any(), undefined, options)
   }
   
+  providerSearchMedia(providerName: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/providers/${providerName}`, "GET", api.GetProviderSearch, z.any(), undefined, options)
+  }
+  
   
 }
 
@@ -299,6 +303,10 @@ export class ClientUrls {
   
   getProviders() {
     return createUrl(this.baseUrl, "/api/v1/providers")
+  }
+  
+  providerSearchMedia(providerName: string) {
+    return createUrl(this.baseUrl, `/api/v1/providers/${providerName}`)
   }
   
   getMediaImage(id: string, file: string) {

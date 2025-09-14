@@ -109,3 +109,15 @@ export function getTimeDifference(fromDate: Date, toDate: Date): TimeDiff {
 export function formatTimeDiff(time: TimeDiff) {
   return `${time.days}d ${time.hours}h ${time.minutes}m`;
 }
+
+// eslint-disable-next-line no-unused-vars
+export function debounce<T extends (...args: never[]) => void>(
+  fn: T,
+  delay: number,
+) {
+  let timer: number | undefined;
+  return (...args: Parameters<T>) => {
+    if (timer) clearTimeout(timer);
+    timer = window.setTimeout(() => fn(...args), delay);
+  };
+}

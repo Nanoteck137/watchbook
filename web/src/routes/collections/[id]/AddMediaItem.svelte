@@ -3,7 +3,7 @@
   import FormItem from "$lib/components/FormItem.svelte";
   import Image from "$lib/components/Image.svelte";
   import type { Modal } from "$lib/components/modals";
-  import { cn } from "$lib/utils";
+  import { cn, debounce } from "$lib/utils";
   import {
     Button,
     Dialog,
@@ -49,14 +49,6 @@
   let checkedItems = $derived(
     results.filter((i) => !i.alreadyAdded).filter((i) => i.checked),
   );
-
-  function debounce<T extends (...args: any[]) => void>(fn: T, delay: number) {
-    let timer: number | undefined;
-    return (...args: Parameters<T>) => {
-      if (timer) clearTimeout(timer);
-      timer = window.setTimeout(() => fn(...args), delay);
-    };
-  }
 
   async function search(query: string) {
     const media = await apiClient.getMedia({
