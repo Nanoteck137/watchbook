@@ -17,6 +17,26 @@ const (
 	ProviderNameTheMovieDbTv     string = "tmdb-tv"
 )
 
+type SearchResultType string
+
+const (
+	SearchResultTypeMedia      SearchResultType = "media"
+	SearchResultTypeCollection SearchResultType = "collection"
+)
+
+type SearchResult struct {
+	SearchType SearchResultType `json:"searchType"`
+	ProviderId string           `json:"providerId"`
+	Title      string           `json:"title"`
+	MediaType  types.MediaType  `json:"mediaType"`
+	ImageUrl   string           `json:"imageUrl"`
+}
+
+type MediaPart struct {
+	Name   string `json:"name"`
+	Number int    `json:"number"`
+}
+
 type Media struct {
 	ProviderId string          `json:"id"`
 	Type       types.MediaType `json:"type"`
@@ -39,6 +59,8 @@ type Media struct {
 	Creators []string `json:"creators"`
 	Tags     []string `json:"tags"`
 
+	Parts []MediaPart `json:"parts"`
+
 	ExtraProviderIds map[string]string `json:"extraProviderIds"`
 }
 
@@ -48,10 +70,10 @@ type Provider interface {
 	Name() string
 
 	GetMedia(ctx context.Context, id string) (Media, error)
-	SearchMedia(ctx context.Context, query string) ([]Media, error)
+	SearchMedia(ctx context.Context, query string) ([]SearchResult, error)
 
 	GetCollection(ctx context.Context, id string) (Collection, error)
-	SearchCollection(ctx context.Context, query string) ([]Collection, error)
+	SearchCollection(ctx context.Context, query string) ([]SearchResult, error)
 }
 
 var ErrNoProvider = errors.New("no provider")
@@ -116,7 +138,7 @@ func (p *ProviderManager) GetMedia(ctx context.Context, providerName, id string)
 		}
 
 		// TODO(patrik): Make ttl to const
-		err = cache.SetJson(p.cache, cacheKey, m, 24 * time.Hour)
+		err = cache.SetJson(p.cache, cacheKey, m, 24*time.Hour)
 		if err != nil {
 			return Media{}, err
 		}
@@ -127,8 +149,38 @@ func (p *ProviderManager) GetMedia(ctx context.Context, providerName, id string)
 	return Media{}, err
 }
 
-func (p *ProviderManager) SearchMedia(ctx context.Context, providerName, query string) ([]Media, error) {
-	return nil, nil
+func (p *ProviderManager) SearchMedia(ctx context.Context, providerName, query string) ([]SearchResult, error) {
+	if !p.IsValidProvider(providerName) {
+		return nil, ErrNoProvider
+	}
+
+	provider := p.providers[providerName]
+	cacheKey := fmt.Sprintf("%s:media-search:%s", provider.Name(), query)
+
+	media, err := cache.GetJson[[]SearchResult](p.cache, cacheKey)
+	if err == nil {
+		fmt.Println("Using the cached version")
+		return media, nil
+	}
+
+	if errors.Is(err, cache.ErrNoData) {
+		fmt.Println("Data not found in cache, fetching new data")
+
+		items, err := provider.SearchMedia(ctx, query)
+		if err != nil {
+			return nil, err
+		}
+
+		// TODO(patrik): Make ttl to const
+		err = cache.SetJson(p.cache, cacheKey, items, 1*time.Second)
+		if err != nil {
+			return nil, err
+		}
+
+		return items, nil
+	}
+
+	return nil, err
 }
 
 func (p *ProviderManager) GetCollection(ctx context.Context, providerName, id string) (Collection, error) {

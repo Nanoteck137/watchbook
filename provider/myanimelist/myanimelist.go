@@ -2,14 +2,10 @@ package myanimelist
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"os"
-	"path"
 	"strings"
 	"time"
 
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/watchbook/provider"
 	"github.com/nanoteck137/watchbook/provider/downloader"
 	"github.com/nanoteck137/watchbook/types"
@@ -44,127 +40,6 @@ type AnimeEntry struct {
 	CoverImageUrl string `json:"coverImageUrl"`
 
 	EpisodeCount *int64 `json:"episodeCount"`
-
-	UsingCache bool `json:"-"`
-}
-
-func readAnimeEntry(p string) (AnimeEntry, error) {
-	d, err := os.ReadFile(p)
-	if err != nil {
-		return AnimeEntry{}, err
-	}
-
-	var res AnimeEntry
-	err = json.Unmarshal(d, &res)
-	if err != nil {
-		return AnimeEntry{}, err
-	}
-
-	return res, nil
-}
-
-func fetchAndCacheNewAnimeData(malId string, cacheDest string) (AnimeEntry, error) {
-	data, err := FetchAnimeData(dl, malId, false)
-	if err != nil {
-		return AnimeEntry{}, err
-	}
-
-	pretty.Println(data)
-
-	desc := strings.Builder{}
-
-	if data.Description != "" {
-		desc.WriteString(data.Description)
-		desc.WriteString("\n\n")
-	}
-
-	fmt.Fprintf(&desc, "Type: %s\n", data.Type)
-	fmt.Fprintf(&desc, "Status: %s\n", data.Status)
-	if data.EpisodeCount != nil {
-		fmt.Fprintf(&desc, "Episode Count: %d\n", *data.EpisodeCount)
-	}
-	fmt.Fprintf(&desc, "Rating: %s\n", data.Rating)
-	fmt.Fprintf(&desc, "Premiered: %s\n", data.Premiered)
-	fmt.Fprintf(&desc, "Source: %s\n", data.Source)
-	fmt.Fprintf(&desc, "Broadcast: %s\n", data.Broadcast)
-
-	if len(data.ThemeSongs) > 0 {
-		desc.WriteString("Theme Songs:\n")
-		for _, t := range data.ThemeSongs {
-			ty := "UNKNOWN"
-
-			switch t.Type {
-			case ThemeSongOpening:
-				ty = "OP"
-			case ThemeSongEnding:
-				ty = "ED"
-			}
-
-			desc.WriteString(t.Raw)
-			desc.WriteString(" (")
-			desc.WriteString(ty)
-			desc.WriteString(")\n")
-		}
-	}
-
-	var startDate *string
-	var endDate *string
-
-	if data.StartDate != nil && *data.StartDate != "" {
-		startDate = data.StartDate
-	}
-
-	if data.EndDate != nil && *data.EndDate != "" {
-		endDate = data.EndDate
-	}
-
-	studios := make([]string, 0, len(data.Studios))
-	tags := make([]string, 0, len(data.Genres)+len(data.Themes)+len(data.Demographics))
-
-	for _, s := range data.Studios {
-		studios = append(studios, utils.Slug(s))
-	}
-
-	for _, t := range data.Genres {
-		tags = append(tags, utils.Slug(t))
-	}
-
-	for _, t := range data.Themes {
-		tags = append(tags, utils.Slug(t))
-	}
-
-	for _, t := range data.Demographics {
-		tags = append(tags, utils.Slug(t))
-	}
-
-	res := AnimeEntry{
-		Type:          ConvertAnimeType(data.Type),
-		Title:         data.Title,
-		TitleEnglish:  data.TitleEnglish,
-		Description:   strings.TrimSpace(desc.String()),
-		Score:         data.Score,
-		Status:        ConvertAnimeStatus(data.Status),
-		Rating:        ConvertAnimeRating(data.Rating),
-		AiringSeason:  utils.Slug(data.Premiered),
-		StartDate:     startDate,
-		EndDate:       endDate,
-		Studios:       studios,
-		Tags:          tags,
-		CoverImageUrl: data.CoverImageUrl,
-		EpisodeCount:  data.EpisodeCount,
-	}
-
-	d, err := json.MarshalIndent(res, "", "  ")
-	if err != nil {
-		return AnimeEntry{}, err
-	}
-
-	err = os.WriteFile(cacheDest, d, 0644)
-	if err != nil {
-		return AnimeEntry{}, err
-	}
-
-	return res, nil
 }
 
 func fetchAnimeData(malId string) (AnimeEntry, error) {
@@ -268,48 +143,7 @@ func RawGetAnime(malId string) (AnimeEntry, error) {
 	return res, nil
 }
 
-// TODO(patrik): Remove
-func GetAnime(workDir types.WorkDir, malId string, useCache bool) (AnimeEntry, error) {
-	panic("REMOVE")
-	cacheDir := ""
-
-	err := os.Mkdir(cacheDir, 0755)
-	if err != nil && !os.IsExist(err) {
-		return AnimeEntry{}, err
-	}
-
-	cacheName := fmt.Sprintf("mal-%s-anime", malId)
-	fullCacheName := cacheName + ".json"
-	cachePath := path.Join(cacheDir, fullCacheName)
-
-	if !useCache {
-		res, err := fetchAndCacheNewAnimeData(malId, cachePath)
-		if err != nil {
-			return AnimeEntry{}, err
-		}
-
-		return res, nil
-	}
-
-	cacheEntry, err := readAnimeEntry(cachePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			res, err := fetchAndCacheNewAnimeData(malId, cachePath)
-			if err != nil {
-				return AnimeEntry{}, err
-			}
-
-			return res, nil
-		}
-
-		return AnimeEntry{}, err
-	}
-
-	cacheEntry.UsingCache = true
-	return cacheEntry, nil
-}
-
-type AnimeEpisodes struct{}
+type AnimeEpisode struct{}
 
 type AnimePictures struct{}
 
@@ -403,9 +237,14 @@ func (m *MyAnimeListAnimeProvider) GetCollection(ctx context.Context, id string)
 }
 
 func (m *MyAnimeListAnimeProvider) GetMedia(ctx context.Context, id string) (provider.Media, error) {
-	anime, err := RawGetAnime(id)
+	anime, err := fetchAnimeData(id)
 	if err != nil {
 		return provider.Media{}, err
+	}
+
+	title := anime.Title
+	if anime.TitleEnglish != "" {
+		title = anime.TitleEnglish
 	}
 
 	var description *string
@@ -427,10 +266,10 @@ func (m *MyAnimeListAnimeProvider) GetMedia(ctx context.Context, id string) (pro
 	}
 
 	var endDate *time.Time
-	if anime.StartDate != nil {
-		d, err := time.Parse(types.MediaDateLayout, *anime.StartDate)
+	if anime.EndDate != nil {
+		d, err := time.Parse(types.MediaDateLayout, *anime.EndDate)
 		if err == nil {
-			startDate = &d
+			endDate = &d
 		}
 	}
 
@@ -439,10 +278,44 @@ func (m *MyAnimeListAnimeProvider) GetMedia(ctx context.Context, id string) (pro
 		coverUrl = &anime.CoverImageUrl
 	}
 
+	episodeCount := 0
+	if anime.EpisodeCount != nil {
+		episodeCount = int(*anime.EpisodeCount)
+	}
+
+	parts := []provider.MediaPart{}
+
+	episodes, _ := FetchAnimeEpisodes(dl, id)
+
+	numEpisodesFound := len(episodes)
+	missingEpisodes := max(episodeCount-numEpisodesFound, 0)
+
+	lastEpisodeNumber := 0
+
+	for _, episode := range episodes {
+		n := int(episode.Number)
+		parts = append(parts, provider.MediaPart{
+			Name:   episode.EnglishTitle,
+			Number: n,
+		})
+
+		if n > lastEpisodeNumber {
+			lastEpisodeNumber = n
+		}
+	}
+
+	for i := range missingEpisodes {
+		n := lastEpisodeNumber + 1 + i
+		parts = append(parts, provider.MediaPart{
+			Name:   fmt.Sprintf("Episode %d", n),
+			Number: n,
+		})
+	}
+
 	return provider.Media{
 		ProviderId:       id,
 		Type:             anime.Type,
-		Title:            anime.Title,
+		Title:            title,
 		Description:      description,
 		Score:            anime.Score,
 		Status:           anime.Status,
@@ -455,14 +328,32 @@ func (m *MyAnimeListAnimeProvider) GetMedia(ctx context.Context, id string) (pro
 		BannerUrl:        nil,
 		Creators:         anime.Studios,
 		Tags:             anime.Tags,
+		Parts:            parts,
 		ExtraProviderIds: map[string]string{},
 	}, nil
 }
 
-func (m *MyAnimeListAnimeProvider) SearchCollection(ctx context.Context, query string) ([]provider.Collection, error) {
+func (m *MyAnimeListAnimeProvider) SearchCollection(ctx context.Context, query string) ([]provider.SearchResult, error) {
 	panic("unimplemented")
 }
 
-func (m *MyAnimeListAnimeProvider) SearchMedia(ctx context.Context, query string) ([]provider.Media, error) {
-	panic("unimplemented")
+func (m *MyAnimeListAnimeProvider) SearchMedia(ctx context.Context, query string) ([]provider.SearchResult, error) {
+	items, err := FetchSearch(query)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]provider.SearchResult, len(items))
+
+	for i, item := range items {
+		res[i] = provider.SearchResult{
+			SearchType: provider.SearchResultTypeMedia,
+			ProviderId: item.Id,
+			Title:      item.Title,
+			MediaType:  item.Type,
+			ImageUrl:   item.ImageUrl,
+		}
+	}
+
+	return res, nil
 }

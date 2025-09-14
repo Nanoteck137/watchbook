@@ -163,6 +163,14 @@ func Min[T cmp.Ordered](value T, min T) T {
 	return value
 }
 
+func Max[T cmp.Ordered](value T, max T) T {
+	if value > max {
+		return max
+	}
+
+	return value
+}
+
 func Clamp[T cmp.Ordered](value T, min T, max T) T {
 	if value < min {
 		return min

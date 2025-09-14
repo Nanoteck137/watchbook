@@ -4,7 +4,6 @@
   import FormItem from "$lib/components/FormItem.svelte";
   import Image from "$lib/components/Image.svelte";
   import type { Modal } from "$lib/components/modals";
-  import { cn, debounce } from "$lib/utils";
   import {
     Button,
     Dialog,
@@ -12,7 +11,7 @@
     Label,
     ScrollArea,
   } from "@nanoteck137/nano-ui";
-  import { Search } from "lucide-svelte";
+  import { Check, Search } from "lucide-svelte";
 
   export type Props = {
     providerName: string;
@@ -24,13 +23,19 @@
     class: className,
     children,
     onResult,
-  }: Props & Modal<void> = $props();
+  }: Props & Modal<ProviderSearchResult[]> = $props();
 
   const apiClient = getApiClient();
 
   let open = $state(false);
 
-  let results = $state<ProviderSearchResult[]>([]);
+  type SearchResult = {
+    data: ProviderSearchResult;
+    checked: boolean;
+  };
+
+  let results = $state<SearchResult[]>([]);
+  let checkedItems = $derived(results.filter((i) => i.checked));
 
   async function search(query: string) {
     const res = await apiClient.providerSearchMedia(providerName, {
@@ -42,20 +47,8 @@
 
     console.log(res.data);
 
-    results = res.data.searchResults;
-
-    // results = media.data.media.map((m) => ({
-    //   id: m.id,
-    //   imageUrl: m.coverUrl ?? undefined,
-    //   name: m.title,
-    //   checked: false,
-    //   alreadyAdded: !!itemIds.find((i) => i === m.id),
-    // }));
+    results = res.data.searchResults.map((d) => ({ data: d, checked: false }));
   }
-
-  const debouncedSearch = debounce((query: string) => {
-    search(query);
-  }, 300);
 </script>
 
 <Dialog.Root bind:open>
@@ -96,32 +89,37 @@
 
       <div class="flex flex-col gap-2">
         {#each results as result, i}
-          <button class="group flex justify-between border-b py-2">
+          <button
+            class="group flex justify-between border-b py-2"
+            onclick={() => {
+              result.checked = !result.checked;
+            }}
+          >
             <div class="flex">
               <div class="relative h-20 w-14">
                 <Image
                   class="h-full w-full"
-                  src={result.imageUrl}
+                  src={result.data.imageUrl}
                   alt="cover"
                 />
-                <!-- <div class="absolute inset-0 flex items-center justify-center">
-                  {#if result.checked || result.alreadyAdded}
+                <div class="absolute inset-0 flex items-center justify-center">
+                  {#if result.checked}
                     <div
                       class="flex h-8 w-8 items-center justify-center rounded-full bg-black/80"
                     >
                       <Check />
                     </div>
                   {/if}
-                </div> -->
+                </div>
               </div>
               <div class="flex flex-col gap-2 px-4 py-1">
                 <p
                   class="line-clamp-2 text-ellipsis text-sm font-semibold"
-                  title={result.title}
+                  title={result.data.title}
                 >
-                  {result.title}
+                  {result.data.title}
                 </p>
-                <p class="text-start text-xs">ID: {result.providerId}</p>
+                <p class="text-start text-xs">ID: {result.data.providerId}</p>
               </div>
             </div>
             <!-- <div
@@ -149,11 +147,14 @@
       </Button>
 
       <Button
+        disabled={checkedItems.length <= 0}
         onclick={() => {
+          // editModalOpen = true;
+          onResult(checkedItems.map((i) => i.data));
           open = false;
         }}
       >
-        Add
+        Add ({checkedItems.length} items)
       </Button>
     </Dialog.Footer>
   </Dialog.Content>

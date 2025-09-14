@@ -9,6 +9,7 @@ import (
 	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/watchbook/database/adapter"
 	"github.com/nanoteck137/watchbook/filter"
+	"github.com/nanoteck137/watchbook/kvstore"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
@@ -62,6 +63,8 @@ type Media struct {
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
+
+	Providers kvstore.Store `db:"providers"`
 
 	PartCount sql.NullInt64 `db:"part_count"`
 
@@ -266,6 +269,8 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 			"media.created",
 			"media.updated",
 
+			"media.providers",
+
 			goqu.I("part_count.data").As("part_count"),
 
 			goqu.I("creators.data").As("creators"),
@@ -377,9 +382,12 @@ func (db *Database) GetMediaById(ctx context.Context, userId *string, id string)
 	return ember.Single[Media](db.db, ctx, query)
 }
 
-func (db *Database) GetMediaByMalId(ctx context.Context, userId *string, malId string) (Media, error) {
+func (db *Database) GetMediaByProviderId(ctx context.Context, userId *string, providerName, value string) (Media, error) {
+	// json_extract(media.providers, '$.myanimelist-anime')
 	query := MediaQuery(userId).
-		Where(goqu.I("media.mal_id").Eq(malId))
+		Where(
+			goqu.Func("json_extract", goqu.I("media.providers"), "$."+providerName).Eq(value),
+		)
 
 	return ember.Single[Media](db.db, ctx, query)
 }
@@ -408,6 +416,8 @@ type CreateMediaParams struct {
 	CoverFile  sql.NullString
 	LogoFile   sql.NullString
 	BannerFile sql.NullString
+
+	Providers kvstore.Store
 
 	Created int64
 	Updated int64
@@ -465,6 +475,8 @@ func (db *Database) CreateMedia(ctx context.Context, params CreateMediaParams) (
 		"logo_file":   params.LogoFile,
 		"banner_file": params.BannerFile,
 
+		"providers": params.Providers,
+
 		"created": created,
 		"updated": updated,
 	}).
@@ -497,6 +509,8 @@ type MediaChanges struct {
 	LogoFile   Change[sql.NullString]
 	BannerFile Change[sql.NullString]
 
+	Providers Change[kvstore.Store]
+
 	Created Change[int64]
 }
 
@@ -525,6 +539,8 @@ func (db *Database) UpdateMedia(ctx context.Context, id string, changes MediaCha
 	addToRecord(record, "cover_file", changes.CoverFile)
 	addToRecord(record, "logo_file", changes.LogoFile)
 	addToRecord(record, "banner_file", changes.BannerFile)
+
+	addToRecord(record, "providers", changes.Providers)
 
 	addToRecord(record, "created", changes.Created)
 

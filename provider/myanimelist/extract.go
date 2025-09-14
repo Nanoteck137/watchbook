@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
 
@@ -118,6 +119,13 @@ type Episode struct {
 
 type Seasonal struct {
 	Animes []SeasonalAnime
+}
+
+type SearchResult struct {
+	Id       string
+	Type     types.MediaType
+	Title    string
+	ImageUrl string
 }
 
 func ExtractAnimeData(pagePath string) (Anime, error) {
@@ -694,4 +702,70 @@ func ExtractSeasonalAnimes(pagePath string) (Seasonal, error) {
 	return Seasonal{
 		Animes: animes,
 	}, nil
+}
+
+func ExtractSearchResults(pagePath string) ([]SearchResult, error) {
+	f, err := os.Open(pagePath)
+	if err != nil {
+		return nil, err
+	}
+
+	doc, err := goquery.NewDocumentFromReader(f)
+	if err != nil {
+		return nil, err
+	}
+
+	type entry struct {
+		Title string
+		Link  string
+		Type  string
+		Image string
+	}
+
+	var entries []entry
+
+	doc.Find(".list > table > tbody > tr").Each(func(i int, s *goquery.Selection) {
+		if i == 0 {
+			return
+		}
+
+		link := s.Find(".title > a")
+		href, _ := link.Attr("href")
+
+		title := s.Find("strong").Text()
+		title = strings.TrimSpace(title)
+
+		img, _ := s.Find("td:nth-child(1) img").Attr("data-src")
+
+		typ := s.Find("td:nth-child(3)").Text()
+		typ = strings.TrimSpace(typ)
+
+		entries = append(entries, entry{
+			Title: title,
+			Link:  href,
+			Type:  typ,
+			Image: img,
+		})
+	})
+
+	res := make([]SearchResult, len(entries))
+
+	for i, e := range entries {
+		u, _ := url.Parse(e.Link)
+		id := ""
+
+		splits := strings.Split(u.Path, "/")
+		if len(splits) >= 3 && splits[1] == "anime" {
+			id = splits[2]
+		}
+
+		res[i] = SearchResult{
+			Id:       id,
+			Type:     ConvertAnimeType(e.Type),
+			Title:    e.Title,
+			ImageUrl: e.Image,
+		}
+	}
+
+	return res, nil
 }

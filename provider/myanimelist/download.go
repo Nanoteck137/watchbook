@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -14,7 +15,9 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/kr/pretty"
 	"github.com/nanoteck137/watchbook/provider/downloader"
+	"github.com/nanoteck137/watchbook/utils"
 )
 
 var ErrCheckFailed = errors.New("entry check failed")
@@ -271,6 +274,67 @@ func FetchAnimeData(dl *downloader.Downloader, id string, fetchPictures bool) (*
 	return &anime, nil
 }
 
+func FetchAnimeEpisodes(dl *downloader.Downloader, id string) ([]Episode, error) {
+	p, err := os.MkdirTemp("", "anime*")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp dir: %w", err)
+	}
+	defer os.RemoveAll(p)
+
+	err = os.Mkdir(p, 0755)
+	if err != nil && !os.IsExist(err) {
+		return nil, fmt.Errorf("failed to create entry dir: %w", err)
+	}
+
+	baseUrl := fmt.Sprintf("https://myanimelist.net/anime/%s/random", id)
+
+	hasEpisodes := true
+
+	firstEpisodePath := path.Join(p, "0.html")
+	err = dl.DownloadToFile(baseUrl+"/episode", firstEpisodePath)
+	if err != nil {
+		if errors.Is(err, downloader.NotFound) {
+			hasEpisodes = false
+		} else {
+			return nil, fmt.Errorf("failed to download entry initial episode page: %w", err)
+		}
+	}
+
+	var episodes []Episode
+
+	if hasEpisodes {
+		count, err := readEpisodeCount(firstEpisodePath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read entry episode count: %w", err)
+		}
+
+		pageCount := utils.TotalPages(perPage, count)
+
+		for i := 1; i < pageCount; i++ {
+			name := fmt.Sprintf("%d.html", i)
+
+			p := path.Join(p, name)
+
+			err = dl.DownloadToFile(baseUrl+fmt.Sprintf("/episode?offset=%d", i*perPage), p)
+			if err != nil && !errors.Is(err, downloader.NotFound) {
+				return nil, fmt.Errorf("failed to download entry episode page (%d): %w", i, err)
+			}
+		}
+
+		for i := 0; i < pageCount; i++ {
+			name := fmt.Sprintf("%d.html", i)
+			e, _, err := ExtractEpisodeData(path.Join(p, name))
+			if err != nil {
+				return nil, err
+			}
+
+			episodes = append(episodes, e...)
+		}
+	}
+
+	return episodes, nil
+}
+
 func FetchSeasonal(season string, year int) (Seasonal, error) {
 	p, err := os.MkdirTemp("", "anime*")
 	if err != nil {
@@ -296,4 +360,33 @@ func FetchSeasonal(season string, year int) (Seasonal, error) {
 	}
 
 	return seasonal, nil
+}
+
+func FetchSearch(query string) ([]SearchResult, error) {
+	p, err := os.MkdirTemp("", "anime*")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp dir: %w", err)
+	}
+	defer os.RemoveAll(p)
+
+	err = os.Mkdir(p, 0755)
+	if err != nil && !os.IsExist(err) {
+		return nil, fmt.Errorf("failed to create entry dir: %w", err)
+	}
+
+	baseUrl := fmt.Sprintf("https://myanimelist.net/anime.php?cat=anime&q=%s&type=0&score=0&status=0&p=0&r=0&sm=0&sd=0&sy=0&em=0&ed=0&ey=0&c%%5B%%5D=a&c%%5B%%5D=b&c%%5B%%5D=c&c%%5B%%5D=f", url.QueryEscape(query))
+
+	err = dl.DownloadToFile(baseUrl, path.Join(p, "root.html"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to download search page: %w", err)
+	}
+
+	items, err := ExtractSearchResults(path.Join(p, "root.html"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract search: %w", err)
+	}
+
+	pretty.Println("items", items)
+
+	return items, nil
 }
