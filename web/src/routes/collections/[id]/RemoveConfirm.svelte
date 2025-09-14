@@ -1,11 +1,6 @@
 <script lang="ts">
-  import Errors from "$lib/components/Errors.svelte";
-  import FormItem from "$lib/components/FormItem.svelte";
   import type { Modal } from "$lib/components/modals";
-  import { Button, Dialog, Input, Label } from "@nanoteck137/nano-ui";
-  import { zod } from "sveltekit-superforms/adapters";
-  import { defaults, superForm } from "sveltekit-superforms/client";
-  import { z } from "zod";
+  import { Button, Dialog } from "@nanoteck137/nano-ui";
 
   export type Props = {
     open: boolean;

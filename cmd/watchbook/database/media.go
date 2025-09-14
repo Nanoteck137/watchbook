@@ -9,7 +9,6 @@ import (
 	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/watchbook/database/adapter"
 	"github.com/nanoteck137/watchbook/filter"
-	"github.com/nanoteck137/watchbook/kvstore"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
@@ -41,6 +40,11 @@ type Media struct {
 	Id   string          `db:"id"`
 	Type types.MediaType `db:"type"`
 
+	TmdbId    sql.NullString `db:"tmdb_id"`
+	ImdbId    sql.NullString `db:"imdb_id"`
+	MalId     sql.NullString `db:"mal_id"`
+	AnilistId sql.NullString `db:"anilist_id"`
+
 	Title       string         `db:"title"`
 	Description sql.NullString `db:"description"`
 
@@ -55,8 +59,6 @@ type Media struct {
 	CoverFile  sql.NullString `db:"cover_file"`
 	LogoFile   sql.NullString `db:"logo_file"`
 	BannerFile sql.NullString `db:"banner_file"`
-
-	Providers kvstore.Store `db:"providers"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -241,6 +243,11 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 			"media.id",
 			"media.type",
 
+			"media.tmdb_id",
+			"media.imdb_id",
+			"media.mal_id",
+			"media.anilist_id",
+
 			"media.title",
 			"media.description",
 
@@ -255,8 +262,6 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 			"media.cover_file",
 			"media.logo_file",
 			"media.banner_file",
-
-			"media.providers",
 
 			"media.created",
 			"media.updated",
@@ -359,6 +364,12 @@ func (db *Database) GetAllMedia(ctx context.Context) ([]Media, error) {
 	return ember.Multiple[Media](db.db, ctx, query)
 }
 
+func (db *Database) GetAllMediaForPartPredict(ctx context.Context) ([]Media, error) {
+	query := MediaQuery(nil).
+		Where(goqu.I("media.release_interval").Gt(0))
+	return ember.Multiple[Media](db.db, ctx, query)
+}
+
 func (db *Database) GetMediaById(ctx context.Context, userId *string, id string) (Media, error) {
 	query := MediaQuery(userId).
 		Where(goqu.I("media.id").Eq(id))
@@ -366,18 +377,14 @@ func (db *Database) GetMediaById(ctx context.Context, userId *string, id string)
 	return ember.Single[Media](db.db, ctx, query)
 }
 
-func (db *Database) GetMediaByProviderId(ctx context.Context, userId *string, providerName, value string) (Media, error) {
-	query := MediaQuery(userId).
-		Where(
-			goqu.Func("json_extract", goqu.I("media.providers"), "$."+providerName).Eq(value),
-		)
-
-	return ember.Single[Media](db.db, ctx, query)
-}
-
 type CreateMediaParams struct {
 	Id   string
 	Type types.MediaType
+
+	TmdbId    sql.NullString
+	ImdbId    sql.NullString
+	MalId     sql.NullString
+	AnilistId sql.NullString
 
 	Title string
 
@@ -394,8 +401,6 @@ type CreateMediaParams struct {
 	CoverFile  sql.NullString
 	LogoFile   sql.NullString
 	BannerFile sql.NullString
-
-	Providers kvstore.Store
 
 	Created int64
 	Updated int64
@@ -432,7 +437,13 @@ func (db *Database) CreateMedia(ctx context.Context, params CreateMediaParams) (
 		"id":   id,
 		"type": params.Type,
 
-		"title":       params.Title,
+		"tmdb_id":    params.TmdbId,
+		"imdb_id":    params.ImdbId,
+		"mal_id":     params.MalId,
+		"anilist_id": params.AnilistId,
+
+		"title": params.Title,
+
 		"description": params.Description,
 
 		"score":         params.Score,
@@ -447,8 +458,6 @@ func (db *Database) CreateMedia(ctx context.Context, params CreateMediaParams) (
 		"logo_file":   params.LogoFile,
 		"banner_file": params.BannerFile,
 
-		"providers": params.Providers,
-
 		"created": created,
 		"updated": updated,
 	}).
@@ -460,7 +469,13 @@ func (db *Database) CreateMedia(ctx context.Context, params CreateMediaParams) (
 type MediaChanges struct {
 	Type Change[types.MediaType]
 
-	Title       Change[string]
+	TmdbId    Change[sql.NullString]
+	ImdbId    Change[sql.NullString]
+	MalId     Change[sql.NullString]
+	AnilistId Change[sql.NullString]
+
+	Title Change[string]
+
 	Description Change[sql.NullString]
 
 	Score        Change[sql.NullFloat64]
@@ -475,8 +490,6 @@ type MediaChanges struct {
 	LogoFile   Change[sql.NullString]
 	BannerFile Change[sql.NullString]
 
-	Providers Change[kvstore.Store]
-
 	Created Change[int64]
 }
 
@@ -485,7 +498,13 @@ func (db *Database) UpdateMedia(ctx context.Context, id string, changes MediaCha
 
 	addToRecord(record, "type", changes.Type)
 
+	addToRecord(record, "tmdb_id", changes.TmdbId)
+	addToRecord(record, "imdb_id", changes.ImdbId)
+	addToRecord(record, "mal_id", changes.MalId)
+	addToRecord(record, "anilist_id", changes.AnilistId)
+
 	addToRecord(record, "title", changes.Title)
+
 	addToRecord(record, "description", changes.Description)
 
 	addToRecord(record, "score", changes.Score)
@@ -499,8 +518,6 @@ func (db *Database) UpdateMedia(ctx context.Context, id string, changes MediaCha
 	addToRecord(record, "cover_file", changes.CoverFile)
 	addToRecord(record, "logo_file", changes.LogoFile)
 	addToRecord(record, "banner_file", changes.BannerFile)
-
-	addToRecord(record, "providers", changes.Providers)
 
 	addToRecord(record, "created", changes.Created)
 
@@ -606,7 +623,7 @@ func (db *Database) RemoveMediaUserList(ctx context.Context, mediaId, userId str
 const DefaultMediaUserList = types.MediaUserListBacklog
 
 const (
-	MediaScoreMin = 0
+	MediaScoreMin = 1
 	MediaScoreMax = 10
 )
 
@@ -616,17 +633,9 @@ type SetMediaUserData struct {
 	RevisitCount sql.NullInt64
 	IsRevisiting bool
 	Score        sql.NullInt64
-
-	Created int64
-	Updated int64
 }
 
 func (db *Database) SetMediaUserData(ctx context.Context, mediaId, userId string, data SetMediaUserData) error {
-	if data.Created == 0 && data.Updated == 0 {
-		t := time.Now().UnixMilli()
-		data.Created = t
-		data.Updated = t
-	}
 
 	if data.List == "" {
 		data.List = DefaultMediaUserList
@@ -635,6 +644,8 @@ func (db *Database) SetMediaUserData(ctx context.Context, mediaId, userId string
 	if data.Score.Valid {
 		data.Score.Int64 = utils.Clamp(data.Score.Int64, MediaScoreMin, MediaScoreMax)
 	}
+
+	updated := time.Now().UnixMilli()
 
 	query := dialect.Insert("media_user_data").
 		Rows(goqu.Record{
@@ -647,8 +658,7 @@ func (db *Database) SetMediaUserData(ctx context.Context, mediaId, userId string
 			"is_revisiting": data.IsRevisiting,
 			"score":         data.Score,
 
-			"created": data.Created,
-			"updated": data.Updated,
+			"updated": updated,
 		}).
 		OnConflict(
 			goqu.DoUpdate("media_id, user_id", goqu.Record{
@@ -658,7 +668,7 @@ func (db *Database) SetMediaUserData(ctx context.Context, mediaId, userId string
 				"is_revisiting": data.IsRevisiting,
 				"score":         data.Score,
 
-				"updated": data.Updated,
+				"updated": updated,
 			}),
 		)
 

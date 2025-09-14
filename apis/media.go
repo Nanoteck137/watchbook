@@ -206,10 +206,6 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 		Id:           media.Id,
 		Title:        media.Title,
 		Description:  utils.SqlNullToStringPtr(media.Description),
-		TmdbId:       media.TmdbId.String,
-		ImdbId:       media.ImdbId.String,
-		MalId:        media.MalId.String,
-		AnilistId:    media.AnilistId.String,
 		MediaType:    media.Type,
 		Score:        utils.SqlNullToFloat64Ptr(media.Score),
 		Status:       media.Status,
@@ -629,23 +625,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				ty := types.MediaType(body.MediaType)
 
 				id, err := app.DB().CreateMedia(ctx, database.CreateMediaParams{
-					Type: ty,
-					TmdbId: sql.NullString{
-						String: body.TmdbId,
-						Valid:  body.TmdbId != "",
-					},
-					ImdbId: sql.NullString{
-						String: body.ImdbId,
-						Valid:  body.ImdbId != "",
-					},
-					MalId: sql.NullString{
-						String: body.MalId,
-						Valid:  body.MalId != "",
-					},
-					AnilistId: sql.NullString{
-						String: body.AnilistId,
-						Valid:  body.AnilistId != "",
-					},
+					Type:  ty,
 					Title: body.Title,
 					Description: sql.NullString{
 						String: body.Description,
@@ -760,7 +740,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 						CollectionId: col.Id,
 						MediaId:      id,
 						Name:         body.CollectionName,
-						OrderNumber:  0,
+						Position:     0,
 					})
 					if err != nil {
 						return nil, err
@@ -824,46 +804,6 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					changes.Type = database.Change[types.MediaType]{
 						Value:   t,
 						Changed: t != dbMedia.Type,
-					}
-				}
-
-				if body.TmdbId != nil {
-					changes.TmdbId = database.Change[sql.NullString]{
-						Value: sql.NullString{
-							String: *body.TmdbId,
-							Valid:  *body.TmdbId != "",
-						},
-						Changed: *body.TmdbId != dbMedia.TmdbId.String,
-					}
-				}
-
-				if body.ImdbId != nil {
-					changes.ImdbId = database.Change[sql.NullString]{
-						Value: sql.NullString{
-							String: *body.ImdbId,
-							Valid:  *body.ImdbId != "",
-						},
-						Changed: *body.ImdbId != dbMedia.ImdbId.String,
-					}
-				}
-
-				if body.MalId != nil {
-					changes.MalId = database.Change[sql.NullString]{
-						Value: sql.NullString{
-							String: *body.MalId,
-							Valid:  *body.MalId != "",
-						},
-						Changed: *body.MalId != dbMedia.MalId.String,
-					}
-				}
-
-				if body.AnilistId != nil {
-					changes.AnilistId = database.Change[sql.NullString]{
-						Value: sql.NullString{
-							String: *body.AnilistId,
-							Valid:  *body.AnilistId != "",
-						},
-						Changed: *body.AnilistId != dbMedia.AnilistId.String,
 					}
 				}
 

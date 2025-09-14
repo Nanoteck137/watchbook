@@ -23,6 +23,8 @@ CREATE TABLE media (
     logo_file TEXT,
     banner_file TEXT,
 
+    providers TEXT NOT NULL,
+
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL
 );
@@ -53,6 +55,9 @@ CREATE TABLE media_user_data (
 
     score INTEGER,
 
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
+
     PRIMARY KEY(media_id, user_id)
 );
 
@@ -68,7 +73,22 @@ CREATE TABLE media_parts (
     PRIMARY KEY(idx, media_id)
 );
 
+CREATE TABLE media_part_release (
+    media_id TEXT NOT NULL PRIMARY KEY REFERENCES media(id) ON DELETE CASCADE,
+
+    type TEXT NOT NULL,
+    start_date DATETIME NOT NULL,
+    num_expected_parts INTEGER NOT NULL,
+    part_offset INTEGER NOT NULL,
+    interval_days INTEGER NOT NULL,
+    delay_days INTEGER NOT NULL,
+
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL
+);
+
 -- +goose Down
+DROP TABLE media_part_release;
 DROP TABLE media_parts;
 DROP TABLE media_user_data;
 DROP TABLE media_creators;

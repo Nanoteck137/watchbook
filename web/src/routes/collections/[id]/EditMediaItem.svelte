@@ -10,20 +10,20 @@
   const schema = z.object({
     name: z.string().min(1, "String must contain at least 1 character(s)"),
     searchSlug: z.string(),
-    order: z.number().min(0, "Order cannot be negative"),
+    position: z.number().min(0, "Position cannot be negative"),
   });
 
   type Result = {
     name: string;
     searchSlug: string;
-    order: number;
+    position: number;
   };
 
   export type Props = {
     open: boolean;
     name: string;
     searchSlug: string;
-    order: number;
+    position: number;
   };
 
   let {
@@ -31,16 +31,16 @@
 
     name,
     searchSlug,
-    order,
+    position,
     onResult,
   }: Props & Modal<Result> = $props();
 
   $effect(() => {
-    reset({ data: { name, searchSlug, order } });
+    reset({ data: { name, searchSlug, position } });
   });
 
   const { form, errors, enhance, validateForm, reset } = superForm(
-    defaults({ name, searchSlug, order }, zod(schema)),
+    defaults({ name, searchSlug, position }, zod(schema)),
     {
       SPA: true,
       validators: zod(schema),
@@ -79,14 +79,14 @@
 
       <div class="flex flex-col-reverse gap-4 sm:flex-row">
         <FormItem class="w-full sm:w-32">
-          <Label for="order">Order</Label>
+          <Label for="position">Position</Label>
           <Input
-            id="order"
-            name="order"
+            id="position"
+            name="position"
             type="number"
-            bind:value={$form.order}
+            bind:value={$form.position}
           />
-          <Errors errors={$errors.order} />
+          <Errors errors={$errors.position} />
         </FormItem>
 
         <FormItem class="w-full">

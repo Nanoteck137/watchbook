@@ -7,7 +7,6 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/nanoteck137/pyrin/ember"
-	"github.com/nanoteck137/watchbook/kvstore"
 	"github.com/nanoteck137/watchbook/types"
 )
 
@@ -17,9 +16,13 @@ type CollectionMediaItem struct {
 	CollectionId string `db:"collection_id"`
 	MediaId      string `db:"media_id"`
 
-	Name       string `db:"name"`
-	SearchSlug string `db:"search_slug"`
-	Position   int    `db:"position"`
+	GroupName  string `db:"group_name"`
+	GroupOrder int64  `db:"group_order"`
+
+	Name           string `db:"name"`
+	SearchSlug     string `db:"search_slug"`
+	OrderNumber    int64  `db:"order_number"`
+	SubOrderNumber int64  `db:"suborder_number"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -32,14 +35,22 @@ type FullCollectionMediaItem struct {
 	CollectionId string `db:"collection_id"`
 	MediaId      string `db:"media_id"`
 
+	GroupName  string `db:"group_name"`
+	GroupOrder int64  `db:"group_order"`
+
 	CollectionName string `db:"collection_name"`
 	SearchSlug     string `db:"search_slug"`
-	Position       int    `db:"position"`
+	OrderNumber    int64  `db:"order_number"`
+	SubOrderNumber int64  `db:"suborder_number"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
 
 	MediaType types.MediaType `db:"media_type"`
+
+	MediaTmdbId    sql.NullString `db:"media_tmdb_id"`
+	MediaMalId     sql.NullString `db:"media_mal_id"`
+	MediaAnilistId sql.NullString `db:"media_anilist_id"`
 
 	MediaTitle       string         `db:"media_title"`
 	MediaDescription sql.NullString `db:"media_description"`
@@ -56,15 +67,13 @@ type FullCollectionMediaItem struct {
 	MediaLogoFile   sql.NullString `db:"media_logo_file"`
 	MediaBannerFile sql.NullString `db:"media_banner_file"`
 
-	MediaProviders kvstore.Store `db:"media_providers"`
-
 	MediaCreated int64 `db:"media_created"`
 	MediaUpdated int64 `db:"media_updated"`
 
 	MediaPartCount sql.NullInt64 `db:"media_part_count"`
 
-	MediaCreators JsonColumn[[]string] `db:"media_creators"`
-	MediaTags     JsonColumn[[]string] `db:"media_tags"`
+	MediaCreators JsonColumn[[]string]         `db:"media_creators"`
+	MediaTags     JsonColumn[[]string]         `db:"media_tags"`
 
 	MediaUserData JsonColumn[MediaUserData] `db:"media_user_data"`
 }
@@ -78,9 +87,13 @@ func CollectionMediaItemQuery(userId *string) *goqu.SelectDataset {
 			"collection_media_items.collection_id",
 			"collection_media_items.media_id",
 
+			"collection_media_items.group_name",
+			"collection_media_items.group_order",
+
 			"collection_media_items.name",
 			"collection_media_items.search_slug",
-			"collection_media_items.position",
+			"collection_media_items.order_number",
+			"collection_media_items.suborder_number",
 
 			"collection_media_items.created",
 			"collection_media_items.updated",
@@ -100,14 +113,22 @@ func FullCollectionMediaItemQuery(userId *string) *goqu.SelectDataset {
 			"collection_media_items.collection_id",
 			"collection_media_items.media_id",
 
+			"collection_media_items.group_name",
+			"collection_media_items.group_order",
+
 			goqu.I("collection_media_items.name").As("collection_name"),
 			"collection_media_items.search_slug",
-			"collection_media_items.position",
+			"collection_media_items.order_number",
+			"collection_media_items.suborder_number",
 
 			"collection_media_items.created",
 			"collection_media_items.updated",
 
 			goqu.I("media.type").As("media_type"),
+
+			goqu.I("media.tmdb_id").As("media_tmdb_id"),
+			goqu.I("media.mal_id").As("media_mal_id"),
+			goqu.I("media.anilist_id").As("media_anilist_id"),
 
 			goqu.I("media.title").As("media_title"),
 			goqu.I("media.description").As("media_description"),
@@ -123,8 +144,6 @@ func FullCollectionMediaItemQuery(userId *string) *goqu.SelectDataset {
 			goqu.I("media.cover_file").As("media_cover_file"),
 			goqu.I("media.logo_file").As("media_logo_file"),
 			goqu.I("media.banner_file").As("media_banner_file"),
-
-			goqu.I("media.providers").As("media_providers"),
 
 			goqu.I("media.created").As("media_created"),
 			goqu.I("media.updated").As("media_updated"),
@@ -169,9 +188,13 @@ type CreateCollectionMediaItemParams struct {
 	CollectionId string
 	MediaId      string
 
-	Name       string
-	SearchSlug string
-	Position   int
+	GroupName  string
+	GroupOrder int64
+
+	Name           string
+	SearchSlug     string
+	OrderNumber    int64
+	SubOrderNumber int64
 
 	Created int64
 	Updated int64
@@ -188,9 +211,13 @@ func (db *Database) CreateCollectionMediaItem(ctx context.Context, params Create
 		"collection_id": params.CollectionId,
 		"media_id":      params.MediaId,
 
-		"name":        params.Name,
-		"search_slug": params.SearchSlug,
-		"position":    params.Position,
+		"group_name":  params.GroupName,
+		"group_order": params.GroupOrder,
+
+		"name":            params.Name,
+		"search_slug":     params.SearchSlug,
+		"order_number":    params.OrderNumber,
+		"suborder_number": params.SubOrderNumber,
 
 		"created": params.Created,
 		"updated": params.Updated,
@@ -205,9 +232,13 @@ func (db *Database) CreateCollectionMediaItem(ctx context.Context, params Create
 }
 
 type CollectionMediaItemChanges struct {
-	Name       Change[string]
-	SearchSlug Change[string]
-	Position   Change[int]
+	GroupName  Change[string]
+	GroupOrder Change[int64]
+
+	Name           Change[string]
+	SearchSlug     Change[string]
+	OrderNumber    Change[int64]
+	SubOrderNumber Change[int64]
 
 	Created Change[int64]
 }
@@ -215,9 +246,13 @@ type CollectionMediaItemChanges struct {
 func (db *Database) UpdateCollectionMediaItem(ctx context.Context, collectionId, mediaId string, changes CollectionMediaItemChanges) error {
 	record := goqu.Record{}
 
+	addToRecord(record, "group_name", changes.GroupName)
+	addToRecord(record, "group_order", changes.GroupOrder)
+
 	addToRecord(record, "name", changes.Name)
 	addToRecord(record, "search_slug", changes.SearchSlug)
-	addToRecord(record, "position", changes.Position)
+	addToRecord(record, "order_number", changes.OrderNumber)
+	addToRecord(record, "suborder_number", changes.SubOrderNumber)
 
 	addToRecord(record, "created", changes.Created)
 

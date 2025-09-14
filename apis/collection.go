@@ -77,7 +77,7 @@ type CollectionItem struct {
 
 	CollectionName string `json:"collectionName"`
 	SearchSlug     string `json:"searchSlug"`
-	Order          int    `json:"order"`
+	Position       int    `json:"position"`
 
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
@@ -158,7 +158,7 @@ func ConvertDBCollectionItem(c pyrin.Context, hasUser bool, item database.FullCo
 		User:           user,
 		CollectionName: item.CollectionName,
 		SearchSlug:     item.SearchSlug,
-		Order:          int(item.OrderNumber),
+		Position:       item.Position,
 	}
 }
 
@@ -214,7 +214,7 @@ type AddCollectionItemBody struct {
 
 	Name       string `json:"name"`
 	SearchSlug string `json:"searchSlug"`
-	Order      int    `json:"order"`
+	Position   int    `json:"position"`
 }
 
 func (b *AddCollectionItemBody) Transform() {
@@ -229,9 +229,9 @@ func (b AddCollectionItemBody) Validate() error {
 }
 
 type EditCollectionItemBody struct {
-	Name       *string `json:"name"`
-	SearchSlug *string `json:"searchSlug"`
-	Order      *int    `json:"order"`
+	Name       *string `json:"name,omitempty"`
+	SearchSlug *string `json:"searchSlug,omitempty"`
+	Position   *int    `json:"position,omitempty"`
 }
 
 func (b *EditCollectionItemBody) Transform() {
@@ -346,7 +346,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 				}
 
 				sort.SliceStable(res.Items, func(i, j int) bool {
-					return res.Items[i].Order < res.Items[j].Order
+					return res.Items[i].Position < res.Items[j].Position
 				})
 
 				return res, nil
@@ -682,14 +682,10 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 				err = app.DB().CreateCollectionMediaItem(ctx, database.CreateCollectionMediaItemParams{
 					CollectionId: dbCollection.Id,
 					MediaId:      dbMedia.Id,
-					// GroupName:      "",
-					// GroupOrder:     0,
-					Name:        body.Name,
-					SearchSlug:  searchSlug,
-					OrderNumber: int64(body.Order),
-					// SubOrderNumber: 0,
-					// Created:        0,
-					// Updated:        0,
+
+					Name:       body.Name,
+					SearchSlug: searchSlug,
+					Position:   body.Position,
 				})
 				if err != nil {
 					// TODO(patrik): Better handling of error
@@ -781,10 +777,10 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				if body.Order != nil {
-					changes.OrderNumber = database.Change[int64]{
-						Value:   int64(*body.Order),
-						Changed: int64(*body.Order) != item.OrderNumber,
+				if body.Position != nil {
+					changes.Position = database.Change[int]{
+						Value:   *body.Position,
+						Changed: *body.Position != item.Position,
 					}
 				}
 

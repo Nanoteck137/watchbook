@@ -126,7 +126,7 @@
         mediaId: item.id,
         name: item.name,
         searchSlug: item.name,
-        order: item.order,
+        position: item.position,
       });
       if (!res.success) {
         return handleApiError(res.error);

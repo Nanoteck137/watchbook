@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { Modal } from "$lib/components/modals";
   import { Button, Dialog, ScrollArea } from "@nanoteck137/nano-ui";
-  import { Check } from "lucide-svelte";
 
   export type Props = {
     logoUrl: string;

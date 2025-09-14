@@ -24,7 +24,7 @@
       z.object({
         name: z.string().min(1),
         searchSlug: z.string(),
-        order: z.number().min(0),
+        position: z.number().min(0),
       }),
     ),
   });
@@ -47,7 +47,7 @@
         items: items.map((i) => ({
           name: i.name,
           searchSlug: "",
-          order: 0,
+          position: 0,
         })),
       },
     });
@@ -67,7 +67,7 @@
               id: items[i].id,
               name: item.name,
               searchSlug: item.searchSlug,
-              order: item.order,
+              position: item.position,
             })),
           );
           open = false;
@@ -109,15 +109,16 @@
 
               <div class="flex flex-col-reverse gap-4 sm:flex-row">
                 <FormItem class="w-full sm:w-32">
-                  <Label class="flex h-5 items-center" for="order">Order</Label
+                  <Label class="flex h-5 items-center" for="position"
+                    >Position</Label
                   >
                   <Input
-                    id="order"
-                    name="order"
+                    id="position"
+                    name="position"
                     type="number"
-                    bind:value={$form.items[i].order}
+                    bind:value={$form.items[i].position}
                   />
-                  <Errors errors={$errors.items?.[i]?.order} />
+                  <Errors errors={$errors.items?.[i]?.position} />
                 </FormItem>
 
                 <FormItem class="w-full">

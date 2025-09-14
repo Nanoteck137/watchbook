@@ -34,7 +34,7 @@
     id: string;
     name: string;
     searchSlug: string;
-    order: number;
+    position: number;
   };
 
   export type SearchResult = {

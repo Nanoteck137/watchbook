@@ -57,7 +57,7 @@
   bind:open={editModalOpen}
   name={item.collectionName}
   searchSlug={item.searchSlug}
-  order={item.order}
+  position={item.position}
   onResult={async (data) => {
     const res = await apiClient.editCollectionItem(
       item.collectionId,
