@@ -3,8 +3,6 @@ package core
 import (
 	"context"
 	"errors"
-	"fmt"
-	"net/url"
 	"os"
 
 	"github.com/nanoteck137/pyrin/ember"

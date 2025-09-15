@@ -1,7 +1,6 @@
 package tmdb
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -32,7 +31,7 @@ func (t *TmdbTvProvider) Info() provider.Info {
 	}
 }
 
-func (t *TmdbTvProvider) GetCollection(ctx context.Context, id string) (provider.Collection, error) {
+func (t *TmdbTvProvider) GetCollection(c provider.Context, id string) (provider.Collection, error) {
 	details, err := getTvDetails(id)
 	if err != nil {
 		return provider.Collection{}, err
@@ -75,7 +74,7 @@ func (t *TmdbTvProvider) GetCollection(ctx context.Context, id string) (provider
 	return res, nil
 }
 
-func (t *TmdbTvProvider) GetMedia(ctx context.Context, id string) (provider.Media, error) {
+func (t *TmdbTvProvider) GetMedia(c provider.Context, id string) (provider.Media, error) {
 	splits := strings.Split(id, "@")
 	if len(splits) != 2 {
 		return provider.Media{}, errors.New("not found")
@@ -192,7 +191,7 @@ func (t *TmdbTvProvider) GetMedia(ctx context.Context, id string) (provider.Medi
 	return res, nil
 }
 
-func (t *TmdbTvProvider) SearchCollection(ctx context.Context, query string) ([]provider.SearchResult, error) {
+func (t *TmdbTvProvider) SearchCollection(c provider.Context, query string) ([]provider.SearchResult, error) {
 	search, err := tvSearch(query)
 	if err != nil {
 		return nil, err
@@ -213,6 +212,6 @@ func (t *TmdbTvProvider) SearchCollection(ctx context.Context, query string) ([]
 	return res, nil
 }
 
-func (t *TmdbTvProvider) SearchMedia(ctx context.Context, query string) ([]provider.SearchResult, error) {
+func (t *TmdbTvProvider) SearchMedia(c provider.Context, query string) ([]provider.SearchResult, error) {
 	panic("unsupported")
 }

@@ -74,7 +74,7 @@ type Collection struct {
 	ProviderId string
 	Type       types.CollectionType
 
-	Name       string
+	Name string
 
 	CoverUrl  *string
 	LogoUrl   *string
@@ -95,21 +95,26 @@ type Info struct {
 }
 
 type Context struct {
-	ctx context.Context
+	ctx   context.Context
+	cache cache.Cache
 }
 
 func (c *Context) Context() context.Context {
 	return c.ctx
 }
 
+func (c *Context) Cache() cache.Cache {
+	return c.cache
+}
+
 type Provider interface {
 	Info() Info
 
-	GetMedia(ctx context.Context, id string) (Media, error)
-	SearchMedia(ctx context.Context, query string) ([]SearchResult, error)
+	GetMedia(c Context, id string) (Media, error)
+	SearchMedia(c Context, query string) ([]SearchResult, error)
 
-	GetCollection(ctx context.Context, id string) (Collection, error)
-	SearchCollection(ctx context.Context, query string) ([]SearchResult, error)
+	GetCollection(c Context, id string) (Collection, error)
+	SearchCollection(c Context, query string) ([]SearchResult, error)
 }
 
 const (
@@ -121,10 +126,10 @@ var ErrNoProvider = errors.New("no provider")
 
 type ProviderManager struct {
 	providers map[string]Provider
-	cache     *cache.Provider
+	cache     *cache.ProviderCache
 }
 
-func NewProviderManager(cache *cache.Provider) *ProviderManager {
+func NewProviderManager(cache *cache.ProviderCache) *ProviderManager {
 	return &ProviderManager{
 		providers: map[string]Provider{},
 		cache:     cache,
@@ -159,20 +164,27 @@ func (p *ProviderManager) GetMedia(ctx context.Context, providerName, id string)
 	}
 
 	provider := p.providers[providerName]
-	cacheKey := fmt.Sprintf("%s:media:%s", providerName, id)
+	cacheKey := fmt.Sprintf("media:%s", id)
 
-	media, err := cache.GetProviderJson[Media](p.cache, cacheKey)
+	providerCache := p.cache.WithName(providerName)
+
+	media, err := cache.GetJson[Media](providerCache, cacheKey)
 	if err == nil {
 		return media, nil
 	}
 
 	if errors.Is(err, cache.ErrNoData) {
-		m, err := provider.GetMedia(ctx, id)
+		c := Context{
+			ctx:   ctx,
+			cache: providerCache,
+		}
+
+		m, err := provider.GetMedia(c, id)
 		if err != nil {
 			return Media{}, err
 		}
 
-		err = cache.SetProviderJson(p.cache, cacheKey, providerName, m, mediaTTL)
+		err = cache.SetJson(providerCache, cacheKey, m, mediaTTL)
 		if err != nil {
 			return Media{}, err
 		}
@@ -189,20 +201,27 @@ func (p *ProviderManager) SearchMedia(ctx context.Context, providerName, query s
 	}
 
 	provider := p.providers[providerName]
-	cacheKey := fmt.Sprintf("%s:media-search:%s", providerName, query)
+	cacheKey := fmt.Sprintf("media-search:%s", query)
 
-	media, err := cache.GetProviderJson[[]SearchResult](p.cache, cacheKey)
+	providerCache := p.cache.WithName(providerName)
+
+	media, err := cache.GetJson[[]SearchResult](providerCache, cacheKey)
 	if err == nil {
 		return media, nil
 	}
 
 	if errors.Is(err, cache.ErrNoData) {
-		items, err := provider.SearchMedia(ctx, query)
+		c := Context{
+			ctx:   ctx,
+			cache: providerCache,
+		}
+
+		items, err := provider.SearchMedia(c, query)
 		if err != nil {
 			return nil, err
 		}
 
-		err = cache.SetProviderJson(p.cache, cacheKey, providerName, items, searchTTL)
+		err = cache.SetJson(providerCache, cacheKey, items, searchTTL)
 		if err != nil {
 			return nil, err
 		}
@@ -219,9 +238,11 @@ func (p *ProviderManager) GetCollection(ctx context.Context, providerName, id st
 	}
 
 	provider := p.providers[providerName]
-	cacheKey := fmt.Sprintf("%s:collections:%s", providerName, id)
+	cacheKey := fmt.Sprintf("collections:%s", id)
 
-	col, err := cache.GetProviderJson[Collection](p.cache, cacheKey)
+	providerCache := p.cache.WithName(providerName)
+
+	col, err := cache.GetJson[Collection](providerCache, cacheKey)
 	if err == nil {
 		return col, nil
 	}
@@ -230,12 +251,17 @@ func (p *ProviderManager) GetCollection(ctx context.Context, providerName, id st
 		return Collection{}, err
 	}
 
-	col, err = provider.GetCollection(ctx, id)
+	c := Context{
+		ctx:   ctx,
+		cache: providerCache,
+	}
+
+	col, err = provider.GetCollection(c, id)
 	if err != nil {
 		return Collection{}, err
 	}
 
-	err = cache.SetProviderJson(p.cache, cacheKey, providerName, col, mediaTTL)
+	err = cache.SetJson(providerCache, cacheKey, col, mediaTTL)
 	if err != nil {
 		return Collection{}, err
 	}
@@ -249,20 +275,27 @@ func (p *ProviderManager) SearchCollection(ctx context.Context, providerName, qu
 	}
 
 	provider := p.providers[providerName]
-	cacheKey := fmt.Sprintf("%s:collections-search:%s", providerName, query)
+	cacheKey := fmt.Sprintf("collections-search:%s", query)
 
-	media, err := cache.GetProviderJson[[]SearchResult](p.cache, cacheKey)
+	providerCache := p.cache.WithName(providerName)
+
+	media, err := cache.GetJson[[]SearchResult](providerCache, cacheKey)
 	if err == nil {
 		return media, nil
 	}
 
 	if errors.Is(err, cache.ErrNoData) {
-		items, err := provider.SearchCollection(ctx, query)
+		c := Context{
+			ctx:   ctx,
+			cache: providerCache,
+		}
+
+		items, err := provider.SearchCollection(c, query)
 		if err != nil {
 			return nil, err
 		}
 
-		err = cache.SetProviderJson(p.cache, cacheKey, providerName, items, searchTTL)
+		err = cache.SetJson(providerCache, cacheKey, items, searchTTL)
 		if err != nil {
 			return nil, err
 		}

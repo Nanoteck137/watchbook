@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/nanoteck137/watchbook/tools/cache"
 	"github.com/nanoteck137/watchbook/utils"
 	"golang.org/x/time/rate"
 )
@@ -18,9 +17,6 @@ var NotFound = errors.New("page not found")
 
 type HTTPClient struct {
 	BaseUrl      string
-	ProviderName string
-
-	cache *cache.Provider
 
 	client    *http.Client
 	limiter   *rate.Limiter
@@ -55,16 +51,9 @@ func WithRate(rps float64, burst int) ClientOption {
 	}
 }
 
-func WithCache(cache *cache.Provider) ClientOption {
-	return func(c *HTTPClient) {
-		c.cache = cache
-	}
-}
-
-func NewHttpClient(baseUrl, providerName string, opts ...ClientOption) *HTTPClient {
+func NewHttpClient(baseUrl string, opts ...ClientOption) *HTTPClient {
 	downloader := &HTTPClient{
 		BaseUrl:      baseUrl,
-		ProviderName: providerName,
 		client:       &http.Client{Timeout: 30 * time.Second},
 		limiter:      rate.NewLimiter(1, 1),
 		userAgent:    "",
@@ -85,12 +74,6 @@ type RequestOptions struct {
 }
 
 func (c *HTTPClient) Get(ctx context.Context, key, path string, opts RequestOptions) ([]byte, error) {
-	if c.cache != nil {
-		if data, ok := c.cache.Get(key); ok {
-			return data, nil
-		}
-	}
-
 	url, err := utils.CreateUrlBase(c.BaseUrl, path, opts.Query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create url: %w", err)
@@ -127,11 +110,6 @@ func (c *HTTPClient) Get(ctx context.Context, key, path string, opts RequestOpti
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response data: %w", err)
-	}
-
-	if c.cache != nil {
-		// TODO(patrik): Log error
-		c.cache.Set(key, c.ProviderName, data, c.cacheTtl)
 	}
 
 	return data, nil

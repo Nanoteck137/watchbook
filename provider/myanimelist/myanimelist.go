@@ -1,7 +1,6 @@
 package myanimelist
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -241,11 +240,11 @@ func (m *MyAnimeListAnimeProvider) Info() provider.Info {
 	}
 }
 
-func (m *MyAnimeListAnimeProvider) GetCollection(ctx context.Context, id string) (provider.Collection, error) {
+func (m *MyAnimeListAnimeProvider) GetCollection(c provider.Context, id string) (provider.Collection, error) {
 	panic("unsupported")
 }
 
-func (m *MyAnimeListAnimeProvider) GetMedia(ctx context.Context, id string) (provider.Media, error) {
+func (m *MyAnimeListAnimeProvider) GetMedia(c provider.Context, id string) (provider.Media, error) {
 	anime, err := fetchAnimeData(id)
 	if err != nil {
 		return provider.Media{}, err
@@ -342,11 +341,11 @@ func (m *MyAnimeListAnimeProvider) GetMedia(ctx context.Context, id string) (pro
 	}, nil
 }
 
-func (m *MyAnimeListAnimeProvider) SearchCollection(ctx context.Context, query string) ([]provider.SearchResult, error) {
+func (m *MyAnimeListAnimeProvider) SearchCollection(c provider.Context, query string) ([]provider.SearchResult, error) {
 	panic("unsupported")
 }
 
-func (m *MyAnimeListAnimeProvider) SearchMedia(ctx context.Context, query string) ([]provider.SearchResult, error) {
+func (m *MyAnimeListAnimeProvider) SearchMedia(c provider.Context, query string) ([]provider.SearchResult, error) {
 	items, err := FetchSearch(query)
 	if err != nil {
 		return nil, err

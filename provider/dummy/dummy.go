@@ -1,7 +1,6 @@
 package dummy
 
 import (
-	"context"
 	"errors"
 	"net/url"
 
@@ -27,7 +26,7 @@ func (d *DummyProvider) Info() provider.Info {
 	}
 }
 
-func (d *DummyProvider) GetCollection(ctx context.Context, id string) (provider.Collection, error) {
+func (d *DummyProvider) GetCollection(c provider.Context, id string) (provider.Collection, error) {
 	if id == "1" {
 		cover := "https://placehold.co/300x450/png?text=" + url.QueryEscape("Attack on Titan")
 
@@ -60,7 +59,7 @@ func (d *DummyProvider) GetCollection(ctx context.Context, id string) (provider.
 	return provider.Collection{}, errors.New("not found")
 }
 
-func (d *DummyProvider) GetMedia(ctx context.Context, id string) (provider.Media, error) {
+func (d *DummyProvider) GetMedia(c provider.Context, id string) (provider.Media, error) {
 	switch id {
 	case "1@1":
 		title := "Attack on Titan Season 1" 
@@ -115,7 +114,7 @@ func (d *DummyProvider) GetMedia(ctx context.Context, id string) (provider.Media
 	return provider.Media{}, errors.New("not found")
 }
 
-func (d *DummyProvider) SearchCollection(ctx context.Context, query string) ([]provider.SearchResult, error) {
+func (d *DummyProvider) SearchCollection(c provider.Context, query string) ([]provider.SearchResult, error) {
 	return []provider.SearchResult{
 		{
 			SearchType: provider.SearchResultTypeCollection,
@@ -134,7 +133,7 @@ func (d *DummyProvider) SearchCollection(ctx context.Context, query string) ([]p
 	}, nil
 }
 
-func (d *DummyProvider) SearchMedia(ctx context.Context, query string) ([]provider.SearchResult, error) {
+func (d *DummyProvider) SearchMedia(c provider.Context, query string) ([]provider.SearchResult, error) {
 	panic("unsupported")
 }
 

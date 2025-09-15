@@ -1,7 +1,6 @@
 package tmdb
 
 import (
-	"context"
 	"strconv"
 	"time"
 
@@ -28,11 +27,11 @@ func (t *TmdbMovieProvider) Info() provider.Info {
 	}
 }
 
-func (t *TmdbMovieProvider) GetCollection(ctx context.Context, id string) (provider.Collection, error) {
+func (t *TmdbMovieProvider) GetCollection(c provider.Context, id string) (provider.Collection, error) {
 	panic("unsupported")
 }
 
-func (t *TmdbMovieProvider) GetMedia(ctx context.Context, id string) (provider.Media, error) {
+func (t *TmdbMovieProvider) GetMedia(c provider.Context, id string) (provider.Media, error) {
 	details, err := getMovieDetails(id)
 	if err != nil {
 		return provider.Media{}, err
@@ -107,11 +106,11 @@ func (t *TmdbMovieProvider) GetMedia(ctx context.Context, id string) (provider.M
 	}, nil
 }
 
-func (t *TmdbMovieProvider) SearchCollection(ctx context.Context, query string) ([]provider.SearchResult, error) {
+func (t *TmdbMovieProvider) SearchCollection(c provider.Context, query string) ([]provider.SearchResult, error) {
 	panic("unsupported")
 }
 
-func (t *TmdbMovieProvider) SearchMedia(ctx context.Context, query string) ([]provider.SearchResult, error) {
+func (t *TmdbMovieProvider) SearchMedia(c provider.Context, query string) ([]provider.SearchResult, error) {
 	search, err := movieSearch(query)
 	if err != nil {
 		return nil, err
