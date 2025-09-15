@@ -91,6 +91,7 @@ func (app *BaseApp) Bootstrap() error {
 	pm.RegisterProvider(&myanimelist.MyAnimeListAnimeProvider{})
 	pm.RegisterProvider(&dummy.DummyProvider{})
 	pm.RegisterProvider(&tmdb.TmdbMovieProvider{})
+	pm.RegisterProvider(&tmdb.TmdbTvProvider{})
 
 	app.providerManager = pm
 

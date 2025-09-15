@@ -32,6 +32,7 @@ type SearchResult struct {
 	ImageUrl   string           `json:"imageUrl"`
 }
 
+// TODO(patrik): Add date aired
 type MediaPart struct {
 	Name   string `json:"name"`
 	Number int    `json:"number"`
@@ -70,7 +71,10 @@ type CollectionItem struct {
 }
 
 type Collection struct {
-	Name string
+	ProviderId string
+	Type       types.CollectionType
+
+	Name       string
 
 	CoverUrl  *string
 	LogoUrl   *string

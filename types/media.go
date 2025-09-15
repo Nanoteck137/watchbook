@@ -8,6 +8,7 @@ import (
 
 const MediaDateLayout = "2006-01-02"
 
+// TODO(patrik): Change to take in time.Time
 func GetAiringSeason(d string) string {
 	t, err := time.Parse(MediaDateLayout, d)
 	if err != nil {
