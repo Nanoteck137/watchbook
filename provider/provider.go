@@ -64,7 +64,20 @@ type Media struct {
 	ExtraProviderIds map[string]string `json:"extraProviderIds"`
 }
 
-type Collection struct{}
+type CollectionItem struct {
+	Id   string
+	Name string
+}
+
+type Collection struct {
+	Name string
+
+	CoverUrl  *string
+	LogoUrl   *string
+	BannerUrl *string
+
+	Items []CollectionItem
+}
 
 type ProviderInfo struct {
 	Name        string
@@ -189,9 +202,61 @@ func (p *ProviderManager) SearchMedia(ctx context.Context, providerName, query s
 }
 
 func (p *ProviderManager) GetCollection(ctx context.Context, providerName, id string) (Collection, error) {
-	return Collection{}, nil
+	if !p.IsValidProvider(providerName) {
+		return Collection{}, ErrNoProvider
+	}
+
+	provider := p.providers[providerName]
+	cacheKey := fmt.Sprintf("%s:collections:%s", providerName, id)
+
+	col, err := cache.GetProviderJson[Collection](p.cache, cacheKey)
+	if err == nil {
+		return col, nil
+	}
+
+	if !errors.Is(err, cache.ErrNoData) {
+		return Collection{}, err
+	}
+
+	col, err = provider.GetCollection(ctx, id)
+	if err != nil {
+		return Collection{}, err
+	}
+
+	err = cache.SetProviderJson(p.cache, cacheKey, providerName, col, mediaTTL)
+	if err != nil {
+		return Collection{}, err
+	}
+
+	return col, nil
 }
 
-func (p *ProviderManager) SearchCollection(ctx context.Context, providerName, query string) ([]Collection, error) {
-	return nil, nil
+func (p *ProviderManager) SearchCollection(ctx context.Context, providerName, query string) ([]SearchResult, error) {
+	if !p.IsValidProvider(providerName) {
+		return nil, ErrNoProvider
+	}
+
+	provider := p.providers[providerName]
+	cacheKey := fmt.Sprintf("%s:collections-search:%s", providerName, query)
+
+	media, err := cache.GetProviderJson[[]SearchResult](p.cache, cacheKey)
+	if err == nil {
+		return media, nil
+	}
+
+	if errors.Is(err, cache.ErrNoData) {
+		items, err := provider.SearchCollection(ctx, query)
+		if err != nil {
+			return nil, err
+		}
+
+		err = cache.SetProviderJson(p.cache, cacheKey, providerName, items, searchTTL)
+		if err != nil {
+			return nil, err
+		}
+
+		return items, nil
+	}
+
+	return nil, err
 }

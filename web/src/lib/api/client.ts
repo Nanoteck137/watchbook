@@ -152,11 +152,19 @@ export class ApiClient extends BaseApiClient {
   }
   
   providerSearchMedia(providerName: string, options?: ExtraOptions) {
-    return this.request(`/api/v1/providers/${providerName}`, "GET", api.GetProviderSearch, z.any(), undefined, options)
+    return this.request(`/api/v1/providers/${providerName}/media`, "GET", api.GetProviderSearch, z.any(), undefined, options)
+  }
+  
+  providerSearchCollections(providerName: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/providers/${providerName}/collections`, "GET", api.GetProviderSearch, z.any(), undefined, options)
   }
   
   providerImportMedia(providerName: string, body: api.PostProviderImportMediaBody, options?: ExtraOptions) {
-    return this.request(`/api/v1/providers/${providerName}/import`, "POST", z.undefined(), z.any(), body, options)
+    return this.request(`/api/v1/providers/${providerName}/media/import`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
+  providerImportCollections(providerName: string, body: api.PostProviderImportCollectionsBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/providers/${providerName}/collections/import`, "POST", z.undefined(), z.any(), body, options)
   }
   
   
@@ -310,11 +318,19 @@ export class ClientUrls {
   }
   
   providerSearchMedia(providerName: string) {
-    return createUrl(this.baseUrl, `/api/v1/providers/${providerName}`)
+    return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/media`)
+  }
+  
+  providerSearchCollections(providerName: string) {
+    return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/collections`)
   }
   
   providerImportMedia(providerName: string) {
-    return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/import`)
+    return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/media/import`)
+  }
+  
+  providerImportCollections(providerName: string) {
+    return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/collections/import`)
   }
   
   getMediaImage(id: string, file: string) {

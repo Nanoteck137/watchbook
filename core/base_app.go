@@ -11,7 +11,9 @@ import (
 	"github.com/nanoteck137/watchbook/config"
 	"github.com/nanoteck137/watchbook/database"
 	"github.com/nanoteck137/watchbook/provider"
+	"github.com/nanoteck137/watchbook/provider/dummy"
 	"github.com/nanoteck137/watchbook/provider/myanimelist"
+	"github.com/nanoteck137/watchbook/provider/tmdb"
 	"github.com/nanoteck137/watchbook/tools/cache"
 	"github.com/nanoteck137/watchbook/types"
 )
@@ -87,6 +89,8 @@ func (app *BaseApp) Bootstrap() error {
 
 	pm := provider.NewProviderManager(cache)
 	pm.RegisterProvider(&myanimelist.MyAnimeListAnimeProvider{})
+	pm.RegisterProvider(&dummy.DummyProvider{})
+	pm.RegisterProvider(&tmdb.TmdbMovieProvider{})
 
 	app.providerManager = pm
 

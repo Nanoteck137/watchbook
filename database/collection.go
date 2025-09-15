@@ -9,6 +9,7 @@ import (
 	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/watchbook/database/adapter"
 	"github.com/nanoteck137/watchbook/filter"
+	"github.com/nanoteck137/watchbook/kvstore"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
@@ -25,12 +26,14 @@ type Collection struct {
 	LogoFile   sql.NullString `db:"logo_file"`
 	BannerFile sql.NullString `db:"banner_file"`
 
+	Providers kvstore.Store `db:"providers"`
+
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
 }
 
 // TODO(patrik): Use goqu.T more
-func CollectionQuery(userId *string) *goqu.SelectDataset {
+func CollectionQuery() *goqu.SelectDataset {
 	query := dialect.From("collections").
 		Select(
 			"collections.rowid",
@@ -44,6 +47,8 @@ func CollectionQuery(userId *string) *goqu.SelectDataset {
 			"collections.logo_file",
 			"collections.banner_file",
 
+			"collections.providers",
+
 			"collections.created",
 			"collections.updated",
 		)
@@ -51,8 +56,8 @@ func CollectionQuery(userId *string) *goqu.SelectDataset {
 	return query
 }
 
-func (db *Database) GetPagedCollections(ctx context.Context, userId *string, filterStr, sortStr string, opts FetchOptions) ([]Collection, types.Page, error) {
-	query := CollectionQuery(userId)
+func (db *Database) GetPagedCollections(ctx context.Context, filterStr, sortStr string, opts FetchOptions) ([]Collection, types.Page, error) {
+	query := CollectionQuery()
 
 	var err error
 
@@ -100,13 +105,22 @@ func (db *Database) GetPagedCollections(ctx context.Context, userId *string, fil
 }
 
 func (db *Database) GetAllCollections(ctx context.Context) ([]Collection, error) {
-	query := CollectionQuery(nil)
+	query := CollectionQuery()
 	return ember.Multiple[Collection](db.db, ctx, query)
 }
 
-func (db *Database) GetCollectionById(ctx context.Context, userId *string, id string) (Collection, error) {
-	query := CollectionQuery(userId).
+func (db *Database) GetCollectionById(ctx context.Context, id string) (Collection, error) {
+	query := CollectionQuery().
 		Where(goqu.I("collections.id").Eq(id))
+
+	return ember.Single[Collection](db.db, ctx, query)
+}
+
+func (db *Database) GetCollectionByProviderId(ctx context.Context, providerName, value string) (Collection, error) {
+	query := CollectionQuery().
+		Where(
+			goqu.Func("json_extract", goqu.I("collections.providers"), "$."+providerName).Eq(value),
+		)
 
 	return ember.Single[Collection](db.db, ctx, query)
 }
@@ -120,6 +134,8 @@ type CreateCollectionParams struct {
 	CoverFile  sql.NullString
 	LogoFile   sql.NullString
 	BannerFile sql.NullString
+
+	Providers kvstore.Store
 
 	Created int64
 	Updated int64
@@ -150,6 +166,8 @@ func (db *Database) CreateCollection(ctx context.Context, params CreateCollectio
 		"logo_file":   params.LogoFile,
 		"banner_file": params.BannerFile,
 
+		"providers": params.Providers,
+
 		"created": params.Created,
 		"updated": params.Updated,
 	}).
@@ -166,6 +184,8 @@ type CollectionChanges struct {
 	CoverFile  Change[sql.NullString]
 	LogoFile   Change[sql.NullString]
 	BannerFile Change[sql.NullString]
+
+	Providers kvstore.Store
 
 	Created Change[int64]
 }

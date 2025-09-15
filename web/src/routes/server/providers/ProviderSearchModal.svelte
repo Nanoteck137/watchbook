@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getApiClient, handleApiError } from "$lib";
-  import { ProviderSearchResult } from "$lib/api/types";
+  import { Collection, ProviderSearchResult } from "$lib/api/types";
   import FormItem from "$lib/components/FormItem.svelte";
   import Image from "$lib/components/Image.svelte";
   import type { Modal } from "$lib/components/modals";
@@ -16,11 +16,13 @@
   export type Props = {
     open: boolean;
     providerName: string;
+    type: "media" | "collection";
     providerDisplayName: string;
   };
 
   let {
     open = $bindable(),
+    type,
     providerName,
     providerDisplayName,
 
@@ -43,10 +45,20 @@
     }
   });
 
-  async function search(query: string) {
-    const res = await apiClient.providerSearchMedia(providerName, {
+  function runSearch(query: string) {
+    if (type === "media") {
+      return apiClient.providerSearchMedia(providerName, {
+        query: { query },
+      });
+    }
+
+    return apiClient.providerSearchCollections(providerName, {
       query: { query },
     });
+  }
+
+  async function search(query: string) {
+    const res = await runSearch(query);
     if (!res.success) {
       return handleApiError(res.error);
     }
@@ -100,12 +112,12 @@
             <div class="flex">
               <div class="relative h-20 w-14">
                 <Image
-                  class="min-h-20 min-w-14"
+                  class="h-20 min-w-14"
                   src={result.data.imageUrl}
                   alt="cover"
                 />
                 <div
-                  class="absolute inset-0 flex items-center justify-center group-hover:bg-black/40"
+                  class="absolute bottom-0 left-0 right-0 top-0 flex items-center justify-center group-hover:bg-black/40"
                 >
                   {#if result.checked}
                     <div

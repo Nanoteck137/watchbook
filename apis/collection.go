@@ -262,7 +262,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 
 				filterStr := q.Get("filter")
 				sortStr := q.Get("sort")
-				collections, page, err := app.DB().GetPagedCollections(ctx, nil, filterStr, sortStr, opts)
+				collections, page, err := app.DB().GetPagedCollections(ctx, filterStr, sortStr, opts)
 				if err != nil {
 					return nil, err
 				}
@@ -288,12 +288,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
-				var userId *string
-				if user, err := User(app, c); err == nil {
-					userId = &user.Id
-				}
-
-				collection, err := app.DB().GetCollectionById(c.Request().Context(), userId, id)
+				collection, err := app.DB().GetCollectionById(c.Request().Context(), id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
 						return nil, CollectionNotFound()
@@ -323,7 +318,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 
 				ctx := c.Request().Context()
 
-				collection, err := app.DB().GetCollectionById(ctx, userId, id)
+				collection, err := app.DB().GetCollectionById(ctx, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
 						return nil, CollectionNotFound()
@@ -422,7 +417,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.Background()
 
-				dbCollection, err := app.DB().GetCollectionById(ctx, nil, id)
+				dbCollection, err := app.DB().GetCollectionById(ctx, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
 						return nil, CollectionNotFound()
@@ -473,7 +468,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.Background()
 
-				dbCollection, err := app.DB().GetCollectionById(ctx, nil, id)
+				dbCollection, err := app.DB().GetCollectionById(ctx, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
 						return nil, CollectionNotFound()
@@ -525,7 +520,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.Background()
 
-				dbCollection, err := app.DB().GetCollectionById(ctx, nil, id)
+				dbCollection, err := app.DB().GetCollectionById(ctx, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
 						return nil, CollectionNotFound()
@@ -656,7 +651,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.Background()
 
-				dbCollection, err := app.DB().GetCollectionById(ctx, nil, id)
+				dbCollection, err := app.DB().GetCollectionById(ctx, id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
 						return nil, CollectionNotFound()

@@ -726,7 +726,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				}
 
 				if body.CollectionId != "" {
-					col, err := app.DB().GetCollectionById(ctx, nil, body.CollectionId)
+					col, err := app.DB().GetCollectionById(ctx, body.CollectionId)
 					if err != nil {
 						// TODO(patrik): Better handling of error
 						if !errors.Is(err, database.ErrItemNotFound) {
