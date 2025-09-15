@@ -21,8 +21,8 @@ const TvProviderName = "tmdb-tv"
 type TmdbTvProvider struct {
 }
 
-func (t *TmdbTvProvider) Info() provider.ProviderInfo {
-	return provider.ProviderInfo{
+func (t *TmdbTvProvider) Info() provider.Info {
+	return provider.Info{
 		Name:                    TvProviderName,
 		DisplayName:             "TheMovieDB TV",
 		SupportGetMedia:         true,

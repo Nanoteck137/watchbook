@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/watchbook/provider"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
@@ -18,8 +17,8 @@ const MovieProviderName = "tmdb-movie"
 type TmdbMovieProvider struct {
 }
 
-func (t *TmdbMovieProvider) Info() provider.ProviderInfo {
-	return provider.ProviderInfo{
+func (t *TmdbMovieProvider) Info() provider.Info {
+	return provider.Info{
 		Name:                    MovieProviderName,
 		DisplayName:             "TheMovieDB Movie",
 		SupportGetMedia:         true,
@@ -43,7 +42,6 @@ func (t *TmdbMovieProvider) GetMedia(ctx context.Context, id string) (provider.M
 	if err != nil {
 		return provider.Media{}, err
 	}
-	pretty.Println(images)
 
 	status := types.MediaStatusUpcoming
 	switch details.Status {

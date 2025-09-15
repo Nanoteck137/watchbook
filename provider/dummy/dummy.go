@@ -16,8 +16,8 @@ var _ provider.Provider = (*DummyProvider)(nil)
 type DummyProvider struct {
 }
 
-func (d *DummyProvider) Info() provider.ProviderInfo {
-	return provider.ProviderInfo{
+func (d *DummyProvider) Info() provider.Info {
+	return provider.Info{
 		Name:                    ProviderName,
 		DisplayName:             "Dummy",
 		SupportGetMedia:         true,

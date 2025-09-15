@@ -16,6 +16,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/kr/pretty"
+	"github.com/nanoteck137/watchbook/provider"
 	"github.com/nanoteck137/watchbook/provider/downloader"
 	"github.com/nanoteck137/watchbook/utils"
 )
@@ -23,7 +24,6 @@ import (
 var ErrCheckFailed = errors.New("entry check failed")
 
 const perPage = 100
-const UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:136.0) Gecko/20100101 Firefox/136.0"
 
 var episodeRegex = regexp.MustCompile(`\((.+)\/(.+)\)`)
 
@@ -335,7 +335,7 @@ func FetchAnimeEpisodes(dl *downloader.Downloader, id string) ([]Episode, error)
 	return episodes, nil
 }
 
-func FetchSeasonal(season string, year int) (Seasonal, error) {
+func FetchSeasonal(client *provider.HTTPClient, season string, year int) (Seasonal, error) {
 	p, err := os.MkdirTemp("", "anime*")
 	if err != nil {
 		return Seasonal{}, fmt.Errorf("failed to create temp dir: %w", err)

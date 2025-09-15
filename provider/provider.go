@@ -83,7 +83,7 @@ type Collection struct {
 	Items []CollectionItem
 }
 
-type ProviderInfo struct {
+type Info struct {
 	Name        string
 	DisplayName string
 
@@ -94,8 +94,16 @@ type ProviderInfo struct {
 	SupportSearchCollection bool
 }
 
+type Context struct {
+	ctx context.Context
+}
+
+func (c *Context) Context() context.Context {
+	return c.ctx
+}
+
 type Provider interface {
-	Info() ProviderInfo
+	Info() Info
 
 	GetMedia(ctx context.Context, id string) (Media, error)
 	SearchMedia(ctx context.Context, query string) ([]SearchResult, error)
@@ -135,8 +143,8 @@ func (p *ProviderManager) IsValidProvider(name string) bool {
 	return ok
 }
 
-func (p *ProviderManager) GetProviders() []ProviderInfo {
-	res := make([]ProviderInfo, 0, len(p.providers))
+func (p *ProviderManager) GetProviders() []Info {
+	res := make([]Info, 0, len(p.providers))
 
 	for _, p := range p.providers {
 		res = append(res, p.Info())

@@ -13,6 +13,8 @@ import (
 	"golang.org/x/time/rate"
 )
 
+const UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:136.0) Gecko/20100101 Firefox/136.0"
+
 var dl = downloader.NewDownloader(
 	rate.NewLimiter(rate.Every(4*time.Second), 10),
 	UserAgent,
@@ -228,8 +230,8 @@ var _ (provider.Provider) = (*MyAnimeListAnimeProvider)(nil)
 type MyAnimeListAnimeProvider struct {
 }
 
-func (m *MyAnimeListAnimeProvider) Info() provider.ProviderInfo {
-	return provider.ProviderInfo{
+func (m *MyAnimeListAnimeProvider) Info() provider.Info {
+	return provider.Info{
 		Name:                    AnimeProviderName,
 		DisplayName:             "MyAnimeList Anime",
 		SupportGetMedia:         true,
