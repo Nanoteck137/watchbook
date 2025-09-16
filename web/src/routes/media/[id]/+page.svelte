@@ -17,7 +17,7 @@
   } from "@nanoteck137/nano-ui";
   import { ChevronDown, Delete, Eye, Star, Trash } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
-  import UpdateButton from "./UpdateButton.svelte";
+  import ProviderUpdate from "./ProviderUpdate.svelte";
 
   const { data } = $props();
   const apiClient = getApiClient();
@@ -136,26 +136,9 @@
 <Spacer size="lg" />
 
 <div class="flex flex-col justify-around gap-2">
-  <div>
+  <div class="flex gap-2">
     {#each data.media.providers as provider}
-      <UpdateButton mediaId={data.media.id} {provider} />
-
-      <!-- <Button
-        onclick={async () => {
-          const res = await apiClient.providerUpdateMedia(
-            provider.name,
-            data.media.id,
-          );
-          if (!res.success) {
-            return handleApiError(res.error);
-          }
-
-          toast.success("Successfully update media");
-          invalidateAll();
-        }}
-      >
-        {provider.displayName}
-      </Button> -->
+      <ProviderUpdate mediaId={data.media.id} {provider} />
     {/each}
   </div>
 

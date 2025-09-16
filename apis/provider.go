@@ -122,10 +122,10 @@ func (b *PostProviderImportCollectionsBody) Transform() {
 func ImportMedia(ctx context.Context, app core.App, providerName, providerId string) (string, error) {
 	pm := app.ProviderManager()
 
-	_, err := app.DB().GetMediaByProviderId(ctx, nil, providerName, providerId)
+	dbMedia, err := app.DB().GetMediaByProviderId(ctx, nil, providerName, providerId)
 	if err == nil {
 		fmt.Printf("id already exists: %v\n", providerId)
-		return "", nil
+		return dbMedia.Id, nil
 	}
 
 	if !errors.Is(err, database.ErrItemNotFound) {
@@ -305,7 +305,11 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 	return id, nil
 }
 
-type ProviderUpdateBody struct {
+type ProviderMediaUpdateBody struct {
+	ReplaceImages bool `json:"replaceImages,omitempty"`
+}
+
+type ProviderCollectionUpdateBody struct {
 	ReplaceImages bool `json:"replaceImages,omitempty"`
 }
 
@@ -586,12 +590,12 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 			Name:     "ProviderUpdateMedia",
 			Method:   http.MethodPatch,
 			Path:     "/providers/:providerName/media/:mediaId",
-			BodyType: ProviderUpdateBody{},
+			BodyType: ProviderMediaUpdateBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				providerName := c.Param("providerName")
 				mediaId := c.Param("mediaId")
 
-				body, err := pyrin.Body[ProviderUpdateBody](c)
+				body, err := pyrin.Body[ProviderMediaUpdateBody](c)
 				if err != nil {
 					return nil, err
 				}
@@ -806,6 +810,161 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 					err = app.DB().AddCreatorToMedia(ctx, dbMedia.Id, tag)
 					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
 						return "", err
+					}
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:     "ProviderUpdateCollection",
+			Method:   http.MethodPatch,
+			Path:     "/providers/:providerName/collections/:collectionId",
+			BodyType: ProviderCollectionUpdateBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				providerName := c.Param("providerName")
+				collectionId := c.Param("collectionId")
+
+				body, err := pyrin.Body[ProviderCollectionUpdateBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				pm := app.ProviderManager()
+
+				ctx := context.Background()
+
+				dbCollection, err := app.DB().GetCollectionById(ctx, collectionId)
+				if err != nil {
+					// TODO(patrik): Handle err
+					return nil, err
+				}
+
+				providerId, ok := dbCollection.Providers[providerName]
+				if !ok {
+					// TODO(patrik): Better error
+					return nil, errors.New("provider not found on media")
+				}
+
+				data, err := pm.GetCollection(ctx, providerName, providerId)
+				if err != nil {
+					fmt.Printf("err: %v\n", err)
+					// TODO(patrik): Handle err
+					return "", err
+				}
+
+				pretty.Println(data)
+
+				changes := database.CollectionChanges{}
+
+				changes.Type = database.Change[types.CollectionType]{
+					Value:   data.Type,
+					Changed: data.Type != dbCollection.Type,
+				}
+
+				changes.Name = database.Change[string]{
+					Value:   data.Name,
+					Changed: data.Name != dbCollection.Name,
+				}
+
+				if body.ReplaceImages {
+					collectionDir := app.WorkDir().CollectionDirById(dbCollection.Id)
+
+					if data.CoverUrl != nil {
+						p, err := utils.DownloadImageHashed(*data.CoverUrl, collectionDir.Images())
+						if err != nil {
+							// TODO(patrik): Better error
+							return "", fmt.Errorf("failed to download cover image for collection: %w", err)
+						}
+
+						n := path.Base(p)
+						changes.CoverFile = database.Change[sql.NullString]{
+							Value: sql.NullString{
+								String: n,
+								Valid:  n != "",
+							},
+							Changed: true,
+						}
+					}
+
+					if data.BannerUrl != nil {
+						p, err := utils.DownloadImageHashed(*data.BannerUrl, collectionDir.Images())
+						if err != nil {
+							// TODO(patrik): Better error
+							return "", fmt.Errorf("failed to download banner image for collection: %w", err)
+						}
+
+						n := path.Base(p)
+						changes.BannerFile = database.Change[sql.NullString]{
+							Value: sql.NullString{
+								String: n,
+								Valid:  n != "",
+							},
+							Changed: true,
+						}
+					}
+
+					if data.LogoUrl != nil {
+						p, err := utils.DownloadImageHashed(*data.LogoUrl, collectionDir.Images())
+						if err != nil {
+							// TODO(patrik): Better error
+							return "", fmt.Errorf("failed to download logo image for collection: %w", err)
+						}
+
+						n := path.Base(p)
+						changes.LogoFile = database.Change[sql.NullString]{
+							Value: sql.NullString{
+								String: n,
+								Valid:  n != "",
+							},
+							Changed: true,
+						}
+					}
+				}
+
+				err = app.DB().UpdateCollection(ctx, dbCollection.Id, changes)
+				if err != nil {
+					return nil, err
+				}
+
+				items, err := app.DB().GetFullAllCollectionMediaItemsByCollection(ctx, nil, dbCollection.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				pretty.Println(items)
+
+				itemToMedia := map[string]string{}
+				for _, item := range data.Items {
+					mediaId, err := ImportMedia(ctx, app, providerName, item.Id)
+					if err != nil {
+						return nil, err
+					}
+
+					itemToMedia[item.Id] = mediaId
+				}
+
+				err = app.DB().RemoveAllCollectionMediaItems(ctx, dbCollection.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, item := range data.Items {
+					mediaId, ok := itemToMedia[item.Id]
+					if !ok {
+						continue
+					}
+
+					err := app.DB().CreateCollectionMediaItem(ctx, database.CreateCollectionMediaItemParams{
+						CollectionId: dbCollection.Id,
+						MediaId:      mediaId,
+						Name:         item.Name,
+						SearchSlug:   utils.Slug(item.Name),
+						Position:     item.Position,
+					})
+					if err != nil {
+						return nil, err
 					}
 				}
 

@@ -9,6 +9,7 @@
   import { invalidateAll } from "$app/navigation";
   import MediaItemDropdown from "./MediaItemDropdown.svelte";
   import AddMediaItem from "./AddMediaItem.svelte";
+  import ProviderUpdate from "./ProviderUpdate.svelte";
 
   const { data } = $props();
   const apiClient = getApiClient();
@@ -82,6 +83,12 @@
         Updated regularly with new releases and extras.
       </p> -->
   </div>
+</div>
+
+<div class="flex gap-2">
+  {#each data.collection.providers as provider}
+    <ProviderUpdate collectionId={data.collection.id} {provider} />
+  {/each}
 </div>
 
 <div class="mx-auto max-w-7xl py-12">

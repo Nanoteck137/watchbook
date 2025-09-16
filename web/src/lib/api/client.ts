@@ -167,8 +167,12 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/providers/${providerName}/collections/import`, "POST", z.undefined(), z.any(), body, options)
   }
   
-  providerUpdateMedia(providerName: string, mediaId: string, body: api.ProviderUpdateBody, options?: ExtraOptions) {
+  providerUpdateMedia(providerName: string, mediaId: string, body: api.ProviderMediaUpdateBody, options?: ExtraOptions) {
     return this.request(`/api/v1/providers/${providerName}/media/${mediaId}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  providerUpdateCollection(providerName: string, collectionId: string, body: api.ProviderCollectionUpdateBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/providers/${providerName}/collections/${collectionId}`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
   
@@ -339,6 +343,10 @@ export class ClientUrls {
   
   providerUpdateMedia(providerName: string, mediaId: string) {
     return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/media/${mediaId}`)
+  }
+  
+  providerUpdateCollection(providerName: string, collectionId: string) {
+    return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/collections/${collectionId}`)
   }
   
   getMediaImage(id: string, file: string) {

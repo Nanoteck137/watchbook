@@ -65,8 +65,9 @@ func (t *TmdbTvProvider) GetCollection(c provider.Context, id string) (provider.
 
 	for i, season := range details.Seasons {
 		res.Items[i] = provider.CollectionItem{
-			Id:   strconv.Itoa(details.Id) + "@" + strconv.Itoa(season.SeasonNumber),
-			Name: season.Name,
+			Id:       strconv.Itoa(details.Id) + "@" + strconv.Itoa(season.SeasonNumber),
+			Name:     season.Name,
+			Position: season.SeasonNumber,
 		}
 	}
 

@@ -66,8 +66,9 @@ type Media struct {
 }
 
 type CollectionItem struct {
-	Id   string
-	Name string
+	Id       string
+	Name     string
+	Position int
 }
 
 type Collection struct {

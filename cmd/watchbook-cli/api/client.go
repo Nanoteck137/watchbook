@@ -626,8 +626,24 @@ func (c *Client) ProviderImportCollections(providerName string, body PostProvide
 	return Request[any](data, body)
 }
 
-func (c *Client) ProviderUpdateMedia(providerName string, mediaId string, body ProviderUpdateBody, options Options) (*any, error) {
+func (c *Client) ProviderUpdateMedia(providerName string, mediaId string, body ProviderMediaUpdateBody, options Options) (*any, error) {
 	path := Sprintf("/api/v1/providers/%v/media/%v", providerName, mediaId)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) ProviderUpdateCollection(providerName string, collectionId string, body ProviderCollectionUpdateBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/providers/%v/collections/%v", providerName, collectionId)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -841,6 +857,11 @@ func (c *ClientUrls) ProviderImportCollections(providerName string) (*URL, error
 
 func (c *ClientUrls) ProviderUpdateMedia(providerName string, mediaId string) (*URL, error) {
 	path := Sprintf("/api/v1/providers/%v/media/%v", providerName, mediaId)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) ProviderUpdateCollection(providerName string, collectionId string) (*URL, error) {
+	path := Sprintf("/api/v1/providers/%v/collections/%v", providerName, collectionId)
 	return c.getUrl(path)
 }
 

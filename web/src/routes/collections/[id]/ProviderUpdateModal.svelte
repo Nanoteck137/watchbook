@@ -1,53 +1,57 @@
 <script lang="ts">
+  import { invalidateAll } from "$app/navigation";
+  import { getApiClient, handleApiError } from "$lib";
+  import type { ProviderValue } from "$lib/api/types";
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
-  import type { Modal } from "$lib/components/modals";
-  import {
-    Button,
-    Checkbox,
-    Dialog,
-    Input,
-    Label,
-  } from "@nanoteck137/nano-ui";
+  import { Button, Checkbox, Dialog, Label } from "@nanoteck137/nano-ui";
+  import toast from "svelte-5-french-toast";
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
   import { z } from "zod";
 
-  const schema = z.object({
+  const Schema = z.object({
     replaceImages: z.boolean(),
   });
-
-  type Result = {
-    replaceImages: boolean;
-  };
+  type SchemaTy = z.infer<typeof Schema>;
 
   export type Props = {
     open: boolean;
-    providerDisplayName: string;
+    collectionId: string;
+    provider: ProviderValue;
   };
 
-  let {
-    open = $bindable(),
-
-    providerDisplayName,
-
-    onResult,
-  }: Props & Modal<Result> = $props();
+  let { open = $bindable(), collectionId, provider }: Props = $props();
+  const apiClient = getApiClient();
 
   $effect(() => {
     reset({ data: { replaceImages: false } });
   });
 
+  async function submit(data: SchemaTy) {
+    const res = await apiClient.providerUpdateCollection(
+      provider.name,
+      collectionId,
+      data,
+    );
+    if (!res.success) {
+      return handleApiError(res.error);
+    }
+
+    toast.success("Successfully update media");
+    invalidateAll();
+  }
+
   const { form, errors, enhance, validateForm, reset } = superForm(
-    defaults({ replaceImages: false }, zod(schema)),
+    defaults({ replaceImages: false }, zod(Schema)),
     {
       SPA: true,
-      validators: zod(schema),
+      validators: zod(Schema),
       resetForm: true,
       onUpdate({ form }) {
-        console.log(form);
         if (form.valid) {
-          onResult(form.data);
+          submit(form.data);
+
           open = false;
           reset({});
         }
@@ -61,9 +65,9 @@
 <Dialog.Root bind:open>
   <Dialog.Content>
     <Dialog.Header>
-      <Dialog.Title>Update media: {providerDisplayName}</Dialog.Title>
+      <Dialog.Title>Update media: {provider.displayName}</Dialog.Title>
       <Dialog.Description>
-        Use '{providerDisplayName}' to update the media
+        Use '{provider.displayName}' to update the media
       </Dialog.Description>
     </Dialog.Header>
 
@@ -77,7 +81,6 @@
           />
           <Label for="replaceImages">Replace Images</Label>
         </div>
-        <!-- <Input type="text" /> -->
         <Errors errors={$errors.replaceImages} />
       </FormItem>
 
