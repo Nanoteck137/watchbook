@@ -50,11 +50,6 @@ type Media struct {
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
 
-	TmdbId    string `json:"tmdbId"`
-	ImdbId    string `json:"imdbId"`
-	MalId     string `json:"malId"`
-	AnilistId string `json:"anilistId"`
-
 	MediaType    types.MediaType   `json:"mediaType"`
 	Score        *float64          `json:"score"`
 	Status       types.MediaStatus `json:"status"`
@@ -256,13 +251,6 @@ type CreateMedia struct {
 type CreateMediaBody struct {
 	MediaType string `json:"mediaType"`
 
-	TmdbId string `json:"tmdbId"`
-	ImdbId string `json:"imdbId"`
-	// TODO(patrik): Add validation for this, should start with 'anime@' or 'manga@'
-	MalId string `json:"malId"`
-	// TODO(patrik): Add validation for this, should start with 'anime@' or 'manga@'
-	AnilistId string `json:"anilistId"`
-
 	Title       string `json:"title"`
 	Description string `json:"description"`
 
@@ -288,11 +276,6 @@ type CreateMediaBody struct {
 }
 
 func (b *CreateMediaBody) Transform() {
-	b.TmdbId = anvil.String(b.TmdbId)
-	b.ImdbId = anvil.String(b.ImdbId)
-	b.MalId = anvil.String(b.MalId)
-	b.AnilistId = anvil.String(b.AnilistId)
-
 	b.Title = anvil.String(b.Title)
 	b.Description = anvil.String(b.Description)
 
@@ -327,13 +310,6 @@ func (b CreateMediaBody) Validate() error {
 type EditMediaBody struct {
 	MediaType *string `json:"mediaType,omitempty"`
 
-	TmdbId *string `json:"tmdbId,omitempty"`
-	ImdbId *string `json:"imdbId,omitempty"`
-	// TODO(patrik): Add validation for this, should start with 'anime@' or 'manga@'
-	MalId *string `json:"malId,omitempty"`
-	// TODO(patrik): Add validation for this, should start with 'anime@' or 'manga@'
-	AnilistId *string `json:"anilistId,omitempty"`
-
 	Title       *string `json:"title,omitempty"`
 	Description *string `json:"description,omitempty"`
 
@@ -352,11 +328,6 @@ type EditMediaBody struct {
 }
 
 func (b *EditMediaBody) Transform() {
-	b.TmdbId = anvil.StringPtr(b.TmdbId)
-	b.ImdbId = anvil.StringPtr(b.ImdbId)
-	b.MalId = anvil.StringPtr(b.MalId)
-	b.AnilistId = anvil.StringPtr(b.AnilistId)
-
 	b.Title = anvil.StringPtr(b.Title)
 	b.Description = anvil.StringPtr(b.Description)
 
