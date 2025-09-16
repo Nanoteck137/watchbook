@@ -275,9 +275,6 @@ type CreateMediaBody struct {
 
 	Tags     []string `json:"tags"`
 	Creators []string `json:"creators"`
-
-	CollectionId   string `json:"collectionId,omitempty"`
-	CollectionName string `json:"collectionName,omitempty"`
 }
 
 func (b *CreateMediaBody) Transform() {
@@ -291,6 +288,10 @@ func (b *CreateMediaBody) Transform() {
 
 	b.StartDate = anvil.String(b.StartDate)
 	b.EndDate = anvil.String(b.EndDate)
+
+	b.CoverUrl = anvil.String(b.CoverUrl)
+	b.BannerUrl = anvil.String(b.BannerUrl)
+	b.LogoUrl = anvil.String(b.LogoUrl)
 
 	b.Tags = utils.TransformSlugArray(b.Tags)
 	b.Creators = utils.TransformSlugArray(b.Creators)
@@ -307,8 +308,6 @@ func (b CreateMediaBody) Validate() error {
 
 		validate.Field(&b.StartDate, validate.Date(types.MediaDateLayout)),
 		validate.Field(&b.EndDate, validate.Date(types.MediaDateLayout)),
-
-		validate.Field(&b.CollectionName, validate.Required.When(b.CollectionId != "")),
 	)
 }
 
@@ -326,9 +325,9 @@ type EditMediaBody struct {
 	StartDate *string `json:"startDate,omitempty"`
 	EndDate   *string `json:"endDate,omitempty"`
 
-	CoverUrl  *string `json:"coverUrl"`
-	BannerUrl *string `json:"bannerUrl"`
-	LogoUrl   *string `json:"logoUrl"`
+	CoverUrl  *string `json:"coverUrl,omitempty"`
+	BannerUrl *string `json:"bannerUrl,omitempty"`
+	LogoUrl   *string `json:"logoUrl,omitempty"`
 
 	Tags     *[]string `json:"tags,omitempty"`
 	Creators *[]string `json:"creators,omitempty"`
@@ -367,6 +366,10 @@ func (b EditMediaBody) Validate() error {
 
 		validate.Field(&b.Status, validate.Required.When(b.Status != nil), validate.By(types.ValidateMediaStatus)),
 		validate.Field(&b.Rating, validate.Required.When(b.Rating != nil), validate.By(types.ValidateMediaRating)),
+
+		validate.Field(&b.CoverUrl, validate.Required.When(b.CoverUrl != nil)),
+		validate.Field(&b.BannerUrl, validate.Required.When(b.BannerUrl != nil)),
+		validate.Field(&b.LogoUrl, validate.Required.When(b.LogoUrl != nil)),
 
 		validate.Field(&b.StartDate, validate.Date(types.MediaDateLayout)),
 		validate.Field(&b.EndDate, validate.Date(types.MediaDateLayout)),
@@ -743,28 +746,6 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				for _, tag := range body.Creators {
 					err := app.DB().AddCreatorToMedia(ctx, id, tag)
 					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-						return nil, err
-					}
-				}
-
-				if body.CollectionId != "" {
-					col, err := app.DB().GetCollectionById(ctx, body.CollectionId)
-					if err != nil {
-						// TODO(patrik): Better handling of error
-						if !errors.Is(err, database.ErrItemNotFound) {
-							return nil, CollectionNotFound()
-						}
-
-						return nil, err
-					}
-
-					err = app.DB().CreateCollectionMediaItem(ctx, database.CreateCollectionMediaItemParams{
-						CollectionId: col.Id,
-						MediaId:      id,
-						Name:         body.CollectionName,
-						Position:     0,
-					})
-					if err != nil {
 						return nil, err
 					}
 				}
