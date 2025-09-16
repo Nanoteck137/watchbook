@@ -5,12 +5,15 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
 	"github.com/nanoteck137/validate"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
+	"github.com/nanoteck137/watchbook/provider/myanimelist"
+	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
 
@@ -230,6 +233,85 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				err = app.DB().DeleteApiToken(ctx, tokenId)
 				if err != nil {
 					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:   "ImportMalAnimeList",
+			Method: http.MethodPost,
+			Path:   "/users/import/mal/:username/anime",
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				username := c.Param("username")
+
+				pm := app.ProviderManager()
+
+				user, err := User(app, c)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				if !pm.IsValidProvider(myanimelist.AnimeProviderName) {
+					// TODO(patrik): Better error
+					return nil, errors.New("unsupported operation")
+				}
+
+				entries, err := myanimelist.GetUserWatchlist(username)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, entry := range entries {
+					id := strconv.Itoa(entry.AnimeId)
+					mediaId, err := ImportMedia(ctx, app, myanimelist.AnimeProviderName, id)
+					if err != nil {
+						return nil, err
+					}
+
+					list := types.MediaUserListBacklog
+					switch entry.Status {
+					case myanimelist.WatchlistStatusCurrentlyWatching:
+						list = types.MediaUserListInProgress
+					case myanimelist.WatchlistStatusCompleted:
+						list = types.MediaUserListCompleted
+					case myanimelist.WatchlistStatusOnHold:
+						list = types.MediaUserListOnHold
+					case myanimelist.WatchlistStatusDropped:
+						list = types.MediaUserListDropped
+					case myanimelist.WatchlistStatusPlanToWatch:
+						list = types.MediaUserListBacklog
+					default:
+						logger.Error("unknown status", "status", entry.Status)
+					}
+
+					// List:        &l,
+					// Score:       &score,
+					// CurrentPart: &currentPart,
+					// // RevisitCount: new(int),
+					// IsRevisiting: &isRevisiting,
+
+					err = app.DB().SetMediaUserData(ctx, mediaId, user.Id, database.SetMediaUserData{
+						List: list,
+						Part: sql.NullInt64{
+							Int64: int64(entry.NumWatchedEpisodes),
+							Valid: entry.NumWatchedEpisodes != 0,
+						},
+						RevisitCount: sql.NullInt64{},
+						IsRevisiting: false,
+						Score: sql.NullInt64{
+							Int64: int64(entry.Score),
+							Valid: entry.Score != 0,
+						},
+						Created: 0,
+						Updated: 0,
+					})
+					if err != nil {
+						return nil, err
+					}
 				}
 
 				return nil, nil

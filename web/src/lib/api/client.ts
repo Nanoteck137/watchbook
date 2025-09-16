@@ -51,6 +51,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/user/apitoken/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
+  importMalAnimeList(username: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/import/mal/${username}/anime`, "POST", z.undefined(), z.any(), undefined, options)
+  }
+  
   getMedia(options?: ExtraOptions) {
     return this.request("/api/v1/media", "GET", api.GetMedia, z.any(), undefined, options)
   }
@@ -223,6 +227,10 @@ export class ClientUrls {
   
   deleteApiToken(id: string) {
     return createUrl(this.baseUrl, `/api/v1/user/apitoken/${id}`)
+  }
+  
+  importMalAnimeList(username: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/import/mal/${username}/anime`)
   }
   
   getMedia() {

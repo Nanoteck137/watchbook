@@ -162,6 +162,22 @@ func (c *Client) DeleteApiToken(id string, options Options) (*any, error) {
 	return Request[any](data, nil)
 }
 
+func (c *Client) ImportMalAnimeList(username string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/users/import/mal/%v/anime", username)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
 func (c *Client) GetMedia(options Options) (*GetMedia, error) {
 	path := "/api/v1/media"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -707,6 +723,11 @@ func (c *ClientUrls) GetAllApiTokens() (*URL, error) {
 
 func (c *ClientUrls) DeleteApiToken(id string) (*URL, error) {
 	path := Sprintf("/api/v1/user/apitoken/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) ImportMalAnimeList(username string) (*URL, error) {
+	path := Sprintf("/api/v1/users/import/mal/%v/anime", username)
 	return c.getUrl(path)
 }
 
