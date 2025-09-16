@@ -2,9 +2,14 @@ package cmd
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	old "github.com/nanoteck137/watchbook/cmd/watchbook/database"
 	"github.com/nanoteck137/watchbook/database"
+	"github.com/nanoteck137/watchbook/kvstore"
+	"github.com/nanoteck137/watchbook/provider/myanimelist"
+	"github.com/nanoteck137/watchbook/provider/tmdb"
 	"github.com/spf13/cobra"
 )
 
@@ -96,6 +101,52 @@ var oldCmd = &cobra.Command{
 			}
 
 			for _, media := range media {
+				providers := kvstore.Store{}
+				providerUsed := ""
+
+				if media.TmdbId.Valid {
+					splits := strings.Split(media.TmdbId.String, "@")
+					if len(splits) == 2 {
+						ty := splits[0]
+						id := splits[1]
+
+						switch ty {
+						case "movie":
+							providers[tmdb.MovieProviderName] = id
+							providerUsed = tmdb.MovieProviderName
+						case "tv":
+							providers[tmdb.TvProviderName] = id
+							providerUsed = tmdb.TvProviderName
+						default:
+							fmt.Println("WARNING: Invalid TMDB-ID TYPE", media.TmdbId.String)
+						}
+					} else {
+						fmt.Println("WARNING: Invalid TMDB-ID", media.TmdbId.String)
+					}
+
+					// providers[tmdb.
+				}
+
+				if media.MalId.Valid {
+					splits := strings.Split(media.MalId.String, "@")
+					if len(splits) == 2 {
+						ty := splits[0]
+						id := splits[1]
+
+						switch ty {
+						case "anime":
+							providers[myanimelist.AnimeProviderName] = id
+							providerUsed = myanimelist.AnimeProviderName
+						default:
+							fmt.Println("WARNING: Invalid MAL-ID", media.MalId.String)
+						}
+					} else {
+						fmt.Println("WARNING: Invalid MAL-ID", media.MalId.String)
+					}
+				}
+
+				_ = providerUsed
+
 				_, err := db.CreateMedia(ctx, database.CreateMediaParams{
 					Id:           media.Id,
 					Type:         media.Type,
@@ -110,6 +161,7 @@ var oldCmd = &cobra.Command{
 					CoverFile:    media.CoverFile,
 					LogoFile:     media.LogoFile,
 					BannerFile:   media.BannerFile,
+					Providers:    providers,
 					Created:      media.Created,
 					Updated:      media.Updated,
 				})
@@ -180,13 +232,13 @@ var oldCmd = &cobra.Command{
 
 		for _, item := range items {
 			err := db.CreateCollectionMediaItem(ctx, database.CreateCollectionMediaItemParams{
-				CollectionId:   item.CollectionId,
-				MediaId:        item.MediaId,
-				Name:           item.Name,
-				SearchSlug:     item.SearchSlug,
-				Position:    int(item.OrderNumber),
-				Created:        item.Created,
-				Updated:        item.Updated,
+				CollectionId: item.CollectionId,
+				MediaId:      item.MediaId,
+				Name:         item.Name,
+				SearchSlug:   item.SearchSlug,
+				Position:     int(item.OrderNumber),
+				Created:      item.Created,
+				Updated:      item.Updated,
 			})
 			if err != nil {
 				logger.Fatal("failed", "err", err)
