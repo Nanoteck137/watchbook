@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/watchbook/provider"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
@@ -32,17 +31,17 @@ func (t *TmdbTvProvider) Info() provider.Info {
 }
 
 func (t *TmdbTvProvider) GetCollection(c provider.Context, id string) (provider.Collection, error) {
-	details, err := getTvDetails(id)
+	apiClient := NewApiClient(c.Cache())
+
+	details, err := apiClient.GetTvDetails(c.Context(), id)
 	if err != nil {
 		return provider.Collection{}, err
 	}
 
-	images, err := getTvImages(id)
+	images, err := apiClient.GetTvImages(c.Context(), id)
 	if err != nil {
 		return provider.Collection{}, err
 	}
-
-	pretty.Println(details)
 
 	coverUrl := "http://image.tmdb.org/t/p/original" + details.PosterPath
 	bannerUrl := "http://image.tmdb.org/t/p/original" + details.BackdropPath
@@ -75,6 +74,8 @@ func (t *TmdbTvProvider) GetCollection(c provider.Context, id string) (provider.
 }
 
 func (t *TmdbTvProvider) GetMedia(c provider.Context, id string) (provider.Media, error) {
+	apiClient := NewApiClient(c.Cache())
+
 	splits := strings.Split(id, "@")
 	if len(splits) != 2 {
 		return provider.Media{}, errors.New("not found")
@@ -83,22 +84,15 @@ func (t *TmdbTvProvider) GetMedia(c provider.Context, id string) (provider.Media
 	serieId := splits[0]
 	seasonNumber := splits[1]
 
-	details, err := getTvDetails(serieId)
+	details, err := apiClient.GetTvDetails(c.Context(), serieId)
 	if err != nil {
 		return provider.Media{}, err
 	}
 
-	_ = details
-
-	seasonDetails, err := getTvSeasonDetails(serieId, seasonNumber)
+	seasonDetails, err := apiClient.GetSeasonDetails(c.Context(), serieId, seasonNumber)
 	if err != nil {
 		return provider.Media{}, err
 	}
-
-	pretty.Println(seasonDetails)
-
-	fmt.Printf("serieId: %v\n", serieId)
-	fmt.Printf("seasonNumber: %v\n", seasonNumber)
 
 	var description *string
 	if seasonDetails.Overview != "" {
@@ -192,7 +186,9 @@ func (t *TmdbTvProvider) GetMedia(c provider.Context, id string) (provider.Media
 }
 
 func (t *TmdbTvProvider) SearchCollection(c provider.Context, query string) ([]provider.SearchResult, error) {
-	search, err := tvSearch(query)
+	apiClient := NewApiClient(c.Cache())
+
+	search, err := apiClient.TvSearch(c.Context(), query)
 	if err != nil {
 		return nil, err
 	}

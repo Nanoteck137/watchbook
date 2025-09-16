@@ -168,31 +168,26 @@ func (p *ProviderManager) GetMedia(ctx context.Context, providerName, id string)
 
 	providerCache := p.cache.WithName(providerName)
 
-	media, err := cache.GetJson[Media](providerCache, cacheKey)
-	if err == nil {
-		return media, nil
+	if data, ok := cache.GetJson[Media](providerCache, cacheKey); ok {
+		return data, nil
 	}
 
-	if errors.Is(err, cache.ErrNoData) {
-		c := Context{
-			ctx:   ctx,
-			cache: providerCache,
-		}
-
-		m, err := provider.GetMedia(c, id)
-		if err != nil {
-			return Media{}, err
-		}
-
-		err = cache.SetJson(providerCache, cacheKey, m, mediaTTL)
-		if err != nil {
-			return Media{}, err
-		}
-
-		return m, nil
+	c := Context{
+		ctx:   ctx,
+		cache: providerCache,
 	}
 
-	return Media{}, err
+	m, err := provider.GetMedia(c, id)
+	if err != nil {
+		return Media{}, err
+	}
+
+	err = cache.SetJson(providerCache, cacheKey, m, mediaTTL)
+	if err != nil {
+		return Media{}, err
+	}
+
+	return m, nil
 }
 
 func (p *ProviderManager) SearchMedia(ctx context.Context, providerName, query string) ([]SearchResult, error) {
@@ -205,31 +200,26 @@ func (p *ProviderManager) SearchMedia(ctx context.Context, providerName, query s
 
 	providerCache := p.cache.WithName(providerName)
 
-	media, err := cache.GetJson[[]SearchResult](providerCache, cacheKey)
-	if err == nil {
-		return media, nil
+	if data, ok := cache.GetJson[[]SearchResult](providerCache, cacheKey); ok {
+		return data, nil
 	}
 
-	if errors.Is(err, cache.ErrNoData) {
-		c := Context{
-			ctx:   ctx,
-			cache: providerCache,
-		}
-
-		items, err := provider.SearchMedia(c, query)
-		if err != nil {
-			return nil, err
-		}
-
-		err = cache.SetJson(providerCache, cacheKey, items, searchTTL)
-		if err != nil {
-			return nil, err
-		}
-
-		return items, nil
+	c := Context{
+		ctx:   ctx,
+		cache: providerCache,
 	}
 
-	return nil, err
+	items, err := provider.SearchMedia(c, query)
+	if err != nil {
+		return nil, err
+	}
+
+	err = cache.SetJson(providerCache, cacheKey, items, searchTTL)
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
 }
 
 func (p *ProviderManager) GetCollection(ctx context.Context, providerName, id string) (Collection, error) {
@@ -242,13 +232,8 @@ func (p *ProviderManager) GetCollection(ctx context.Context, providerName, id st
 
 	providerCache := p.cache.WithName(providerName)
 
-	col, err := cache.GetJson[Collection](providerCache, cacheKey)
-	if err == nil {
-		return col, nil
-	}
-
-	if !errors.Is(err, cache.ErrNoData) {
-		return Collection{}, err
+	if data, ok := cache.GetJson[Collection](providerCache, cacheKey); ok {
+		return data, nil
 	}
 
 	c := Context{
@@ -256,7 +241,7 @@ func (p *ProviderManager) GetCollection(ctx context.Context, providerName, id st
 		cache: providerCache,
 	}
 
-	col, err = provider.GetCollection(c, id)
+	col, err := provider.GetCollection(c, id)
 	if err != nil {
 		return Collection{}, err
 	}
@@ -279,29 +264,24 @@ func (p *ProviderManager) SearchCollection(ctx context.Context, providerName, qu
 
 	providerCache := p.cache.WithName(providerName)
 
-	media, err := cache.GetJson[[]SearchResult](providerCache, cacheKey)
-	if err == nil {
-		return media, nil
+	if data, ok := cache.GetJson[[]SearchResult](providerCache, cacheKey); ok {
+		return data, nil
 	}
 
-	if errors.Is(err, cache.ErrNoData) {
-		c := Context{
-			ctx:   ctx,
-			cache: providerCache,
-		}
-
-		items, err := provider.SearchCollection(c, query)
-		if err != nil {
-			return nil, err
-		}
-
-		err = cache.SetJson(providerCache, cacheKey, items, searchTTL)
-		if err != nil {
-			return nil, err
-		}
-
-		return items, nil
+	c := Context{
+		ctx:   ctx,
+		cache: providerCache,
 	}
 
-	return nil, err
+	items, err := provider.SearchCollection(c, query)
+	if err != nil {
+		return nil, err
+	}
+
+	err = cache.SetJson(providerCache, cacheKey, items, searchTTL)
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
 }

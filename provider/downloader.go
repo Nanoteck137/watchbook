@@ -22,7 +22,6 @@ type HTTPClient struct {
 	limiter   *rate.Limiter
 	userAgent string
 	timeout   time.Duration
-	cacheTtl  time.Duration
 }
 
 type ClientOption func(*HTTPClient)
@@ -39,12 +38,6 @@ func WithUserAgent(userAgent string) ClientOption {
 	}
 }
 
-func WithCacheTTL(ttl time.Duration) ClientOption {
-	return func(c *HTTPClient) {
-		c.cacheTtl = ttl
-	}
-}
-
 func WithRate(rps float64, burst int) ClientOption {
 	return func(c *HTTPClient) {
 		c.limiter = rate.NewLimiter(rate.Limit(rps), burst)
@@ -58,7 +51,6 @@ func NewHttpClient(baseUrl string, opts ...ClientOption) *HTTPClient {
 		limiter:      rate.NewLimiter(1, 1),
 		userAgent:    "",
 		timeout:      30 * time.Second,
-		cacheTtl:     1 * time.Hour,
 	}
 
 	for _, opt := range opts {
@@ -73,7 +65,7 @@ type RequestOptions struct {
 	Query   url.Values
 }
 
-func (c *HTTPClient) Get(ctx context.Context, key, path string, opts RequestOptions) ([]byte, error) {
+func (c *HTTPClient) Get(ctx context.Context, path string, opts RequestOptions) ([]byte, error) {
 	url, err := utils.CreateUrlBase(c.BaseUrl, path, opts.Query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create url: %w", err)

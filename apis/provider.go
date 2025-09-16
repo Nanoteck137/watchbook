@@ -11,7 +11,6 @@ import (
 
 	"maps"
 
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
 	"github.com/nanoteck137/watchbook/core"
@@ -106,8 +105,6 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 		// TODO(patrik): Handle err
 		return "", err
 	}
-
-	pretty.Println(media)
 
 	if media.AiringSeason != nil {
 		*media.AiringSeason = utils.Slug(*media.AiringSeason)
@@ -442,8 +439,6 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 						// TODO(patrik): Handle err
 						return nil, err
 					}
-
-					pretty.Println(col)
 
 					providerIds := kvstore.Store{}
 					// maps.Copy(providerIds, media.ExtraProviderIds)

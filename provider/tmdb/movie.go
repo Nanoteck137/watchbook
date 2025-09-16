@@ -32,12 +32,14 @@ func (t *TmdbMovieProvider) GetCollection(c provider.Context, id string) (provid
 }
 
 func (t *TmdbMovieProvider) GetMedia(c provider.Context, id string) (provider.Media, error) {
-	details, err := getMovieDetails(id)
+	apiClient := NewApiClient(c.Cache())
+
+	details, err := apiClient.GetMovieDetails(c.Context(), id)
 	if err != nil {
 		return provider.Media{}, err
 	}
 
-	images, err := getMovieImages(id)
+	images, err := apiClient.GetMovieImages(c.Context(), id)
 	if err != nil {
 		return provider.Media{}, err
 	}
@@ -111,7 +113,9 @@ func (t *TmdbMovieProvider) SearchCollection(c provider.Context, query string) (
 }
 
 func (t *TmdbMovieProvider) SearchMedia(c provider.Context, query string) ([]provider.SearchResult, error) {
-	search, err := movieSearch(query)
+	apiClient := NewApiClient(c.Cache())
+
+	search, err := apiClient.MovieSearch(c.Context(), query)
 	if err != nil {
 		return nil, err
 	}

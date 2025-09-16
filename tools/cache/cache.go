@@ -144,20 +144,20 @@ func (p NamedProviderCache) Set(key string, value []byte, ttl time.Duration) err
 
 var ErrNoData = errors.New("no data in cache")
 
-func GetJson[T any](cache Cache, key string) (T, error) {
+func GetJson[T any](cache Cache, key string) (T, bool) {
 	var res T
 
 	d, hasData := cache.Get(key)
 	if !hasData {
-		return res, ErrNoData
+		return res, false
 	}
 
 	err := json.Unmarshal(d, &res)
 	if err != nil {
-		return res, err
+		return res, false
 	}
 
-	return res, nil
+	return res, true
 }
 
 func SetJson[T any](cache Cache, key string, data T, ttl time.Duration) error {

@@ -1,48 +1,5 @@
 package tmdb
 
-type TmdbMovieSearchRequestResult struct {
-	Adult            bool    `json:"adult"`
-	BackdropPath     string  `json:"backdrop_path"`
-	Id               int     `json:"id"`
-	Title            string  `json:"title"`
-	OriginalTitle    string  `json:"original_title"`
-	Overview         string  `json:"overview"`
-	PosterPath       string  `json:"poster_path"`
-	MediaType        string  `json:"media_type"`
-	OriginalLanguage string  `json:"original_language"`
-	GenreIds         []int   `json:"genre_ids"`
-	Popularity       float32 `json:"popularity"`
-	ReleaseDate      string  `json:"release_date"`
-	Video            bool    `json:"video"`
-	VoteAverage      float32 `json:"vote_average"`
-	VoteCount        int     `json:"vote_count"`
-}
-
-type TmdbTvSearchRequestResult struct {
-	Adult            bool    `json:"adult"`
-	BackdropPath     string  `json:"backdrop_path"`
-	Id               int     `json:"id"`
-	Name             string  `json:"name"`
-	OriginalName     string  `json:"original_name"`
-	Overview         string  `json:"overview"`
-	PosterPath       string  `json:"poster_path"`
-	MediaType        string  `json:"media_type"`
-	OriginalLanguage string  `json:"original_language"`
-	GenreIds         []int   `json:"genre_ids"`
-	Popularity       float32 `json:"popularity"`
-	ReleaseDate      string  `json:"release_date"`
-	Video            bool    `json:"video"`
-	VoteAverage      float32 `json:"vote_average"`
-	VoteCount        int     `json:"vote_count"`
-}
-
-type TmdbSearchRequest[T any] struct {
-	Page         int `json:"page"`
-	TotalPages   int `json:"total_pages"`
-	TotalResults int `json:"total_results"`
-	Results      []T `json:"results"`
-}
-
 // var tmdbSearchCmd = &cobra.Command{
 // 	Use: "search",
 // 	Run: func(cmd *cobra.Command, args []string) {
@@ -248,7 +205,7 @@ type TmdbTvDetails struct {
 	CreatedBy           any                     `json:"created_by"`           //: [
 	EpisodeRunTime      any                     `json:"episode_run_time"`     //: [],
 	FirstAirDate        string                  `json:"first_air_date"`       //: "2016-07-15",
-	Genres              []TmdbGenre             `json:"genres"`               //: [
+	Genres              []Genre             `json:"genres"`               //: [
 	Homepage            string                  `json:"homepage"`             //: "https://www.netflix.com/title/80057281",
 	Id                  int                     `json:"id"`                   //: 66732,
 	InProduction        bool                    `json:"in_production"`        //: true,
@@ -257,7 +214,7 @@ type TmdbTvDetails struct {
 	LastEpisodeToAir    any                     `json:"last_episode_to_air"`  //: {
 	Name                string                  `json:"name"`                 //: "Stranger Things",
 	NextEpisodeToAir    any                     `json:"next_episode_to_air"`  //: {
-	Networks            []TmdbProductionCompany `json:"networks"`             //: [
+	Networks            []ProductionCompany `json:"networks"`             //: [
 	NumberOfEpisodes    int                     `json:"number_of_episodes"`   //: 42,
 	NumberOfSeasons     int                     `json:"number_of_seasons"`    //: 5,
 	OriginCountry       any                     `json:"origin_country"`       //: [
@@ -266,7 +223,7 @@ type TmdbTvDetails struct {
 	Overview            string                  `json:"overview"`             //: "When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces, and one strange little girl.",
 	Popularity          float64                 `json:"popularity"`           //: 167.3198,
 	PosterPath          string                  `json:"poster_path"`          //: "/uOOtwVbSr4QDjAGIifLDwpb2Pdl.jpg",
-	ProductionCompanies []TmdbProductionCompany `json:"production_companies"` //: [
+	ProductionCompanies []ProductionCompany `json:"production_companies"` //: [
 	ProductionCountries any                     `json:"production_countries"` //: [
 	Seasons             []TmdbTvDetailsSeason   `json:"seasons"`              //: [
 	SpokenLanguages     any                     `json:"spoken_languages"`     //: [
