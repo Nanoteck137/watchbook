@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -145,8 +146,6 @@ var oldCmd = &cobra.Command{
 					}
 				}
 
-				_ = providerUsed
-
 				_, err := db.CreateMedia(ctx, database.CreateMediaParams{
 					Id:           media.Id,
 					Type:         media.Type,
@@ -161,6 +160,10 @@ var oldCmd = &cobra.Command{
 					CoverFile:    media.CoverFile,
 					LogoFile:     media.LogoFile,
 					BannerFile:   media.BannerFile,
+					DefaultProvider: sql.NullString{
+						String: providerUsed,
+						Valid:  providerUsed != "",
+					},
 					Providers:    providers,
 					Created:      media.Created,
 					Updated:      media.Updated,

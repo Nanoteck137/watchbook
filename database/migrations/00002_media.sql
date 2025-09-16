@@ -18,6 +18,7 @@ CREATE TABLE media (
     logo_file TEXT,
     banner_file TEXT,
 
+    default_provider TEXT,
     providers TEXT NOT NULL,
 
     created INTEGER NOT NULL,

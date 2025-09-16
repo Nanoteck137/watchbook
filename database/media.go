@@ -56,7 +56,8 @@ type Media struct {
 	LogoFile   sql.NullString `db:"logo_file"`
 	BannerFile sql.NullString `db:"banner_file"`
 
-	Providers kvstore.Store `db:"providers"`
+	DefaultProvider sql.NullString `db:"default_provider"`
+	Providers       kvstore.Store  `db:"providers"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -256,6 +257,7 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 			"media.logo_file",
 			"media.banner_file",
 
+			"media.default_provider",
 			"media.providers",
 
 			"media.created",
@@ -301,6 +303,7 @@ func (db *Database) GetAllMediaIds(ctx context.Context) ([]string, error) {
 	return ember.Multiple[string](db.db, ctx, query)
 }
 
+// Cleanup
 type FetchOptions struct {
 	PerPage int
 	Page    int
@@ -395,7 +398,8 @@ type CreateMediaParams struct {
 	LogoFile   sql.NullString
 	BannerFile sql.NullString
 
-	Providers kvstore.Store
+	DefaultProvider sql.NullString
+	Providers       kvstore.Store
 
 	Created int64
 	Updated int64
@@ -447,7 +451,8 @@ func (db *Database) CreateMedia(ctx context.Context, params CreateMediaParams) (
 		"logo_file":   params.LogoFile,
 		"banner_file": params.BannerFile,
 
-		"providers": params.Providers,
+		"default_provider": params.DefaultProvider,
+		"providers":        params.Providers,
 
 		"created": created,
 		"updated": updated,
@@ -475,7 +480,8 @@ type MediaChanges struct {
 	LogoFile   Change[sql.NullString]
 	BannerFile Change[sql.NullString]
 
-	Providers Change[kvstore.Store]
+	DefaultProvider Change[sql.NullString]
+	Providers       Change[kvstore.Store]
 
 	Created Change[int64]
 }
@@ -500,6 +506,7 @@ func (db *Database) UpdateMedia(ctx context.Context, id string, changes MediaCha
 	addToRecord(record, "logo_file", changes.LogoFile)
 	addToRecord(record, "banner_file", changes.BannerFile)
 
+	addToRecord(record, "default_provider", changes.DefaultProvider)
 	addToRecord(record, "providers", changes.Providers)
 
 	addToRecord(record, "created", changes.Created)
@@ -606,7 +613,7 @@ func (db *Database) RemoveMediaUserList(ctx context.Context, mediaId, userId str
 const DefaultMediaUserList = types.MediaUserListBacklog
 
 const (
-	MediaScoreMin = 0
+	MediaScoreMin = 1
 	MediaScoreMax = 10
 )
 
