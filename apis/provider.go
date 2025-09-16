@@ -341,6 +341,10 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
+				sort.SliceStable(res.Providers, func(i, j int) bool {
+					return natural.Less(res.Providers[i].Name, res.Providers[j].Name)
+				})
+
 				return res, nil
 			},
 		},
