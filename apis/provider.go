@@ -493,8 +493,8 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 					}
 
 					providerIds := kvstore.Store{}
-					// maps.Copy(providerIds, media.ExtraProviderIds)
-					providerIds[providerName] = id //col.ProviderId
+					maps.Copy(providerIds, data.ExtraProviderIds)
+					providerIds[providerName] = data.ProviderId
 
 					coverFilename := ""
 					bannerFilename := ""
@@ -529,8 +529,7 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 
 					_, err = app.DB().CreateCollection(ctx, database.CreateCollectionParams{
 						Id: id,
-						// TODO(patrik): Move this to provider
-						Type: types.CollectionTypeSeries,
+						Type: data.Type,
 						Name: data.Name,
 						CoverFile: sql.NullString{
 							String: coverFilename,

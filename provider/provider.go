@@ -82,6 +82,8 @@ type Collection struct {
 	BannerUrl *string
 
 	Items []CollectionItem
+
+	ExtraProviderIds map[string]string
 }
 
 type Info struct {
