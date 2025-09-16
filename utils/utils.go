@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"bytes"
 	"cmp"
+	"crypto/md5"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -353,6 +356,47 @@ func DownloadImage(url, outDir, name string) (string, error) {
 	defer f.Close()
 
 	_, err = io.Copy(f, resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to copy response body to file: %w", err)
+	}
+
+	return out, nil
+}
+
+func DownloadImageHashed(url, outDir string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("failed to send http get request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("download unsuccessful: %s", resp.Status)
+	}
+
+	contentType := resp.Header.Get("Content-Type")
+	ext, err := GetImageExtFromContentType(contentType)
+	if err != nil {
+		return "", err
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read body: %w", err)
+	}
+
+	h := md5.Sum(data)
+	hash := hex.EncodeToString(h[:])
+
+	out := path.Join(outDir, hash+ext)
+
+	f, err := os.OpenFile(out, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return "", fmt.Errorf("failed to open output file: %w", err)
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, bytes.NewReader(data))
 	if err != nil {
 		return "", fmt.Errorf("failed to copy response body to file: %w", err)
 	}

@@ -95,7 +95,7 @@ type Info struct {
 }
 
 func (i Info) GetDisplayName() string {
-	if i.DisplayName == "" {
+	if i.DisplayName != "" {
 		return i.DisplayName
 	}
 

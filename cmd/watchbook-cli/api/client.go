@@ -626,6 +626,22 @@ func (c *Client) ProviderImportCollections(providerName string, body PostProvide
 	return Request[any](data, body)
 }
 
+func (c *Client) ProviderUpdateMedia(providerName string, mediaId string, body ProviderUpdateBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/providers/%v/media/%v", providerName, mediaId)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
 
 
 func (c *ClientUrls) Signup() (*URL, error) {
@@ -820,6 +836,11 @@ func (c *ClientUrls) ProviderImportMedia(providerName string) (*URL, error) {
 
 func (c *ClientUrls) ProviderImportCollections(providerName string) (*URL, error) {
 	path := Sprintf("/api/v1/providers/%v/collections/import", providerName)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) ProviderUpdateMedia(providerName string, mediaId string) (*URL, error) {
+	path := Sprintf("/api/v1/providers/%v/media/%v", providerName, mediaId)
 	return c.getUrl(path)
 }
 
