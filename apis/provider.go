@@ -178,6 +178,10 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 			String: endDate,
 			Valid:  endDate != "",
 		},
+		DefaultProvider: sql.NullString{
+			String: providerName,
+			Valid:  providerName != "",
+		},
 		Providers: providerIds,
 	})
 	if err != nil {
@@ -487,8 +491,12 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 
 					id, err := app.DB().CreateCollection(ctx, database.CreateCollectionParams{
 						// TODO(patrik): Move this to provider
-						Type:      types.CollectionTypeSeries,
-						Name:      col.Name,
+						Type: types.CollectionTypeSeries,
+						Name: col.Name,
+						DefaultProvider: sql.NullString{
+							String: providerName,
+							Valid:  providerName != "",
+						},
 						Providers: providerIds,
 					})
 					if err != nil {
