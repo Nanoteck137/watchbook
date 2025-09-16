@@ -26,7 +26,8 @@ type Collection struct {
 	LogoFile   sql.NullString `db:"logo_file"`
 	BannerFile sql.NullString `db:"banner_file"`
 
-	Providers kvstore.Store `db:"providers"`
+	DefaultProvider sql.NullString `db:"default_provider"`
+	Providers       kvstore.Store  `db:"providers"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -47,6 +48,7 @@ func CollectionQuery() *goqu.SelectDataset {
 			"collections.logo_file",
 			"collections.banner_file",
 
+			"collections.default_provider",
 			"collections.providers",
 
 			"collections.created",
@@ -135,7 +137,8 @@ type CreateCollectionParams struct {
 	LogoFile   sql.NullString
 	BannerFile sql.NullString
 
-	Providers kvstore.Store
+	DefaultProvider sql.NullString
+	Providers       kvstore.Store
 
 	Created int64
 	Updated int64
@@ -166,7 +169,8 @@ func (db *Database) CreateCollection(ctx context.Context, params CreateCollectio
 		"logo_file":   params.LogoFile,
 		"banner_file": params.BannerFile,
 
-		"providers": params.Providers,
+		"default_provider": params.DefaultProvider,
+		"providers":        params.Providers,
 
 		"created": params.Created,
 		"updated": params.Updated,
@@ -185,7 +189,8 @@ type CollectionChanges struct {
 	LogoFile   Change[sql.NullString]
 	BannerFile Change[sql.NullString]
 
-	Providers kvstore.Store
+	DefaultProvider Change[sql.NullString]
+	Providers       Change[kvstore.Store]
 
 	Created Change[int64]
 }
@@ -200,6 +205,9 @@ func (db *Database) UpdateCollection(ctx context.Context, id string, changes Col
 	addToRecord(record, "cover_file", changes.CoverFile)
 	addToRecord(record, "logo_file", changes.LogoFile)
 	addToRecord(record, "banner_file", changes.BannerFile)
+
+	addToRecord(record, "default_provider", changes.DefaultProvider)
+	addToRecord(record, "providers", changes.Providers)
 
 	addToRecord(record, "created", changes.Created)
 
