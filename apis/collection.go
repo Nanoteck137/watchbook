@@ -180,10 +180,18 @@ type CreateCollectionBody struct {
 	CollectionType string `json:"collectionType"`
 
 	Name string `json:"name"`
+
+	CoverUrl  string `json:"coverUrl"`
+	BannerUrl string `json:"bannerUrl"`
+	LogoUrl   string `json:"logoUrl"`
 }
 
 func (b *CreateCollectionBody) Transform() {
 	b.Name = anvil.String(b.Name)
+
+	b.CoverUrl = anvil.String(b.CoverUrl)
+	b.BannerUrl = anvil.String(b.BannerUrl)
+	b.LogoUrl = anvil.String(b.LogoUrl)
 }
 
 func (b CreateCollectionBody) Validate() error {
@@ -198,11 +206,17 @@ type EditCollectionBody struct {
 
 	Name *string `json:"name,omitempty"`
 
-	AdminStatus *string `json:"adminStatus,omitempty"`
+	CoverUrl  *string `json:"coverUrl,omitempty"`
+	BannerUrl *string `json:"bannerUrl,omitempty"`
+	LogoUrl   *string `json:"logoUrl,omitempty"`
 }
 
 func (b *EditCollectionBody) Transform() {
 	b.Name = anvil.StringPtr(b.Name)
+
+	b.CoverUrl = anvil.StringPtr(b.CoverUrl)
+	b.BannerUrl = anvil.StringPtr(b.BannerUrl)
+	b.LogoUrl = anvil.StringPtr(b.LogoUrl)
 }
 
 func (b EditCollectionBody) Validate() error {
@@ -211,7 +225,9 @@ func (b EditCollectionBody) Validate() error {
 
 		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
 
-		validate.Field(&b.AdminStatus, validate.Required.When(b.AdminStatus != nil), validate.By(types.ValidateAdminStatus)),
+		validate.Field(&b.CoverUrl, validate.Required.When(b.CoverUrl != nil)),
+		validate.Field(&b.BannerUrl, validate.Required.When(b.BannerUrl != nil)),
+		validate.Field(&b.LogoUrl, validate.Required.When(b.LogoUrl != nil)),
 	)
 }
 
@@ -379,13 +395,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 
 				ty := types.CollectionType(body.CollectionType)
 
-				id, err := app.DB().CreateCollection(ctx, database.CreateCollectionParams{
-					Type: ty,
-					Name: body.Name,
-				})
-				if err != nil {
-					return nil, err
-				}
+				id := utils.CreateCollectionId()
 
 				collectionDir := app.WorkDir().CollectionDirById(id)
 				dirs := []string{
@@ -398,6 +408,58 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 					if err != nil && !os.IsExist(err) {
 						return nil, err
 					}
+				}
+
+				coverFile := ""
+				bannerFile := ""
+				logoFile := ""
+
+				if body.CoverUrl != "" {
+					p, err := utils.DownloadImageHashed(body.CoverUrl, collectionDir.Images())
+					if err == nil {
+						coverFile = path.Base(p)
+					} else {
+						app.Logger().Error("failed to download cover image for collection", "err", err)
+					}
+				}
+
+				if body.BannerUrl != "" {
+					p, err := utils.DownloadImageHashed(body.BannerUrl, collectionDir.Images())
+					if err == nil {
+						coverFile = path.Base(p)
+					} else {
+						app.Logger().Error("failed to download banner image for collection", "err", err)
+					}
+				}
+
+				if body.LogoUrl != "" {
+					p, err := utils.DownloadImageHashed(body.LogoUrl, collectionDir.Images())
+					if err == nil {
+						coverFile = path.Base(p)
+					} else {
+						app.Logger().Error("failed to download logo image for collection", "err", err)
+					}
+				}
+
+				_, err = app.DB().CreateCollection(ctx, database.CreateCollectionParams{
+					Id:   id,
+					Type: ty,
+					Name: body.Name,
+					CoverFile: sql.NullString{
+						String: coverFile,
+						Valid:  coverFile != "",
+					},
+					BannerFile: sql.NullString{
+						String: bannerFile,
+						Valid:  bannerFile != "",
+					},
+					LogoFile: sql.NullString{
+						String: logoFile,
+						Valid:  logoFile != "",
+					},
+				})
+				if err != nil {
+					return nil, err
 				}
 
 				return CreateCollection{
@@ -436,6 +498,8 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
+				collectionDir := app.WorkDir().CollectionDirById(dbCollection.Id)
+
 				changes := database.CollectionChanges{}
 
 				if body.CollectionType != nil {
@@ -451,6 +515,54 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 					changes.Name = database.Change[string]{
 						Value:   *body.Name,
 						Changed: *body.Name != dbCollection.Name,
+					}
+				}
+
+				if body.CoverUrl != nil {
+					p, err := utils.DownloadImageHashed(*body.CoverUrl, collectionDir.Images())
+					if err == nil {
+						n := path.Base(p)
+						changes.CoverFile = database.Change[sql.NullString]{
+							Value: sql.NullString{
+								String: n,
+								Valid:  n != "",
+							},
+							Changed: n != dbCollection.CoverFile.String,
+						}
+					} else {
+						app.Logger().Error("failed to download cover image for collection", "err", err)
+					}
+				}
+
+				if body.BannerUrl != nil {
+					p, err := utils.DownloadImageHashed(*body.BannerUrl, collectionDir.Images())
+					if err == nil {
+						n := path.Base(p)
+						changes.BannerFile = database.Change[sql.NullString]{
+							Value: sql.NullString{
+								String: n,
+								Valid:  n != "",
+							},
+							Changed: n != dbCollection.BannerFile.String,
+						}
+					} else {
+						app.Logger().Error("failed to download banner image for collection", "err", err)
+					}
+				}
+
+				if body.LogoUrl != nil {
+					p, err := utils.DownloadImageHashed(*body.LogoUrl, collectionDir.Images())
+					if err == nil {
+						n := path.Base(p)
+						changes.LogoFile = database.Change[sql.NullString]{
+							Value: sql.NullString{
+								String: n,
+								Valid:  n != "",
+							},
+							Changed: n != dbCollection.LogoFile.String,
+						}
+					} else {
+						app.Logger().Error("failed to download logo image for collection", "err", err)
 					}
 				}
 
