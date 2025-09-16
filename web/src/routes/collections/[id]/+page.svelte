@@ -1,7 +1,7 @@
 <script lang="ts">
   import MediaCard from "$lib/components/MediaCard.svelte";
-  import { Button, buttonVariants } from "@nanoteck137/nano-ui";
-  import { Image } from "lucide-svelte";
+  import { Button, buttonVariants, DropdownMenu } from "@nanoteck137/nano-ui";
+  import { EllipsisVertical, Image as ImageIcon, Trash } from "lucide-svelte";
   import ShowLogoModal from "./ShowLogoModal.svelte";
   import { cn } from "$lib/utils";
   import { getApiClient, handleApiError } from "$lib";
@@ -10,12 +10,38 @@
   import MediaItemDropdown from "./MediaItemDropdown.svelte";
   import AddMediaItem from "./AddMediaItem.svelte";
   import ProviderUpdate from "./ProviderUpdate.svelte";
+  import EditImagesModal from "./EditImagesModal.svelte";
 
   const { data } = $props();
   const apiClient = getApiClient();
 
   let addMediaModalOpen = $state(false);
+  let openEditImagesModal = $state(false);
 </script>
+
+<DropdownMenu.Root>
+  <DropdownMenu.Trigger
+    class={cn(buttonVariants({ variant: "outline", size: "icon" }))}
+  >
+    <EllipsisVertical />
+  </DropdownMenu.Trigger>
+  <DropdownMenu.Content class="w-40" align="start">
+    <DropdownMenu.Group>
+      <DropdownMenu.Item
+        onclick={() => {
+          openEditImagesModal = true;
+        }}
+      >
+        <ImageIcon />
+        Edit Images
+      </DropdownMenu.Item>
+      <DropdownMenu.Item>
+        <Trash />
+        Remove
+      </DropdownMenu.Item>
+    </DropdownMenu.Group>
+  </DropdownMenu.Content>
+</DropdownMenu.Root>
 
 <div
   class="relative h-48 w-full overflow-hidden rounded-lg shadow-lg sm:h-60 md:h-72"
@@ -51,7 +77,7 @@
       logoUrl={data.collection.logoUrl}
       onResult={() => {}}
     >
-      <Image />
+      <ImageIcon />
     </ShowLogoModal>
   {/if}
 </div>
@@ -143,4 +169,9 @@
     toast.success("Successfully added new media items");
     invalidateAll();
   }}
+/>
+
+<EditImagesModal
+  bind:open={openEditImagesModal}
+  collectionId={data.collection.id}
 />

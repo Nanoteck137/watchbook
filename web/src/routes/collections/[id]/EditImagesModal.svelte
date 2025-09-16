@@ -25,10 +25,10 @@
 
   export type Props = {
     open: boolean;
-    mediaId: string;
+    collectionId: string;
   };
 
-  let { open = $bindable(), mediaId }: Props = $props();
+  let { open = $bindable(), collectionId }: Props = $props();
   const apiClient = getApiClient();
 
   $effect(() => {
@@ -36,7 +36,7 @@
   });
 
   async function submit(data: SchemaTy) {
-    const res = await apiClient.editMedia(mediaId, {
+    const res = await apiClient.editCollection(collectionId, {
       coverUrl: data.coverUrl !== "" ? data.coverUrl : null,
       bannerUrl: data.bannerUrl !== "" ? data.bannerUrl : null,
       logoUrl: data.logoUrl !== "" ? data.logoUrl : null,
@@ -45,7 +45,7 @@
       return handleApiError(res.error);
     }
 
-    toast.success("Successfully updated media");
+    toast.success("Successfully updated collection");
     invalidateAll();
   }
 
@@ -73,8 +73,8 @@
 <Dialog.Root bind:open>
   <Dialog.Content>
     <Dialog.Header>
-      <Dialog.Title>Edit Media Images</Dialog.Title>
-      <Dialog.Description>Set the media images</Dialog.Description>
+      <Dialog.Title>Edit Collection Images</Dialog.Title>
+      <Dialog.Description>Set the collection images</Dialog.Description>
     </Dialog.Header>
 
     <form class="flex flex-col gap-4" use:enhance>
