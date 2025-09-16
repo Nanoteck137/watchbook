@@ -8,19 +8,50 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sort"
 	"time"
 
 	"maps"
 
 	"github.com/kr/pretty"
+	"github.com/maruel/natural"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
 	"github.com/nanoteck137/watchbook/kvstore"
+	"github.com/nanoteck137/watchbook/provider"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
+
+type ProviderValue struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	Value       string `json:"value"`
+}
+
+func createProviderValues(pm *provider.ProviderManager, providerStore kvstore.Store) []ProviderValue {
+	providers := make([]ProviderValue, 0, len(providerStore))
+	for name, value := range providerStore {
+		info, ok := pm.GetProviderInfo(name)
+		if !ok {
+			continue
+		}
+
+		providers = append(providers, ProviderValue{
+			Name:        info.Name,
+			DisplayName: info.GetDisplayName(),
+			Value:       value,
+		})
+	}
+
+	sort.SliceStable(providers, func(i, j int) bool {
+		return natural.Less(providers[i].Name, providers[j].Name)
+	})
+
+	return providers
+}
 
 type ProviderSupports struct {
 	GetMedia    bool `json:"getMedia"`

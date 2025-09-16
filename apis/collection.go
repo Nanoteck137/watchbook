@@ -16,6 +16,7 @@ import (
 	"github.com/nanoteck137/validate"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
+	"github.com/nanoteck137/watchbook/provider"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
@@ -29,6 +30,8 @@ type Collection struct {
 	CoverUrl  *string `json:"coverUrl"`
 	LogoUrl   *string `json:"logoUrl"`
 	BannerUrl *string `json:"bannerUrl"`
+
+	Providers []ProviderValue `json:"providers"`
 }
 
 type GetCollections struct {
@@ -40,7 +43,7 @@ type GetCollectionById struct {
 	Collection
 }
 
-func ConvertDBCollection(c pyrin.Context, hasUser bool, collection database.Collection) Collection {
+func ConvertDBCollection(c pyrin.Context, pm *provider.ProviderManager, hasUser bool, collection database.Collection) Collection {
 	// TODO(patrik): Add default cover
 	var coverUrl *string
 	var bannerUrl *string
@@ -68,6 +71,7 @@ func ConvertDBCollection(c pyrin.Context, hasUser bool, collection database.Coll
 		CoverUrl:       coverUrl,
 		LogoUrl:        logoUrl,
 		BannerUrl:      bannerUrl,
+		Providers:      createProviderValues(pm, collection.Providers),
 	}
 }
 
@@ -255,6 +259,8 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 			Path:         "/collections",
 			ResponseType: GetCollections{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
+				pm := app.ProviderManager()
+
 				q := c.Request().URL.Query()
 				opts := getPageOptions(q)
 
@@ -273,7 +279,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 				}
 
 				for i, col := range collections {
-					res.Collections[i] = ConvertDBCollection(c, false, col)
+					res.Collections[i] = ConvertDBCollection(c, pm, false, col)
 				}
 
 				return res, nil
@@ -288,6 +294,8 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
+				pm := app.ProviderManager()
+
 				collection, err := app.DB().GetCollectionById(c.Request().Context(), id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
@@ -298,7 +306,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return GetCollectionById{
-					Collection: ConvertDBCollection(c, false, collection),
+					Collection: ConvertDBCollection(c, pm, false, collection),
 				}, nil
 			},
 		},

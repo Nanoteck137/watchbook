@@ -10,11 +10,9 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"sort"
 	"strconv"
 	"time"
 
-	"github.com/maruel/natural"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
 	"github.com/nanoteck137/validate"
@@ -47,12 +45,6 @@ type MediaRelease struct {
 	NextAiring  *string                      `json:"nextAiring"`
 }
 
-type MediaProvider struct {
-	Name        string `json:"name"`
-	DisplayName string `json:"displayName"`
-	Value       string `json:"value"`
-}
-
 type Media struct {
 	Id string `json:"id"`
 
@@ -76,7 +68,7 @@ type Media struct {
 	BannerUrl *string `json:"bannerUrl"`
 	LogoUrl   *string `json:"logoUrl"`
 
-	Providers []MediaProvider `json:"providers"`
+	Providers []ProviderValue `json:"providers"`
 
 	User    *MediaUser    `json:"user,omitempty"`
 	Release *MediaRelease `json:"release"`
@@ -134,24 +126,6 @@ func ConvertDBMedia(c pyrin.Context, pm *provider.ProviderManager, hasUser bool,
 		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/images/%s", media.Id, path.Base(media.BannerFile.String)))
 		bannerUrl = &url
 	}
-
-	providers := make([]MediaProvider, 0, len(media.Providers))
-	for name, value := range media.Providers {
-		info, ok := pm.GetProviderInfo(name)
-		if !ok {
-			continue
-		}
-
-		providers = append(providers, MediaProvider{
-			Name:        info.Name,
-			DisplayName: info.GetDisplayName(),
-			Value:       value,
-		})
-	}
-
-	sort.SliceStable(providers, func(i, j int) bool {
-		return natural.Less(providers[i].Name, providers[j].Name)
-	})
 
 	var user *MediaUser
 	if hasUser {
@@ -243,7 +217,7 @@ func ConvertDBMedia(c pyrin.Context, pm *provider.ProviderManager, hasUser bool,
 		CoverUrl:     coverUrl,
 		BannerUrl:    bannerUrl,
 		LogoUrl:      logoUrl,
-		Providers:    providers,
+		Providers:    createProviderValues(pm, media.Providers),
 		User:         user,
 		Release:      release,
 	}
