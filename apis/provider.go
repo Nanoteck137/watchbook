@@ -139,6 +139,22 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 		return "", err
 	}
 
+	id := utils.CreateMediaId()
+
+	// TODO(patrik): Better way to do this, ensure that these directories exists
+	mediaDir := app.WorkDir().MediaDirById(id)
+	dirs := []string{
+		mediaDir.String(),
+		mediaDir.Images(),
+	}
+
+	for _, dir := range dirs {
+		err = os.Mkdir(dir, 0755)
+		if err != nil && !os.IsExist(err) {
+			return "", err
+		}
+	}
+
 	if media.AiringSeason != nil {
 		*media.AiringSeason = utils.Slug(*media.AiringSeason)
 
@@ -162,7 +178,39 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 		endDate = media.EndDate.Format(types.MediaDateLayout)
 	}
 
-	id, err := app.DB().CreateMedia(ctx, database.CreateMediaParams{
+	coverFilename := ""
+	bannerFilename := ""
+	logoFilename := ""
+
+	if media.CoverUrl != nil {
+		p, err := utils.DownloadImageHashed(*media.CoverUrl, mediaDir.Images())
+		if err == nil {
+			coverFilename = path.Base(p)
+		} else {
+			app.Logger().Error("failed to download cover image for media", "err", err)
+		}
+	}
+
+	if media.BannerUrl != nil {
+		p, err := utils.DownloadImageHashed(*media.BannerUrl, mediaDir.Images())
+		if err == nil {
+			bannerFilename = path.Base(p)
+		} else {
+			app.Logger().Error("failed to download banner image for media", "err", err)
+		}
+	}
+
+	if media.LogoUrl != nil {
+		p, err := utils.DownloadImageHashed(*media.LogoUrl, mediaDir.Images())
+		if err == nil {
+			logoFilename = path.Base(p)
+		} else {
+			app.Logger().Error("failed to download logo image for media", "err", err)
+		}
+	}
+
+	_, err = app.DB().CreateMedia(ctx, database.CreateMediaParams{
+		Id:           id,
 		Type:         media.Type,
 		Title:        media.Title,
 		Description:  utils.StringPtrToSqlNull(media.Description),
@@ -178,6 +226,18 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 			String: endDate,
 			Valid:  endDate != "",
 		},
+		CoverFile: sql.NullString{
+			String: coverFilename,
+			Valid:  coverFilename != "",
+		},
+		BannerFile: sql.NullString{
+			String: bannerFilename,
+			Valid:  bannerFilename != "",
+		},
+		LogoFile: sql.NullString{
+			String: logoFilename,
+			Valid:  logoFilename != "",
+		},
 		DefaultProvider: sql.NullString{
 			String: providerName,
 			Valid:  providerName != "",
@@ -186,19 +246,6 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 	})
 	if err != nil {
 		return "", err
-	}
-
-	mediaDir := app.WorkDir().MediaDirById(id)
-	dirs := []string{
-		mediaDir.String(),
-		mediaDir.Images(),
-	}
-
-	for _, dir := range dirs {
-		err = os.Mkdir(dir, 0755)
-		if err != nil && !os.IsExist(err) {
-			return "", err
-		}
 	}
 
 	if media.Type.IsMovie() {
@@ -221,61 +268,6 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 				return "", err
 			}
 		}
-	}
-
-	changes := database.MediaChanges{}
-
-	if media.CoverUrl != nil {
-		p, err := utils.DownloadImage(*media.CoverUrl, mediaDir.Images(), "cover")
-		if err != nil {
-			return "", fmt.Errorf("failed to download cover image for media: %w", err)
-		}
-
-		n := path.Base(p)
-		changes.CoverFile = database.Change[sql.NullString]{
-			Value: sql.NullString{
-				String: n,
-				Valid:  n != "",
-			},
-			Changed: true,
-		}
-	}
-
-	if media.BannerUrl != nil {
-		p, err := utils.DownloadImage(*media.BannerUrl, mediaDir.Images(), "banner")
-		if err != nil {
-			return "", fmt.Errorf("failed to download banner image for media: %w", err)
-		}
-
-		n := path.Base(p)
-		changes.BannerFile = database.Change[sql.NullString]{
-			Value: sql.NullString{
-				String: n,
-				Valid:  n != "",
-			},
-			Changed: true,
-		}
-	}
-
-	if media.LogoUrl != nil {
-		p, err := utils.DownloadImage(*media.LogoUrl, mediaDir.Images(), "logo")
-		if err != nil {
-			return "", fmt.Errorf("failed to download logo image for media: %w", err)
-		}
-
-		n := path.Base(p)
-		changes.LogoFile = database.Change[sql.NullString]{
-			Value: sql.NullString{
-				String: n,
-				Valid:  n != "",
-			},
-			Changed: true,
-		}
-	}
-
-	err = app.DB().UpdateMedia(ctx, id, changes)
-	if err != nil {
-		return "", err
 	}
 
 	for _, tag := range media.Tags {
@@ -468,10 +460,10 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.Background()
 
-				for _, id := range body.Ids {
-					_, err := app.DB().GetCollectionByProviderId(ctx, providerName, id)
+				for _, providerId := range body.Ids {
+					_, err := app.DB().GetCollectionByProviderId(ctx, providerName, providerId)
 					if err == nil {
-						fmt.Printf("id already exists: %v\n", id)
+						fmt.Printf("id already exists: %v\n", providerId)
 						continue
 					}
 
@@ -479,29 +471,13 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 						return nil, err
 					}
 
-					col, err := pm.GetCollection(ctx, providerName, id)
+					data, err := pm.GetCollection(ctx, providerName, providerId)
 					if err != nil {
 						// TODO(patrik): Handle err
 						return nil, err
 					}
 
-					providerIds := kvstore.Store{}
-					// maps.Copy(providerIds, media.ExtraProviderIds)
-					providerIds[providerName] = id //col.ProviderId
-
-					id, err := app.DB().CreateCollection(ctx, database.CreateCollectionParams{
-						// TODO(patrik): Move this to provider
-						Type: types.CollectionTypeSeries,
-						Name: col.Name,
-						DefaultProvider: sql.NullString{
-							String: providerName,
-							Valid:  providerName != "",
-						},
-						Providers: providerIds,
-					})
-					if err != nil {
-						return nil, err
-					}
+					id := utils.CreateCollectionId()
 
 					collectionDir := app.WorkDir().CollectionDirById(id)
 					dirs := []string{
@@ -516,62 +492,69 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 						}
 					}
 
-					changes := database.CollectionChanges{}
+					providerIds := kvstore.Store{}
+					// maps.Copy(providerIds, media.ExtraProviderIds)
+					providerIds[providerName] = id //col.ProviderId
 
-					if col.CoverUrl != nil {
-						p, err := utils.DownloadImage(*col.CoverUrl, collectionDir.Images(), "cover")
-						if err != nil {
-							return "", fmt.Errorf("failed to download cover image for collection: %w", err)
-						}
+					coverFilename := ""
+					bannerFilename := ""
+					logoFilename := ""
 
-						n := path.Base(p)
-						changes.CoverFile = database.Change[sql.NullString]{
-							Value: sql.NullString{
-								String: n,
-								Valid:  n != "",
-							},
-							Changed: true,
-						}
-					}
-
-					if col.BannerUrl != nil {
-						p, err := utils.DownloadImage(*col.BannerUrl, collectionDir.Images(), "banner")
-						if err != nil {
-							return "", fmt.Errorf("failed to download banner image for collection: %w", err)
-						}
-
-						n := path.Base(p)
-						changes.BannerFile = database.Change[sql.NullString]{
-							Value: sql.NullString{
-								String: n,
-								Valid:  n != "",
-							},
-							Changed: true,
+					if data.CoverUrl != nil {
+						p, err := utils.DownloadImageHashed(*data.CoverUrl, collectionDir.Images())
+						if err == nil {
+							coverFilename = path.Base(p)
+						} else {
+							app.Logger().Error("failed to download cover image for collection", "err", err)
 						}
 					}
 
-					if col.LogoUrl != nil {
-						p, err := utils.DownloadImage(*col.LogoUrl, collectionDir.Images(), "logo")
-						if err != nil {
-							return "", fmt.Errorf("failed to download logo image for collection: %w", err)
-						}
-
-						n := path.Base(p)
-						changes.LogoFile = database.Change[sql.NullString]{
-							Value: sql.NullString{
-								String: n,
-								Valid:  n != "",
-							},
-							Changed: true,
+					if data.BannerUrl != nil {
+						p, err := utils.DownloadImageHashed(*data.BannerUrl, collectionDir.Images())
+						if err == nil {
+							bannerFilename = path.Base(p)
+						} else {
+							app.Logger().Error("failed to download banner image for collection", "err", err)
 						}
 					}
 
-					err = app.DB().UpdateCollection(ctx, id, changes)
+					if data.LogoUrl != nil {
+						p, err := utils.DownloadImageHashed(*data.LogoUrl, collectionDir.Images())
+						if err == nil {
+							logoFilename = path.Base(p)
+						} else {
+							app.Logger().Error("failed to download logo image for collection", "err", err)
+						}
+					}
+
+					_, err = app.DB().CreateCollection(ctx, database.CreateCollectionParams{
+						Id: id,
+						// TODO(patrik): Move this to provider
+						Type: types.CollectionTypeSeries,
+						Name: data.Name,
+						CoverFile: sql.NullString{
+							String: coverFilename,
+							Valid:  coverFilename != "",
+						},
+						BannerFile: sql.NullString{
+							String: bannerFilename,
+							Valid:  bannerFilename != "",
+						},
+						LogoFile: sql.NullString{
+							String: logoFilename,
+							Valid:  logoFilename != "",
+						},
+						DefaultProvider: sql.NullString{
+							String: providerName,
+							Valid:  providerName != "",
+						},
+						Providers: providerIds,
+					})
 					if err != nil {
-						return "", err
+						return nil, err
 					}
 
-					for i, item := range col.Items {
+					for i, item := range data.Items {
 						mediaId, err := ImportMedia(ctx, app, providerName, item.Id)
 						if err != nil {
 							return nil, err
