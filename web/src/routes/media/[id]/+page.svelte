@@ -15,15 +15,26 @@
     Input,
     Label,
   } from "@nanoteck137/nano-ui";
-  import { ChevronDown, Delete, Eye, Star, Trash } from "lucide-svelte";
+  import {
+    ChevronDown,
+    Delete,
+    EllipsisVertical,
+    Eye,
+    Star,
+    Trash,
+    Image as ImageIcon,
+  } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
   import ProviderUpdate from "./ProviderUpdate.svelte";
+  import EditImagesModal from "./EditImagesModal.svelte";
 
   const { data } = $props();
   const apiClient = getApiClient();
 
   let showMore = $state(false);
   let episodeOpen = $state(false);
+
+  let openEditImagesModal = $state(false);
 
   function formatAnimeType(ty: string) {
     switch (ty) {
@@ -119,6 +130,30 @@
 </div>
 
 <Spacer size="sm" />
+
+<DropdownMenu.Root>
+  <DropdownMenu.Trigger
+    class={cn(buttonVariants({ variant: "outline", size: "icon" }))}
+  >
+    <EllipsisVertical />
+  </DropdownMenu.Trigger>
+  <DropdownMenu.Content class="w-40" align="start">
+    <DropdownMenu.Group>
+      <DropdownMenu.Item
+        onclick={() => {
+          openEditImagesModal = true;
+        }}
+      >
+        <ImageIcon />
+        Edit Images
+      </DropdownMenu.Item>
+      <DropdownMenu.Item>
+        <Trash />
+        Remove
+      </DropdownMenu.Item>
+    </DropdownMenu.Group>
+  </DropdownMenu.Content>
+</DropdownMenu.Root>
 
 <div class="flex flex-col items-center gap-2">
   <Image class="min-h-80 w-56" src={data.media.coverUrl} alt="cover" />
@@ -422,3 +457,5 @@
     <Image class="min-h-80 w-56" src={image.url} alt="cover" />
   {/each}
 </div> -->
+
+<EditImagesModal bind:open={openEditImagesModal} mediaId={data.media.id} />

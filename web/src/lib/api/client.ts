@@ -75,10 +75,6 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/media/${id}`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
-  changeMediaImages(id: string, body: FormData, options?: ExtraOptions) {
-    return this.requestForm(`/api/v1/media/${id}/images`, "PATCH", z.undefined(), z.any(), body, options)
-  }
-  
   addPart(id: string, body: api.AddPartBody, options?: ExtraOptions) {
     return this.request(`/api/v1/media/${id}/single/parts`, "POST", api.AddPart, z.any(), body, options)
   }
@@ -251,10 +247,6 @@ export class ClientUrls {
   
   editMedia(id: string) {
     return createUrl(this.baseUrl, `/api/v1/media/${id}`)
-  }
-  
-  changeMediaImages(id: string) {
-    return createUrl(this.baseUrl, `/api/v1/media/${id}/images`)
   }
   
   addPart(id: string) {
