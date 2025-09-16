@@ -12,6 +12,7 @@ import (
 	"github.com/nanoteck137/validate"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
+	"github.com/nanoteck137/watchbook/kvstore"
 	"github.com/nanoteck137/watchbook/provider/myanimelist"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
@@ -252,6 +253,35 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				if err != nil {
 					return nil, err
 				}
+
+				store := kvstore.Store{
+					"username": username,
+					"userId": user.Id,
+				}
+
+				payload, err := store.Serialize()
+				if err != nil {
+					return nil, err
+				}
+
+				_, err = app.DB().CreateJob(context.Background(), database.CreateJobParams{
+					Type:        "test",
+					Status:      types.JobStatusQueued,
+					Priority:    0,
+					RunAt:       0,
+					Attempts:    0,
+					MaxAttempts: 1,
+					Payload:     payload,
+					Error:       sql.NullString{},
+					Created:     0,
+					Updated:     0,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+
 
 				ctx := context.Background()
 
