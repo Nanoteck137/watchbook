@@ -22,20 +22,20 @@ func TagQuery() *goqu.SelectDataset {
 	return query
 }
 
-func (db *Database) GetAllTags(ctx context.Context) ([]Tag, error) {
+func (db DB) GetAllTags(ctx context.Context) ([]Tag, error) {
 	query := TagQuery()
 
 	return ember.Multiple[Tag](db.db, ctx, query)
 }
 
-func (db *Database) GetTagBySlug(ctx context.Context, slug string) (Tag, error) {
+func (db DB) GetTagBySlug(ctx context.Context, slug string) (Tag, error) {
 	query := TagQuery().
 		Where(goqu.I("tags.slug").Eq(slug))
 
 	return ember.Single[Tag](db.db, ctx, query)
 }
 
-func (db *Database) CreateTag(ctx context.Context, slug, name string) error {
+func (db DB) CreateTag(ctx context.Context, slug, name string) error {
 	query := dialect.Insert("tags").
 		Rows(goqu.Record{
 			"slug": slug,

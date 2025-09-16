@@ -58,7 +58,7 @@ func CollectionQuery() *goqu.SelectDataset {
 	return query
 }
 
-func (db *Database) GetPagedCollections(ctx context.Context, filterStr, sortStr string, opts FetchOptions) ([]Collection, types.Page, error) {
+func (db DB) GetPagedCollections(ctx context.Context, filterStr, sortStr string, opts FetchOptions) ([]Collection, types.Page, error) {
 	query := CollectionQuery()
 
 	var err error
@@ -106,19 +106,19 @@ func (db *Database) GetPagedCollections(ctx context.Context, filterStr, sortStr 
 	return items, page, nil
 }
 
-func (db *Database) GetAllCollections(ctx context.Context) ([]Collection, error) {
+func (db DB) GetAllCollections(ctx context.Context) ([]Collection, error) {
 	query := CollectionQuery()
 	return ember.Multiple[Collection](db.db, ctx, query)
 }
 
-func (db *Database) GetCollectionById(ctx context.Context, id string) (Collection, error) {
+func (db DB) GetCollectionById(ctx context.Context, id string) (Collection, error) {
 	query := CollectionQuery().
 		Where(goqu.I("collections.id").Eq(id))
 
 	return ember.Single[Collection](db.db, ctx, query)
 }
 
-func (db *Database) GetCollectionByProviderId(ctx context.Context, providerName, value string) (Collection, error) {
+func (db DB) GetCollectionByProviderId(ctx context.Context, providerName, value string) (Collection, error) {
 	query := CollectionQuery().
 		Where(
 			goqu.Func("json_extract", goqu.I("collections.providers"), "$."+providerName).Eq(value),
@@ -144,7 +144,7 @@ type CreateCollectionParams struct {
 	Updated int64
 }
 
-func (db *Database) CreateCollection(ctx context.Context, params CreateCollectionParams) (string, error) {
+func (db DB) CreateCollection(ctx context.Context, params CreateCollectionParams) (string, error) {
 	if params.Created == 0 && params.Updated == 0 {
 		t := time.Now().UnixMilli()
 		params.Created = t
@@ -195,7 +195,7 @@ type CollectionChanges struct {
 	Created Change[int64]
 }
 
-func (db *Database) UpdateCollection(ctx context.Context, id string, changes CollectionChanges) error {
+func (db DB) UpdateCollection(ctx context.Context, id string, changes CollectionChanges) error {
 	record := goqu.Record{}
 
 	addToRecord(record, "type", changes.Type)
@@ -229,7 +229,7 @@ func (db *Database) UpdateCollection(ctx context.Context, id string, changes Col
 	return nil
 }
 
-func (db *Database) RemoveCollection(ctx context.Context, id string) error {
+func (db DB) RemoveCollection(ctx context.Context, id string) error {
 	query := dialect.Delete("collections").
 		Where(goqu.I("collections.id").Eq(id))
 

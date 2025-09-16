@@ -144,18 +144,18 @@ func FullCollectionMediaItemQuery(userId *string) *goqu.SelectDataset {
 	return query
 }
 
-func (db *Database) GetAllCollectionMediaItems(ctx context.Context) ([]CollectionMediaItem, error) {
+func (db DB) GetAllCollectionMediaItems(ctx context.Context) ([]CollectionMediaItem, error) {
 	query := CollectionMediaItemQuery(nil)
 	return ember.Multiple[CollectionMediaItem](db.db, ctx, query)
 }
 
-func (db *Database) GetFullAllCollectionMediaItemsByCollection(ctx context.Context, userId *string, collectionId string) ([]FullCollectionMediaItem, error) {
+func (db DB) GetFullAllCollectionMediaItemsByCollection(ctx context.Context, userId *string, collectionId string) ([]FullCollectionMediaItem, error) {
 	query := FullCollectionMediaItemQuery(userId).
 		Where(goqu.I("collection_media_items.collection_id").Eq(collectionId))
 	return ember.Multiple[FullCollectionMediaItem](db.db, ctx, query)
 }
 
-func (db *Database) GetCollectionMediaItemById(ctx context.Context, collectionId, mediaId string) (CollectionMediaItem, error) {
+func (db DB) GetCollectionMediaItemById(ctx context.Context, collectionId, mediaId string) (CollectionMediaItem, error) {
 	query := CollectionMediaItemQuery(nil).
 		Where(
 			goqu.I("collection_media_items.collection_id").Eq(collectionId),
@@ -177,7 +177,7 @@ type CreateCollectionMediaItemParams struct {
 	Updated int64
 }
 
-func (db *Database) CreateCollectionMediaItem(ctx context.Context, params CreateCollectionMediaItemParams) error {
+func (db DB) CreateCollectionMediaItem(ctx context.Context, params CreateCollectionMediaItemParams) error {
 	if params.Created == 0 && params.Updated == 0 {
 		t := time.Now().UnixMilli()
 		params.Created = t
@@ -212,7 +212,7 @@ type CollectionMediaItemChanges struct {
 	Created Change[int64]
 }
 
-func (db *Database) UpdateCollectionMediaItem(ctx context.Context, collectionId, mediaId string, changes CollectionMediaItemChanges) error {
+func (db DB) UpdateCollectionMediaItem(ctx context.Context, collectionId, mediaId string, changes CollectionMediaItemChanges) error {
 	record := goqu.Record{}
 
 	addToRecord(record, "name", changes.Name)
@@ -242,7 +242,7 @@ func (db *Database) UpdateCollectionMediaItem(ctx context.Context, collectionId,
 	return nil
 }
 
-func (db *Database) RemoveCollectionMediaItem(ctx context.Context, collectionId, mediaId string) error {
+func (db DB) RemoveCollectionMediaItem(ctx context.Context, collectionId, mediaId string) error {
 	query := dialect.Delete("collection_media_items").
 		Where(
 			goqu.I("collection_media_items.collection_id").Eq(collectionId),
@@ -257,7 +257,7 @@ func (db *Database) RemoveCollectionMediaItem(ctx context.Context, collectionId,
 	return nil
 }
 
-func (db *Database) RemoveAllCollectionMediaItems(ctx context.Context, collectionId string) error {
+func (db DB) RemoveAllCollectionMediaItems(ctx context.Context, collectionId string) error {
 	query := dialect.Delete("collection_media_items").
 		Where(
 			goqu.I("collection_media_items.collection_id").Eq(collectionId),

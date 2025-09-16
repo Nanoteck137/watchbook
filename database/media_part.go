@@ -38,12 +38,12 @@ func MediaPartQuery() *goqu.SelectDataset {
 	return query
 }
 
-func (db *Database) GetAllMediaParts(ctx context.Context) ([]MediaPart, error) {
+func (db DB) GetAllMediaParts(ctx context.Context) ([]MediaPart, error) {
 	query := MediaPartQuery()
 	return ember.Multiple[MediaPart](db.db, ctx, query)
 }
 
-func (db *Database) GetMediaPartByIndexMediaId(ctx context.Context, index int64, mediaId string) (MediaPart, error) {
+func (db DB) GetMediaPartByIndexMediaId(ctx context.Context, index int64, mediaId string) (MediaPart, error) {
 	query := MediaPartQuery().
 		Where(
 			goqu.I("media_parts.idx").Eq(index),
@@ -53,7 +53,7 @@ func (db *Database) GetMediaPartByIndexMediaId(ctx context.Context, index int64,
 	return ember.Single[MediaPart](db.db, ctx, query)
 }
 
-func (db *Database) GetMediaPartsByMediaId(ctx context.Context, mediaId string) ([]MediaPart, error) {
+func (db DB) GetMediaPartsByMediaId(ctx context.Context, mediaId string) ([]MediaPart, error) {
 	query := MediaPartQuery().
 		Where(goqu.I("media_parts.media_id").Eq(mediaId)).
 		Order(goqu.I("media_parts.idx").Asc())
@@ -71,7 +71,7 @@ type CreateMediaPartParams struct {
 	Updated int64
 }
 
-func (db *Database) CreateMediaPart(ctx context.Context, params CreateMediaPartParams) error {
+func (db DB) CreateMediaPart(ctx context.Context, params CreateMediaPartParams) error {
 	t := time.Now().UnixMilli()
 	created := params.Created
 	updated := params.Updated
@@ -105,7 +105,7 @@ type MediaPartChanges struct {
 	Created Change[int64]
 }
 
-func (db *Database) UpdateMediaPart(ctx context.Context, index int64, mediaId string, changes MediaPartChanges) error {
+func (db DB) UpdateMediaPart(ctx context.Context, index int64, mediaId string, changes MediaPartChanges) error {
 	record := goqu.Record{}
 
 	addToRecord(record, "name", changes.Name)
@@ -133,7 +133,7 @@ func (db *Database) UpdateMediaPart(ctx context.Context, index int64, mediaId st
 	return nil
 }
 
-func (db *Database) RemoveMediaPart(ctx context.Context, idx int64, mediaId string) error {
+func (db DB) RemoveMediaPart(ctx context.Context, idx int64, mediaId string) error {
 	query := dialect.Delete("media_parts").
 		Where(
 			goqu.I("media_parts.idx").Eq(idx),
@@ -148,7 +148,7 @@ func (db *Database) RemoveMediaPart(ctx context.Context, idx int64, mediaId stri
 	return nil
 }
 
-func (db *Database) RemoveAllMediaParts(ctx context.Context, mediaId string) error {
+func (db DB) RemoveAllMediaParts(ctx context.Context, mediaId string) error {
 	query := dialect.Delete("media_parts").
 		Where(
 			goqu.I("media_parts.media_id").Eq(mediaId),

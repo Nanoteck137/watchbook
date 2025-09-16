@@ -67,7 +67,7 @@ func UserSettingsQuery() *goqu.SelectDataset {
 	return query
 }
 
-func (db *Database) GetAllUsers(ctx context.Context) ([]User, error) {
+func (db DB) GetAllUsers(ctx context.Context) ([]User, error) {
 	query := UserQuery()
 
 	return ember.Multiple[User](db.db, ctx, query)
@@ -83,7 +83,7 @@ type CreateUserParams struct {
 	Updated int64
 }
 
-func (db *Database) CreateUser(ctx context.Context, params CreateUserParams) (string, error) {
+func (db DB) CreateUser(ctx context.Context, params CreateUserParams) (string, error) {
 	t := time.Now().UnixMilli()
 	created := params.Created
 	updated := params.Updated
@@ -114,21 +114,21 @@ func (db *Database) CreateUser(ctx context.Context, params CreateUserParams) (st
 	return ember.Single[string](db.db, ctx, query)
 }
 
-func (db *Database) GetUserById(ctx context.Context, id string) (User, error) {
+func (db DB) GetUserById(ctx context.Context, id string) (User, error) {
 	query := UserQuery().
 		Where(goqu.I("users.id").Eq(id))
 
 	return ember.Single[User](db.db, ctx, query)
 }
 
-func (db *Database) GetUserSettingsById(ctx context.Context, id string) (UserSettings, error) {
+func (db DB) GetUserSettingsById(ctx context.Context, id string) (UserSettings, error) {
 	query := UserSettingsQuery().
 		Where(goqu.I("users_settings.id").Eq(id))
 
 	return ember.Single[UserSettings](db.db, ctx, query)
 }
 
-func (db *Database) GetUserByUsername(ctx context.Context, username string) (User, error) {
+func (db DB) GetUserByUsername(ctx context.Context, username string) (User, error) {
 	query := UserQuery().
 		Where(goqu.I("users.username").Eq(username))
 
@@ -142,7 +142,7 @@ type UserChanges struct {
 	Created Change[int64]
 }
 
-func (db *Database) UpdateUser(ctx context.Context, id string, changes UserChanges) error {
+func (db DB) UpdateUser(ctx context.Context, id string, changes UserChanges) error {
 	record := goqu.Record{}
 
 	addToRecord(record, "username", changes.Username)
@@ -168,7 +168,7 @@ func (db *Database) UpdateUser(ctx context.Context, id string, changes UserChang
 	return nil
 }
 
-func (db *Database) UpdateUserSettings(ctx context.Context, settings UserSettings) error {
+func (db DB) UpdateUserSettings(ctx context.Context, settings UserSettings) error {
 	query := dialect.Insert("users_settings").
 		Rows(goqu.Record{
 			"id":           settings.Id,

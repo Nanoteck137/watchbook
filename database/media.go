@@ -296,7 +296,7 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 	return query
 }
 
-func (db *Database) GetAllMediaIds(ctx context.Context) ([]string, error) {
+func (db DB) GetAllMediaIds(ctx context.Context) ([]string, error) {
 	query := dialect.From("media").
 		Select("media.id")
 
@@ -309,7 +309,7 @@ type FetchOptions struct {
 	Page    int
 }
 
-func (db *Database) GetPagedMedia(ctx context.Context, userId *string, filterStr, sortStr string, opts FetchOptions) ([]Media, types.Page, error) {
+func (db DB) GetPagedMedia(ctx context.Context, userId *string, filterStr, sortStr string, opts FetchOptions) ([]Media, types.Page, error) {
 	query := MediaQuery(userId)
 
 	var err error
@@ -357,19 +357,19 @@ func (db *Database) GetPagedMedia(ctx context.Context, userId *string, filterStr
 	return items, page, nil
 }
 
-func (db *Database) GetAllMedia(ctx context.Context) ([]Media, error) {
+func (db DB) GetAllMedia(ctx context.Context) ([]Media, error) {
 	query := MediaQuery(nil)
 	return ember.Multiple[Media](db.db, ctx, query)
 }
 
-func (db *Database) GetMediaById(ctx context.Context, userId *string, id string) (Media, error) {
+func (db DB) GetMediaById(ctx context.Context, userId *string, id string) (Media, error) {
 	query := MediaQuery(userId).
 		Where(goqu.I("media.id").Eq(id))
 
 	return ember.Single[Media](db.db, ctx, query)
 }
 
-func (db *Database) GetMediaByProviderId(ctx context.Context, userId *string, providerName, value string) (Media, error) {
+func (db DB) GetMediaByProviderId(ctx context.Context, userId *string, providerName, value string) (Media, error) {
 	query := MediaQuery(userId).
 		Where(
 			goqu.Func("json_extract", goqu.I("media.providers"), "$."+providerName).Eq(value),
@@ -405,7 +405,7 @@ type CreateMediaParams struct {
 	Updated int64
 }
 
-func (db *Database) CreateMedia(ctx context.Context, params CreateMediaParams) (string, error) {
+func (db DB) CreateMedia(ctx context.Context, params CreateMediaParams) (string, error) {
 	t := time.Now().UnixMilli()
 	created := params.Created
 	updated := params.Updated
@@ -486,7 +486,7 @@ type MediaChanges struct {
 	Created Change[int64]
 }
 
-func (db *Database) UpdateMedia(ctx context.Context, id string, changes MediaChanges) error {
+func (db DB) UpdateMedia(ctx context.Context, id string, changes MediaChanges) error {
 	record := goqu.Record{}
 
 	addToRecord(record, "type", changes.Type)
@@ -529,7 +529,7 @@ func (db *Database) UpdateMedia(ctx context.Context, id string, changes MediaCha
 	return nil
 }
 
-func (db *Database) RemoveMedia(ctx context.Context, id string) error {
+func (db DB) RemoveMedia(ctx context.Context, id string) error {
 	query := dialect.Delete("media").
 		Where(goqu.I("media.id").Eq(id))
 
@@ -541,7 +541,7 @@ func (db *Database) RemoveMedia(ctx context.Context, id string) error {
 	return nil
 }
 
-func (db *Database) AddTagToMedia(ctx context.Context, mediaId, tagSlug string) error {
+func (db DB) AddTagToMedia(ctx context.Context, mediaId, tagSlug string) error {
 	query := dialect.Insert("media_tags").
 		Rows(goqu.Record{
 			"media_id": mediaId,
@@ -556,7 +556,7 @@ func (db *Database) AddTagToMedia(ctx context.Context, mediaId, tagSlug string) 
 	return nil
 }
 
-func (db *Database) RemoveAllTagsFromMedia(ctx context.Context, mediaId string) error {
+func (db DB) RemoveAllTagsFromMedia(ctx context.Context, mediaId string) error {
 	query := dialect.Delete("media_tags").
 		Where(goqu.I("media_tags.media_id").Eq(mediaId))
 
@@ -568,7 +568,7 @@ func (db *Database) RemoveAllTagsFromMedia(ctx context.Context, mediaId string) 
 	return nil
 }
 
-func (db *Database) AddCreatorToMedia(ctx context.Context, mediaId, tagSlug string) error {
+func (db DB) AddCreatorToMedia(ctx context.Context, mediaId, tagSlug string) error {
 	query := dialect.Insert("media_creators").
 		Rows(goqu.Record{
 			"media_id": mediaId,
@@ -583,7 +583,7 @@ func (db *Database) AddCreatorToMedia(ctx context.Context, mediaId, tagSlug stri
 	return nil
 }
 
-func (db *Database) RemoveAllCreatorsFromMedia(ctx context.Context, mediaId string) error {
+func (db DB) RemoveAllCreatorsFromMedia(ctx context.Context, mediaId string) error {
 	query := dialect.Delete("media_creators").
 		Where(goqu.I("media_creators.media_id").Eq(mediaId))
 
@@ -595,7 +595,7 @@ func (db *Database) RemoveAllCreatorsFromMedia(ctx context.Context, mediaId stri
 	return nil
 }
 
-func (db *Database) RemoveMediaUserList(ctx context.Context, mediaId, userId string) error {
+func (db DB) RemoveMediaUserList(ctx context.Context, mediaId, userId string) error {
 	query := dialect.Delete("media_user_list").
 		Where(
 			goqu.I("media_user_list.media_id").Eq(mediaId),
@@ -628,7 +628,7 @@ type SetMediaUserData struct {
 	Updated int64
 }
 
-func (db *Database) SetMediaUserData(ctx context.Context, mediaId, userId string, data SetMediaUserData) error {
+func (db DB) SetMediaUserData(ctx context.Context, mediaId, userId string, data SetMediaUserData) error {
 	if data.Created == 0 && data.Updated == 0 {
 		t := time.Now().UnixMilli()
 		data.Created = t
@@ -677,7 +677,7 @@ func (db *Database) SetMediaUserData(ctx context.Context, mediaId, userId string
 	return nil
 }
 
-func (db *Database) DeleteMediaUserData(ctx context.Context, mediaId, userId string) error {
+func (db DB) DeleteMediaUserData(ctx context.Context, mediaId, userId string) error {
 	query := dialect.Delete("media_user_data").
 		Where(
 			goqu.I("media_user_data.media_id").Eq(mediaId),
@@ -704,7 +704,7 @@ type SetMediaPartRelease struct {
 	Updated int64
 }
 
-func (db *Database) SetMediaPartRelease(ctx context.Context, mediaId string, data SetMediaPartRelease) error {
+func (db DB) SetMediaPartRelease(ctx context.Context, mediaId string, data SetMediaPartRelease) error {
 	if data.Created == 0 && data.Updated == 0 {
 		t := time.Now().UnixMilli()
 		data.Created = t
@@ -750,7 +750,7 @@ func (db *Database) SetMediaPartRelease(ctx context.Context, mediaId string, dat
 	return nil
 }
 
-func (db *Database) RemoveMediaPartRelease(ctx context.Context, mediaId string) error {
+func (db DB) RemoveMediaPartRelease(ctx context.Context, mediaId string) error {
 	query := dialect.Delete("media_part_release").
 		Where(
 			goqu.I("media_part_release.media_id").Eq(mediaId),
