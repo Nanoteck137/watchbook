@@ -31,7 +31,8 @@ type Collection struct {
 	LogoUrl   *string `json:"logoUrl"`
 	BannerUrl *string `json:"bannerUrl"`
 
-	Providers []ProviderValue `json:"providers"`
+	DefaultProvider *string         `json:"defaultProvider"`
+	Providers       []ProviderValue `json:"providers"`
 }
 
 type GetCollections struct {
@@ -65,13 +66,14 @@ func ConvertDBCollection(c pyrin.Context, pm *provider.ProviderManager, hasUser 
 	}
 
 	return Collection{
-		Id:             collection.Id,
-		CollectionType: collection.Type,
-		Name:           collection.Name,
-		CoverUrl:       coverUrl,
-		LogoUrl:        logoUrl,
-		BannerUrl:      bannerUrl,
-		Providers:      createProviderValues(pm, collection.Providers),
+		Id:              collection.Id,
+		CollectionType:  collection.Type,
+		Name:            collection.Name,
+		CoverUrl:        coverUrl,
+		LogoUrl:         logoUrl,
+		BannerUrl:       bannerUrl,
+		DefaultProvider: utils.SqlNullToStringPtr(collection.DefaultProvider),
+		Providers:       createProviderValues(pm, collection.Providers),
 	}
 }
 

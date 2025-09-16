@@ -68,7 +68,8 @@ type Media struct {
 	BannerUrl *string `json:"bannerUrl"`
 	LogoUrl   *string `json:"logoUrl"`
 
-	Providers []ProviderValue `json:"providers"`
+	DefaultProvider *string         `json:"defaultProvider"`
+	Providers       []ProviderValue `json:"providers"`
 
 	User    *MediaUser    `json:"user,omitempty"`
 	Release *MediaRelease `json:"release"`
@@ -217,6 +218,7 @@ func ConvertDBMedia(c pyrin.Context, pm *provider.ProviderManager, hasUser bool,
 		CoverUrl:     coverUrl,
 		BannerUrl:    bannerUrl,
 		LogoUrl:      logoUrl,
+		DefaultProvider: utils.SqlNullToStringPtr(media.DefaultProvider),
 		Providers:    createProviderValues(pm, media.Providers),
 		User:         user,
 		Release:      release,
