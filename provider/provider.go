@@ -94,6 +94,14 @@ type Info struct {
 	SupportSearchCollection bool
 }
 
+func (i Info) GetDisplayName() string {
+	if i.DisplayName == "" {
+		return i.DisplayName
+	}
+
+	return i.Name
+}
+
 type Context struct {
 	ctx   context.Context
 	cache cache.Cache
@@ -125,22 +133,31 @@ const (
 var ErrNoProvider = errors.New("no provider")
 
 type ProviderManager struct {
-	providers map[string]Provider
-	cache     *cache.ProviderCache
+	providers     map[string]Provider
+	providerInfos map[string]Info
+	cache         *cache.ProviderCache
 }
 
 func NewProviderManager(cache *cache.ProviderCache) *ProviderManager {
 	return &ProviderManager{
-		providers: map[string]Provider{},
-		cache:     cache,
+		providers:     map[string]Provider{},
+		providerInfos: map[string]Info{},
+		cache:         cache,
 	}
 }
 
 func (p *ProviderManager) RegisterProvider(provider Provider) {
-	name := provider.Info().Name
+	info := provider.Info()
+	name := info.Name
 	if name != "" {
-		p.providers[provider.Info().Name] = provider
+		p.providers[info.Name] = provider
+		p.providerInfos[info.Name] = info
 	}
+}
+
+func (p *ProviderManager) GetProviderInfo(name string) (Info, bool) {
+	info, ok := p.providerInfos[name]
+	return info, ok
 }
 
 func (p *ProviderManager) IsValidProvider(name string) bool {

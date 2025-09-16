@@ -10,14 +10,17 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"time"
 
+	"github.com/maruel/natural"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
 	"github.com/nanoteck137/validate"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
+	"github.com/nanoteck137/watchbook/provider"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
@@ -44,6 +47,12 @@ type MediaRelease struct {
 	NextAiring  *string                      `json:"nextAiring"`
 }
 
+type MediaProvider struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	Value       string `json:"value"`
+}
+
 type Media struct {
 	Id string `json:"id"`
 
@@ -66,6 +75,8 @@ type Media struct {
 	CoverUrl  *string `json:"coverUrl"`
 	BannerUrl *string `json:"bannerUrl"`
 	LogoUrl   *string `json:"logoUrl"`
+
+	Providers []MediaProvider `json:"providers"`
 
 	User    *MediaUser    `json:"user,omitempty"`
 	Release *MediaRelease `json:"release"`
@@ -103,7 +114,7 @@ func getPageOptions(q url.Values) database.FetchOptions {
 	}
 }
 
-func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
+func ConvertDBMedia(c pyrin.Context, pm *provider.ProviderManager, hasUser bool, media database.Media) Media {
 	// TODO(patrik): Add default cover
 	var coverUrl *string
 	var bannerUrl *string
@@ -123,6 +134,24 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 		url := ConvertURL(c, fmt.Sprintf("/files/media/%s/images/%s", media.Id, path.Base(media.BannerFile.String)))
 		bannerUrl = &url
 	}
+
+	providers := make([]MediaProvider, 0, len(media.Providers))
+	for name, value := range media.Providers {
+		info, ok := pm.GetProviderInfo(name)
+		if !ok {
+			continue
+		}
+
+		providers = append(providers, MediaProvider{
+			Name:        info.Name,
+			DisplayName: info.GetDisplayName(),
+			Value:       value,
+		})
+	}
+
+	sort.SliceStable(providers, func(i, j int) bool {
+		return natural.Less(providers[i].Name, providers[j].Name)
+	})
 
 	var user *MediaUser
 	if hasUser {
@@ -214,6 +243,7 @@ func ConvertDBMedia(c pyrin.Context, hasUser bool, media database.Media) Media {
 		CoverUrl:     coverUrl,
 		BannerUrl:    bannerUrl,
 		LogoUrl:      logoUrl,
+		Providers:    providers,
 		User:         user,
 		Release:      release,
 	}
@@ -453,6 +483,8 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			Path:         "/media",
 			ResponseType: GetMedia{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
+				pm := app.ProviderManager()
+
 				q := c.Request().URL.Query()
 				opts := getPageOptions(q)
 
@@ -492,7 +524,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				}
 
 				for i, m := range media {
-					res.Media[i] = ConvertDBMedia(c, userId != nil, m)
+					res.Media[i] = ConvertDBMedia(c, pm, userId != nil, m)
 				}
 
 				return res, nil
@@ -505,6 +537,8 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 			Path:         "/media/:id",
 			ResponseType: GetMediaById{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
+				pm := app.ProviderManager()
+
 				id := c.Param("id")
 
 				var userId *string
@@ -522,7 +556,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return GetMediaById{
-					Media: ConvertDBMedia(c, userId != nil, media),
+					Media: ConvertDBMedia(c, pm, userId != nil, media),
 				}, nil
 			},
 		},

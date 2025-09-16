@@ -135,6 +135,12 @@
 <Spacer size="lg" />
 
 <div class="flex flex-col justify-around gap-2">
+  <div>
+    {#each data.media.providers as provider}
+      <Button onclick={() => {}}>{provider.displayName}</Button>
+    {/each}
+  </div>
+
   <div class="flex gap-2">
     {#if !!data.media.user?.hasData}
       <Button
