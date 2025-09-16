@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -202,26 +201,26 @@ func ConvertDBMedia(c pyrin.Context, pm *provider.ProviderManager, hasUser bool,
 	}
 
 	return Media{
-		Id:           media.Id,
-		Title:        media.Title,
-		Description:  utils.SqlNullToStringPtr(media.Description),
-		MediaType:    media.Type,
-		Score:        utils.SqlNullToFloat64Ptr(media.Score),
-		Status:       media.Status,
-		Rating:       media.Rating,
-		PartCount:    media.PartCount.Int64,
-		Creators:     utils.FixNilArrayToEmpty(media.Creators.Data),
-		Tags:         utils.FixNilArrayToEmpty(media.Tags.Data),
-		AiringSeason: utils.SqlNullToStringPtr(media.AiringSeason),
-		StartDate:    utils.SqlNullToStringPtr(media.StartDate),
-		EndDate:      utils.SqlNullToStringPtr(media.EndDate),
-		CoverUrl:     coverUrl,
-		BannerUrl:    bannerUrl,
-		LogoUrl:      logoUrl,
+		Id:              media.Id,
+		Title:           media.Title,
+		Description:     utils.SqlNullToStringPtr(media.Description),
+		MediaType:       media.Type,
+		Score:           utils.SqlNullToFloat64Ptr(media.Score),
+		Status:          media.Status,
+		Rating:          media.Rating,
+		PartCount:       media.PartCount.Int64,
+		Creators:        utils.FixNilArrayToEmpty(media.Creators.Data),
+		Tags:            utils.FixNilArrayToEmpty(media.Tags.Data),
+		AiringSeason:    utils.SqlNullToStringPtr(media.AiringSeason),
+		StartDate:       utils.SqlNullToStringPtr(media.StartDate),
+		EndDate:         utils.SqlNullToStringPtr(media.EndDate),
+		CoverUrl:        coverUrl,
+		BannerUrl:       bannerUrl,
+		LogoUrl:         logoUrl,
 		DefaultProvider: utils.SqlNullToStringPtr(media.DefaultProvider),
-		Providers:    createProviderValues(pm, media.Providers),
-		User:         user,
-		Release:      release,
+		Providers:       createProviderValues(pm, media.Providers),
+		User:            user,
+		Release:         release,
 	}
 }
 
@@ -327,7 +326,9 @@ type EditMediaBody struct {
 	StartDate *string `json:"startDate,omitempty"`
 	EndDate   *string `json:"endDate,omitempty"`
 
-	AdminStatus *string `json:"adminStatus,omitempty"`
+	CoverUrl  *string `json:"coverUrl"`
+	BannerUrl *string `json:"bannerUrl"`
+	LogoUrl   *string `json:"logoUrl"`
 
 	Tags     *[]string `json:"tags,omitempty"`
 	Creators *[]string `json:"creators,omitempty"`
@@ -344,6 +345,10 @@ func (b *EditMediaBody) Transform() {
 	if b.AiringSeason != nil {
 		*b.AiringSeason = utils.TransformStringSlug(*b.AiringSeason)
 	}
+
+	b.CoverUrl = anvil.StringPtr(b.CoverUrl)
+	b.BannerUrl = anvil.StringPtr(b.BannerUrl)
+	b.LogoUrl = anvil.StringPtr(b.LogoUrl)
 
 	if b.Tags != nil {
 		*b.Tags = utils.TransformSlugArray(*b.Tags)
@@ -365,8 +370,6 @@ func (b EditMediaBody) Validate() error {
 
 		validate.Field(&b.StartDate, validate.Date(types.MediaDateLayout)),
 		validate.Field(&b.EndDate, validate.Date(types.MediaDateLayout)),
-
-		validate.Field(&b.AdminStatus, validate.Required.When(b.AdminStatus != nil), validate.By(types.ValidateAdminStatus)),
 	)
 }
 
@@ -605,7 +608,54 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 				ty := types.MediaType(body.MediaType)
 
-				id, err := app.DB().CreateMedia(ctx, database.CreateMediaParams{
+				id := utils.CreateMediaId()
+
+				mediaDir := app.WorkDir().MediaDirById(id)
+				dirs := []string{
+					mediaDir.String(),
+					mediaDir.Images(),
+				}
+
+				for _, dir := range dirs {
+					err = os.Mkdir(dir, 0755)
+					if err != nil && !os.IsExist(err) {
+						return nil, err
+					}
+				}
+
+				coverFile := ""
+				bannerFile := ""
+				logoFile := ""
+
+				if body.CoverUrl != "" {
+					p, err := utils.DownloadImageHashed(body.CoverUrl, mediaDir.Images())
+					if err == nil {
+						coverFile = path.Base(p)
+					} else {
+						app.Logger().Error("failed to download cover image for media", "err", err)
+					}
+				}
+
+				if body.BannerUrl != "" {
+					p, err := utils.DownloadImageHashed(body.BannerUrl, mediaDir.Images())
+					if err == nil {
+						coverFile = path.Base(p)
+					} else {
+						app.Logger().Error("failed to download banner image for media", "err", err)
+					}
+				}
+
+				if body.LogoUrl != "" {
+					p, err := utils.DownloadImageHashed(body.LogoUrl, mediaDir.Images())
+					if err == nil {
+						coverFile = path.Base(p)
+					} else {
+						app.Logger().Error("failed to download logo image for media", "err", err)
+					}
+				}
+
+				_, err = app.DB().CreateMedia(ctx, database.CreateMediaParams{
+					Id:    id,
 					Type:  ty,
 					Title: body.Title,
 					Description: sql.NullString{
@@ -629,6 +679,18 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					EndDate: sql.NullString{
 						String: body.EndDate,
 						Valid:  body.EndDate != "",
+					},
+					CoverFile: sql.NullString{
+						String: coverFile,
+						Valid:  coverFile != "",
+					},
+					BannerFile: sql.NullString{
+						String: bannerFile,
+						Valid:  bannerFile != "",
+					},
+					LogoFile: sql.NullString{
+						String: logoFile,
+						Valid:  logoFile != "",
 					},
 				})
 				if err != nil {
@@ -656,27 +718,6 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 						}
 					}
 				}
-
-				// if body.CoverUrl != "" {
-				// 	_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.CoverUrl, types.MediaImageTypeCover, true)
-				// 	if err != nil {
-				// 		logger.Error("failed to download cover image for media", "mediaId", id, "err", err)
-				// 	}
-				// }
-				//
-				// if body.BannerUrl != "" {
-				// 	_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.BannerUrl, types.MediaImageTypeBanner, true)
-				// 	if err != nil {
-				// 		logger.Error("failed to download banner image for media", "mediaId", id, "err", err)
-				// 	}
-				// }
-				//
-				// if body.LogoUrl != "" {
-				// 	_, err := downloadImage(ctx, app.DB(), app.WorkDir(), id, body.LogoUrl, types.MediaImageTypeLogo, true)
-				// 	if err != nil {
-				// 		logger.Error("failed to download logo image for media", "media", id, "err", err)
-				// 	}
-				// }
 
 				for _, tag := range body.Tags {
 					err := app.DB().CreateTag(ctx, tag, tag)
@@ -728,19 +769,6 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				mediaDir := app.WorkDir().MediaDirById(id)
-				dirs := []string{
-					mediaDir.String(),
-					mediaDir.Images(),
-				}
-
-				for _, dir := range dirs {
-					err = os.Mkdir(dir, 0755)
-					if err != nil && !os.IsExist(err) {
-						return nil, err
-					}
-				}
-
 				return CreateMedia{
 					Id: id,
 				}, nil
@@ -776,6 +804,8 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 					return nil, err
 				}
+
+				mediaDir := app.WorkDir().MediaDirById(dbMedia.Id)
 
 				changes := database.MediaChanges{}
 
@@ -869,13 +899,53 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				// if body.AdminStatus != nil {
-				// 	s := types.AdminStatus(*body.AdminStatus)
-				// 	changes.AdminStatus = database.Change[types.AdminStatus]{
-				// 		Value:   s,
-				// 		Changed: s != dbMedia.AdminStatus,
-				// 	}
-				// }
+				if body.CoverUrl != nil {
+					p, err := utils.DownloadImageHashed(*body.CoverUrl, mediaDir.Images())
+					if err == nil {
+						n := path.Base(p)
+						changes.CoverFile = database.Change[sql.NullString]{
+							Value: sql.NullString{
+								String: n,
+								Valid:  n != "",
+							},
+							Changed: n != dbMedia.CoverFile.String,
+						}
+					} else {
+						app.Logger().Error("failed to download cover image for media", "err", err)
+					}
+				}
+
+				if body.BannerUrl != nil {
+					p, err := utils.DownloadImageHashed(*body.BannerUrl, mediaDir.Images())
+					if err == nil {
+						n := path.Base(p)
+						changes.BannerFile = database.Change[sql.NullString]{
+							Value: sql.NullString{
+								String: n,
+								Valid:  n != "",
+							},
+							Changed: n != dbMedia.BannerFile.String,
+						}
+					} else {
+						app.Logger().Error("failed to download banner image for media", "err", err)
+					}
+				}
+
+				if body.LogoUrl != nil {
+					p, err := utils.DownloadImageHashed(*body.LogoUrl, mediaDir.Images())
+					if err == nil {
+						n := path.Base(p)
+						changes.LogoFile = database.Change[sql.NullString]{
+							Value: sql.NullString{
+								String: n,
+								Valid:  n != "",
+							},
+							Changed: n != dbMedia.LogoFile.String,
+						}
+					} else {
+						app.Logger().Error("failed to download logo image for media", "err", err)
+					}
+				}
 
 				err = app.DB().UpdateMedia(ctx, dbMedia.Id, changes)
 				if err != nil {
@@ -926,144 +996,6 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 							return nil, err
 						}
 					}
-				}
-
-				return nil, nil
-			},
-		},
-
-		pyrin.FormApiHandler{
-			Name:         "ChangeMediaImages",
-			Method:       http.MethodPatch,
-			Path:         "/media/:id/images",
-			ResponseType: nil,
-			Spec: pyrin.FormSpec{
-				Files: map[string]pyrin.FormFileSpec{
-					"cover": {
-						NumExpected: 0,
-					},
-					"logo": {
-						NumExpected: 0,
-					},
-					"banner": {
-						NumExpected: 0,
-					},
-				},
-			},
-			HandlerFunc: func(c pyrin.Context) (any, error) {
-				id := c.Param("id")
-
-				_, err := User(app, c, HasEditPrivilege)
-				if err != nil {
-					return nil, err
-				}
-
-				ctx := context.Background()
-
-				dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
-				if err != nil {
-					if errors.Is(err, database.ErrItemNotFound) {
-						return nil, MediaNotFound()
-					}
-
-					return nil, err
-				}
-
-				mediaDir := app.WorkDir().MediaDirById(dbMedia.Id)
-				dirs := []string{
-					mediaDir.String(),
-					mediaDir.Images(),
-				}
-
-				for _, dir := range dirs {
-					err = os.Mkdir(dir, 0755)
-					if err != nil && !os.IsExist(err) {
-						return nil, err
-					}
-				}
-
-				changes := database.MediaChanges{}
-
-				// TODO(patrik): Change name
-				test := func(old sql.NullString, name string) (database.Change[sql.NullString], error) {
-					files, err := pyrin.FormFiles(c, name)
-					if err != nil {
-						return database.Change[sql.NullString]{}, err
-					}
-
-					if len(files) > 0 {
-						file := files[0]
-
-						// TODO(patrik): Add better size limiting
-						if file.Size > 25*1024*1024 {
-							return database.Change[sql.NullString]{}, errors.New("file too big")
-						}
-
-						contentType := file.Header.Get("Content-Type")
-						ext, err := utils.GetImageExtFromContentType(contentType)
-						// TODO(patrik): Better error
-						if err != nil {
-							return database.Change[sql.NullString]{}, err
-						}
-
-						if old.Valid {
-							p := path.Join(mediaDir.Images(), old.String)
-							err = os.Remove(p)
-							if err != nil {
-								return database.Change[sql.NullString]{}, err
-							}
-						}
-
-						f, err := file.Open()
-						// TODO(patrik): Better error
-						if err != nil {
-							return database.Change[sql.NullString]{}, err
-						}
-						defer f.Close()
-
-						outFile, err := os.OpenFile(path.Join(mediaDir.Images(), name+ext), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-						// TODO(patrik): Better error
-						if err != nil {
-							return database.Change[sql.NullString]{}, err
-						}
-						defer outFile.Close()
-
-						_, err = io.Copy(outFile, f)
-						// TODO(patrik): Better error
-						if err != nil {
-							return database.Change[sql.NullString]{}, err
-						}
-
-						return database.Change[sql.NullString]{
-							Value: sql.NullString{
-								String: name + ext,
-								Valid:  true,
-							},
-							Changed: true,
-						}, nil
-					}
-
-					return database.Change[sql.NullString]{}, nil
-				}
-
-				changes.CoverFile, err = test(dbMedia.CoverFile, "cover")
-				if err != nil {
-					return nil, err
-				}
-
-				changes.LogoFile, err = test(dbMedia.LogoFile, "logo")
-				if err != nil {
-					return nil, err
-				}
-
-				changes.BannerFile, err = test(dbMedia.BannerFile, "banner")
-				if err != nil {
-					return nil, err
-				}
-
-				err = app.DB().UpdateMedia(ctx, dbMedia.Id, changes)
-				if err != nil {
-					return nil, err
 				}
 
 				return nil, nil
