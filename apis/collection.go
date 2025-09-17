@@ -288,6 +288,14 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 				sortStr := q.Get("sort")
 				collections, page, err := app.DB().GetPagedCollections(ctx, filterStr, sortStr, opts)
 				if err != nil {
+					if errors.Is(err, database.ErrInvalidFilter) {
+						return nil, InvalidFilter(err)
+					}
+
+					if errors.Is(err, database.ErrInvalidSort) {
+						return nil, InvalidSort(err)
+					}
+
 					return nil, err
 				}
 

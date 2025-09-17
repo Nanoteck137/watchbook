@@ -13,6 +13,9 @@ const (
 	ErrTypeApiTokenNotFound   pyrin.ErrorType = "API_TOKEN_NOT_FOUND"
 	ErrTypeInvalidCredentials pyrin.ErrorType = "INVALID_CREDENTIALS"
 
+	ErrTypeInvalidFilter      pyrin.ErrorType = "INVALID_FILTER"
+	ErrTypeInvalidSort        pyrin.ErrorType = "INVALID_SORT"
+
 	ErrTypeMediaNotFound            pyrin.ErrorType = "MEDIA_NOT_FOUND"
 	ErrTypeMediaPartReleaseNotFound pyrin.ErrorType = "MEDIA_PART_RELEASE_NOT_FOUND"
 	ErrTypeCollectionNotFound       pyrin.ErrorType = "COLLECTION_NOT_FOUND"
@@ -29,6 +32,22 @@ func InvalidAuth(message string) *pyrin.Error {
 		Code:    http.StatusBadRequest,
 		Type:    ErrTypeInvalidAuth,
 		Message: "Invalid auth: " + message,
+	}
+}
+
+func InvalidFilter(err error) *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeInvalidFilter,
+		Message: err.Error(),
+	}
+}
+
+func InvalidSort(err error) *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusBadRequest,
+		Type:    ErrTypeInvalidSort,
+		Message: err.Error(),
 	}
 }
 
