@@ -140,6 +140,12 @@ func generateFilter(e filter.FilterExpr) (exp.Expression, error) {
 		} else {
 			return goqu.L("? IN ?", goqu.I(e.IdSelector), s), nil
 		}
+	case *filter.InExpr:
+		if e.Not {
+			return goqu.L("? NOT IN ?", goqu.I(e.Variable), e.Values), nil
+		} else {
+			return goqu.L("? IN ?", goqu.I(e.Variable), e.Values), nil
+		}
 	}
 
 	return nil, fmt.Errorf("Unimplemented expr %T", e)

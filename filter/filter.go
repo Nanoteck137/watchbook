@@ -183,6 +183,39 @@ func (r *Resolver) InTable(name, typ, idSelector string, args []ast.Expr) (*InTa
 	}, nil
 }
 
+func (r *Resolver) In(name, variable string, args []ast.Expr) (*InExpr, error) {
+	if len(args) <= 0 {
+		return nil, fmt.Errorf("'%s' requires at least 1 parameter", name)
+	}
+
+	n, has := r.adapter.ResolveVariableName(variable)
+	if !has {
+		return nil, fmt.Errorf("unknown variable '%s'", variable)
+	}
+
+	var values []any
+	for _, arg := range args {
+		switch n.Kind {
+		case NameKindString:
+			s, err := r.ResolveToStr(arg)
+			if err != nil {
+				return nil, err
+			}
+
+			if s != "" {
+				values = append(values, s)
+			}
+		}
+
+	}
+
+	return &InExpr{
+		Not:      false,
+		Variable: n.Name,
+		Values:   values,
+	}, nil
+}
+
 var opMapping = map[token.Token]OpKind{
 	token.EQL: OpEqual,
 	token.NEQ: OpNotEqual,
@@ -281,6 +314,8 @@ func (r *Resolver) Resolve(e ast.Expr) (FilterExpr, error) {
 
 		switch expr := expr.(type) {
 		case *InTableExpr:
+			expr.Not = true
+		case *InExpr:
 			expr.Not = true
 		}
 

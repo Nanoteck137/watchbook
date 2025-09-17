@@ -50,8 +50,15 @@ type InTableExpr struct {
 	Ids        []string
 }
 
+type InExpr struct {
+	Not      bool
+	Variable string
+	Values   []any
+}
+
 func (e *AndExpr) filterExprType()     {}
 func (e *OrExpr) filterExprType()      {}
 func (e *IsNullExpr) filterExprType()  {}
 func (e *OpExpr) filterExprType()      {}
 func (e *InTableExpr) filterExprType() {}
+func (e *InExpr) filterExprType() {}
