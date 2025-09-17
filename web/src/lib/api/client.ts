@@ -75,6 +75,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/media/${id}`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
+  deleteMedia(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/media/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  }
+  
   addPart(id: string, body: api.AddPartBody, options?: ExtraOptions) {
     return this.request(`/api/v1/media/${id}/single/parts`, "POST", api.AddPart, z.any(), body, options)
   }
@@ -246,6 +250,10 @@ export class ClientUrls {
   }
   
   editMedia(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/media/${id}`)
+  }
+  
+  deleteMedia(id: string) {
     return createUrl(this.baseUrl, `/api/v1/media/${id}`)
   }
   

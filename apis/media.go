@@ -984,6 +984,45 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
+			Name:         "DeleteMedia",
+			Method:       http.MethodDelete,
+			Path:         "/media/:id",
+			ResponseType: nil,
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				_, err := User(app, c, HasEditPrivilege)
+				if err != nil {
+					return nil, err
+				}
+
+				ctx := context.Background()
+
+				dbMedia, err := app.DB().GetMediaById(ctx, nil, id)
+				if err != nil {
+					if errors.Is(err, database.ErrItemNotFound) {
+						return nil, MediaNotFound()
+					}
+
+					return nil, err
+				}
+
+				err = app.DB().RemoveMedia(ctx, dbMedia.Id)
+				if err != nil {
+					return nil, err
+				}
+
+				dir := app.WorkDir().MediaDirById(dbMedia.Id)
+				err = os.RemoveAll(dir.String())
+				if err != nil {
+					return nil, err
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
 			Name:         "AddPart",
 			Method:       http.MethodPost,
 			Path:         "/media/:id/single/parts",
