@@ -84,7 +84,7 @@ func (a *CollectionResolverAdapter) ResolveTable(typ string) (filter.Table, bool
 
 func (a *CollectionResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, name string, args []ast.Expr) (filter.FilterExpr, error) {
 	switch name {
-	case "hasCollectionType":
+	case "hasType":
 		return resolver.In(name, "collectionType", args)
 	}
 
