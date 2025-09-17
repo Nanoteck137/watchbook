@@ -4,19 +4,30 @@
 
   export type Props = {
     open: boolean;
+
+    title: string;
+    description?: string;
+    confirmText?: string;
   };
 
-  let { open = $bindable(), onResult }: Props & Modal<void> = $props();
+  let {
+    open = $bindable(),
+    title,
+    description,
+    confirmText = "Confirm",
+    onResult,
+  }: Props & Modal<void> = $props();
 </script>
 
 <Dialog.Root bind:open>
   <Dialog.Content>
     <Dialog.Header>
-      <Dialog.Title>Remove Collection Item?</Dialog.Title>
-      <Dialog.Description>
-        Are you sure you want to remove this media item? This action cannot be
-        undone.
-      </Dialog.Description>
+      <Dialog.Title>{title}</Dialog.Title>
+      {#if description}
+        <Dialog.Description>
+          {description}
+        </Dialog.Description>
+      {/if}
     </Dialog.Header>
 
     <Dialog.Footer class="gap-2 sm:gap-0">
@@ -36,7 +47,7 @@
           onResult();
         }}
       >
-        Remove item
+        {confirmText}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>

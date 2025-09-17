@@ -1,9 +1,14 @@
 <script lang="ts">
   import MediaCard from "$lib/components/MediaCard.svelte";
   import { Button, buttonVariants, DropdownMenu } from "@nanoteck137/nano-ui";
-  import { EllipsisVertical, Image as ImageIcon, Trash } from "lucide-svelte";
+  import {
+    EllipsisVertical,
+    Image as ImageIcon,
+    Plus,
+    Trash,
+  } from "lucide-svelte";
   import ShowLogoModal from "./ShowLogoModal.svelte";
-  import { cn } from "$lib/utils";
+  import { cn, isRoleAdmin } from "$lib/utils";
   import { getApiClient, handleApiError } from "$lib";
   import toast from "svelte-5-french-toast";
   import { invalidateAll } from "$app/navigation";
@@ -11,37 +16,15 @@
   import AddMediaItem from "./AddMediaItem.svelte";
   import ProviderUpdate from "./ProviderUpdate.svelte";
   import EditImagesModal from "./EditImagesModal.svelte";
+  import CollectionDropdown from "./CollectionDropdown.svelte";
+  import Spacer from "$lib/components/Spacer.svelte";
 
   const { data } = $props();
   const apiClient = getApiClient();
 
-  let addMediaModalOpen = $state(false);
+  let openAddMediaModal = $state(false);
   let openEditImagesModal = $state(false);
 </script>
-
-<DropdownMenu.Root>
-  <DropdownMenu.Trigger
-    class={cn(buttonVariants({ variant: "outline", size: "icon" }))}
-  >
-    <EllipsisVertical />
-  </DropdownMenu.Trigger>
-  <DropdownMenu.Content class="w-40" align="start">
-    <DropdownMenu.Group>
-      <DropdownMenu.Item
-        onclick={() => {
-          openEditImagesModal = true;
-        }}
-      >
-        <ImageIcon />
-        Edit Images
-      </DropdownMenu.Item>
-      <DropdownMenu.Item>
-        <Trash />
-        Remove
-      </DropdownMenu.Item>
-    </DropdownMenu.Group>
-  </DropdownMenu.Content>
-</DropdownMenu.Root>
 
 <div
   class="relative h-48 w-full overflow-hidden rounded-lg shadow-lg sm:h-60 md:h-72"
@@ -86,13 +69,15 @@
   class="relative mx-2 -mt-16 flex flex-col items-center space-y-4 px-4 sm:-mt-20 sm:flex-row sm:items-start sm:space-x-6 sm:space-y-0 sm:px-0"
 >
   <div
-    class="z-10 aspect-[75/106] w-40 min-w-40 flex-shrink-0 overflow-hidden rounded-lg border-4 border-gray-900 bg-gray-800 shadow-lg sm:w-48 sm:min-w-48"
+    class="relative z-10 aspect-[75/106] w-40 min-w-40 flex-shrink-0 overflow-hidden rounded-lg border-4 border-gray-900 bg-gray-800 shadow-lg sm:w-48 sm:min-w-48"
   >
     <img
       src={data.collection.coverUrl}
       alt="Collection Cover"
       class="h-full w-full object-cover"
     />
+
+    <CollectionDropdown collection={data.collection} />
   </div>
 
   <div
@@ -118,17 +103,26 @@
 </div>
 
 <div class="mx-auto max-w-7xl py-12">
-  <div class="flex items-center gap-4">
-    <p class="text-xl font-semibold">Collection Items</p>
-    <Button
-      variant="link"
-      onclick={() => {
-        addMediaModalOpen = true;
-      }}
-    >
-      Add Media Item
-    </Button>
+  <div class="flex items-center justify-between">
+    <h2 class="text-bold text-xl">
+      Collection Items
+      {#if isRoleAdmin(data.user?.role)}
+        <Button
+          variant="ghost"
+          size="icon"
+          onclick={() => {
+            openAddMediaModal = true;
+          }}
+        >
+          <Plus />
+        </Button>
+      {/if}
+    </h2>
+    <p class="text-sm">{data.items.length} item(s)</p>
   </div>
+
+  <Spacer size="md" />
+
   <div
     class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] items-center justify-items-center gap-6"
   >
@@ -151,7 +145,7 @@
 </div>
 
 <AddMediaItem
-  bind:open={addMediaModalOpen}
+  bind:open={openAddMediaModal}
   itemIds={data.items.map((i) => i.mediaId)}
   onResult={async (results) => {
     for (const item of results) {

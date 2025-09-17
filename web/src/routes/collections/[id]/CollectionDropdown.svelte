@@ -1,40 +1,42 @@
 <script lang="ts">
-  import { invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
   import { cn } from "$lib/utils";
   import { buttonVariants, DropdownMenu } from "@nanoteck137/nano-ui";
-  import { EllipsisVertical, Pencil, Trash } from "lucide-svelte";
-  import toast from "svelte-5-french-toast";
-  import EditMediaItem from "./EditMediaItem.svelte";
-  import type { CollectionItem } from "$lib/api/types";
+  import { EllipsisVertical, Image, Pencil, Trash } from "lucide-svelte";
+  import type { Collection } from "$lib/api/types";
   import ConfirmBox from "$lib/components/ConfirmBox.svelte";
+  import EditImagesModal from "./EditImagesModal.svelte";
+  import toast from "svelte-5-french-toast";
+  import { goto, invalidateAll } from "$app/navigation";
+  import EditCollectionModal from "./EditCollectionModal.svelte";
 
   type Props = {
-    item: CollectionItem;
+    collection: Collection;
   };
 
-  const { item }: Props = $props();
+  const { collection }: Props = $props();
 
   const apiClient = getApiClient();
 
-  let editModalOpen = $state(false);
-  let removeModalOpen = $state(false);
+  let openEditModal = $state(false);
+  let openEditImagesModal = $state(false);
+  let openRemoveModal = $state(false);
 </script>
 
 <DropdownMenu.Root>
   <DropdownMenu.Trigger
     class={cn(
-      "absolute right-4 top-4 z-20",
+      "absolute right-2 top-2 z-20",
       buttonVariants({ variant: "secondary", size: "icon" }),
     )}
   >
     <EllipsisVertical />
   </DropdownMenu.Trigger>
-  <DropdownMenu.Content class="w-40" align="end">
+  <DropdownMenu.Content class="w-40" align="center">
     <DropdownMenu.Group>
       <DropdownMenu.Item
         onclick={() => {
-          editModalOpen = true;
+          openEditModal = true;
         }}
       >
         <Pencil />
@@ -43,7 +45,16 @@
 
       <DropdownMenu.Item
         onclick={() => {
-          removeModalOpen = true;
+          openEditImagesModal = true;
+        }}
+      >
+        <Image />
+        Edit Images
+      </DropdownMenu.Item>
+
+      <DropdownMenu.Item
+        onclick={() => {
+          openRemoveModal = true;
         }}
       >
         <Trash />
@@ -53,7 +64,9 @@
   </DropdownMenu.Content>
 </DropdownMenu.Root>
 
-<EditMediaItem
+<EditCollectionModal bind:open={openEditModal} {collection} />
+
+<!-- <EditMediaItem
   bind:open={editModalOpen}
   name={item.collectionName}
   searchSlug={item.searchSlug}
@@ -73,21 +86,25 @@
   }}
 />
 
+-->
+
+<EditImagesModal
+  bind:open={openEditImagesModal}
+  collectionId={collection.id}
+/>
+
 <ConfirmBox
-  bind:open={removeModalOpen}
-  title="Remove Collection Item?"
-  description="Are you sure you want to remove this media item? This action cannot be undone."
-  confirmText="Remove Item"
+  bind:open={openRemoveModal}
+  title="Remove Collection?"
+  description="Are you sure you want to remove this collection? This action cannot be undone."
+  confirmText="Remove"
   onResult={async () => {
-    const res = await apiClient.removeCollectionItem(
-      item.collectionId,
-      item.mediaId,
-    );
+    const res = await apiClient.deleteCollection(collection.id);
     if (!res.success) {
       return handleApiError(res.error);
     }
 
-    toast.success("Successfully removed collection item");
-    invalidateAll();
+    toast.success("Successfully removed collection");
+    goto(`/collections`, { invalidateAll: true });
   }}
 />
