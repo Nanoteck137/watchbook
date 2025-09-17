@@ -15,36 +15,17 @@
     Input,
     Label,
   } from "@nanoteck137/nano-ui";
-  import {
-    ChevronDown,
-    Delete,
-    EllipsisVertical,
-    Eye,
-    Star,
-    Trash,
-    Image as ImageIcon,
-  } from "lucide-svelte";
+  import { ChevronDown, Eye, Star, Trash } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
   import ProviderUpdate from "./ProviderUpdate.svelte";
-  import EditImagesModal from "./EditImagesModal.svelte";
   import BannerHeader from "$lib/components/BannerHeader.svelte";
+  import MediaDropdown from "./MediaDropdown.svelte";
 
   const { data } = $props();
   const apiClient = getApiClient();
 
   let showMore = $state(false);
   let episodeOpen = $state(false);
-
-  let openEditImagesModal = $state(false);
-
-  function formatAnimeType(ty: string) {
-    switch (ty) {
-      case "tv":
-        return "TV";
-    }
-
-    return ty;
-  }
 
   async function updateScore(score: number | null) {
     if (score === null) {
@@ -137,57 +118,12 @@
   bannerUrl={data.media.bannerUrl}
   logoUrl={data.media.logoUrl}
 >
-  <!-- {#snippet imageContent()}
-    <CollectionDropdown collection={data.collection} />
-  {/snippet} -->
+  {#snippet imageContent()}
+    <MediaDropdown media={data.media} />
+  {/snippet}
 </BannerHeader>
 
-<DropdownMenu.Root>
-  <DropdownMenu.Trigger
-    class={cn(buttonVariants({ variant: "outline", size: "icon" }))}
-  >
-    <EllipsisVertical />
-  </DropdownMenu.Trigger>
-  <DropdownMenu.Content class="w-40" align="start">
-    <DropdownMenu.Group>
-      <DropdownMenu.Item
-        onclick={() => {
-          openEditImagesModal = true;
-        }}
-      >
-        <ImageIcon />
-        Edit Images
-      </DropdownMenu.Item>
-      <DropdownMenu.Item>
-        <Trash />
-        Remove
-      </DropdownMenu.Item>
-    </DropdownMenu.Group>
-  </DropdownMenu.Content>
-</DropdownMenu.Root>
-
-<div class="flex flex-col items-center gap-2">
-  <Image class="min-h-80 w-56" src={data.media.coverUrl} alt="cover" />
-  <div class="flex flex-col gap-1">
-    <p class="text-center text-base">{data.media.title}</p>
-    <!-- {#if data.anime.titleEnglish}
-      <Separator />
-      <p class="text-center text-sm text-zinc-300">
-        {data.anime.titleEnglish}
-      </p>
-    {/if} -->
-  </div>
-</div>
-
-<Spacer size="lg" />
-
 <div class="flex flex-col justify-around gap-2">
-  <div class="flex gap-2">
-    {#each data.media.providers as provider}
-      <ProviderUpdate mediaId={data.media.id} {provider} />
-    {/each}
-  </div>
-
   <div class="flex gap-2">
     {#if !!data.media.user?.hasData}
       <Button
@@ -381,28 +317,6 @@
 
 <Spacer size="lg" />
 
-{#if data.media.description}
-  <div class="flex flex-col gap-1">
-    <p
-      class={`text-ellipsis whitespace-pre-line text-sm ${!showMore ? "line-clamp-2" : ""}`}
-    >
-      {data.media.description}
-    </p>
-    <Button
-      class="w-fit"
-      size="sm"
-      variant="outline"
-      onclick={() => {
-        showMore = !showMore;
-      }}
-    >
-      Show More
-    </Button>
-  </div>
-{/if}
-
-<Spacer size="lg" />
-
 <div
   class="flex items-center justify-center rounded bg-primary py-1 text-primary-foreground"
 >
@@ -418,7 +332,7 @@
 <div
   class="flex flex-col gap-1 rounded bg-primary p-2 text-primary-foreground"
 >
-  <p>Type: {formatAnimeType(data.media.mediaType)}</p>
+  <p>Type: {data.media.mediaType}</p>
   <p>Parts: {data.media.partCount}</p>
   <p>Status: {data.media.status}</p>
   {#if data.media.airingSeason}
@@ -462,11 +376,3 @@
   </p>
   <p>Rating: {data.media.rating}</p>
 </div>
-
-<!-- <div class="flex flex-col">
-  {#each data.anime.images as image}
-    <Image class="min-h-80 w-56" src={image.url} alt="cover" />
-  {/each}
-</div> -->
-
-<EditImagesModal bind:open={openEditImagesModal} mediaId={data.media.id} />
