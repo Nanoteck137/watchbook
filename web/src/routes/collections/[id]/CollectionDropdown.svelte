@@ -2,13 +2,20 @@
   import { getApiClient, handleApiError } from "$lib";
   import { cn } from "$lib/utils";
   import { buttonVariants, DropdownMenu } from "@nanoteck137/nano-ui";
-  import { EllipsisVertical, Image, Pencil, Trash } from "lucide-svelte";
+  import {
+    Download,
+    EllipsisVertical,
+    Image,
+    Pencil,
+    Trash,
+  } from "lucide-svelte";
   import type { Collection } from "$lib/api/types";
   import ConfirmBox from "$lib/components/ConfirmBox.svelte";
   import EditImagesModal from "./EditImagesModal.svelte";
   import toast from "svelte-5-french-toast";
   import { goto, invalidateAll } from "$app/navigation";
   import EditCollectionModal from "./EditCollectionModal.svelte";
+  import ProviderUpdateModal from "./ProviderUpdateModal.svelte";
 
   type Props = {
     collection: Collection;
@@ -21,6 +28,7 @@
   let openEditModal = $state(false);
   let openEditImagesModal = $state(false);
   let openRemoveModal = $state(false);
+  let openProviderUpdateModal = $state(false);
 </script>
 
 <DropdownMenu.Root>
@@ -34,6 +42,15 @@
   </DropdownMenu.Trigger>
   <DropdownMenu.Content class="w-40" align="center">
     <DropdownMenu.Group>
+      <DropdownMenu.Item
+        onclick={() => {
+          openProviderUpdateModal = true;
+        }}
+      >
+        <Download />
+        Update
+      </DropdownMenu.Item>
+
       <DropdownMenu.Item
         onclick={() => {
           openEditModal = true;
@@ -107,4 +124,10 @@
     toast.success("Successfully removed collection");
     goto(`/collections`, { invalidateAll: true });
   }}
+/>
+
+<ProviderUpdateModal
+  bind:open={openProviderUpdateModal}
+  collectionId={collection.id}
+  providers={collection.providers}
 />

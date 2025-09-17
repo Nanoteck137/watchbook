@@ -1,12 +1,7 @@
 <script lang="ts">
   import MediaCard from "$lib/components/MediaCard.svelte";
-  import { Button, buttonVariants, DropdownMenu } from "@nanoteck137/nano-ui";
-  import {
-    EllipsisVertical,
-    Image as ImageIcon,
-    Plus,
-    Trash,
-  } from "lucide-svelte";
+  import { Button, buttonVariants } from "@nanoteck137/nano-ui";
+  import { Image as ImageIcon, Plus } from "lucide-svelte";
   import ShowLogoModal from "./ShowLogoModal.svelte";
   import { cn, isRoleAdmin } from "$lib/utils";
   import { getApiClient, handleApiError } from "$lib";
@@ -14,16 +9,17 @@
   import { invalidateAll } from "$app/navigation";
   import MediaItemDropdown from "./MediaItemDropdown.svelte";
   import AddMediaItem from "./AddMediaItem.svelte";
-  import ProviderUpdate from "./ProviderUpdate.svelte";
   import EditImagesModal from "./EditImagesModal.svelte";
   import CollectionDropdown from "./CollectionDropdown.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
+  import ProviderUpdateModal from "./ProviderUpdateModal.svelte";
 
   const { data } = $props();
   const apiClient = getApiClient();
 
   let openAddMediaModal = $state(false);
   let openEditImagesModal = $state(false);
+  let openUpdateModal = $state(false);
 </script>
 
 <div
@@ -94,12 +90,6 @@
         Updated regularly with new releases and extras.
       </p> -->
   </div>
-</div>
-
-<div class="flex gap-2">
-  {#each data.collection.providers as provider}
-    <ProviderUpdate collectionId={data.collection.id} {provider} />
-  {/each}
 </div>
 
 <div class="mx-auto max-w-7xl py-12">

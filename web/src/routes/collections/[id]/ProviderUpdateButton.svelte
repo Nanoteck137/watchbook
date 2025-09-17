@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Button } from "@nanoteck137/nano-ui";
   import type { ProviderValue } from "$lib/api/types";
-  import ProviderUpdateModal from "./ProviderUpdateModal.svelte";
+  import ProviderUpdateModal from "./ProviderUpdateSettingsModal.svelte";
 
   type Props = {
     collectionId: string;
