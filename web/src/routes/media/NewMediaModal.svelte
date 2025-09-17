@@ -80,8 +80,6 @@
   });
 
   async function submit(data: SchemaTy) {
-    console.log(data);
-
     const res = await apiClient.createMedia({
       title: data.title,
       description: data.description,
@@ -124,9 +122,8 @@
       dataType: "json",
       resetForm: true,
       async onUpdate({ form }) {
-        console.log(form);
         if (form.valid) {
-          // await submit(form.data);
+          await submit(form.data);
         }
       },
     },
