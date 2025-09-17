@@ -15,17 +15,10 @@
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
   import { z } from "zod";
-  import { collectionTypes, type CollectionType } from "./types";
+  import { CollectionTypeEnum, collectionTypes } from "./types";
 
   const Schema = z.object({
-    type: z
-      .enum(
-        collectionTypes.map((f) => f.value) as [
-          CollectionType,
-          ...CollectionType[],
-        ],
-      )
-      .default("unknown"),
+    type: CollectionTypeEnum.default("unknown"),
     name: z.string().min(1, "Name cannot be empty"),
     coverUrl: z
       .string()
@@ -110,8 +103,6 @@
             {#each collectionTypes as type (type.value)}
               <Select.Item value={type.value} label={type.label} />
             {/each}
-            <!-- <Select.Item value="series">Series</Select.Item>
-            <Select.Item value="anime">Anime</Select.Item> -->
           </Select.Content>
         </Select.Root>
 
