@@ -6,6 +6,7 @@
   import { Button } from "@nanoteck137/nano-ui";
   import { isRoleAdmin } from "$lib/utils";
   import { Plus } from "lucide-svelte";
+  import NewMediaModal from "./NewMediaModal.svelte";
 
   const { data } = $props();
 
@@ -62,3 +63,5 @@
 <Spacer size="sm" />
 
 <StandardPagination pageData={data.page} />
+
+<NewMediaModal bind:open={openNewMediaModal} />
