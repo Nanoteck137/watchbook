@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { invalidateAll } from "$app/navigation";
+  import { goto, invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
@@ -63,38 +63,44 @@
       return handleApiError(res.error);
     }
 
-    toast.success("Successfully updated media");
-    invalidateAll();
+    open = false;
+    reset({});
+
+    toast.success("Successfully created new collection");
+    goto(`/collections/${res.data.id}`, { invalidateAll: true });
   }
 
-  const { form, errors, enhance, reset } = superForm(defaults(zod(Schema)), {
-    SPA: true,
-    validators: zod(Schema),
-    dataType: "json",
-    resetForm: true,
-    onUpdate({ form }) {
-      if (form.valid) {
-        submit(form.data);
-
-        open = false;
-        reset({});
-      }
+  const { form, errors, enhance, reset, submitting } = superForm(
+    defaults(zod(Schema)),
+    {
+      SPA: true,
+      validators: zod(Schema),
+      dataType: "json",
+      resetForm: true,
+      async onUpdate({ form }) {
+        if (form.valid) {
+          await submit(form.data);
+        }
+      },
     },
-  });
+  );
 </script>
 
 <Dialog.Root bind:open>
   <Dialog.Content>
     <Dialog.Header>
       <Dialog.Title>Create new collection</Dialog.Title>
-      <!-- <Dialog.Description>Set the media images</Dialog.Description> -->
     </Dialog.Header>
 
     <form class="flex flex-col gap-4" use:enhance>
       <FormItem>
         <Label for="type">Type</Label>
 
-        <Select.Root type="single" bind:value={$form.type}>
+        <Select.Root
+          type="single"
+          bind:value={$form.type}
+          allowDeselect={false}
+        >
           <Select.Trigger>
             {collectionTypes.find((f) => f.value === $form.type)?.label ??
               "Select type"}
@@ -161,7 +167,12 @@
           Close
         </Button>
 
-        <Button type="submit">Create</Button>
+        <Button type="submit" disabled={$submitting}>
+          Create
+          {#if $submitting}
+            <Spinner />
+          {/if}
+        </Button>
       </Dialog.Footer>
     </form>
   </Dialog.Content>
