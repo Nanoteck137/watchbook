@@ -55,7 +55,7 @@ export const defaultSort: SortType = "title-a-z";
 
 export const FullFilter = z.object({
   query: z.string(),
-  filter: z.object({
+  filters: z.object({
     type: z.array(MediaTypeEnum),
     status: z.array(MediaStatusEnum),
     rating: z.array(MediaRatingEnum),

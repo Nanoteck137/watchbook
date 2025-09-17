@@ -13,18 +13,18 @@ function constructFilterSort(
     filters.push(`title % "%${filter.query}%"`);
   }
 
-  if (filter.filter.type.length > 0) {
-    const s = filter.filter.type.map((i) => `"${i}"`).join(",");
+  if (filter.filters.type.length > 0) {
+    const s = filter.filters.type.map((i) => `"${i}"`).join(",");
     filters.push(`hasType(${s})`);
   }
 
-  if (filter.filter.status.length > 0) {
-    const s = filter.filter.status.map((i) => `"${i}"`).join(",");
+  if (filter.filters.status.length > 0) {
+    const s = filter.filters.status.map((i) => `"${i}"`).join(",");
     filters.push(`hasStatus(${s})`);
   }
 
-  if (filter.filter.rating.length > 0) {
-    const s = filter.filter.rating.map((i) => `"${i}"`).join(",");
+  if (filter.filters.rating.length > 0) {
+    const s = filter.filters.rating.map((i) => `"${i}"`).join(",");
     filters.push(`hasRating(${s})`);
   }
 
@@ -67,7 +67,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
   const filter = FullFilter.parse({
     query: url.searchParams.get("query") ?? "",
     sort: url.searchParams.get("sort") ?? undefined,
-    filter: {
+    filters: {
       type: url.searchParams.get("filterType")?.split(",") ?? [],
       status: url.searchParams.get("filterStatus")?.split(",") ?? [],
       rating: url.searchParams.get("filterRating")?.split(",") ?? [],
@@ -76,14 +76,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
       type: url.searchParams.get("excludeType")?.split(",") ?? [],
       status: url.searchParams.get("excludeStatus")?.split(",") ?? [],
       rating: url.searchParams.get("excludeRating")?.split(",") ?? [],
-      // url.searchParams.get("excludes")?.split(",") ?? [],
     },
   });
 
-  console.log(filter);
-
   constructFilterSort(filter, query);
-  console.log(query);
 
   const media = await locals.apiClient.getMedia({ query });
   if (!media.success) {

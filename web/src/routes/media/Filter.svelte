@@ -22,8 +22,6 @@
   const { fullFilter }: Props = $props();
 
   function submit(data: FullFilter) {
-    console.log(data);
-
     setTimeout(() => {
       const query = $page.url.searchParams;
       query.delete("query");
@@ -40,16 +38,16 @@
       query.set("query", data.query);
       query.set("sort", data.sort);
 
-      if (data.filter.type.length > 0) {
-        query.set("filterType", data.filter.type.join(","));
+      if (data.filters.type.length > 0) {
+        query.set("filterType", data.filters.type.join(","));
       }
 
-      if (data.filter.status.length > 0) {
-        query.set("filterStatus", data.filter.status.join(","));
+      if (data.filters.status.length > 0) {
+        query.set("filterStatus", data.filters.status.join(","));
       }
 
-      if (data.filter.rating.length > 0) {
-        query.set("filterRating", data.filter.rating.join(","));
+      if (data.filters.rating.length > 0) {
+        query.set("filterRating", data.filters.rating.join(","));
       }
 
       if (data.excludes.type.length > 0) {
@@ -63,16 +61,6 @@
       if (data.excludes.rating.length > 0) {
         query.set("excludeRating", data.excludes.rating.join(","));
       }
-
-      // if (data.excludes.length > 0) {
-      //   query.delete("filter");
-      //   query.set("excludes", data.excludes.join(","));
-      // }
-
-      // if (data.filter !== "") {
-      //   query.delete("excludes");
-      //   query.set("filter", data.filter);
-      // }
 
       goto("?" + query.toString(), { invalidateAll: true });
     }, 0);
@@ -106,7 +94,7 @@
     <div class="flex items-center gap-4">
       <p class="w-20">Filter</p>
 
-      <Select.Root type="multiple" bind:value={$form.filter.type}>
+      <Select.Root type="multiple" bind:value={$form.filters.type}>
         <Select.Trigger class="max-w-[120px]">Type</Select.Trigger>
         <Select.Content>
           {#each mediaTypes as ty (ty.value)}
@@ -115,7 +103,7 @@
         </Select.Content>
       </Select.Root>
 
-      <Select.Root type="multiple" bind:value={$form.filter.status}>
+      <Select.Root type="multiple" bind:value={$form.filters.status}>
         <Select.Trigger class="max-w-[120px]">Status</Select.Trigger>
         <Select.Content>
           {#each mediaStatus as status (status.value)}
@@ -124,7 +112,7 @@
         </Select.Content>
       </Select.Root>
 
-      <Select.Root type="multiple" bind:value={$form.filter.rating}>
+      <Select.Root type="multiple" bind:value={$form.filters.rating}>
         <Select.Trigger class="max-w-[120px]">Rating</Select.Trigger>
         <Select.Content>
           {#each mediaRatings as rating (rating.value)}
@@ -165,21 +153,27 @@
       </Select.Root>
     </div>
 
-    <Select.Root type="single" allowDeselect={false} bind:value={$form.sort}>
-      <Select.Trigger class="max-w-[120px]">Sort</Select.Trigger>
-      <Select.Content>
-        {#each sortTypes as ty (ty.value)}
-          <Select.Item value={ty.value} label={ty.label} />
-        {/each}
-      </Select.Content>
-    </Select.Root>
+    <div class="flex items-center gap-4">
+      <p class="w-20">Sort</p>
+
+      <Select.Root type="single" allowDeselect={false} bind:value={$form.sort}>
+        <Select.Trigger class="max-w-[180px]">
+          {sortTypes.find((i) => i.value === $form.sort)?.label ?? "Sort"}
+        </Select.Trigger>
+        <Select.Content>
+          {#each sortTypes as ty (ty.value)}
+            <Select.Item value={ty.value} label={ty.label} />
+          {/each}
+        </Select.Content>
+      </Select.Root>
+    </div>
 
     <Button
       onclick={() => {
         reset({
           data: {
             query: "",
-            filter: { type: [], status: [], rating: [] },
+            filters: { type: [], status: [], rating: [] },
             excludes: { type: [], status: [], rating: [] },
             sort: defaultSort,
           },
