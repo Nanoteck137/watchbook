@@ -3,9 +3,12 @@
   import { page } from "$app/stores";
   import CollectionCard from "$lib/components/CollectionCard.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
-  import { Pagination } from "@nanoteck137/nano-ui";
+  import { Button, Pagination } from "@nanoteck137/nano-ui";
+  import NewCollectionModal from "./NewCollectionModal.svelte";
 
   const { data } = $props();
+
+  let openNewCollectionModal = $state(false);
 </script>
 
 <div class="mb-6 flex space-x-4 border-b border-gray-700 text-gray-400">
@@ -111,6 +114,14 @@
 
 <p id="totalCount" class="mb-4 text-gray-400">Total collections: 0</p>
 
+<Button
+  onclick={() => {
+    openNewCollectionModal = true;
+  }}
+>
+  New Collection
+</Button>
+
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
   <div
     class="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] items-center justify-items-center gap-6"
@@ -167,3 +178,5 @@
     </Pagination.Content>
   {/snippet}
 </Pagination.Root>
+
+<NewCollectionModal bind:open={openNewCollectionModal} />

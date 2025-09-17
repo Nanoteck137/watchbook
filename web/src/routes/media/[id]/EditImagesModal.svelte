@@ -1,16 +1,9 @@
 <script lang="ts">
   import { invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
-  import type { ProviderValue } from "$lib/api/types";
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
-  import {
-    Button,
-    Checkbox,
-    Dialog,
-    Input,
-    Label,
-  } from "@nanoteck137/nano-ui";
+  import { Button, Dialog, Input, Label } from "@nanoteck137/nano-ui";
   import toast from "svelte-5-french-toast";
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
