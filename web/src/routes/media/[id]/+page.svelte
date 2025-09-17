@@ -27,6 +27,7 @@
   import toast from "svelte-5-french-toast";
   import ProviderUpdate from "./ProviderUpdate.svelte";
   import EditImagesModal from "./EditImagesModal.svelte";
+  import BannerHeader from "$lib/components/BannerHeader.svelte";
 
   const { data } = $props();
   const apiClient = getApiClient();
@@ -113,23 +114,33 @@
   }
 </script>
 
-<div class="py-2">
-  <Breadcrumb.Root>
-    <Breadcrumb.List>
-      <Breadcrumb.Item>
-        <Breadcrumb.Link href="/media">Media</Breadcrumb.Link>
-      </Breadcrumb.Item>
-      <Breadcrumb.Separator />
-      <Breadcrumb.Item>
-        <Breadcrumb.Page class="line-clamp-1 max-w-96 text-ellipsis">
-          {data.media.title}
-        </Breadcrumb.Page>
-      </Breadcrumb.Item>
-    </Breadcrumb.List>
-  </Breadcrumb.Root>
-</div>
+<Breadcrumb.Root class="py-2">
+  <Breadcrumb.List>
+    <Breadcrumb.Item>
+      <Breadcrumb.Link href="/media">Media</Breadcrumb.Link>
+    </Breadcrumb.Item>
+    <Breadcrumb.Separator />
+    <Breadcrumb.Item>
+      <Breadcrumb.Page class="line-clamp-1 max-w-96 text-ellipsis">
+        {data.media.title}
+      </Breadcrumb.Page>
+    </Breadcrumb.Item>
+  </Breadcrumb.List>
+</Breadcrumb.Root>
 
-<Spacer size="sm" />
+<Spacer size="md" />
+
+<BannerHeader
+  title={data.media.title}
+  description={data.media.description}
+  coverUrl={data.media.coverUrl}
+  bannerUrl={data.media.bannerUrl}
+  logoUrl={data.media.logoUrl}
+>
+  <!-- {#snippet imageContent()}
+    <CollectionDropdown collection={data.collection} />
+  {/snippet} -->
+</BannerHeader>
 
 <DropdownMenu.Root>
   <DropdownMenu.Trigger
