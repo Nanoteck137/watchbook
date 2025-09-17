@@ -1,10 +1,10 @@
-import { getPagedQueryOptions } from "$lib/utils";
+import { getFullQueryOptions } from "$lib/utils";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, params, url }) => {
   const queryParams = url.searchParams;
-  const query = getPagedQueryOptions(queryParams);
+  const query = getFullQueryOptions(queryParams);
   query["userId"] = params.id;
   query["filter"] = "userList != null";
 

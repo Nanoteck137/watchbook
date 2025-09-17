@@ -1,9 +1,9 @@
-import { getPagedQueryOptions } from "$lib/utils";
+import { getFullQueryOptions } from "$lib/utils";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, url }) => {
-  const query = getPagedQueryOptions(url.searchParams);
+  const query = getFullQueryOptions(url.searchParams);
 
   delete query["sort"];
   delete query["filter"];

@@ -34,7 +34,7 @@ export function isRoleAdmin(role: string) {
   }
 }
 
-export function getPagedQueryOptions(searchParams: URLSearchParams) {
+export function getFullQueryOptions(searchParams: URLSearchParams) {
   const query: Record<string, string> = {};
   const filter = searchParams.get("filter");
   if (filter) {
@@ -45,6 +45,17 @@ export function getPagedQueryOptions(searchParams: URLSearchParams) {
   if (sort) {
     query["sort"] = sort;
   }
+
+  const page = searchParams.get("page");
+  if (page) {
+    query["page"] = page;
+  }
+
+  return query;
+}
+
+export function getPageOptions(searchParams: URLSearchParams) {
+  const query: Record<string, string> = {};
 
   const page = searchParams.get("page");
   if (page) {

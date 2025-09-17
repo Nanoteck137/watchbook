@@ -15,13 +15,7 @@
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
   import { z } from "zod";
-
-  const collectionTypes = [
-    { label: "Unknown", value: "unknown" },
-    { label: "Series", value: "series" },
-    { label: "Anime", value: "anime" },
-  ] as const;
-  type CollectionType = (typeof collectionTypes)[number]["value"];
+  import { collectionTypes, type CollectionType } from "./types";
 
   const Schema = z.object({
     type: z
