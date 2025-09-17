@@ -5,6 +5,7 @@
   import { Pagination } from "@nanoteck137/nano-ui";
   import { page } from "$app/stores";
   import MediaCard from "$lib/components/MediaCard.svelte";
+  import Filter from "./Filter.svelte";
 
   const { data } = $props();
   const apiClient = getApiClient();
@@ -17,109 +18,11 @@
 
 <Spacer size="sm" />
 
-<div class="mb-6 flex space-x-4 border-b border-gray-700 text-gray-400">
-  <button
-    id="tabBasic"
-    class="border-b-2 border-blue-500 px-4 py-2 font-semibold text-blue-400 focus:outline-none"
-    type="button"
-  >
-    Basic
-  </button>
-  <button
-    id="tabAdvanced"
-    class="border-b-2 border-transparent px-4 py-2 hover:text-blue-400 focus:outline-none"
-    type="button"
-  >
-    Advanced
-  </button>
-</div>
-
-<div class="" id="basicSection">
-  <div
-    class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-  >
-    <div class="flex-grow">
-      <!-- TODO(patrik): Fix -->
-      <label for="search" class="sr-only">Search Collections</label>
-      <input
-        type="search"
-        id="search"
-        name="search"
-        placeholder="Search collections..."
-        class="w-full rounded-md bg-gray-800 px-4 py-2 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-96"
-        autocomplete="off"
-      />
-    </div>
-
-    <div>
-      <!-- TODO(patrik): Fix -->
-      <label for="sort" class="sr-only">Sort Collections</label>
-      <select
-        id="sort"
-        name="sort"
-        class="w-full rounded-md bg-gray-800 px-4 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-auto"
-      >
-        <option value="title-asc">Title: A to Z</option>
-        <option value="title-desc">Title: Z to A</option>
-      </select>
-    </div>
-  </div>
-
-  <!-- Type Filters -->
-  <div class="mb-8 flex flex-wrap gap-4 text-gray-300">
-    <label class="inline-flex cursor-pointer items-center">
-      <input type="checkbox" class="type-filter" value="anime" checked />
-      <span class="ml-2 select-none">Anime</span>
-    </label>
-
-    <label class="inline-flex cursor-pointer items-center">
-      <input type="checkbox" class="type-filter" value="tv" checked />
-      <span class="ml-2 select-none">TV</span>
-    </label>
-
-    <label class="inline-flex cursor-pointer items-center">
-      <input type="checkbox" class="type-filter" value="game" checked />
-      <span class="ml-2 select-none">Game</span>
-    </label>
-
-    <label class="inline-flex cursor-pointer items-center">
-      <input type="checkbox" class="type-filter" value="more" checked />
-      <span class="ml-2 select-none">More</span>
-    </label>
-  </div>
-</div>
-
-<div id="advancedSection" class="hidden">
-  <div class="mb-6">
-    <label for="customFilter" class="mb-2 block font-semibold text-gray-300">
-      Advanced Filter
-    </label>
-
-    <input
-      type="text"
-      id="customFilter"
-      placeholder="Enter custom filter language..."
-      class="w-full rounded-md bg-gray-800 px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-  </div>
-
-  <div>
-    <label for="customSort" class="mb-2 block font-semibold text-gray-300">
-      Advanced Sort
-    </label>
-
-    <input
-      type="text"
-      id="customSort"
-      placeholder="Enter custom sort language..."
-      class="w-full rounded-md bg-gray-800 px-4 py-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-  </div>
-</div>
+<Filter fullFilter={data.filter} />
 
 <Spacer />
 
-<p class="text-gray-400">Total: {data.page.totalItems}</p>
+<p>Total: {data.page.totalItems}</p>
 
 <Spacer />
 

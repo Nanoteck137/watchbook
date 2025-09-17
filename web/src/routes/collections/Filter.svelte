@@ -60,7 +60,7 @@
 
 <form action="GET" class="flex flex-col gap-4" use:enhance>
   <FormItem>
-    <Label for="query">Search Collections</Label>
+    <Label for="query">Search</Label>
     <Input id="query" name="query" type="text" bind:value={$form.query} />
     <Errors errors={$errors.query} />
   </FormItem>
