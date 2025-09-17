@@ -27,7 +27,7 @@
 
   let openEditModal = $state(false);
   let openEditImagesModal = $state(false);
-  let openRemoveModal = $state(false);
+  let openDeleteModal = $state(false);
   let openProviderUpdateModal = $state(false);
 </script>
 
@@ -71,11 +71,11 @@
 
       <DropdownMenu.Item
         onclick={() => {
-          openRemoveModal = true;
+          openDeleteModal = true;
         }}
       >
         <Trash />
-        Remove
+        Delete
       </DropdownMenu.Item>
     </DropdownMenu.Group>
   </DropdownMenu.Content>
@@ -111,9 +111,9 @@
 />
 
 <ConfirmBox
-  bind:open={openRemoveModal}
-  title="Remove Collection?"
-  description="Are you sure you want to remove this collection? This action cannot be undone."
+  bind:open={openDeleteModal}
+  title="Delete Collection?"
+  description="Are you sure you want to delete this collection? This action cannot be undone."
   confirmText="Remove"
   onResult={async () => {
     const res = await apiClient.deleteCollection(collection.id);
@@ -121,7 +121,7 @@
       return handleApiError(res.error);
     }
 
-    toast.success("Successfully removed collection");
+    toast.success("Successfully deleted collection");
     goto(`/collections`, { invalidateAll: true });
   }}
 />
