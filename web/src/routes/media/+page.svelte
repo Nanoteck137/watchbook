@@ -3,8 +3,13 @@
   import MediaCard from "$lib/components/MediaCard.svelte";
   import Filter from "./Filter.svelte";
   import StandardPagination from "$lib/components/StandardPagination.svelte";
+  import { Button } from "@nanoteck137/nano-ui";
+  import { isRoleAdmin } from "$lib/utils";
+  import { Plus } from "lucide-svelte";
 
   const { data } = $props();
+
+  let openNewMediaModal = $state(false);
 
   // NOTE(patrik):
   //  - Large image size: 225x318 (h-80 w-56)
@@ -12,15 +17,29 @@
   //  - Small image size: 50x70 (h-20 w-14)
 </script>
 
-<Spacer size="sm" />
-
 <Filter fullFilter={data.filter} />
 
-<Spacer />
+<Spacer size="md" />
 
-<p>Total: {data.page.totalItems}</p>
+<div class="flex items-center justify-between">
+  <h2 class="text-bold text-xl">
+    Media
+    {#if isRoleAdmin(data.user?.role)}
+      <Button
+        variant="ghost"
+        size="icon"
+        onclick={() => {
+          openNewMediaModal = true;
+        }}
+      >
+        <Plus />
+      </Button>
+    {/if}
+  </h2>
+  <p class="text-sm">{data.page.totalItems} item(s)</p>
+</div>
 
-<Spacer />
+<Spacer size="md" />
 
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
   <div

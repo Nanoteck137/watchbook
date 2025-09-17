@@ -1,7 +1,7 @@
 <script lang="ts">
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
-  import { Button, Input, Label, Select } from "@nanoteck137/nano-ui";
+  import { Button, Card, Input, Label, Select } from "@nanoteck137/nano-ui";
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
   import {
@@ -14,6 +14,7 @@
   } from "./types";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
+  import { FilterX } from "lucide-svelte";
 
   export type Props = {
     fullFilter: FullFilter;
@@ -83,90 +84,7 @@
   );
 </script>
 
-<form action="GET" class="flex flex-col gap-4" use:enhance>
-  <FormItem>
-    <Label for="query">Search</Label>
-    <Input id="query" name="query" type="text" bind:value={$form.query} />
-    <Errors errors={$errors.query} />
-  </FormItem>
-
-  <div class="flex flex-col gap-4">
-    <div class="flex items-center gap-4">
-      <p class="w-20">Filter</p>
-
-      <Select.Root type="multiple" bind:value={$form.filters.type}>
-        <Select.Trigger class="max-w-[120px]">Type</Select.Trigger>
-        <Select.Content>
-          {#each mediaTypes as ty (ty.value)}
-            <Select.Item value={ty.value} label={ty.label} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
-
-      <Select.Root type="multiple" bind:value={$form.filters.status}>
-        <Select.Trigger class="max-w-[120px]">Status</Select.Trigger>
-        <Select.Content>
-          {#each mediaStatus as status (status.value)}
-            <Select.Item value={status.value} label={status.label} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
-
-      <Select.Root type="multiple" bind:value={$form.filters.rating}>
-        <Select.Trigger class="max-w-[120px]">Rating</Select.Trigger>
-        <Select.Content>
-          {#each mediaRatings as rating (rating.value)}
-            <Select.Item value={rating.value} label={rating.label} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
-    </div>
-
-    <div class="flex items-center gap-4">
-      <p class="w-20">Excludes</p>
-
-      <Select.Root type="multiple" bind:value={$form.excludes.type}>
-        <Select.Trigger class="max-w-[120px]">Type</Select.Trigger>
-        <Select.Content>
-          {#each mediaTypes as ty (ty.value)}
-            <Select.Item value={ty.value} label={ty.label} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
-
-      <Select.Root type="multiple" bind:value={$form.excludes.status}>
-        <Select.Trigger class="max-w-[120px]">Status</Select.Trigger>
-        <Select.Content>
-          {#each mediaStatus as status (status.value)}
-            <Select.Item value={status.value} label={status.label} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
-
-      <Select.Root type="multiple" bind:value={$form.excludes.rating}>
-        <Select.Trigger class="max-w-[120px]">Rating</Select.Trigger>
-        <Select.Content>
-          {#each mediaRatings as rating (rating.value)}
-            <Select.Item value={rating.value} label={rating.label} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
-    </div>
-
-    <div class="flex items-center gap-4">
-      <p class="w-20">Sort</p>
-
-      <Select.Root type="single" allowDeselect={false} bind:value={$form.sort}>
-        <Select.Trigger class="max-w-[180px]">
-          {sortTypes.find((i) => i.value === $form.sort)?.label ?? "Sort"}
-        </Select.Trigger>
-        <Select.Content>
-          {#each sortTypes as ty (ty.value)}
-            <Select.Item value={ty.value} label={ty.label} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
-    </div>
+<!-- <form action="GET" class="flex flex-col gap-4" use:enhance>
 
     <Button
       onclick={() => {
@@ -183,4 +101,120 @@
   </div>
 
   <Button type="submit">Filter</Button>
+</form> -->
+
+<form action="GET" use:enhance>
+  <Card.Root>
+    <Card.Content class="flex flex-col gap-4">
+      <FormItem>
+        <Label for="query">Search</Label>
+        <Input id="query" name="query" type="text" bind:value={$form.query} />
+        <Errors errors={$errors.query} />
+      </FormItem>
+
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <p class="w-20">Filter</p>
+
+          <Select.Root type="multiple" bind:value={$form.filters.type}>
+            <Select.Trigger class="sm:max-w-[120px]">Type</Select.Trigger>
+            <Select.Content>
+              {#each mediaTypes as ty (ty.value)}
+                <Select.Item value={ty.value} label={ty.label} />
+              {/each}
+            </Select.Content>
+          </Select.Root>
+
+          <Select.Root type="multiple" bind:value={$form.filters.status}>
+            <Select.Trigger class="sm:max-w-[120px]">Status</Select.Trigger>
+            <Select.Content>
+              {#each mediaStatus as status (status.value)}
+                <Select.Item value={status.value} label={status.label} />
+              {/each}
+            </Select.Content>
+          </Select.Root>
+
+          <Select.Root type="multiple" bind:value={$form.filters.rating}>
+            <Select.Trigger class="sm:max-w-[120px]">Rating</Select.Trigger>
+            <Select.Content>
+              {#each mediaRatings as rating (rating.value)}
+                <Select.Item value={rating.value} label={rating.label} />
+              {/each}
+            </Select.Content>
+          </Select.Root>
+        </div>
+
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <p class="w-20">Excludes</p>
+
+          <Select.Root type="multiple" bind:value={$form.excludes.type}>
+            <Select.Trigger class="sm:max-w-[120px]">Type</Select.Trigger>
+            <Select.Content>
+              {#each mediaTypes as ty (ty.value)}
+                <Select.Item value={ty.value} label={ty.label} />
+              {/each}
+            </Select.Content>
+          </Select.Root>
+
+          <Select.Root type="multiple" bind:value={$form.excludes.status}>
+            <Select.Trigger class="sm:max-w-[120px]">Status</Select.Trigger>
+            <Select.Content>
+              {#each mediaStatus as status (status.value)}
+                <Select.Item value={status.value} label={status.label} />
+              {/each}
+            </Select.Content>
+          </Select.Root>
+
+          <Select.Root type="multiple" bind:value={$form.excludes.rating}>
+            <Select.Trigger class="sm:max-w-[120px]">Rating</Select.Trigger>
+            <Select.Content>
+              {#each mediaRatings as rating (rating.value)}
+                <Select.Item value={rating.value} label={rating.label} />
+              {/each}
+            </Select.Content>
+          </Select.Root>
+        </div>
+
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <p class="w-20">Sort</p>
+
+          <Select.Root
+            type="single"
+            allowDeselect={false}
+            bind:value={$form.sort}
+          >
+            <Select.Trigger class="sm:max-w-[180px]">
+              {sortTypes.find((i) => i.value === $form.sort)?.label ?? "Sort"}
+            </Select.Trigger>
+            <Select.Content>
+              {#each sortTypes as ty (ty.value)}
+                <Select.Item value={ty.value} label={ty.label} />
+              {/each}
+            </Select.Content>
+          </Select.Root>
+        </div>
+      </div>
+    </Card.Content>
+
+    <Card.Footer class="flex gap-2">
+      <Button
+        variant="outline"
+        onclick={() => {
+          reset({
+            data: {
+              query: "",
+              filters: { type: [], status: [], rating: [] },
+              excludes: { type: [], status: [], rating: [] },
+              sort: defaultSort,
+            },
+          });
+        }}
+      >
+        <FilterX />
+        Reset
+      </Button>
+
+      <Button type="submit">Filter</Button>
+    </Card.Footer>
+  </Card.Root>
 </form>

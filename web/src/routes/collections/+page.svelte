@@ -13,28 +13,9 @@
   let openNewCollectionModal = $state(false);
 </script>
 
-<!-- <h1 class="flex items-center gap-4 text-xl">
-  Collections
-  {#if isRoleAdmin(data.user?.role)}
-    <Button
-      variant="ghost"
-      size="icon"
-      onclick={() => {
-        openNewCollectionModal = true;
-      }}
-    >
-      <Plus />
-    </Button>
-  {/if}
-</h1>
-
-<Spacer size="md" /> -->
-
 <Filter fullFilter={data.filter} />
 
 <Spacer size="md" />
-
-<!-- <p>Total: {data.page.totalItems}</p> -->
 
 <div class="flex items-center justify-between">
   <h2 class="text-bold text-xl">
@@ -51,7 +32,7 @@
       </Button>
     {/if}
   </h2>
-  <p class="text-sm">7041 collections(s)</p>
+  <p class="text-sm">{data.page.totalItems} collections(s)</p>
 </div>
 
 <Spacer size="md" />
