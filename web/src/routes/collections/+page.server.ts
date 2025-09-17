@@ -7,30 +7,23 @@ function constructFilterSort(
   filter: FullFilter,
   query: Record<string, string>,
 ) {
-  let f = "";
+  const filters = [];
 
   if (filter.query !== "") {
-    f += `name % "%${filter.query}%"`;
+    filters.push(`name % "%${filter.query}%"`);
   }
 
-  if (filter.excludes.length > 0) {
-    if (f !== "") {
-      f += "&&";
-    }
-
-    const e = filter.excludes.map((i) => `"${i}"`).join(",");
-    f += `!hasCollectionType(${e})`;
+  if (filter.filters.type.length > 0) {
+    const s = filter.filters.type.map((i) => `"${i}"`).join(",");
+    filters.push(`hasType(${s})`);
   }
 
-  if (filter.filter !== "") {
-    if (f !== "") {
-      f += "&&";
-    }
-
-    f += `hasCollectionType("${filter.filter}")`;
+  if (filter.excludes.type.length > 0) {
+    const s = filter.excludes.type.map((i) => `"${i}"`).join(",");
+    filters.push(`!hasType(${s})`);
   }
 
-  query["filter"] = f;
+  query["filter"] = filters.join(" && ");
 
   switch (filter.sort) {
     case "name-a-z":
@@ -48,13 +41,15 @@ export const load: PageServerLoad = async ({ locals, url }) => {
   const filter = FullFilter.parse({
     query: url.searchParams.get("query") ?? "",
     sort: url.searchParams.get("sort") ?? undefined,
-    excludes: url.searchParams.get("excludes")?.split(",") ?? [],
-    filter: url.searchParams.get("filter") ?? "",
+    filters: {
+      type: url.searchParams.get("filterType")?.split(",") ?? [],
+    },
+    excludes: {
+      type: url.searchParams.get("excludeType")?.split(",") ?? [],
+    },
   });
 
   constructFilterSort(filter, query);
-
-  console.log(query);
 
   const res = await locals.apiClient.getCollections({ query });
   if (!res.success) {

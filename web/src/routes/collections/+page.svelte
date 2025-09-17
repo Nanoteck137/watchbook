@@ -3,16 +3,8 @@
   import { page } from "$app/stores";
   import CollectionCard from "$lib/components/CollectionCard.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
-  import {
-    Button,
-    Checkbox,
-    Input,
-    Label,
-    Pagination,
-    Select,
-  } from "@nanoteck137/nano-ui";
+  import { Button, Pagination } from "@nanoteck137/nano-ui";
   import NewCollectionModal from "./NewCollectionModal.svelte";
-  import FormItem from "$lib/components/FormItem.svelte";
   import Filter from "./Filter.svelte";
 
   const { data } = $props();
