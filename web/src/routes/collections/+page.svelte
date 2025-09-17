@@ -5,23 +5,56 @@
   import NewCollectionModal from "./NewCollectionModal.svelte";
   import Filter from "./Filter.svelte";
   import StandardPagination from "$lib/components/StandardPagination.svelte";
+  import { Plus } from "lucide-svelte";
+  import { isRoleAdmin } from "$lib/utils";
 
   const { data } = $props();
 
   let openNewCollectionModal = $state(false);
 </script>
 
+<!-- <h1 class="flex items-center gap-4 text-xl">
+  Collections
+  {#if isRoleAdmin(data.user?.role)}
+    <Button
+      variant="ghost"
+      size="icon"
+      onclick={() => {
+        openNewCollectionModal = true;
+      }}
+    >
+      <Plus />
+    </Button>
+  {/if}
+</h1>
+
+<Spacer size="md" /> -->
+
 <Filter fullFilter={data.filter} />
 
-<p>Total collections: {data.page.totalItems}</p>
+<Spacer size="md" />
 
-<Button
-  onclick={() => {
-    openNewCollectionModal = true;
-  }}
->
-  New Collection
-</Button>
+<!-- <p>Total: {data.page.totalItems}</p> -->
+
+<div class="flex items-center justify-between">
+  <h2 class="text-bold text-xl">
+    Collections
+    {#if isRoleAdmin(data.user?.role)}
+      <Button
+        variant="ghost"
+        size="icon"
+        onclick={() => {
+          openNewCollectionModal = true;
+        }}
+      >
+        <Plus />
+      </Button>
+    {/if}
+  </h2>
+  <p class="text-sm">7041 collections(s)</p>
+</div>
+
+<Spacer size="md" />
 
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
   <div

@@ -1,7 +1,7 @@
 <script lang="ts">
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
-  import { Button, Input, Label, Select } from "@nanoteck137/nano-ui";
+  import { Button, Card, Input, Label, Select } from "@nanoteck137/nano-ui";
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
   import {
@@ -12,6 +12,7 @@
   } from "./types";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
+  import { X, FilterX } from "lucide-svelte";
 
   export type Props = {
     fullFilter: FullFilter;
@@ -61,70 +62,81 @@
   );
 </script>
 
-<form action="GET" class="flex flex-col gap-4" use:enhance>
-  <FormItem>
-    <Label for="query">Search</Label>
-    <Input id="query" name="query" type="text" bind:value={$form.query} />
-    <Errors errors={$errors.query} />
-  </FormItem>
+<form action="GET" use:enhance>
+  <Card.Root>
+    <Card.Content class="flex flex-col gap-4">
+      <FormItem>
+        <Label for="query">Search</Label>
+        <Input id="query" name="query" type="text" bind:value={$form.query} />
+        <Errors errors={$errors.query} />
+      </FormItem>
 
-  <div class="flex flex-col gap-4">
-    <div class="flex items-center gap-4">
-      <p class="w-20">Filters</p>
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center gap-4">
+          <p class="min-w-20">Filters</p>
 
-      <Select.Root type="multiple" bind:value={$form.filters.type}>
-        <Select.Trigger class="max-w-[120px]">Type</Select.Trigger>
-        <Select.Content>
-          {#each collectionTypes as ty (ty.value)}
-            <Select.Item value={ty.value} label={ty.label} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
-    </div>
+          <Select.Root type="multiple" bind:value={$form.filters.type}>
+            <Select.Trigger>Type</Select.Trigger>
+            <Select.Content>
+              {#each collectionTypes as ty (ty.value)}
+                <Select.Item value={ty.value} label={ty.label} />
+              {/each}
+            </Select.Content>
+          </Select.Root>
+        </div>
 
-    <div class="flex items-center gap-4">
-      <p class="w-20">Excludes</p>
+        <div class="flex items-center gap-4">
+          <p class="min-w-20">Excludes</p>
 
-      <Select.Root type="multiple" bind:value={$form.excludes.type}>
-        <Select.Trigger class="max-w-[120px]">Type</Select.Trigger>
-        <Select.Content>
-          {#each collectionTypes as ty (ty.value)}
-            <Select.Item value={ty.value} label={ty.label} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
-    </div>
+          <Select.Root type="multiple" bind:value={$form.excludes.type}>
+            <Select.Trigger>Type</Select.Trigger>
+            <Select.Content>
+              {#each collectionTypes as ty (ty.value)}
+                <Select.Item value={ty.value} label={ty.label} />
+              {/each}
+            </Select.Content>
+          </Select.Root>
+        </div>
 
-    <div class="flex items-center gap-4">
-      <p class="w-20">Sort</p>
+        <div class="flex items-center gap-4">
+          <p class="min-w-20">Sort</p>
 
-      <Select.Root type="single" allowDeselect={false} bind:value={$form.sort}>
-        <Select.Trigger class="max-w-[160px]">
-          {sortTypes.find((i) => i.value === $form.sort)?.label ?? "Sort"}
-        </Select.Trigger>
-        <Select.Content>
-          {#each sortTypes as ty (ty.value)}
-            <Select.Item value={ty.value} label={ty.label} />
-          {/each}
-        </Select.Content>
-      </Select.Root>
-    </div>
+          <Select.Root
+            type="single"
+            allowDeselect={false}
+            bind:value={$form.sort}
+          >
+            <Select.Trigger>
+              {sortTypes.find((i) => i.value === $form.sort)?.label ?? "Sort"}
+            </Select.Trigger>
+            <Select.Content>
+              {#each sortTypes as ty (ty.value)}
+                <Select.Item value={ty.value} label={ty.label} />
+              {/each}
+            </Select.Content>
+          </Select.Root>
+        </div>
+      </div>
+    </Card.Content>
+    <Card.Footer class="flex gap-2">
+      <Button
+        variant="outline"
+        onclick={() => {
+          reset({
+            data: {
+              query: "",
+              filters: { type: [] },
+              excludes: { type: [] },
+              sort: defaultSort,
+            },
+          });
+        }}
+      >
+        <FilterX />
+        Reset
+      </Button>
 
-    <Button
-      onclick={() => {
-        reset({
-          data: {
-            query: "",
-            filters: { type: [] },
-            excludes: { type: [] },
-            sort: defaultSort,
-          },
-        });
-      }}
-    >
-      Reset filters
-    </Button>
-
-    <Button type="submit">Filter</Button>
-  </div>
+      <Button type="submit">Filter</Button>
+    </Card.Footer>
+  </Card.Root>
 </form>
