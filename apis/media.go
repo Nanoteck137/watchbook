@@ -642,7 +642,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				if body.BannerUrl != "" {
 					p, err := utils.DownloadImageHashed(body.BannerUrl, mediaDir.Images())
 					if err == nil {
-						coverFile = path.Base(p)
+						bannerFile = path.Base(p)
 					} else {
 						app.Logger().Error("failed to download banner image for media", "err", err)
 					}
@@ -651,7 +651,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				if body.LogoUrl != "" {
 					p, err := utils.DownloadImageHashed(body.LogoUrl, mediaDir.Images())
 					if err == nil {
-						coverFile = path.Base(p)
+						logoFile = path.Base(p)
 					} else {
 						app.Logger().Error("failed to download logo image for media", "err", err)
 					}

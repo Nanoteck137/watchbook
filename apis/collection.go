@@ -434,7 +434,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 				if body.BannerUrl != "" {
 					p, err := utils.DownloadImageHashed(body.BannerUrl, collectionDir.Images())
 					if err == nil {
-						coverFile = path.Base(p)
+						bannerFile = path.Base(p)
 					} else {
 						app.Logger().Error("failed to download banner image for collection", "err", err)
 					}
@@ -443,7 +443,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 				if body.LogoUrl != "" {
 					p, err := utils.DownloadImageHashed(body.LogoUrl, collectionDir.Images())
 					if err == nil {
-						coverFile = path.Base(p)
+						logoFile = path.Base(p)
 					} else {
 						app.Logger().Error("failed to download logo image for collection", "err", err)
 					}
