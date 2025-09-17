@@ -22,17 +22,10 @@ func (a *MediaResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 			Kind: filter.NameKindString,
 			Name: "media.id",
 		}, true
-	case "malId":
+	case "mediaType":
 		return filter.Name{
 			Kind: filter.NameKindString,
-			Name: "media.mal_id",
-			Nullable: true,
-		}, true
-	case "tmdbId":
-		return filter.Name{
-			Kind: filter.NameKindString,
-			Name: "media.tmdb_id",
-			Nullable: true,
+			Name: "media.type",
 		}, true
 	case "title":
 		return filter.Name{
@@ -105,6 +98,8 @@ func (a *MediaResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, na
 	switch name {
 	case "hasTag":
 		return resolver.InTable(name, "tags", "media.id", args)
+	case "hasMediaType":
+		return resolver.In(name, "mediaType", args)
 	}
 
 	return nil, filter.UnknownFunction(name)
