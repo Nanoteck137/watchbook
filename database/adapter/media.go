@@ -61,6 +61,11 @@ func (a *MediaResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 			Kind: filter.NameKindString,
 			Name: "media.status",
 		}, true
+	case "rating":
+		return filter.Name{
+			Kind: filter.NameKindString,
+			Name: "media.rating",
+		}, true
 	case "release":
 		return filter.Name{
 			Kind: filter.NameKindString,
@@ -98,8 +103,12 @@ func (a *MediaResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, na
 	switch name {
 	case "hasTag":
 		return resolver.InTable(name, "tags", "media.id", args)
-	case "hasMediaType":
+	case "hasType":
 		return resolver.In(name, "mediaType", args)
+	case "hasStatus":
+		return resolver.In(name, "status", args)
+	case "hasRating":
+		return resolver.In(name, "rating", args)
 	}
 
 	return nil, filter.UnknownFunction(name)
