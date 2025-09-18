@@ -3,8 +3,17 @@
   import Spacer from "$lib/components/Spacer.svelte";
   import { Breadcrumb, Button } from "@nanoteck137/nano-ui";
   import MediaDropdown from "./MediaDropdown.svelte";
+  import Badge from "$lib/components/Badge.svelte";
+  import { type UserList } from "$lib/types";
+  import SetListModal from "./SetListModal.svelte";
+  import { getApiClient, handleApiError } from "$lib";
+  import { invalidate, invalidateAll } from "$app/navigation";
+  import toast from "svelte-5-french-toast";
 
   const { data, children } = $props();
+  const apiClient = getApiClient();
+
+  let openSetListModal = $state(false);
 </script>
 
 <Breadcrumb.Root class="py-2">
@@ -63,8 +72,51 @@
       <!-- <Button variant="link">Overview</Button> -->
     </div>
   {/snippet}
+  {#snippet underText()}
+    <div class="flex gap-2">
+      {#if data.media.user?.list}
+        <Badge
+          class="w-fit hover:cursor-pointer hover:brightness-75"
+          list={data.media.user?.list as UserList}
+          onclick={() => {
+            openSetListModal = true;
+          }}
+        />
+
+        <p
+          class="inline-block w-fit select-none rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white"
+        >
+          {data.media.user?.currentPart ?? "??"} / {data.media.partCount ??
+            "??"}
+        </p>
+      {:else}
+        <Button
+          variant="link"
+          onclick={async () => {
+            const res = await apiClient.setMediaUserData(data.media.id, {
+              list: "backlog",
+            });
+            if (!res.success) {
+              return handleApiError(res.error);
+            }
+
+            toast.success("Added to user list");
+            invalidateAll();
+          }}
+        >
+          Add to list
+        </Button>
+      {/if}
+    </div>
+  {/snippet}
 </BannerHeader>
 
 <Spacer size="md" />
 
 {@render children()}
+
+<SetListModal
+  bind:open={openSetListModal}
+  mediaId={data.media.id}
+  userList={data.media.user ?? undefined}
+/>

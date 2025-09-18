@@ -15,6 +15,7 @@
 
     imageContent?: Snippet<[]>;
     buttons?: Snippet<[]>;
+    underText?: Snippet<[]>;
   };
 
   const {
@@ -25,6 +26,7 @@
     logoUrl,
     imageContent,
     buttons,
+    underText,
   }: Props = $props();
 
   let descriptionShowMore = $state(false);
@@ -109,14 +111,9 @@
           {title}
         </h1>
 
-        <div class="flex gap-2">
-          <Badge class="w-fit" list="in-progress" />
-          <p
-            class="inline-block w-fit select-none rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white"
-          >
-            8 / 12
-          </p>
-        </div>
+        {#if underText}
+          {@render underText()}
+        {/if}
       </div>
 
       {#if buttons}

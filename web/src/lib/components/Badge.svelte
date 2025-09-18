@@ -6,9 +6,10 @@
   type Props = {
     list: UserList;
     class?: string;
+    onclick?: () => void;
   };
 
-  const { list, class: className }: Props = $props();
+  const { list, class: className, onclick }: Props = $props();
 
   function toName(): string {
     switch (list) {
@@ -29,12 +30,15 @@
   const extraClass = $derived(userListClass(list));
 </script>
 
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <span
   class={cn(
     "inline-block select-none rounded-full px-3 py-1 text-xs font-semibold",
     extraClass,
     className,
   )}
+  {onclick}
 >
   {name}
 </span>
