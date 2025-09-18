@@ -123,6 +123,12 @@
   </DropdownMenu.Root>
 </div>
 
+<Spacer />
+
+<StandardPagination pageData={data.page} />
+
+<Spacer size="md" />
+
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
   <div
     class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] items-center justify-items-center gap-6"
