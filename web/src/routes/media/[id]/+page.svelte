@@ -8,6 +8,7 @@
     Breadcrumb,
     Button,
     buttonVariants,
+    Card,
     Checkbox,
     Dialog,
     DropdownMenu,
@@ -92,33 +93,7 @@
   }
 </script>
 
-<Breadcrumb.Root class="py-2">
-  <Breadcrumb.List>
-    <Breadcrumb.Item>
-      <Breadcrumb.Link href="/media">Media</Breadcrumb.Link>
-    </Breadcrumb.Item>
-    <Breadcrumb.Separator />
-    <Breadcrumb.Item>
-      <Breadcrumb.Page class="line-clamp-1 max-w-96 text-ellipsis">
-        {data.media.title}
-      </Breadcrumb.Page>
-    </Breadcrumb.Item>
-  </Breadcrumb.List>
-</Breadcrumb.Root>
-
-<Spacer size="md" />
-
-<BannerHeader
-  title={data.media.title}
-  description={data.media.description}
-  coverUrl={data.media.coverUrl}
-  bannerUrl={data.media.bannerUrl}
-  logoUrl={data.media.logoUrl}
->
-  {#snippet imageContent()}
-    <MediaDropdown media={data.media} />
-  {/snippet}
-</BannerHeader>
+<div class="h-[400px]"></div>
 
 <div class="flex flex-col justify-around gap-2">
   <div class="flex gap-2">
