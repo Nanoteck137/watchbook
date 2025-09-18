@@ -9,11 +9,12 @@
     Pencil,
     Trash,
   } from "lucide-svelte";
-  import type { Collection, Media } from "$lib/api/types";
+  import type { Media } from "$lib/api/types";
   import ConfirmBox from "$lib/components/ConfirmBox.svelte";
   import EditImagesModal from "./EditImagesModal.svelte";
   import toast from "svelte-5-french-toast";
   import { goto } from "$app/navigation";
+  import EditMediaModal from "./EditMediaModal.svelte";
 
   type Props = {
     media: Media;
@@ -79,29 +80,7 @@
   </DropdownMenu.Content>
 </DropdownMenu.Root>
 
-<!-- <EditCollectionModal bind:open={openEditModal} {collection} /> -->
-
-<!-- <EditMediaItem
-  bind:open={editModalOpen}
-  name={item.collectionName}
-  searchSlug={item.searchSlug}
-  position={item.position}
-  onResult={async (data) => {
-    const res = await apiClient.editCollectionItem(
-      item.collectionId,
-      item.mediaId,
-      data,
-    );
-    if (!res.success) {
-      return handleApiError(res.error);
-    }
-
-    toast.success("Successfully updated collection item");
-    invalidateAll();
-  }}
-/>
-
--->
+<EditMediaModal bind:open={openEditModal} {media} />
 
 <EditImagesModal bind:open={openEditImagesModal} mediaId={media.id} />
 

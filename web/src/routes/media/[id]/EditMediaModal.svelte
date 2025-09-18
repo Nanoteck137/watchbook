@@ -1,17 +1,8 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
-  import {
-    Button,
-    Dialog,
-    Input,
-    Label,
-    Select,
-    Separator,
-  } from "@nanoteck137/nano-ui";
-  import toast from "svelte-5-french-toast";
+  import { Button, Dialog, Input, Label, Select } from "@nanoteck137/nano-ui";
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
   import { z } from "zod";
@@ -22,9 +13,15 @@
     MediaStatusEnum,
     MediaTypeEnum,
     mediaTypes,
-  } from "./types";
+    type MediaRating,
+    type MediaStatus,
+    type MediaType,
+  } from "../types";
   import { isMatch } from "date-fns";
   import Spinner from "$lib/components/Spinner.svelte";
+  import type { Media } from "$lib/api/types";
+  import toast from "svelte-5-french-toast";
+  import { invalidateAll } from "$app/navigation";
 
   const Schema = z.object({
     type: MediaTypeEnum.default("unknown"),
@@ -50,35 +47,47 @@
         message: "End date is not in the correct format (YYYY-MM-DD)",
       }),
 
-    partCount: z.number().int("Part Count needs to be a integer"),
-
     tags: z.string(),
     creators: z.string(),
-
-    coverUrl: z.string().url("Cover URL must be valid url").or(z.literal("")),
-    bannerUrl: z
-      .string()
-      .url("Banner URL must be valid url")
-      .or(z.literal("")),
-    logoUrl: z.string().url("Logo URL must be valid url").or(z.literal("")),
   });
   type SchemaTy = z.infer<typeof Schema>;
 
   export type Props = {
     open: boolean;
+    media: Media;
   };
 
-  let { open = $bindable() }: Props = $props();
+  let { open = $bindable(), media }: Props = $props();
   const apiClient = getApiClient();
 
   $effect(() => {
     if (open) {
-      reset({});
+      reset({
+        data: {
+          type: media.mediaType as MediaType,
+
+          title: media.title,
+          description: media.description ?? "",
+
+          score: media.score ?? 0.0,
+          status: media.status as MediaStatus,
+          rating: media.rating as MediaRating,
+          airingSeason: media.airingSeason ?? "",
+
+          startDate: media.startDate ?? "",
+          endDate: media.endDate ?? "",
+
+          tags: media.tags.join(","),
+          creators: media.creators.join(","),
+        },
+      });
     }
   });
 
   async function submit(data: SchemaTy) {
-    const res = await apiClient.createMedia({
+    console.log(data);
+
+    const res = await apiClient.editMedia(media.id, {
       mediaType: data.type,
 
       title: data.title,
@@ -92,8 +101,6 @@
       startDate: data.startDate,
       endDate: data.endDate,
 
-      partCount: data.partCount,
-
       tags: data.tags
         .split(",")
         .map((s) => s.trim())
@@ -102,10 +109,6 @@
         .split(",")
         .map((s) => s.trim())
         .filter((s) => s !== ""),
-
-      coverUrl: data.coverUrl,
-      bannerUrl: data.bannerUrl,
-      logoUrl: data.logoUrl,
     });
     if (!res.success) {
       return handleApiError(res.error);
@@ -113,8 +116,8 @@
 
     open = false;
 
-    toast.success("Successfully create new media");
-    goto(`/media/${res.data.id}`, { invalidateAll: true });
+    toast.success("Successfully updated media");
+    invalidateAll();
   }
 
   const { form, errors, enhance, reset, submitting } = superForm(
@@ -270,18 +273,6 @@
       </FormItem>
 
       <FormItem>
-        <Label for="partCount">Part Count</Label>
-        <Input
-          id="partCount"
-          name="partCount"
-          type="number"
-          min={0}
-          bind:value={$form.partCount}
-        />
-        <Errors errors={$errors.partCount} />
-      </FormItem>
-
-      <FormItem>
         <Label for="tags">Tags (comma seperated)</Label>
         <Input id="tags" name="tags" type="text" bind:value={$form.tags} />
         <Errors errors={$errors.tags} />
@@ -298,41 +289,6 @@
         <Errors errors={$errors.creators} />
       </FormItem>
 
-      <Separator />
-
-      <FormItem>
-        <Label for="coverUrl">Cover URL</Label>
-        <Input
-          id="coverUrl"
-          name="coverUrl"
-          type="text"
-          bind:value={$form.coverUrl}
-        />
-        <Errors errors={$errors.coverUrl} />
-      </FormItem>
-
-      <FormItem>
-        <Label for="bannerUrl">Banner URL</Label>
-        <Input
-          id="bannerUrl"
-          name="bannerUrl"
-          type="text"
-          bind:value={$form.bannerUrl}
-        />
-        <Errors errors={$errors.bannerUrl} />
-      </FormItem>
-
-      <FormItem>
-        <Label for="logoUrl">Logo URL</Label>
-        <Input
-          id="logoUrl"
-          name="logoUrl"
-          type="text"
-          bind:value={$form.logoUrl}
-        />
-        <Errors errors={$errors.logoUrl} />
-      </FormItem>
-
       <Dialog.Footer class="gap-2 sm:gap-0">
         <Button
           variant="outline"
@@ -345,7 +301,7 @@
         </Button>
 
         <Button type="submit" disabled={$submitting}>
-          Create
+          Update
           {#if $submitting}
             <Spinner />
           {/if}

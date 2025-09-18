@@ -51,8 +51,6 @@
     }
 
     open = false;
-    reset({});
-
     toast.success("Successfully updated collection");
     invalidateAll();
   }
