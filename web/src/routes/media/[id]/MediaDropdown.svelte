@@ -15,6 +15,7 @@
   import toast from "svelte-5-french-toast";
   import { goto } from "$app/navigation";
   import EditMediaModal from "./EditMediaModal.svelte";
+  import ProviderUpdateModal from "./ProviderUpdateModal.svelte";
 
   type Props = {
     media: Media;
@@ -100,8 +101,8 @@
   }}
 />
 
-<!-- <ProviderUpdateModal
+<ProviderUpdateModal
   bind:open={openProviderUpdateModal}
-  collectionId={collection.id}
-  providers={collection.providers}
-/> -->
+  mediaId={media.id}
+  providers={media.providers}
+/>

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
-  import Image from "$lib/components/Image.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
   import type { UserList } from "$lib/types.js";
   import { cn } from "$lib/utils.js";
@@ -17,14 +16,12 @@
   } from "@nanoteck137/nano-ui";
   import { ChevronDown, Eye, Star, Trash } from "lucide-svelte";
   import toast from "svelte-5-french-toast";
-  import ProviderUpdate from "./ProviderUpdate.svelte";
   import BannerHeader from "$lib/components/BannerHeader.svelte";
   import MediaDropdown from "./MediaDropdown.svelte";
 
   const { data } = $props();
   const apiClient = getApiClient();
 
-  let showMore = $state(false);
   let episodeOpen = $state(false);
 
   async function updateScore(score: number | null) {

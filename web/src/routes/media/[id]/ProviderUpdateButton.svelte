@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Button } from "@nanoteck137/nano-ui";
   import type { ProviderValue } from "$lib/api/types";
-  import ProviderUpdateModal from "./ProviderUpdateModal.svelte";
+  import ProviderUpdateSettingsModal from "./ProviderUpdateSettingsModal.svelte";
 
   type Props = {
     mediaId: string;
@@ -20,4 +20,8 @@
   {provider.displayName}
 </Button>
 
-<ProviderUpdateModal bind:open={updateModalOpen} {mediaId} {provider} />
+<ProviderUpdateSettingsModal
+  bind:open={updateModalOpen}
+  {mediaId}
+  {provider}
+/>
