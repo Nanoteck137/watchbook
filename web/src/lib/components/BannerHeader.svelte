@@ -28,8 +28,6 @@
     buttons,
     underText,
   }: Props = $props();
-
-  let descriptionShowMore = $state(false);
 </script>
 
 <Card.Root>
@@ -104,7 +102,7 @@
     </div>
 
     <div
-      class="mt-2 flex w-full flex-col items-center justify-center gap-4 pl-2 text-center sm:mt-20 sm:items-start sm:justify-between sm:text-left"
+      class="mt-2 flex w-full flex-col items-center justify-center gap-4 text-center sm:mt-20 sm:items-start sm:justify-between sm:pl-2 sm:text-left"
     >
       <div class="flex flex-col items-center gap-2 pl-2 sm:items-start">
         <h1 class="text-2xl font-bold sm:line-clamp-2 sm:pt-2" {title}>

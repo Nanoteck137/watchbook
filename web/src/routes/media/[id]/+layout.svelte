@@ -9,6 +9,7 @@
   import { getApiClient, handleApiError } from "$lib";
   import { invalidate, invalidateAll } from "$app/navigation";
   import toast from "svelte-5-french-toast";
+  import { isRoleAdmin } from "$lib/utils";
 
   const { data, children } = $props();
   const apiClient = getApiClient();
@@ -59,13 +60,15 @@
       >
         Parts
       </Button>
-      <Button
-        href="/media/{data.media.id}/settings"
-        variant="secondary"
-        data-sveltekit-noscroll
-      >
-        Settings
-      </Button>
+      {#if isRoleAdmin(data.user?.role)}
+        <Button
+          href="/media/{data.media.id}/settings"
+          variant="secondary"
+          data-sveltekit-noscroll
+        >
+          Settings
+        </Button>
+      {/if}
 
       <!-- <a class="bg-red-200" href="?">Overview</a>
         <a href="?">Parts</a> -->
@@ -74,38 +77,40 @@
   {/snippet}
   {#snippet underText()}
     <div class="flex gap-2">
-      {#if data.media.user?.list}
-        <Badge
-          class="w-fit hover:cursor-pointer hover:brightness-75"
-          list={data.media.user?.list as UserList}
-          onclick={() => {
-            openSetListModal = true;
-          }}
-        />
+      {#if data.user}
+        {#if data.media.user?.list}
+          <Badge
+            class="w-fit hover:cursor-pointer hover:brightness-75"
+            list={data.media.user?.list as UserList}
+            onclick={() => {
+              openSetListModal = true;
+            }}
+          />
 
-        <p
-          class="inline-block w-fit select-none rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white"
-        >
-          {data.media.user?.currentPart ?? "??"} / {data.media.partCount ??
-            "??"}
-        </p>
-      {:else}
-        <Button
-          variant="link"
-          onclick={async () => {
-            const res = await apiClient.setMediaUserData(data.media.id, {
-              list: "backlog",
-            });
-            if (!res.success) {
-              return handleApiError(res.error);
-            }
+          <p
+            class="inline-block w-fit select-none rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white"
+          >
+            {data.media.user?.currentPart ?? "??"} / {data.media.partCount ??
+              "??"}
+          </p>
+        {:else}
+          <Button
+            variant="link"
+            onclick={async () => {
+              const res = await apiClient.setMediaUserData(data.media.id, {
+                list: "backlog",
+              });
+              if (!res.success) {
+                return handleApiError(res.error);
+              }
 
-            toast.success("Added to user list");
-            invalidateAll();
-          }}
-        >
-          Add to list
-        </Button>
+              toast.success("Added to user list");
+              invalidateAll();
+            }}
+          >
+            Add to list
+          </Button>
+        {/if}
       {/if}
     </div>
   {/snippet}
