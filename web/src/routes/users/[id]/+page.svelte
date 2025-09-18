@@ -38,6 +38,10 @@
   }
 </script>
 
+{#if data.user?.id === data.userId}
+  <Button href="/account">Account</Button>
+{/if}
+
 <!-- Header Section -->
 <div class="mb-6">
   <!-- Title -->
@@ -119,16 +123,10 @@
   </DropdownMenu.Root>
 </div>
 
-<!-- Media Grid -->
-
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
   <div
     class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] items-center justify-items-center gap-6"
   >
-    <!-- <div
-    class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"
-  > -->
-
     {#each data.media as media}
       <UserMediaCard
         href="/media/{media.id}"
@@ -143,47 +141,6 @@
   </div>
 </div>
 
-{#if data.user?.id === data.userId}
-  <Button href="/account">Account</Button>
-{/if}
-
-<ScrollArea orientation="horizontal">
-  <div class="flex gap-2 py-2">
-    {#each buttons as button}
-      <Button variant="link" data-sveltekit-replacestate href="?list={button}">
-        {button}
-      </Button>
-    {/each}
-  </div>
-</ScrollArea>
-
-<div class="flex flex-col gap-4">
-  {#each data.media as media}
-    <div class="flex justify-between border-b py-2">
-      <div class="flex">
-        <Image class="h-20 w-14" src={media.coverUrl} alt="cover" />
-        <div class="flex flex-col gap-2 px-4 py-1">
-          <a
-            class="line-clamp-2 text-ellipsis text-sm font-semibold hover:cursor-pointer hover:underline"
-            href="/media/{media.id}"
-            title={media.title}
-          >
-            {media.title}
-          </a>
-          <p class="text-xs">{media.user?.list}</p>
-        </div>
-      </div>
-      <div class="flex min-w-24 max-w-24 items-center justify-center border-l">
-        <Star size={18} class="fill-foreground" />
-        <Spacer horizontal size="xs" />
-        <p class="font-mono text-xs">
-          {media.user?.score ?? "0"}
-        </p>
-      </div>
-    </div>
-  {/each}
-</div>
-
-<Spacer size="sm" />
+<Spacer size="md" />
 
 <StandardPagination pageData={data.page} />
