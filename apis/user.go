@@ -15,13 +15,12 @@ import (
 	"github.com/nanoteck137/watchbook/kvstore"
 	"github.com/nanoteck137/watchbook/provider/myanimelist"
 	"github.com/nanoteck137/watchbook/types"
-	"github.com/nanoteck137/watchbook/utils"
 )
 
 type UserData struct {
-	Id          string  `json:"id"`
-	Username    string  `json:"username"`
-	DisplayName *string `json:"displayName"`
+	Id          string `json:"id"`
+	Username    string `json:"username"`
+	DisplayName string `json:"displayName"`
 }
 
 type GetUser struct {
@@ -92,11 +91,16 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
+				displayName := user.Username
+				if user.DisplayName.Valid {
+					displayName = user.DisplayName.String
+				}
+
 				return GetUser{
 					UserData: UserData{
 						Id:          user.Id,
 						Username:    user.Username,
-						DisplayName: utils.SqlNullToStringPtr(user.DisplayName),
+						DisplayName: displayName,
 					},
 				}, nil
 			},
@@ -256,7 +260,7 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 
 				store := kvstore.Store{
 					"username": username,
-					"userId": user.Id,
+					"userId":   user.Id,
 				}
 
 				payload, err := store.Serialize()
@@ -281,7 +285,6 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return nil, nil
-
 
 				ctx := context.Background()
 

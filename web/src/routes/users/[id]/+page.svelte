@@ -32,11 +32,6 @@
 
     goto("?" + params.toString(), { invalidateAll: true });
   }
-
-  function getName() {
-    if (data.userData.displayName) return data.userData.displayName;
-    return data.userData.username;
-  }
 </script>
 
 <Card.Root>
@@ -45,7 +40,7 @@
       class="h-full w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-6"
     >
       <h1 class="text-3xl font-bold">
-        {getName()}
+        {data.userData.displayName}
       </h1>
     </div>
   </div>
