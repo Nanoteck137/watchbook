@@ -1,34 +1,35 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-  import Image from "$lib/components/Image.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
   import UserMediaCard from "$lib/components/UserMediaCard.svelte";
-  import {
-    Button,
-    buttonVariants,
-    DropdownMenu,
-    ScrollArea,
-  } from "@nanoteck137/nano-ui";
-  import { ArrowUpDown, Star } from "lucide-svelte";
-  import HeaderButton from "./HeaderButton.svelte";
-  import { cn, userListClass } from "$lib/utils";
+  import { Card, ScrollArea, Select } from "@nanoteck137/nano-ui";
   import StandardPagination from "$lib/components/StandardPagination.svelte";
 
   const { data } = $props();
 
-  const buttons = [
-    "all",
-    "in-progress",
-    "completed",
-    "on-hold",
-    "dropped",
-    "backlog",
+  const lists = [
+    { label: "All", value: "" },
+    { label: "Completed", value: "completed" },
+    { label: "In Progress", value: "in-progress" },
+    { label: "On Hold", value: "on-hold" },
+    { label: "Dropped", value: "dropped" },
+    { label: "Backlog", value: "backlog" },
   ];
 
   function gotoSort(sort: string) {
     const params = $page.url.searchParams;
     params.set("sort", sort);
+    params.set("page", "0");
+
+    goto("?" + params.toString(), { invalidateAll: true });
+  }
+
+  function gotoList(list: string) {
+    const params = $page.url.searchParams;
+    params.set("list", list);
+    params.set("page", "0");
+
     goto("?" + params.toString(), { invalidateAll: true });
   }
 
@@ -38,115 +39,139 @@
   }
 </script>
 
-{#if data.user?.id === data.userId}
-  <Button href="/account">Account</Button>
-{/if}
-
-<!-- Header Section -->
-<div class="mb-6">
-  <!-- Title -->
-  <h1 class="mb-4 text-3xl font-bold text-white">
-    {getName()} Watchlist
-  </h1>
-
-  <!-- Status Buttons with Strips -->
-  <div class="grid grid-cols-6 gap-2 text-center">
-    <HeaderButton
-      href="?list=all"
-      name="All"
-      stripClass="bg-white"
-      active={data.list === "all"}
-    />
-    <HeaderButton
-      href="?list=completed"
-      name="Completed"
-      stripClass={userListClass("completed")}
-      active={data.list === "completed"}
-    />
-    <HeaderButton
-      href="?list=in-progress"
-      name="In Progress"
-      stripClass={userListClass("in-progress")}
-      active={data.list === "in-progress"}
-    />
-    <HeaderButton
-      href="?list=on-hold"
-      name="On Hold"
-      stripClass={userListClass("on-hold")}
-      active={data.list === "on-hold"}
-    />
-    <HeaderButton
-      href="?list=dropped"
-      name="Dropped"
-      stripClass={userListClass("dropped")}
-      active={data.list === "dropped"}
-    />
-    <HeaderButton
-      href="?list=backlog"
-      name="Backlog"
-      stripClass={userListClass("backlog")}
-      active={data.list === "backlog"}
-    />
+<Card.Root>
+  <div class="relative w-full overflow-hidden rounded-xl shadow-lg">
+    <div
+      class="h-full w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-6"
+    >
+      <h1 class="text-3xl font-bold">
+        {getName()}
+      </h1>
+    </div>
   </div>
 
-  <Spacer />
+  <div class="flex w-full justify-center gap-4">
+    <!-- <div class="flex flex-col items-center gap-2 sm:items-start">
+        <h1 class="text-2xl font-bold sm:line-clamp-2 sm:pt-2">
+          {getName()}
+        </h1>
+      </div> -->
 
-  <DropdownMenu.Root>
-    <DropdownMenu.Trigger class={cn(buttonVariants({ variant: "outline" }))}>
-      <ArrowUpDown />
-      Sort
-    </DropdownMenu.Trigger>
-    <DropdownMenu.Content align="start">
-      <DropdownMenu.Group>
-        <DropdownMenu.GroupHeading>Sorting</DropdownMenu.GroupHeading>
-        <DropdownMenu.Separator />
-        <DropdownMenu.Item onclick={() => gotoSort("titleAsc")}>
-          Title (A-Z)
-        </DropdownMenu.Item>
-        <DropdownMenu.Item onclick={() => gotoSort("titleDesc")}>
-          Title (Z-A)
-        </DropdownMenu.Item>
-        <DropdownMenu.Item onclick={() => gotoSort("userScoreDesc")}>
-          User Score (+)
-        </DropdownMenu.Item>
-        <DropdownMenu.Item onclick={() => gotoSort("userScoreAsc")}>
-          User Score (-)
-        </DropdownMenu.Item>
-        <DropdownMenu.Item onclick={() => gotoSort("scoreDesc")}>
-          Score (+)
-        </DropdownMenu.Item>
-        <DropdownMenu.Item onclick={() => gotoSort("scoreAsc")}>
-          Score (-)
-        </DropdownMenu.Item>
-      </DropdownMenu.Group>
-    </DropdownMenu.Content>
-  </DropdownMenu.Root>
-</div>
+    <ScrollArea class="px-2 pb-4 sm:pb-0" orientation="horizontal">
+      <div class="flex gap-4 pt-4">
+        <!-- <Button variant="secondary" data-sveltekit-noscroll>Overview</Button>
+      <Button variant="secondary" data-sveltekit-noscroll>Parts</Button> -->
 
-<Spacer />
+        <button
+          class="border-b-2 px-2 py-3 text-sm font-medium hover:brightness-75"
+        >
+          Overview
+        </button>
 
-<StandardPagination pageData={data.page} />
+        <button
+          class="border-b-2 px-2 py-3 text-sm font-medium hover:brightness-75"
+        >
+          Watchlist
+        </button>
+
+        <button
+          class="border-b-2 px-2 py-3 text-sm font-medium hover:brightness-75"
+        >
+          Folders
+        </button>
+
+        <button
+          class="border-b-2 px-2 py-3 text-sm font-medium hover:brightness-75"
+        >
+          Settings
+        </button>
+      </div>
+    </ScrollArea>
+  </div>
+
+  <!-- <div
+    class="relative flex flex-col items-center p-2 sm:flex-row sm:items-stretch"
+  ></div> -->
+</Card.Root>
 
 <Spacer size="md" />
 
-<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-  <div
-    class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] items-center justify-items-center gap-6"
-  >
-    {#each data.media as media}
-      <UserMediaCard
-        href="/media/{media.id}"
-        title={media.title}
-        coverUrl={media.coverUrl}
-        score={media.user?.score}
-        list={media.user?.list}
-        currentPart={media.user?.currentPart}
-        partCount={media.partCount}
-      />
-    {/each}
+<Card.Root>
+  <div class="flex flex-col">
+    <div class="border-b p-4">
+      <div class="hidden justify-center gap-2 sm:flex">
+        {#each lists as list (list.value)}
+          <button
+            class="border-b-2 px-2 py-3 text-sm font-medium hover:brightness-75"
+            onclick={() => gotoList(list.value)}
+          >
+            {list.label}
+          </button>
+        {/each}
+      </div>
+
+      <div class="sm:hidden">
+        <Select.Root
+          type="single"
+          value={data.list}
+          allowDeselect={false}
+          onValueChange={(value) => {
+            gotoList(value);
+          }}
+        >
+          <Select.Trigger>
+            {lists.find((i) => i.value === data.list)?.label ?? "List"}
+          </Select.Trigger>
+          <Select.Content>
+            {#each lists as list (list.value)}
+              <Select.Item value={list.value} label={list.label} />
+            {/each}
+            <!-- <Select.Item value={""} label={"All"} />
+          <Select.Item value={"completed"} label={"Completed"} />
+          <Select.Item value={"in-progress"} label={"In Progress"} />
+          <Select.Item value={"on-hold"} label={"On Hold"} />
+          <Select.Item value={"dropped"} label={"Dropped"} />
+          <Select.Item value={"backlog"} label={"Backlog"} /> -->
+          </Select.Content>
+        </Select.Root>
+      </div>
+
+      <!-- <Filter
+        fullFilter={{
+          sort: "title-a-z",
+          query: "",
+          filters: { type: [], rating: [], status: [] },
+          excludes: { type: [], rating: [], status: [] },
+        }}
+      /> -->
+    </div>
+
+    <div class="flex flex-col">
+      <Spacer size="md" />
+
+      <StandardPagination pageData={data.page} />
+
+      <Spacer size="md" />
+
+      <div
+        class="grid w-full grid-cols-1 items-center justify-items-center gap-4 px-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+      >
+        {#each data.media as media}
+          <UserMediaCard
+            href="/media/{media.id}"
+            title={media.title}
+            coverUrl={media.coverUrl}
+            score={media.user?.score}
+            list={media.user?.list}
+            currentPart={media.user?.currentPart}
+            partCount={media.partCount}
+          />
+        {/each}
+      </div>
+
+      <Spacer size="md" />
+
+      <StandardPagination pageData={data.page} />
+    </div>
   </div>
-</div>
-
-<Spacer size="md" />
-
-<StandardPagination pageData={data.page} />
+</Card.Root>
