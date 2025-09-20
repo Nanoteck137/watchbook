@@ -2,16 +2,47 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import type { Page } from "$lib/api/types";
-  import { Pagination } from "@nanoteck137/nano-ui";
+  import { Button, Pagination } from "@nanoteck137/nano-ui";
+  import { ChevronLeft, ChevronRight } from "lucide-svelte";
 
   type Props = {
     pageData: Page;
   };
 
   const { pageData }: Props = $props();
+
+  function gotoPage(p: number) {
+    const query = $page.url.searchParams;
+    query.set("page", (p - 1).toString());
+
+    goto(`?${query.toString()}`, { invalidateAll: true, keepFocus: true });
+  }
 </script>
 
+<div class="flex items-center justify-center gap-4">
+  <Button
+    size="icon-lg"
+    variant="ghost"
+    onclick={() => gotoPage(pageData.page)}
+    disabled={pageData.page <= 0}
+  >
+    <ChevronLeft />
+  </Button>
+
+  <p class="text-md px-3">{pageData.page + 1}</p>
+
+  <Button
+    size="icon-lg"
+    variant="ghost"
+    onclick={() => gotoPage(pageData.page + 2)}
+    disabled={pageData.page >= pageData.totalPages - 1}
+  >
+    <ChevronRight />
+  </Button>
+</div>
+
 <Pagination.Root
+  class="hidden sm:flex"
   page={pageData.page + 1}
   count={pageData.totalItems}
   perPage={pageData.perPage}
