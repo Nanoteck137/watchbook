@@ -9,5 +9,5 @@ export const POST = async ({ cookies, locals }) => {
   locals.user = undefined;
   setApiClientAuth(locals.apiClient, undefined);
 
-  throw redirect(303, "/login");
+  throw redirect(303, "/");
 };
