@@ -4,6 +4,7 @@
   import type { ProviderValue } from "$lib/api/types";
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
+  import Spinner from "$lib/components/Spinner.svelte";
   import { Button, Checkbox, Dialog, Label } from "@nanoteck137/nano-ui";
   import toast from "svelte-5-french-toast";
   import { zod } from "sveltekit-superforms/adapters";
@@ -12,6 +13,7 @@
 
   const Schema = z.object({
     replaceImages: z.boolean(),
+    overrideParts: z.boolean().default(true),
   });
   type SchemaTy = z.infer<typeof Schema>;
 
@@ -25,35 +27,33 @@
   const apiClient = getApiClient();
 
   $effect(() => {
-    reset({ data: { replaceImages: false } });
+    if (open) {
+      reset();
+    }
   });
 
-  async function submit(data: SchemaTy) {
-    const res = await apiClient.providerUpdateMedia(
-      provider.name,
-      mediaId,
-      data,
-    );
-    if (!res.success) {
-      return handleApiError(res.error);
-    }
-
-    toast.success("Successfully update media");
-    invalidateAll();
-  }
-
-  const { form, errors, enhance, validateForm, reset } = superForm(
+  const { form, errors, enhance, validateForm, reset, submitting } = superForm(
     defaults({ replaceImages: false }, zod(Schema)),
     {
       SPA: true,
       validators: zod(Schema),
       resetForm: true,
-      onUpdate({ form }) {
+      async onUpdate({ form }) {
         if (form.valid) {
-          submit(form.data);
+          const data = form.data;
+          const res = await apiClient.providerUpdateMedia(
+            provider.name,
+            mediaId,
+            data,
+          );
+          if (!res.success) {
+            return handleApiError(res.error);
+          }
+
+          toast.success("Successfully update media");
+          invalidateAll();
 
           open = false;
-          reset({});
         }
       },
     },
@@ -84,6 +84,18 @@
         <Errors errors={$errors.replaceImages} />
       </FormItem>
 
+      <FormItem>
+        <div class="flex items-center gap-2">
+          <Checkbox
+            id="overrideParts"
+            name="overrideParts"
+            bind:checked={$form.overrideParts}
+          />
+          <Label for="overrideParts">Override Parts</Label>
+        </div>
+        <Errors errors={$errors.overrideParts} />
+      </FormItem>
+
       <Dialog.Footer class="gap-2 sm:gap-0">
         <Button
           variant="outline"
@@ -95,7 +107,12 @@
           Close
         </Button>
 
-        <Button type="submit">Save</Button>
+        <Button type="submit" disabled={$submitting}>
+          Update
+          {#if $submitting}
+            <Spinner />
+          {/if}
+        </Button>
       </Dialog.Footer>
     </form>
   </Dialog.Content>

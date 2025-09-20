@@ -303,6 +303,7 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 
 type ProviderMediaUpdateBody struct {
 	ReplaceImages bool `json:"replaceImages,omitempty"`
+	OverrideParts bool `json:"overrideParts,omitempty"`
 }
 
 type ProviderCollectionUpdateBody struct {
@@ -532,7 +533,7 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 					}
 
 					_, err = app.DB().CreateCollection(ctx, database.CreateCollectionParams{
-						Id: id,
+						Id:   id,
 						Type: data.Type,
 						Name: data.Name,
 						CoverFile: sql.NullString{
@@ -762,20 +763,22 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				err = app.DB().RemoveAllMediaParts(ctx, dbMedia.Id)
-				if err != nil {
-					return nil, err
-				}
-
-				for _, part := range data.Parts {
-					// TODO(patrik): Check for duplicated numbers
-					err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
-						Index:   int64(part.Number),
-						MediaId: dbMedia.Id,
-						Name:    part.Name,
-					})
+				if body.OverrideParts {
+					err = app.DB().RemoveAllMediaParts(ctx, dbMedia.Id)
 					if err != nil {
 						return nil, err
+					}
+
+					for _, part := range data.Parts {
+						// TODO(patrik): Check for duplicated numbers
+						err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
+							Index:   int64(part.Number),
+							MediaId: dbMedia.Id,
+							Name:    part.Name,
+						})
+						if err != nil {
+							return nil, err
+						}
 					}
 				}
 
