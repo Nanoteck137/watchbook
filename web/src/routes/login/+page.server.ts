@@ -1,3 +1,4 @@
+import { dev } from "$app/environment";
 import { setApiClientAuth } from "$lib";
 import { SigninBody } from "$lib/api/types";
 import { capitilize } from "$lib/utils";
@@ -26,7 +27,7 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions: Actions = {
-  default: async ({ locals, request, cookies }) => {
+  default: async ({ locals, request, cookies, url }) => {
     const form = await superValidate(request, zod(schema));
 
     if (!form.valid) {
@@ -77,6 +78,8 @@ export const actions: Actions = {
     cookies.set("auth", JSON.stringify(data), {
       path: "/",
       sameSite: "strict",
+      httpOnly: true,
+      secure: !dev || url.protocol === "https:",
     });
 
     throw redirect(302, "/");
