@@ -3,8 +3,10 @@
   import { page } from "$app/stores";
   import Spacer from "$lib/components/Spacer.svelte";
   import UserMediaCard from "$lib/components/UserMediaCard.svelte";
-  import { Card, Select } from "@nanoteck137/nano-ui";
+  import { Button, Card, Select } from "@nanoteck137/nano-ui";
   import StandardPagination from "$lib/components/StandardPagination.svelte";
+  import { mediaStatus, mediaTypes } from "../../../media/types.js";
+  import { sortTypes } from "./types.js";
 
   const { data } = $props();
 
@@ -22,7 +24,7 @@
     params.set("sort", sort);
     params.set("page", "0");
 
-    goto("?" + params.toString(), { invalidateAll: true });
+    goto("?" + params.toString(), { invalidateAll: true, noScroll: true });
   }
 
   function gotoList(list: string) {
@@ -30,7 +32,7 @@
     params.set("list", list);
     params.set("page", "0");
 
-    goto("?" + params.toString(), { invalidateAll: true });
+    goto("?" + params.toString(), { invalidateAll: true, noScroll: true });
   }
 </script>
 
@@ -40,7 +42,7 @@
 
 <Card.Root>
   <div class="flex flex-col">
-    <div class="border-b p-4">
+    <div class="flex flex-col gap-4 border-b p-4">
       <div class="hidden justify-center gap-2 sm:flex">
         {#each lists as list (list.value)}
           <button
@@ -55,14 +57,14 @@
       <div class="sm:hidden">
         <Select.Root
           type="single"
-          value={data.list}
+          value={data.filter.list}
           allowDeselect={false}
           onValueChange={(value) => {
             gotoList(value);
           }}
         >
           <Select.Trigger>
-            {lists.find((i) => i.value === data.list)?.label ?? "List"}
+            {lists.find((i) => i.value === data.filter.list)?.label ?? "List"}
           </Select.Trigger>
           <Select.Content>
             {#each lists as list (list.value)}
@@ -71,6 +73,84 @@
           </Select.Content>
         </Select.Root>
       </div>
+
+      <Select.Root
+        type="multiple"
+        value={data.filter.types}
+        onValueChange={(values) => {
+          const query = $page.url.searchParams;
+          query.set("types", values.join(","));
+
+          goto("?" + query.toString(), {
+            invalidateAll: true,
+            noScroll: true,
+          });
+        }}
+      >
+        <Select.Trigger class="sm:max-w-[120px]">Type</Select.Trigger>
+        <Select.Content>
+          {#each mediaTypes as ty (ty.value)}
+            <Select.Item value={ty.value} label={ty.label} />
+          {/each}
+        </Select.Content>
+      </Select.Root>
+
+      <Select.Root
+        type="multiple"
+        value={data.filter.status}
+        onValueChange={(values) => {
+          const query = $page.url.searchParams;
+          query.set("status", values.join(","));
+
+          goto("?" + query.toString(), {
+            invalidateAll: true,
+            noScroll: true,
+          });
+        }}
+      >
+        <Select.Trigger class="sm:max-w-[120px]">Status</Select.Trigger>
+        <Select.Content>
+          {#each mediaStatus as status (status.value)}
+            <Select.Item value={status.value} label={status.label} />
+          {/each}
+        </Select.Content>
+      </Select.Root>
+
+      <Select.Root
+        type="single"
+        allowDeselect={false}
+        value={data.filter.sort}
+        onValueChange={(sort) => {
+          gotoSort(sort);
+        }}
+      >
+        <Select.Trigger class="sm:max-w-[180px]">
+          {sortTypes.find((i) => i.value === data.filter.sort)?.label ??
+            "Sort"}
+        </Select.Trigger>
+        <Select.Content>
+          {#each sortTypes as ty (ty.value)}
+            <Select.Item value={ty.value} label={ty.label} />
+          {/each}
+        </Select.Content>
+      </Select.Root>
+
+      <Button
+        variant="outline"
+        onclick={() => {
+          const query = $page.url.searchParams;
+          query.delete("sort");
+          query.delete("types");
+          query.delete("status");
+
+          goto("?" + query.toString(), {
+            invalidateAll: true,
+            noScroll: true,
+          });
+        }}
+      >
+        Reset Filters
+      </Button>
 
       <!-- <Filter
         fullFilter={{
