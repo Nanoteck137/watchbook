@@ -19,7 +19,7 @@
   }
 </script>
 
-<div class="flex items-center justify-center gap-4">
+<div class="flex items-center justify-center gap-4 sm:hidden">
   <Button
     size="icon-lg"
     variant="ghost"
