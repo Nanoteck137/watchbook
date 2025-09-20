@@ -146,3 +146,11 @@ func InvalidCredentials() *pyrin.Error {
 		Message: "Invalid Credentials",
 	}
 }
+
+func IncorrectPassword() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusUnauthorized,
+		Type:    ErrTypeInvalidCredentials,
+		Message: "Incorrect password",
+	}
+}
