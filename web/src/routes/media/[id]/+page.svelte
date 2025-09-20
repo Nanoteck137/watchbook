@@ -180,11 +180,12 @@
 
         <dd class="mt-1 flex flex-wrap gap-2">
           {#each data.media.creators as creator}
-            <span
+            <a
               class="rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-700"
+              href="/media?filterCreators={creator}"
             >
               {creator}
-            </span>
+            </a>
           {/each}
         </dd>
       </div>

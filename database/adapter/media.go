@@ -103,6 +103,8 @@ func (a *MediaResolverAdapter) ResolveNameToId(typ, name string) (string, bool) 
 	switch typ {
 	case "tags":
 		return utils.Slug(name), true
+	case "creators":
+		return utils.Slug(name), true
 	}
 
 	return "", false
@@ -116,6 +118,12 @@ func (a *MediaResolverAdapter) ResolveTable(typ string) (filter.Table, bool) {
 			SelectName: "media_id",
 			WhereName:  "tag_slug",
 		}, true
+	case "creators":
+		return filter.Table{
+			Name:       "media_creators",
+			SelectName: "media_id",
+			WhereName:  "tag_slug",
+		}, true
 	}
 
 	return filter.Table{}, false
@@ -125,6 +133,8 @@ func (a *MediaResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, na
 	switch name {
 	case "hasTag":
 		return resolver.InTable(name, "tags", "media.id", args)
+	case "hasCreator":
+		return resolver.InTable(name, "creators", "media.id", args)
 	case "hasType":
 		return resolver.In(name, "mediaType", args)
 	case "hasStatus":

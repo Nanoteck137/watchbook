@@ -28,6 +28,11 @@ function constructFilterSort(
     filters.push(`hasRating(${s})`);
   }
 
+  if (filter.filters.creators.length > 0) {
+    const s = filter.filters.creators.map((i) => `"${i}"`).join(",");
+    filters.push(`hasCreator(${s})`);
+  }
+
   if (filter.filters.tags.length > 0) {
     const s = filter.filters.tags.map((i) => `"${i}"`).join(",");
     filters.push(`hasTag(${s})`);
@@ -76,6 +81,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
       type: url.searchParams.get("filterType")?.split(",") ?? [],
       status: url.searchParams.get("filterStatus")?.split(",") ?? [],
       rating: url.searchParams.get("filterRating")?.split(",") ?? [],
+      creators: url.searchParams.get("filterCreators")?.split(",") ?? [],
       tags: url.searchParams.get("filterTags")?.split(",") ?? [],
     },
     excludes: {
