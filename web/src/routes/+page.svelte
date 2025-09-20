@@ -1,5 +1,5 @@
 <script>
-  import { Card, ScrollArea, Separator } from "@nanoteck137/nano-ui";
+  import { Button, Card, ScrollArea, Separator } from "@nanoteck137/nano-ui";
   import NotLoggedIn from "./NotLoggedIn.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
   import SmallMediaCard from "$lib/components/SmallMediaCard.svelte";
@@ -85,7 +85,10 @@
     </div>
 
     <div class="p-6">
-      <h2 class="text-lg font-semibold">Continue</h2>
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold">Continue</h2>
+        <Button size="sm" variant="link" href="#">View More</Button>
+      </div>
 
       <ScrollArea orientation="horizontal">
         <div class="flex w-full gap-2 py-4">
@@ -97,7 +100,30 @@
               startDate={undefined}
               partCount={0}
               score={undefined}
-              userList={undefined}
+              userList={media.user?.list}
+            />
+          {/each}
+        </div>
+      </ScrollArea>
+    </div>
+
+    <div class="p-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold">Recently created media</h2>
+        <Button size="sm" variant="link" href="#">View More</Button>
+      </div>
+
+      <ScrollArea orientation="horizontal">
+        <div class="flex w-full gap-2 py-4">
+          {#each data.recentlyReleasedMedia as media}
+            <SmallMediaCard
+              href="/media/{media.id}"
+              coverUrl={media.coverUrl}
+              title={media.title}
+              startDate={undefined}
+              partCount={0}
+              score={undefined}
+              userList={media.user?.list}
             />
           {/each}
         </div>

@@ -72,6 +72,28 @@ func (a *MediaResolverAdapter) ResolveVariableName(name string) (filter.Name, bo
 			Name: "release.id",
 			Nullable: true,
 		}, true
+	case "created":
+		return filter.Name{
+			Kind: filter.NameKindNumber,
+			Name: "media.created",
+		}, true
+	case "updated":
+		return filter.Name{
+			Kind: filter.NameKindNumber,
+			Name: "media.updated",
+		}, true
+	case "userCreated":
+		return filter.Name{
+			Kind: filter.NameKindNumber,
+			Name: "user_data.created",
+			Nullable: true,
+		}, true
+	case "userUpdated":
+		return filter.Name{
+			Kind: filter.NameKindNumber,
+			Name: "user_data.updated",
+			Nullable: true,
+		}, true
 	}
 
 	return filter.Name{}, false

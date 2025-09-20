@@ -84,7 +84,7 @@
     >
       {title}
     </h2>
-    <div
+    <!-- <div
       class="mt-1 flex hidden justify-center space-x-4 text-sm text-gray-300"
     >
       {#if score}
@@ -103,6 +103,6 @@
           <span>{year}</span>
         </div>
       {/if}
-    </div>
+    </div> -->
   </div>
 </a>
