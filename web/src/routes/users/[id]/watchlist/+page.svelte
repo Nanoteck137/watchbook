@@ -34,6 +34,10 @@
   }
 </script>
 
+<StandardPagination pageData={data.page} />
+
+<Spacer size="md" />
+
 <Card.Root>
   <div class="flex flex-col">
     <div class="border-b p-4">
@@ -79,12 +83,6 @@
     </div>
 
     <div class="flex flex-col">
-      <Spacer size="md" />
-
-      <StandardPagination pageData={data.page} />
-
-      <Spacer size="md" />
-
       <div
         class="grid w-full grid-cols-1 items-center justify-items-center gap-4 px-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
       >
@@ -100,10 +98,10 @@
           />
         {/each}
       </div>
-
-      <Spacer size="md" />
-
-      <StandardPagination pageData={data.page} />
     </div>
   </div>
 </Card.Root>
+
+<Spacer size="md" />
+
+<StandardPagination pageData={data.page} />
