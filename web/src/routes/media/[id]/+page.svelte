@@ -1,25 +1,10 @@
 <script lang="ts">
   import { invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
+  import { mediaRatings, mediaStatus } from "$lib/api-types.js";
   import Spacer from "$lib/components/Spacer.svelte";
   import type { UserList } from "$lib/types.js";
-  import { cn } from "$lib/utils.js";
-  import {
-    Breadcrumb,
-    Button,
-    buttonVariants,
-    Card,
-    Checkbox,
-    Dialog,
-    DropdownMenu,
-    Input,
-    Label,
-  } from "@nanoteck137/nano-ui";
-  import { ChevronDown, Eye, Star, Trash } from "lucide-svelte";
-  import toast from "svelte-5-french-toast";
-  import BannerHeader from "$lib/components/BannerHeader.svelte";
-  import MediaDropdown from "./MediaDropdown.svelte";
-  import { mediaRatings, mediaStatus } from "../types";
+  import { Button, Card } from "@nanoteck137/nano-ui";
 
   const { data } = $props();
   const apiClient = getApiClient();

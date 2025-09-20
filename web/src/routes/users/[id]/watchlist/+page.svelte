@@ -5,8 +5,8 @@
   import UserMediaCard from "$lib/components/UserMediaCard.svelte";
   import { Button, Card, Select } from "@nanoteck137/nano-ui";
   import StandardPagination from "$lib/components/StandardPagination.svelte";
-  import { mediaStatus, mediaTypes } from "../../../media/types.js";
   import { sortTypes } from "./types.js";
+  import { mediaStatus, mediaTypes } from "$lib/api-types.js";
 
   const { data } = $props();
 

@@ -1,14 +1,5 @@
+import { CollectionTypeEnum } from "$lib/api-types";
 import { z } from "zod";
-
-export const collectionTypes = [
-  { label: "Unknown", value: "unknown" },
-  { label: "Series", value: "series" },
-  { label: "Anime", value: "anime" },
-] as const;
-export type CollectionType = (typeof collectionTypes)[number]["value"];
-export const CollectionTypeEnum = z.enum(
-  collectionTypes.map((f) => f.value) as [CollectionType, ...CollectionType[]],
-);
 
 export const sortTypes = [
   { label: "Name (A-Z)", value: "name-a-z" },

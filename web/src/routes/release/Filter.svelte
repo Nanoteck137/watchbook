@@ -8,7 +8,7 @@
   import { page } from "$app/stores";
   import { FilterX } from "lucide-svelte";
   import { defaultSort, FullFilter, sortTypes } from "./types";
-  import { mediaRatings, mediaStatus, mediaTypes } from "../media/types";
+  import { mediaRatings, mediaStatus, mediaTypes } from "$lib/api-types";
 
   export type Props = {
     fullFilter: FullFilter;

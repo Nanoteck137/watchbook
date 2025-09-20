@@ -4,17 +4,11 @@
   import { Button, Card, Input, Label, Select } from "@nanoteck137/nano-ui";
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
-  import {
-    defaultSort,
-    FullFilter,
-    mediaRatings,
-    mediaStatus,
-    mediaTypes,
-    sortTypes,
-  } from "./types";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import { FilterX } from "lucide-svelte";
+  import { defaultSort, FullFilter, sortTypes } from "./types";
+  import { mediaRatings, mediaStatus, mediaTypes } from "$lib/api-types";
 
   export type Props = {
     fullFilter: FullFilter;

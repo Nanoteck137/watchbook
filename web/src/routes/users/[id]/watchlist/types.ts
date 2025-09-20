@@ -1,6 +1,9 @@
+import {
+  MediaStatusEnum,
+  MediaTypeEnum,
+  MediaUserListEnum,
+} from "$lib/api-types";
 import { z } from "zod";
-import { MediaUserListEnum } from "../../../media/[id]/types";
-import { MediaStatusEnum, MediaTypeEnum } from "../../../media/types";
 
 export const sortTypes = [
   { label: "Title (A-Z)", value: "title-a-z" },

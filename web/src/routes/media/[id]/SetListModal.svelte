@@ -17,13 +17,13 @@
   import type { MediaUser } from "$lib/api/types";
   import toast from "svelte-5-french-toast";
   import { invalidateAll } from "$app/navigation";
-  import {
-    MediaUserListEnum,
-    mediaUserLists,
-    type MediaUserList,
-  } from "./types";
   import { Trash } from "lucide-svelte";
   import ConfirmBox from "$lib/components/ConfirmBox.svelte";
+  import {
+    MediaUserListEnum,
+    type MediaUserList,
+    mediaUserLists,
+  } from "$lib/api-types";
 
   const Schema = z.object({
     list: MediaUserListEnum,

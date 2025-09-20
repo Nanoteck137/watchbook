@@ -1,9 +1,9 @@
-import { z } from "zod";
 import {
   MediaRatingEnum,
   MediaStatusEnum,
   MediaTypeEnum,
-} from "../media/types";
+} from "$lib/api-types";
+import { z } from "zod";
 
 export const sortTypes = [
   { label: "Title (A-Z)", value: "title-a-z" },

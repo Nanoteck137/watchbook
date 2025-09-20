@@ -8,13 +8,13 @@
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
   import { z } from "zod";
-  import {
-    CollectionTypeEnum,
-    collectionTypes,
-    type CollectionType,
-  } from "../types";
   import Spinner from "$lib/components/Spinner.svelte";
   import type { Collection } from "$lib/api/types";
+  import {
+    type CollectionType,
+    CollectionTypeEnum,
+    collectionTypes,
+  } from "$lib/api-types";
 
   const Schema = z.object({
     type: CollectionTypeEnum.default("unknown"),

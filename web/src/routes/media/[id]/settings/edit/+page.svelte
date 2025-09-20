@@ -6,6 +6,10 @@
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
   import { z } from "zod";
+  import { isMatch } from "date-fns";
+  import Spinner from "$lib/components/Spinner.svelte";
+  import toast from "svelte-5-french-toast";
+  import { invalidateAll } from "$app/navigation";
   import {
     MediaRatingEnum,
     mediaRatings,
@@ -16,12 +20,7 @@
     type MediaRating,
     type MediaStatus,
     type MediaType,
-  } from "../../../types";
-  import { isMatch } from "date-fns";
-  import Spinner from "$lib/components/Spinner.svelte";
-  import type { Media } from "$lib/api/types";
-  import toast from "svelte-5-french-toast";
-  import { invalidateAll } from "$app/navigation";
+  } from "$lib/api-types.js";
 
   const Schema = z.object({
     type: MediaTypeEnum.default("unknown"),

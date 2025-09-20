@@ -15,6 +15,8 @@
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
   import { z } from "zod";
+  import { isMatch } from "date-fns";
+  import Spinner from "$lib/components/Spinner.svelte";
   import {
     MediaRatingEnum,
     mediaRatings,
@@ -22,9 +24,7 @@
     MediaStatusEnum,
     MediaTypeEnum,
     mediaTypes,
-  } from "./types";
-  import { isMatch } from "date-fns";
-  import Spinner from "$lib/components/Spinner.svelte";
+  } from "$lib/api-types";
 
   const Schema = z.object({
     type: MediaTypeEnum.default("unknown"),
