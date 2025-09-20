@@ -194,11 +194,12 @@
 
         <dd class="mt-1 flex flex-wrap gap-2">
           {#each data.media.tags as tag}
-            <span
+            <a
               class="rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-700"
+              href="/media?filterTags={tag}"
             >
               {tag}
-            </span>
+            </a>
           {/each}
         </dd>
       </div>

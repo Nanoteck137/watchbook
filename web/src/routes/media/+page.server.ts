@@ -28,6 +28,11 @@ function constructFilterSort(
     filters.push(`hasRating(${s})`);
   }
 
+  if (filter.filters.tags.length > 0) {
+    const s = filter.filters.tags.map((i) => `"${i}"`).join(",");
+    filters.push(`hasTag(${s})`);
+  }
+
   if (filter.excludes.type.length > 0) {
     const s = filter.excludes.type.map((i) => `"${i}"`).join(",");
     filters.push(`!hasType(${s})`);
@@ -71,6 +76,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
       type: url.searchParams.get("filterType")?.split(",") ?? [],
       status: url.searchParams.get("filterStatus")?.split(",") ?? [],
       rating: url.searchParams.get("filterRating")?.split(",") ?? [],
+      tags: url.searchParams.get("filterTags")?.split(",") ?? [],
     },
     excludes: {
       type: url.searchParams.get("excludeType")?.split(",") ?? [],
@@ -78,6 +84,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
       rating: url.searchParams.get("excludeRating")?.split(",") ?? [],
     },
   });
+  console.log(filter);
 
   constructFilterSort(filter, query);
 

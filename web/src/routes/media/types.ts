@@ -24,6 +24,7 @@ export const FullFilter = z.object({
     type: z.array(MediaTypeEnum),
     status: z.array(MediaStatusEnum),
     rating: z.array(MediaRatingEnum),
+    tags: z.array(z.string()),
   }),
   excludes: z.object({
     type: z.array(MediaTypeEnum),
