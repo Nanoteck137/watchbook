@@ -27,14 +27,15 @@
           pname = "watchbook";
           version = fullVersion;
           src = ./.;
-          subPackages = ["cmd/watchbook" "cmd/watchbook-cli"];
+          # subPackages = ["cmd/watchbook" "cmd/watchbook-cli"];
+          subPackages = ["cmd/watchbook"];
 
           ldflags = [
             "-X github.com/nanoteck137/watchbook.Version=${version}"
             "-X github.com/nanoteck137/watchbook.Commit=${self.dirtyRev or self.rev or "no-commit"}"
           ];
 
-          vendorHash = "sha256-CbdNgQRiOopCljuWq3vI3fUV59A63J6k55v3Gy+J5x4=";
+          vendorHash = "sha256-e6R8fUKTmaw3iVF13s6k0+2ONsaaVnay8QumuHz7Ri0=";
         };
 
         frontend = pkgs.buildNpmPackage {
@@ -42,7 +43,7 @@
           version = fullVersion;
 
           src = gitignore.lib.gitignoreSource ./web;
-          npmDepsHash = "sha256-V1WhvsZMljM/5KMTXI+QMoboRkFVhTbQLqVWJitZpR8=";
+          npmDepsHash = "sha256-oYzKicN0I5L03YB+1ijduNDqJ4EufPoiiHje3U2hgAc=";
 
           PUBLIC_VERSION=version;
           PUBLIC_COMMIT=self.dirtyRev or self.rev or "no-commit";
