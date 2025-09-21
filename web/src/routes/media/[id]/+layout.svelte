@@ -2,12 +2,11 @@
   import BannerHeader from "$lib/components/BannerHeader.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
   import { Breadcrumb, Button } from "@nanoteck137/nano-ui";
-  import MediaDropdown from "./MediaDropdown.svelte";
   import Badge from "$lib/components/Badge.svelte";
   import { type UserList } from "$lib/types";
   import SetListModal from "./SetListModal.svelte";
   import { getApiClient, handleApiError } from "$lib";
-  import { invalidate, invalidateAll } from "$app/navigation";
+  import { invalidateAll } from "$app/navigation";
   import toast from "svelte-5-french-toast";
   import { isRoleAdmin } from "$lib/utils";
 
@@ -40,10 +39,6 @@
   bannerUrl={data.media.bannerUrl}
   logoUrl={data.media.logoUrl}
 >
-  {#snippet imageContent()}
-    <MediaDropdown media={data.media} />
-  {/snippet}
-
   {#snippet buttons()}
     <div class="flex gap-4">
       <Button
