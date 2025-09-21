@@ -1,10 +1,10 @@
 <script lang="ts">
+  import { mediaReleaseStatus, mediaReleaseTypes } from "$lib/api-types";
   import type { MediaRelease } from "$lib/api/types";
   import Badge from "$lib/components/Badge.svelte";
   import Image from "$lib/components/Image.svelte";
   import { parseUserList } from "$lib/types";
   import { clamp, formatTimeDiff, getTimeDifference } from "$lib/utils";
-  import { Calendar, Clapperboard, Star } from "lucide-svelte";
 
   type Props = {
     href: string;
@@ -47,6 +47,18 @@
       <Badge class="absolute left-2 top-2 z-10" {list} />
     {/if}
   {/if}
+
+  <span
+    class="absolute right-2 top-2 z-10 inline-block select-none rounded-full bg-gray-900 px-3 py-1 text-xs font-semibold"
+  >
+    {mediaReleaseTypes.find((i) => i.value === release.releaseType)?.label}
+  </span>
+
+  <span
+    class="absolute right-2 top-10 z-10 inline-block select-none rounded-full bg-gray-900 px-3 py-1 text-xs font-semibold"
+  >
+    {mediaReleaseStatus.find((i) => i.value === release.status)?.label}
+  </span>
 
   <div
     class="flex min-w-[240px] items-center justify-center overflow-hidden bg-gray-800 text-gray-400"
@@ -115,8 +127,8 @@
         </div>
       {/if}
 
-      <p>{release!.status}</p>
-      <p>{release!.releaseType}</p>
+      <!-- <p>{release!.status}</p>
+      <p>{release!.releaseType}</p> -->
     </div>
   </div>
 </a>

@@ -61,3 +61,29 @@ export type CollectionType = (typeof collectionTypes)[number]["value"];
 export const CollectionTypeEnum = z.enum(
   collectionTypes.map((f) => f.value) as [CollectionType, ...CollectionType[]],
 );
+
+export const mediaReleaseTypes = [
+  { label: "Confirmed", value: "confirmed" },
+  { label: "Not Confirmed", value: "not-confirmed" },
+] as const;
+export type MediaReleaseType = (typeof mediaReleaseTypes)[number]["value"];
+export const MediaReleaseTypeEnum = z.enum(
+  mediaReleaseTypes.map((f) => f.value) as [
+    MediaReleaseType,
+    ...MediaReleaseType[],
+  ],
+);
+
+export const mediaReleaseStatus = [
+  { label: "Unknown", value: "unknown" },
+  { label: "Waiting", value: "waiting" },
+  { label: "Running", value: "running" },
+  { label: "Completed", value: "completed" },
+] as const;
+export type MediaReleaseStatus = (typeof mediaReleaseStatus)[number]["value"];
+export const MediaReleaseStatusEnum = z.enum(
+  mediaReleaseStatus.map((f) => f.value) as [
+    MediaReleaseStatus,
+    ...MediaReleaseStatus[],
+  ],
+);
