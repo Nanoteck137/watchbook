@@ -5,6 +5,7 @@
   import ApiToken from "./ApiToken.svelte";
   import NewApiTokenModal from "./NewApiTokenModal.svelte";
   import { Plus } from "lucide-svelte";
+  import ImportMalWatchlist from "./ImportMalWatchlist.svelte";
 
   let { data } = $props();
 
@@ -14,6 +15,7 @@
 <Card.Root>
   <ChangeDisplayName />
   <ChangePassword />
+  <ImportMalWatchlist />
 
   <div class="flex flex-col items-center gap-4 border-b p-6">
     <h2 class="text-bold text-center text-xl">

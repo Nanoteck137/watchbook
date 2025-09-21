@@ -10,6 +10,10 @@ export const sortTypes = [
   { label: "Title (Z-A)", value: "title-z-a" },
   { label: "Score (High–Low)", value: "score-high" },
   { label: "Score (Low–High)", value: "score-low" },
+  { label: "Created (New–Old)", value: "created-new" },
+  { label: "Created (Old-New)", value: "created-old" },
+  { label: "Updated (New–Old)", value: "updated-new" },
+  { label: "Updated (Old-New)", value: "updated-old" },
 ] as const;
 export type SortType = (typeof sortTypes)[number]["value"];
 export const SortTypeEnum = z.enum(

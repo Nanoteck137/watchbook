@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
@@ -13,7 +12,6 @@ import (
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
 	"github.com/nanoteck137/watchbook/kvstore"
-	"github.com/nanoteck137/watchbook/provider/myanimelist"
 	"github.com/nanoteck137/watchbook/types"
 )
 
@@ -251,8 +249,6 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				username := c.Param("username")
 
-				pm := app.ProviderManager()
-
 				user, err := User(app, c)
 				if err != nil {
 					return nil, err
@@ -269,7 +265,7 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				}
 
 				_, err = app.DB().CreateJob(context.Background(), database.CreateJobParams{
-					Type:        "test",
+					Type:        "import-mal-watchlist",
 					Status:      types.JobStatusQueued,
 					Priority:    0,
 					RunAt:       0,
@@ -277,74 +273,9 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 					MaxAttempts: 1,
 					Payload:     payload,
 					Error:       sql.NullString{},
-					Created:     0,
-					Updated:     0,
 				})
 				if err != nil {
 					return nil, err
-				}
-
-				return nil, nil
-
-				ctx := context.Background()
-
-				if !pm.IsValidProvider(myanimelist.AnimeProviderName) {
-					// TODO(patrik): Better error
-					return nil, errors.New("unsupported operation")
-				}
-
-				entries, err := myanimelist.GetUserWatchlist(username)
-				if err != nil {
-					return nil, err
-				}
-
-				for _, entry := range entries {
-					id := strconv.Itoa(entry.AnimeId)
-					mediaId, err := ImportMedia(ctx, app, myanimelist.AnimeProviderName, id)
-					if err != nil {
-						return nil, err
-					}
-
-					list := types.MediaUserListBacklog
-					switch entry.Status {
-					case myanimelist.WatchlistStatusCurrentlyWatching:
-						list = types.MediaUserListInProgress
-					case myanimelist.WatchlistStatusCompleted:
-						list = types.MediaUserListCompleted
-					case myanimelist.WatchlistStatusOnHold:
-						list = types.MediaUserListOnHold
-					case myanimelist.WatchlistStatusDropped:
-						list = types.MediaUserListDropped
-					case myanimelist.WatchlistStatusPlanToWatch:
-						list = types.MediaUserListBacklog
-					default:
-						logger.Error("unknown status", "status", entry.Status)
-					}
-
-					// List:        &l,
-					// Score:       &score,
-					// CurrentPart: &currentPart,
-					// // RevisitCount: new(int),
-					// IsRevisiting: &isRevisiting,
-
-					err = app.DB().SetMediaUserData(ctx, mediaId, user.Id, database.SetMediaUserData{
-						List: list,
-						Part: sql.NullInt64{
-							Int64: int64(entry.NumWatchedEpisodes),
-							Valid: entry.NumWatchedEpisodes != 0,
-						},
-						RevisitCount: sql.NullInt64{},
-						IsRevisiting: false,
-						Score: sql.NullInt64{
-							Int64: int64(entry.Score),
-							Valid: entry.Score != 0,
-						},
-						Created: 0,
-						Updated: 0,
-					})
-					if err != nil {
-						return nil, err
-					}
 				}
 
 				return nil, nil

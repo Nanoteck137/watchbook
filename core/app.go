@@ -4,6 +4,7 @@ import (
 	"github.com/nanoteck137/pyrin/trail"
 	"github.com/nanoteck137/watchbook/config"
 	"github.com/nanoteck137/watchbook/database"
+	"github.com/nanoteck137/watchbook/job"
 	"github.com/nanoteck137/watchbook/provider"
 	"github.com/nanoteck137/watchbook/types"
 )
@@ -16,6 +17,7 @@ type App interface {
 	DB() *database.Database
 	Config() *config.Config
 	ProviderManager() *provider.ProviderManager
+	JobProcessor() *job.JobProcessor
 
 	WorkDir() types.WorkDir
 

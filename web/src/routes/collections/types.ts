@@ -4,6 +4,10 @@ import { z } from "zod";
 export const sortTypes = [
   { label: "Name (A-Z)", value: "name-a-z" },
   { label: "Name (Z-A)", value: "name-z-a" },
+  { label: "Created (New–Old)", value: "created-new" },
+  { label: "Created (Old-New)", value: "created-old" },
+  { label: "Updated (New–Old)", value: "updated-new" },
+  { label: "Updated (Old-New)", value: "updated-old" },
 ] as const;
 export type SortType = (typeof sortTypes)[number]["value"];
 export const SortTypeEnum = z.enum(

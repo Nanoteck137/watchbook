@@ -63,17 +63,18 @@ function constructFilterSort(
     case "title-z-a":
       query["sort"] = "sort=-title";
       break;
+    // TODO(patrik): Add +title to all filters
     case "score-high":
-      query["sort"] = "sort=-score";
+      query["sort"] = "sort=-score,+title";
       break;
     case "score-low":
-      query["sort"] = "sort=+score";
+      query["sort"] = "sort=+score,+title";
       break;
     case "user-score-high":
-      query["sort"] = "sort=-userScore";
+      query["sort"] = "sort=-userScore,+title";
       break;
     case "user-score-low":
-      query["sort"] = "sort=+userScore";
+      query["sort"] = "sort=+userScore,+title";
       break;
   }
 }

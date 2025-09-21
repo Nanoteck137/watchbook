@@ -1,5 +1,5 @@
 <script>
-  import { Button, Card, ScrollArea, Separator } from "@nanoteck137/nano-ui";
+  import { Button, Card, ScrollArea } from "@nanoteck137/nano-ui";
   import NotLoggedIn from "./NotLoggedIn.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
   import SmallMediaCard from "$lib/components/SmallMediaCard.svelte";
@@ -54,7 +54,12 @@
     <div class="p-6">
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold">Continue</h2>
-        <Button size="sm" variant="link" href="#">View More</Button>
+        <Button
+          size="sm"
+          variant="link"
+          href="/users/{data.user.id}/watchlist?list=in-progress"
+          >View More</Button
+        >
       </div>
 
       <ScrollArea orientation="horizontal">
@@ -77,7 +82,9 @@
     <div class="p-6">
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold">Recently created media</h2>
-        <Button size="sm" variant="link" href="#">View More</Button>
+        <Button size="sm" variant="link" href="/media?sort=created-new">
+          View More
+        </Button>
       </div>
 
       <ScrollArea orientation="horizontal">
@@ -100,7 +107,9 @@
     <div class="p-6">
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold">Recently created collections</h2>
-        <Button size="sm" variant="link" href="#">View More</Button>
+        <Button size="sm" variant="link" href="/collections?sort=created-new">
+          View More
+        </Button>
       </div>
 
       <ScrollArea orientation="horizontal">

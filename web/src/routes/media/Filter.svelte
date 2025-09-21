@@ -197,7 +197,13 @@
           reset({
             data: {
               query: "",
-              filters: { type: [], status: [], rating: [] },
+              filters: {
+                type: [],
+                status: [],
+                rating: [],
+                tags: [],
+                creators: [],
+              },
               excludes: { type: [], status: [], rating: [] },
               sort: defaultSort,
             },

@@ -32,6 +32,18 @@ function constructFilterSort(
     case "name-z-a":
       query["sort"] = "sort=-name";
       break;
+    case "created-new":
+      query["sort"] = "sort=-created";
+      break;
+    case "created-old":
+      query["sort"] = "sort=+created";
+      break;
+    case "updated-new":
+      query["sort"] = "sort=-updated";
+      break;
+    case "updated-old":
+      query["sort"] = "sort=+updated";
+      break;
   }
 }
 

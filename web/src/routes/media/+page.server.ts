@@ -68,6 +68,18 @@ function constructFilterSort(
     case "score-low":
       query["sort"] = "sort=+score";
       break;
+    case "created-new":
+      query["sort"] = "sort=-created";
+      break;
+    case "created-old":
+      query["sort"] = "sort=+created";
+      break;
+    case "updated-new":
+      query["sort"] = "sort=-updated";
+      break;
+    case "updated-old":
+      query["sort"] = "sort=+updated";
+      break;
   }
 }
 
@@ -90,7 +102,6 @@ export const load: PageServerLoad = async ({ locals, url }) => {
       rating: url.searchParams.get("excludeRating")?.split(",") ?? [],
     },
   });
-  console.log(filter);
 
   constructFilterSort(filter, query);
 
