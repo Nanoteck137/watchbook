@@ -49,8 +49,8 @@
         data: {
           type: (release?.releaseType as MediaReleaseType) ?? "not-confirmed",
           startDate: release?.startDate ?? "",
-          numExpectedParts: release?.delayDays ?? 0,
-          intervalDays: release?.delayDays ?? 0,
+          numExpectedParts: release?.numExpectedParts ?? 0,
+          intervalDays: release?.intervalDays ?? 0,
           delayDays: release?.delayDays ?? 0,
         },
       });
@@ -63,7 +63,7 @@
       SPA: true,
       validators: zod(Schema),
       dataType: "json",
-      resetForm: true,
+      resetForm: false,
       async onUpdate({ form }) {
         if (form.valid) {
           const data = form.data;
