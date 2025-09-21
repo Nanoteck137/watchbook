@@ -36,7 +36,7 @@
 
 <a
   {href}
-  class="group relative block aspect-[75/106] w-[160px] transform cursor-pointer overflow-hidden rounded bg-gray-900 shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
+  class="group relative block aspect-[75/106] w-[160px] min-w-[160px] transform cursor-pointer overflow-hidden rounded bg-gray-900 shadow-md transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
 >
   <!-- Badge -->
   {#if userList}
@@ -47,7 +47,7 @@
   {/if}
 
   <div
-    class="flex w-[160px] items-center justify-center overflow-hidden bg-gray-800 text-gray-400"
+    class="flex w-[160px] min-w-[160px] items-center justify-center overflow-hidden bg-gray-800 text-gray-400"
   >
     {#if coverUrl}
       <!-- svelte-ignore a11y_img_redundant_alt -->
