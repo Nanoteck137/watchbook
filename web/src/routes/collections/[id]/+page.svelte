@@ -1,54 +1,20 @@
 <script lang="ts">
   import MediaCard from "$lib/components/MediaCard.svelte";
-  import { Breadcrumb, Button, buttonVariants } from "@nanoteck137/nano-ui";
-  import { FileQuestion, Image as ImageIcon, Plus } from "lucide-svelte";
-  import ShowLogoModal from "./ShowLogoModal.svelte";
-  import { cn, isRoleAdmin } from "$lib/utils";
+  import { Button } from "@nanoteck137/nano-ui";
+  import { Plus } from "lucide-svelte";
+  import { isRoleAdmin } from "$lib/utils";
   import { getApiClient, handleApiError } from "$lib";
   import toast from "svelte-5-french-toast";
   import { invalidateAll } from "$app/navigation";
   import MediaItemDropdown from "./MediaItemDropdown.svelte";
   import AddMediaItem from "./AddMediaItem.svelte";
-  import EditImagesModal from "./EditImagesModal.svelte";
-  import CollectionDropdown from "./CollectionDropdown.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
-  import BannerHeader from "$lib/components/BannerHeader.svelte";
 
   const { data } = $props();
   const apiClient = getApiClient();
 
   let openAddMediaModal = $state(false);
-  let openEditImagesModal = $state(false);
 </script>
-
-<Breadcrumb.Root class="py-2">
-  <Breadcrumb.List>
-    <Breadcrumb.Item>
-      <Breadcrumb.Link href="/collections">Collections</Breadcrumb.Link>
-    </Breadcrumb.Item>
-    <Breadcrumb.Separator />
-    <Breadcrumb.Item>
-      <Breadcrumb.Page class="line-clamp-1 max-w-96 text-ellipsis">
-        {data.collection.name}
-      </Breadcrumb.Page>
-    </Breadcrumb.Item>
-  </Breadcrumb.List>
-</Breadcrumb.Root>
-
-<Spacer size="md" />
-
-<BannerHeader
-  title={data.collection.name}
-  coverUrl={data.collection.coverUrl}
-  bannerUrl={data.collection.bannerUrl}
-  logoUrl={data.collection.logoUrl}
->
-  {#snippet imageContent()}
-    <CollectionDropdown collection={data.collection} />
-  {/snippet}
-</BannerHeader>
-
-<Spacer size="md" />
 
 <div class="flex items-center justify-between">
   <h2 class="text-bold text-xl">
@@ -109,9 +75,4 @@
     toast.success("Successfully added new media items");
     invalidateAll();
   }}
-/>
-
-<EditImagesModal
-  bind:open={openEditImagesModal}
-  collectionId={data.collection.id}
 />
