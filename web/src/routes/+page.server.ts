@@ -1,4 +1,4 @@
-import type { Media } from "$lib/api/types";
+import type { Collection, Media } from "$lib/api/types";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
@@ -6,7 +6,8 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
   const data = await parent();
 
   let userMedia: Media[] = [];
-  let recentlyReleasedMedia: Media[] = [];
+  let recentlyCreatedMedia: Media[] = [];
+  let recentlyCreatedCollections: Collection[] = [];
 
   if (data.user) {
     const res = await locals.apiClient.getMedia({
@@ -34,13 +35,29 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
         throw error(res.error.code, { message: res.error.message });
       }
 
-      recentlyReleasedMedia = res.data.media;
+      recentlyCreatedMedia = res.data.media;
+    }
+
+    {
+      const res = await locals.apiClient.getCollections({
+        query: {
+          filter: "",
+          sort: "sort=-created",
+          perPage: "10",
+        },
+      });
+      if (!res.success) {
+        throw error(res.error.code, { message: res.error.message });
+      }
+
+      recentlyCreatedCollections = res.data.collections;
     }
   }
 
   return {
     ...data,
     userMedia,
-    recentlyReleasedMedia,
+    recentlyCreatedMedia,
+    recentlyCreatedCollections,
   };
 };

@@ -32,6 +32,16 @@ func (a *CollectionResolverAdapter) ResolveVariableName(name string) (filter.Nam
 			Kind: filter.NameKindString,
 			Name: "collections.name",
 		}, true
+	case "created":
+		return filter.Name{
+			Kind: filter.NameKindNumber,
+			Name: "collections.created",
+		}, true
+	case "updated":
+		return filter.Name{
+			Kind: filter.NameKindNumber,
+			Name: "collections.updated",
+		}, true
 	// case "userList":
 	// 	return filter.Name{
 	// 		Kind: filter.NameKindString,
