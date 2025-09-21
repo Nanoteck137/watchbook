@@ -16,46 +16,13 @@
         class="h-full w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-6"
       >
         <p class="text-sm text-muted">Welcome back</p>
-        <h1 class="text-3xl font-bold">
+        <a
+          class="text-3xl font-bold hover:underline"
+          href="/users/{data.user.id}"
+        >
           {data.user.displayName}
-        </h1>
+        </a>
       </div>
-    </div>
-
-    <div class="flex w-full justify-center gap-4">
-      <ScrollArea class="px-2 pb-4 sm:pb-0" orientation="horizontal">
-        <div class="flex gap-4 pt-4">
-          <a
-            class="border-b-2 px-2 py-3 text-sm font-medium hover:brightness-75"
-            href="/users/{data.user.id}"
-          >
-            Overview
-          </a>
-
-          <a
-            class="border-b-2 px-2 py-3 text-sm font-medium hover:brightness-75"
-            href="/users/{data.user.id}/watchlist"
-          >
-            Watchlist
-          </a>
-
-          <a
-            class="border-b-2 px-2 py-3 text-sm font-medium hover:brightness-75"
-            href="/users/{data.user.id}/folders"
-          >
-            Folders
-          </a>
-
-          {#if data.user.id === data.user?.id}
-            <a
-              class="border-b-2 px-2 py-3 text-sm font-medium hover:brightness-75"
-              href="/users/{data.user.id}/settings"
-            >
-              Settings
-            </a>
-          {/if}
-        </div>
-      </ScrollArea>
     </div>
   </Card.Root>
 
