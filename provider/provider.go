@@ -28,11 +28,11 @@ type SearchResult struct {
 	SearchType SearchResultType `json:"searchType"`
 	ProviderId string           `json:"providerId"`
 	Title      string           `json:"title"`
-	MediaType  types.MediaType  `json:"mediaType"`
-	ImageUrl   string           `json:"imageUrl"`
+	// TODO(patrik): Should this be here?
+	MediaType types.MediaType `json:"mediaType"`
+	ImageUrl  string          `json:"imageUrl"`
 }
 
-// TODO(patrik): Add date aired
 type MediaPart struct {
 	Name        string `json:"name"`
 	Number      int    `json:"number"`
