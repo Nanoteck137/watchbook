@@ -6,11 +6,13 @@
   import { goto } from "$app/navigation";
   import { Button } from "@nanoteck137/nano-ui";
   import { Trash } from "lucide-svelte";
+  import SetReleaseModal from "./SetReleaseModal.svelte";
 
   const { data } = $props();
   const apiClient = getApiClient();
 
   let openDeleteModal = $state(false);
+  let openSetReleaseModal = $state(false);
 </script>
 
 <div class="mx-auto max-w-3xl p-6">
@@ -123,6 +125,15 @@
   Delete Media
 </Button>
 
+<Button
+  variant="outline"
+  onclick={() => {
+    openSetReleaseModal = true;
+  }}
+>
+  Set Release
+</Button>
+
 {#each data.media.providers as provider}
   <ProviderUpdateButton mediaId={data.media.id} {provider} />
 {/each}
@@ -141,4 +152,10 @@
     toast.success("Successfully deleted media");
     goto(`/media`, { invalidateAll: true });
   }}
+/>
+
+<SetReleaseModal
+  bind:open={openSetReleaseModal}
+  mediaId={data.media.id}
+  release={data.media.release ?? undefined}
 />

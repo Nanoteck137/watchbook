@@ -44,6 +44,7 @@
   const { form, errors, enhance, reset, submitting } = superForm(
     defaults(zod(Schema)),
     {
+      id: part.mediaId + "/" + part.index.toString(),
       SPA: true,
       validators: zod(Schema),
       dataType: "json",
