@@ -9,75 +9,7 @@
   const { data } = $props();
   const apiClient = getApiClient();
 
-  let episodeOpen = $state(false);
   let descriptionShowMore = $state(false);
-
-  async function updateScore(score: number | null) {
-    if (score === null) {
-      const res = await apiClient.setMediaUserData(data.media.id, {
-        score: 0,
-      });
-      if (!res.success) {
-        return handleApiError(res.error);
-      }
-    } else {
-      const res = await apiClient.setMediaUserData(data.media.id, { score });
-      if (!res.success) {
-        return handleApiError(res.error);
-      }
-    }
-
-    await invalidateAll();
-  }
-
-  async function updateList(list: UserList | null) {
-    if (list === null) {
-      const res = await apiClient.setMediaUserData(data.media.id, {
-        list: "",
-      });
-      if (!res.success) {
-        return handleApiError(res.error);
-      }
-    } else {
-      const res = await apiClient.setMediaUserData(data.media.id, {
-        list,
-      });
-      if (!res.success) {
-        return handleApiError(res.error);
-      }
-    }
-
-    await invalidateAll();
-  }
-
-  function formatScore() {
-    const score = data.media.user?.score;
-
-    if (score === null) return "-";
-
-    return score?.toString();
-  }
-
-  function formatList() {
-    const category = data.media.user?.list;
-
-    if (!category) return "Not Added";
-
-    switch (category) {
-      case "in-progress":
-        return "In-Progress";
-      case "completed":
-        return "Completed";
-      case "on-hold":
-        return "On-Hold";
-      case "dropped":
-        return "Dropped";
-      case "backlog":
-        return "Backlog";
-    }
-
-    return category;
-  }
 
   function formatDate(dateString?: string) {
     if (!dateString) return "N/A"; // handle missing dates
