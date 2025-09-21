@@ -34,8 +34,9 @@ type SearchResult struct {
 
 // TODO(patrik): Add date aired
 type MediaPart struct {
-	Name   string `json:"name"`
-	Number int    `json:"number"`
+	Name        string `json:"name"`
+	Number      int    `json:"number"`
+	ReleaseDate *time.Time
 }
 
 type Media struct {

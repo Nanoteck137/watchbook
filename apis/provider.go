@@ -249,20 +249,38 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 	}
 
 	if media.Type.IsMovie() {
+		releaseDate := ""
+		if media.StartDate != nil {
+			releaseDate = media.StartDate.Format(types.MediaDateLayout)
+		}
+
 		err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
 			MediaId: id,
 			Name:    media.Title,
 			Index:   1,
+			ReleaseDate: sql.NullString{
+				String: releaseDate,
+				Valid:  releaseDate != "",
+			},
 		})
 		if err != nil {
 			return "", err
 		}
 	} else {
 		for _, part := range media.Parts {
+			releaseDate := ""
+			if part.ReleaseDate != nil {
+				releaseDate = part.ReleaseDate.Format(types.MediaDateLayout)
+			}
+
 			err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
 				MediaId: id,
 				Name:    part.Name,
 				Index:   int64(part.Number),
+				ReleaseDate: sql.NullString{
+					String: releaseDate,
+					Valid:  releaseDate != "",
+				},
 			})
 			if err != nil {
 				return "", err
@@ -769,15 +787,44 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 						return nil, err
 					}
 
-					for _, part := range data.Parts {
-						// TODO(patrik): Check for duplicated numbers
+					if data.Type.IsMovie() {
+						releaseDate := ""
+						if data.StartDate != nil {
+							releaseDate = data.StartDate.Format(types.MediaDateLayout)
+						}
+
 						err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
-							Index:   int64(part.Number),
 							MediaId: dbMedia.Id,
-							Name:    part.Name,
+							Name:    data.Title,
+							Index:   1,
+							ReleaseDate: sql.NullString{
+								String: releaseDate,
+								Valid:  releaseDate != "",
+							},
 						})
 						if err != nil {
-							return nil, err
+							return "", err
+						}
+					} else {
+						for _, part := range data.Parts {
+							releaseDate := ""
+							if part.ReleaseDate != nil {
+								releaseDate = part.ReleaseDate.Format(types.MediaDateLayout)
+							}
+
+							// TODO(patrik): Check for duplicated numbers
+							err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
+								MediaId: dbMedia.Id,
+								Name:    part.Name,
+								Index:   int64(part.Number),
+								ReleaseDate: sql.NullString{
+									String: releaseDate,
+									Valid:  releaseDate != "",
+								},
+							})
+							if err != nil {
+								return "", err
+							}
 						}
 					}
 				}

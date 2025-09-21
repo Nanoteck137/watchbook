@@ -301,10 +301,17 @@ func (m *MyAnimeListAnimeProvider) GetMedia(c provider.Context, id string) (prov
 	lastEpisodeNumber := 0
 
 	for _, episode := range episodes {
+		var releaseDate *time.Time
+		d, err := time.Parse(types.MediaDateLayout, episode.Aired)
+		if err == nil {
+			releaseDate = &d
+		}
+
 		n := int(episode.Number)
 		parts = append(parts, provider.MediaPart{
-			Name:   episode.EnglishTitle,
-			Number: n,
+			Name:        episode.EnglishTitle,
+			Number:      n,
+			ReleaseDate: releaseDate,
 		})
 
 		if n > lastEpisodeNumber {

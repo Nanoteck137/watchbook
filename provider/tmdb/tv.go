@@ -177,9 +177,17 @@ func (t *TmdbTvProvider) GetMedia(c provider.Context, id string) (provider.Media
 	}
 
 	for i, episode := range seasonDetails.Episodes {
+		var releaseDate *time.Time
+
+		d, err := time.Parse(types.MediaDateLayout, episode.AirDate)
+		if err == nil {
+			releaseDate = &d
+		}
+
 		res.Parts[i] = provider.MediaPart{
-			Name:   episode.Name,
-			Number: episode.EpisodeNumber,
+			Name:        episode.Name,
+			Number:      episode.EpisodeNumber,
+			ReleaseDate: releaseDate,
 		}
 	}
 

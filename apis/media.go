@@ -242,7 +242,8 @@ type MediaPart struct {
 	Index   int64  `json:"index"`
 	MediaId string `json:"mediaId"`
 
-	Name string `json:"name"`
+	Name        string  `json:"name"`
+	ReleaseDate *string `json:"releaseDate"`
 }
 
 type GetMediaParts struct {
@@ -381,17 +382,20 @@ type AddPart struct {
 }
 
 type AddPartBody struct {
-	Index int64  `json:"index"`
-	Name  string `json:"name"`
+	Index       int64  `json:"index"`
+	Name        string `json:"name"`
+	ReleaseDate string `json:"releaseDate"`
 }
 
+// TODO(patrik): Fix no validate
 func (b *AddPartBody) Transform() {
 	b.Name = anvil.String(b.Name)
 	b.Index = utils.Min(b.Index, 0)
 }
 
 type EditPartBody struct {
-	Name *string `json:"name"`
+	Name        *string `json:"name,omitempty"`
+	ReleaseDate *string `json:"releaseDate,omitempty"`
 }
 
 func (b *EditPartBody) Transform() {
@@ -401,11 +405,13 @@ func (b *EditPartBody) Transform() {
 func (b EditPartBody) Validate() error {
 	return validate.ValidateStruct(&b,
 		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
+		validate.Field(&b.ReleaseDate, validate.Date(types.MediaDateLayout)),
 	)
 }
 
 type PartBody struct {
-	Name string `json:"name"`
+	Name        string `json:"name"`
+	ReleaseDate string `json:"releaseDate"`
 }
 
 func (b *PartBody) Transform() {
@@ -415,6 +421,7 @@ func (b *PartBody) Transform() {
 func (b PartBody) Validate() error {
 	return validate.ValidateStruct(&b,
 		validate.Field(&b.Name, validate.Required),
+		validate.Field(&b.ReleaseDate, validate.Date(types.MediaDateLayout)),
 	)
 }
 
@@ -569,9 +576,10 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 				for i, part := range parts {
 					res[i] = MediaPart{
-						Index:   part.Index,
-						MediaId: part.MediaId,
-						Name:    part.Name,
+						Index:       part.Index,
+						MediaId:     part.MediaId,
+						Name:        part.Name,
+						ReleaseDate: utils.SqlNullToStringPtr(part.ReleaseDate),
 					}
 				}
 
@@ -703,6 +711,10 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 						MediaId: id,
 						Name:    body.Title,
 						Index:   1,
+						ReleaseDate: sql.NullString{
+							String: body.StartDate,
+							Valid:  body.StartDate != "",
+						},
 					})
 					if err != nil {
 						return nil, err
@@ -1076,6 +1088,10 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					Index:   index,
 					MediaId: dbMedia.Id,
 					Name:    name,
+					ReleaseDate: sql.NullString{
+						String: body.ReleaseDate,
+						Valid:  body.ReleaseDate != "",
+					},
 				})
 				if err != nil {
 					if errors.Is(err, database.ErrItemAlreadyExists) {
@@ -1142,6 +1158,16 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 						Value:   *body.Name,
 						Changed: *body.Name != dbPart.Name,
 					}
+				}
+
+				if body.ReleaseDate != nil {
+					 changes.ReleaseDate = database.Change[sql.NullString]{
+					 	Value:   sql.NullString{
+					 		String: *body.ReleaseDate,
+					 		Valid:  *body.ReleaseDate != "",
+					 	},
+					 	Changed: *body.ReleaseDate != dbPart.ReleaseDate.String,
+					 }
 				}
 
 				err = app.DB().UpdateMediaPart(ctx, dbPart.Index, dbPart.MediaId, changes)
@@ -1223,9 +1249,13 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 				for i, part := range body.Parts {
 					err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
-						Index:   int64(i),
-						MediaId: id,
-						Name:    part.Name,
+						Index:       int64(i),
+						MediaId:     id,
+						Name:        part.Name,
+						ReleaseDate: sql.NullString{
+							String: part.ReleaseDate,
+							Valid:  part.ReleaseDate != "",
+						},
 					})
 					if err != nil {
 						return nil, err

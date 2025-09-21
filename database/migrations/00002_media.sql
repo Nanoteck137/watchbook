@@ -62,6 +62,7 @@ CREATE TABLE media_parts (
     media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE,
 
     name TEXT NOT NULL,
+	release_date TEXT, 
 
     created INTEGER NOT NULL,
     updated INTEGER NOT NULL,

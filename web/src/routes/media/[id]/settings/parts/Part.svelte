@@ -23,7 +23,7 @@
     <p class="font-medium">
       Part {part.index} — {part.name}
     </p>
-    <p class="text-xs text-muted-foreground">Air Date: 2013-04-07</p>
+    <p class="text-xs text-muted-foreground">Air Date: {part.releaseDate}</p>
   </div>
 
   <div class="flex items-center gap-2">

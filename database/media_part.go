@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/doug-martin/goqu/v9"
@@ -14,7 +15,8 @@ type MediaPart struct {
 	Index   int64  `db:"idx"`
 	MediaId string `db:"media_id"`
 
-	Name string `db:"name"`
+	Name        string         `db:"name"`
+	ReleaseDate sql.NullString `db:"release_date"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -30,6 +32,7 @@ func MediaPartQuery() *goqu.SelectDataset {
 			"media_parts.media_id",
 
 			"media_parts.name",
+			"media_parts.release_date",
 
 			"media_parts.created",
 			"media_parts.updated",
@@ -62,10 +65,11 @@ func (db DB) GetMediaPartsByMediaId(ctx context.Context, mediaId string) ([]Medi
 }
 
 type CreateMediaPartParams struct {
-	Index int64
+	Index   int64
 	MediaId string
 
-	Name  string
+	Name        string
+	ReleaseDate sql.NullString
 
 	Created int64
 	Updated int64
@@ -82,10 +86,11 @@ func (db DB) CreateMediaPart(ctx context.Context, params CreateMediaPartParams) 
 	}
 
 	query := dialect.Insert("media_parts").Rows(goqu.Record{
-		"idx":  params.Index,
+		"idx":      params.Index,
 		"media_id": params.MediaId,
 
-		"name": params.Name,
+		"name":         params.Name,
+		"release_date": params.ReleaseDate,
 
 		"created": created,
 		"updated": updated,
@@ -100,7 +105,8 @@ func (db DB) CreateMediaPart(ctx context.Context, params CreateMediaPartParams) 
 }
 
 type MediaPartChanges struct {
-	Name  Change[string]
+	Name        Change[string]
+	ReleaseDate Change[sql.NullString]
 
 	Created Change[int64]
 }
@@ -109,6 +115,7 @@ func (db DB) UpdateMediaPart(ctx context.Context, index int64, mediaId string, c
 	record := goqu.Record{}
 
 	addToRecord(record, "name", changes.Name)
+	addToRecord(record, "release_date", changes.ReleaseDate)
 
 	addToRecord(record, "created", changes.Created)
 
