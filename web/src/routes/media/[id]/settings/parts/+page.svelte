@@ -1,32 +1,22 @@
 <script lang="ts">
-  import { invalidateAll } from "$app/navigation";
-  import { getApiClient, handleApiError } from "$lib";
-  import { Button } from "@nanoteck137/nano-ui";
-  import toast from "svelte-5-french-toast";
+  import Part from "./Part.svelte";
 
   const { data } = $props();
-  const apiClient = getApiClient();
 </script>
 
-{#each data.parts as part}
-  <div class="flex items-center gap-2">
-    <p>{part.index}. {part.name}</p>
-    <Button
-      variant="link"
-      onclick={async () => {
-        const res = await apiClient.removePart(
-          data.media.id,
-          part.index.toString(),
-        );
-        if (!res.success) {
-          return handleApiError(res.error);
-        }
-
-        toast.success("Successfully removed part");
-        invalidateAll();
-      }}
-    >
-      Remove
-    </Button>
+<div class="flex flex-col gap-4">
+  <div>
+    <h1 class="text-2xl font-bold">Part Settings</h1>
+    <p class="text-sm text-muted-foreground">
+      Manage, edit, or delete episodes for this media entry.
+    </p>
   </div>
-{/each}
+
+  <section class="flex flex-col gap-4">
+    <h2 class="text-lg font-semibold">Parts</h2>
+
+    {#each data.parts as part}
+      <Part {part} />
+    {/each}
+  </section>
+</div>

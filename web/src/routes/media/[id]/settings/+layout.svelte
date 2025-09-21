@@ -1,41 +1,49 @@
 <script lang="ts">
-  import Spacer from "$lib/components/Spacer.svelte";
-  import { Button } from "@nanoteck137/nano-ui";
+  import { Card, ScrollArea } from "@nanoteck137/nano-ui";
 
   const { data, children } = $props();
 </script>
 
-<p class="text-center">Media Settings</p>
+<Card.Root>
+  <div class="flex w-full justify-center gap-4 border-b">
+    <ScrollArea class="px-2 pb-4 sm:pb-0" orientation="horizontal">
+      <div class="flex gap-4 pt-4">
+        <a
+          class="border-b-2 px-2 py-3 text-sm font-medium hover:brightness-75"
+          href="/media/{data.media.id}/settings"
+          data-sveltekit-noscroll
+        >
+          General
+        </a>
 
-<Spacer size="md" />
+        <a
+          class="border-b-2 px-2 py-3 text-sm font-medium hover:brightness-75"
+          href="/media/{data.media.id}/settings/images"
+          data-sveltekit-noscroll
+        >
+          Images
+        </a>
 
-<nav class="flex justify-center">
-  <Button
-    href="/media/{data.media.id}/settings"
-    variant="link"
-    data-sveltekit-noscroll>Update</Button
-  >
-  <Button
-    href="/media/{data.media.id}/settings/images"
-    variant="link"
-    data-sveltekit-noscroll
-  >
-    Images
-  </Button>
-  <Button
-    href="/media/{data.media.id}/settings/edit"
-    variant="link"
-    data-sveltekit-noscroll
-  >
-    Edit
-  </Button>
-  <Button
-    href="/media/{data.media.id}/settings/parts"
-    variant="link"
-    data-sveltekit-noscroll
-  >
-    Parts
-  </Button>
-</nav>
+        <a
+          class="border-b-2 px-2 py-3 text-sm font-medium hover:brightness-75"
+          href="/media/{data.media.id}/settings/edit"
+          data-sveltekit-noscroll
+        >
+          Edit
+        </a>
 
-{@render children()}
+        <a
+          class="border-b-2 px-2 py-3 text-sm font-medium hover:brightness-75"
+          href="/media/{data.media.id}/settings/parts"
+          data-sveltekit-noscroll
+        >
+          Parts
+        </a>
+      </div>
+    </ScrollArea>
+  </div>
+
+  <div class="p-6">
+    {@render children()}
+  </div>
+</Card.Root>
