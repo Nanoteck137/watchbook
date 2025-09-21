@@ -30,6 +30,8 @@ import (
 var CreateId = createIdGenerator(32)
 var CreateSmallId = createIdGenerator(8)
 
+var CreateUserId = createIdGenerator(8)
+
 var CreateMediaId = createIdGenerator(12)
 var CreateCollectionId = createIdGenerator(8)
 

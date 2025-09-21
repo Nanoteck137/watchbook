@@ -11,6 +11,7 @@ import (
 	"github.com/nanoteck137/watchbook/kvstore"
 	"github.com/nanoteck137/watchbook/provider/myanimelist"
 	"github.com/nanoteck137/watchbook/provider/tmdb"
+	"github.com/nanoteck137/watchbook/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -46,8 +47,10 @@ var oldCmd = &cobra.Command{
 		}
 
 		for _, user := range users {
+			newUserId := utils.CreateUserId()
+
 			_, err := db.CreateUser(ctx, database.CreateUserParams{
-				Id:       user.Id,
+				Id:       newUserId,
 				Username: user.Username,
 				Password: user.Password,
 				Role:     user.Role,
@@ -59,7 +62,7 @@ var oldCmd = &cobra.Command{
 			}
 
 			err = db.UpdateUserSettings(ctx, database.UserSettings{
-				Id:          user.Id,
+				Id:          newUserId,
 				DisplayName: user.DisplayName,
 			})
 			if err != nil {
@@ -74,7 +77,7 @@ var oldCmd = &cobra.Command{
 			for _, token := range tokens {
 				_, err := db.CreateApiToken(ctx, database.CreateApiTokenParams{
 					Id:      token.Id,
-					UserId:  token.UserId,
+					UserId:  newUserId,
 					Name:    token.Name,
 					Created: token.Created,
 					Updated: token.Updated,

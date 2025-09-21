@@ -95,7 +95,7 @@ func (db DB) CreateUser(ctx context.Context, params CreateUserParams) (string, e
 
 	id := params.Id
 	if id == "" {
-		id = utils.CreateId()
+		id = utils.CreateUserId()
 	}
 
 	query := dialect.
