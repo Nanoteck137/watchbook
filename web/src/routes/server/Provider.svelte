@@ -2,9 +2,9 @@
   import { getApiClient, handleApiError } from "$lib";
   import type { Provider } from "$lib/api/types";
   import toast from "svelte-5-french-toast";
-  import ProviderSearchModal from "./ProviderSearchModal.svelte";
   import { invalidateAll } from "$app/navigation";
   import { Button } from "@nanoteck137/nano-ui";
+  import ProviderSearchModal from "./ProviderSearchModal.svelte";
 
   type Props = {
     provider: Provider;
