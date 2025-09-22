@@ -184,9 +184,11 @@ func fetchAnimeData(malId string) (AnimeEntry, error) {
 	}
 
 	var release *time.Time
-	t, err := parseDateTimeUTC(*startDate, data.Broadcast)
-	if err == nil {
-		release = &t
+	if startDate != nil && data.Broadcast != "" {
+		t, err := parseDateTimeUTC(*startDate, data.Broadcast)
+		if err == nil {
+			release = &t
+		}
 	}
 
 	res := AnimeEntry{
