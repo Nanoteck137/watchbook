@@ -53,6 +53,7 @@ type Media struct {
 
 	StartDate *time.Time `json:"startDate"`
 	EndDate   *time.Time `json:"endDate"`
+	Release   *time.Time `json:"release"`
 
 	CoverUrl  *string `json:"coverUrl"`
 	LogoUrl   *string `json:"logoUrl"`

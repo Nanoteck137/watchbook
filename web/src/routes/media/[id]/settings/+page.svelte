@@ -56,6 +56,6 @@
 
 <SetReleaseModal
   bind:open={openSetReleaseModal}
-  mediaId={data.media.id}
+  media={data.media}
   release={data.media.release ?? undefined}
 />

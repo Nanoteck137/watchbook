@@ -14,8 +14,8 @@
   const Schema = z.object({
     replaceImages: z.boolean(),
     overrideParts: z.boolean().default(true),
+    setRelease: z.boolean().default(false),
   });
-  type SchemaTy = z.infer<typeof Schema>;
 
   export type Props = {
     open: boolean;
@@ -33,7 +33,7 @@
   });
 
   const { form, errors, enhance, validateForm, reset, submitting } = superForm(
-    defaults({ replaceImages: false }, zod(Schema)),
+    defaults({}, zod(Schema)),
     {
       SPA: true,
       validators: zod(Schema),
@@ -94,6 +94,18 @@
           <Label for="overrideParts">Override Parts</Label>
         </div>
         <Errors errors={$errors.overrideParts} />
+      </FormItem>
+
+      <FormItem>
+        <div class="flex items-center gap-2">
+          <Checkbox
+            id="setRelease"
+            name="setRelease"
+            bind:checked={$form.setRelease}
+          />
+          <Label for="setRelease">Set Release</Label>
+        </div>
+        <Errors errors={$errors.setRelease} />
       </FormItem>
 
       <Dialog.Footer class="gap-2 sm:gap-0">

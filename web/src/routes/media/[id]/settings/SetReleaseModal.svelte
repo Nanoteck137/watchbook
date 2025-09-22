@@ -7,10 +7,10 @@
   import { defaults, superForm } from "sveltekit-superforms/client";
   import { z } from "zod";
   import Spinner from "$lib/components/Spinner.svelte";
-  import type { MediaRelease } from "$lib/api/types";
+  import type { Media, MediaRelease } from "$lib/api/types";
   import toast from "svelte-5-french-toast";
   import { invalidateAll } from "$app/navigation";
-  import { Trash } from "lucide-svelte";
+  import { Bolt, Trash } from "lucide-svelte";
   import ConfirmBox from "$lib/components/ConfirmBox.svelte";
   import {
     MediaReleaseTypeEnum,
@@ -34,11 +34,11 @@
 
   export type Props = {
     open: boolean;
-    mediaId: string;
+    media: Media;
     release?: MediaRelease;
   };
 
-  let { open = $bindable(), mediaId, release }: Props = $props();
+  let { open = $bindable(), media, release }: Props = $props();
   const apiClient = getApiClient();
 
   let openDeleteConfirmModal = $state(false);
@@ -68,7 +68,7 @@
         if (form.valid) {
           const data = form.data;
 
-          const res = await apiClient.setMediaRelease(mediaId, {
+          const res = await apiClient.setMediaRelease(media.id, {
             releaseType: data.type,
             startDate: data.startDate,
             numExpectedParts: data.numExpectedParts,
@@ -92,7 +92,24 @@
 <Dialog.Root bind:open>
   <Dialog.Content>
     <Dialog.Header>
-      <Dialog.Title>Set release</Dialog.Title>
+      <Dialog.Title class="flex items-center gap-2">
+        Set release
+        <Button
+          size="icon"
+          variant="ghost"
+          onclick={() => {
+            reset({
+              data: {
+                startDate: media.startDate?.concat("T00:00:00Z") ?? "",
+                numExpectedParts: media.partCount,
+                intervalDays: 7,
+              },
+            });
+          }}
+        >
+          <Bolt />
+        </Button>
+      </Dialog.Title>
     </Dialog.Header>
 
     <form class="flex flex-col gap-4" use:enhance>
@@ -205,7 +222,7 @@
   title="Remove release?"
   description="Are you sure you want to remove this release? This action cannot be undone."
   onResult={async () => {
-    const res = await apiClient.deleteMediaRelease(mediaId);
+    const res = await apiClient.deleteMediaRelease(media.id);
     if (!res.success) {
       return handleApiError(res.error);
     }

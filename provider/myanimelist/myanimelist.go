@@ -2,9 +2,11 @@ package myanimelist
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/kr/pretty"
 	"github.com/nanoteck137/watchbook/provider"
 	"github.com/nanoteck137/watchbook/provider/downloader"
 	"github.com/nanoteck137/watchbook/types"
@@ -32,8 +34,9 @@ type AnimeEntry struct {
 	Rating       types.MediaRating `json:"rating"`
 	AiringSeason string            `json:"airingSeason"`
 
-	StartDate *string `json:"startDate"`
-	EndDate   *string `json:"endDate"`
+	StartDate *string    `json:"startDate"`
+	EndDate   *string    `json:"endDate"`
+	Release   *time.Time `json:"release"`
 
 	Studios []string `json:"studios"`
 	Tags    []string `json:"tags"`
@@ -41,6 +44,72 @@ type AnimeEntry struct {
 	CoverImageUrl string `json:"coverImageUrl"`
 
 	EpisodeCount *int64 `json:"episodeCount"`
+}
+
+func parseDateTimeUTC(dateStr, schedule string) (time.Time, error) {
+	// Parse base date
+	date, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("invalid date: %w", err)
+	}
+
+	// Split schedule, e.g. "Saturdays at 23:00 (JST)"
+	parts := strings.Split(schedule, " at ")
+	if len(parts) != 2 {
+		return time.Time{}, fmt.Errorf("invalid schedule format")
+	}
+
+	// Extract weekday
+	weekdayStr := strings.TrimSuffix(parts[0], "s") // "Saturdays" → "Saturday"
+	weekdayMap := map[string]time.Weekday{
+		"Sunday":    time.Sunday,
+		"Monday":    time.Monday,
+		"Tuesday":   time.Tuesday,
+		"Wednesday": time.Wednesday,
+		"Thursday":  time.Thursday,
+		"Friday":    time.Friday,
+		"Saturday":  time.Saturday,
+	}
+	weekday, ok := weekdayMap[weekdayStr]
+	if !ok {
+		return time.Time{}, fmt.Errorf("invalid weekday: %s", weekdayStr)
+	}
+
+	// Extract time and tz, e.g. "23:00 (JST)"
+	timeAndTZ := parts[1]
+	timeParts := strings.SplitN(timeAndTZ, " ", 2)
+	if len(timeParts) < 2 {
+		return time.Time{}, fmt.Errorf("invalid time format")
+	}
+
+	hm := timeParts[0] // "23:00"
+	hmSplit := strings.Split(hm, ":")
+	if len(hmSplit) != 2 {
+		return time.Time{}, fmt.Errorf("invalid hour:minute")
+	}
+	hour, _ := strconv.Atoi(hmSplit[0])
+	min, _ := strconv.Atoi(hmSplit[1])
+
+	// Timezone
+	tz := strings.Trim(timeParts[1], "()")
+	var loc *time.Location
+	switch tz {
+	case "JST":
+		loc = time.FixedZone("JST", 9*60*60)
+	default:
+		return time.Time{}, fmt.Errorf("unsupported timezone: %s", tz)
+	}
+
+	// Adjust to the correct weekday
+	for date.Weekday() != weekday {
+		date = date.AddDate(0, 0, 1)
+	}
+
+	// Build full datetime in given TZ
+	localTime := time.Date(date.Year(), date.Month(), date.Day(), hour, min, 0, 0, loc)
+
+	// Convert to UTC
+	return localTime.UTC(), nil
 }
 
 func fetchAnimeData(malId string) (AnimeEntry, error) {
@@ -115,6 +184,12 @@ func fetchAnimeData(malId string) (AnimeEntry, error) {
 		tags = append(tags, utils.Slug(t))
 	}
 
+	var release *time.Time
+	t, err := parseDateTimeUTC(*startDate, data.Broadcast)
+	if err == nil {
+		release = &t
+	}
+
 	res := AnimeEntry{
 		Type:          ConvertAnimeType(data.Type),
 		Title:         data.Title,
@@ -130,6 +205,7 @@ func fetchAnimeData(malId string) (AnimeEntry, error) {
 		Tags:          tags,
 		CoverImageUrl: data.CoverImageUrl,
 		EpisodeCount:  data.EpisodeCount,
+		Release:       release,
 	}
 
 	return res, nil
@@ -250,6 +326,8 @@ func (m *MyAnimeListAnimeProvider) GetMedia(c provider.Context, id string) (prov
 		return provider.Media{}, err
 	}
 
+	pretty.Println(anime)
+
 	title := anime.Title
 	if anime.TitleEnglish != "" {
 		title = anime.TitleEnglish
@@ -338,6 +416,7 @@ func (m *MyAnimeListAnimeProvider) GetMedia(c provider.Context, id string) (prov
 		AiringSeason:     airingSeason,
 		StartDate:        startDate,
 		EndDate:          endDate,
+		Release:          anime.Release,
 		CoverUrl:         coverUrl,
 		LogoUrl:          nil,
 		BannerUrl:        nil,

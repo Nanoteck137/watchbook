@@ -322,6 +322,7 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 type ProviderMediaUpdateBody struct {
 	ReplaceImages bool `json:"replaceImages,omitempty"`
 	OverrideParts bool `json:"overrideParts,omitempty"`
+	SetRelease    bool `json:"setRelease,omitempty"`
 }
 
 type ProviderCollectionUpdateBody struct {
@@ -803,7 +804,7 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 							},
 						})
 						if err != nil {
-							return "", err
+							return nil, err
 						}
 					} else {
 						for _, part := range data.Parts {
@@ -823,7 +824,7 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 								},
 							})
 							if err != nil {
-								return "", err
+								return nil, err
 							}
 						}
 					}
@@ -834,12 +835,12 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 
 					err := app.DB().CreateTag(ctx, tag, tag)
 					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-						return "", err
+						return nil, err
 					}
 
 					err = app.DB().AddTagToMedia(ctx, dbMedia.Id, tag)
 					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-						return "", err
+						return nil, err
 					}
 				}
 
@@ -848,12 +849,28 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 
 					err := app.DB().CreateTag(ctx, tag, tag)
 					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-						return "", err
+						return nil, err
 					}
 
 					err = app.DB().AddCreatorToMedia(ctx, dbMedia.Id, tag)
 					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-						return "", err
+						return nil, err
+					}
+				}
+
+				if body.SetRelease {
+					if data.Release != nil {
+						err := app.DB().SetMediaPartRelease(ctx, dbMedia.Id, database.SetMediaPartRelease{
+							Type:             types.MediaPartReleaseTypeNotConfirmed,
+							StartDate:        data.Release.Format(time.RFC3339),
+							NumExpectedParts: len(data.Parts),
+							PartOffset:       0,
+							IntervalDays:     7,
+							DelayDays:        0,
+						})
+						if err != nil {
+							return nil, err
+						}
 					}
 				}
 
