@@ -5,23 +5,41 @@ import type { PageServerLoad } from "./$types";
 export const load: PageServerLoad = async ({ locals, parent }) => {
   const data = await parent();
 
-  let userMedia: Media[] = [];
+  let userInprogressMedia: Media[] = [];
+  let userBacklogMedia: Media[] = [];
   let recentlyCreatedMedia: Media[] = [];
   let recentlyCreatedCollections: Collection[] = [];
 
   if (data.user) {
-    const res = await locals.apiClient.getMedia({
-      query: {
-        filter: 'userList == "in-progress"',
-        sort: "sort=-userUpdated",
-        perPage: "10",
-      },
-    });
-    if (!res.success) {
-      throw error(res.error.code, { message: res.error.message });
+    {
+      const res = await locals.apiClient.getMedia({
+        query: {
+          filter: 'userList == "in-progress"',
+          sort: "sort=-userUpdated",
+          perPage: "10",
+        },
+      });
+      if (!res.success) {
+        throw error(res.error.code, { message: res.error.message });
+      }
+
+      userInprogressMedia = res.data.media;
     }
 
-    userMedia = res.data.media;
+    {
+      const res = await locals.apiClient.getMedia({
+        query: {
+          filter: 'userList == "backlog"',
+          sort: "sort=title",
+          perPage: "10",
+        },
+      });
+      if (!res.success) {
+        throw error(res.error.code, { message: res.error.message });
+      }
+
+      userBacklogMedia = res.data.media;
+    }
 
     {
       const res = await locals.apiClient.getMedia({
@@ -56,7 +74,8 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 
   return {
     ...data,
-    userMedia,
+    userInprogressMedia,
+    userBacklogMedia,
     recentlyCreatedMedia,
     recentlyCreatedCollections,
   };

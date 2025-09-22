@@ -64,7 +64,36 @@
 
       <ScrollArea orientation="horizontal">
         <div class="flex w-full gap-2 py-4">
-          {#each data.userMedia as media}
+          {#each data.userInprogressMedia as media}
+            <SmallMediaCard
+              href="/media/{media.id}"
+              coverUrl={media.coverUrl}
+              title={media.title}
+              startDate={undefined}
+              partCount={0}
+              score={undefined}
+              userList={media.user?.list}
+            />
+          {/each}
+        </div>
+      </ScrollArea>
+    </div>
+
+    <div class="p-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-semibold">Backlog</h2>
+        <Button
+          size="sm"
+          variant="link"
+          href="/users/{data.user.id}/watchlist?list=backlog"
+        >
+          View More
+        </Button>
+      </div>
+
+      <ScrollArea orientation="horizontal">
+        <div class="flex w-full gap-2 py-4">
+          {#each data.userBacklogMedia as media}
             <SmallMediaCard
               href="/media/{media.id}"
               coverUrl={media.coverUrl}
