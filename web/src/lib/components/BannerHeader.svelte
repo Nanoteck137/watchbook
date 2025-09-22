@@ -40,13 +40,15 @@
         alt="Collection Banner"
         class="h-full w-full object-cover"
       />
-    {:else}
-      <div class="h-full w-full bg-background"></div>
-    {/if}
 
-    <div
-      class="absolute inset-0 rounded-lg border-b bg-black bg-opacity-40"
-    ></div>
+      <div
+        class="absolute inset-0 rounded-lg border-b bg-black bg-opacity-40"
+      ></div>
+    {:else}
+      <div
+        class="h-full w-full bg-gradient-to-br from-[#9333EA] to-[#F59E0B]"
+      ></div>
+    {/if}
 
     {#if logoUrl}
       <div

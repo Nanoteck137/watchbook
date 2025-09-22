@@ -8,7 +8,7 @@
 <Card.Root>
   <div class="relative w-full overflow-hidden rounded-xl shadow-lg">
     <div
-      class="h-full w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-6"
+      class="h-full w-full bg-gradient-to-br from-[#9333EA] to-[#F59E0B] p-6"
     >
       <h1 class="text-3xl font-bold">
         {data.userData.displayName}
