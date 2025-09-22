@@ -445,6 +445,7 @@ type SetMediaReleaseBody struct {
 	ReleaseType      string `json:"releaseType"`
 	StartDate        string `json:"startDate"`
 	NumExpectedParts int    `json:"numExpectedParts"`
+	PartOffset       int    `json:"partOffset"`
 	IntervalDays     int    `json:"intervalDays"`
 	DelayDays        int    `json:"delayDays"`
 }
@@ -1161,13 +1162,13 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 				}
 
 				if body.ReleaseDate != nil {
-					 changes.ReleaseDate = database.Change[sql.NullString]{
-					 	Value:   sql.NullString{
-					 		String: *body.ReleaseDate,
-					 		Valid:  *body.ReleaseDate != "",
-					 	},
-					 	Changed: *body.ReleaseDate != dbPart.ReleaseDate.String,
-					 }
+					changes.ReleaseDate = database.Change[sql.NullString]{
+						Value: sql.NullString{
+							String: *body.ReleaseDate,
+							Valid:  *body.ReleaseDate != "",
+						},
+						Changed: *body.ReleaseDate != dbPart.ReleaseDate.String,
+					}
 				}
 
 				err = app.DB().UpdateMediaPart(ctx, dbPart.Index, dbPart.MediaId, changes)
@@ -1249,9 +1250,9 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 				for i, part := range body.Parts {
 					err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
-						Index:       int64(i),
-						MediaId:     id,
-						Name:        part.Name,
+						Index:   int64(i),
+						MediaId: id,
+						Name:    part.Name,
 						ReleaseDate: sql.NullString{
 							String: part.ReleaseDate,
 							Valid:  part.ReleaseDate != "",
@@ -1415,6 +1416,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					Type:             types.MediaPartReleaseType(body.ReleaseType),
 					StartDate:        t.Format(time.RFC3339),
 					NumExpectedParts: body.NumExpectedParts,
+					PartOffset:       body.PartOffset,
 					IntervalDays:     body.IntervalDays,
 					DelayDays:        body.DelayDays,
 				})

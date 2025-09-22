@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kr/pretty"
 	"github.com/nanoteck137/watchbook/provider"
 	"github.com/nanoteck137/watchbook/provider/downloader"
 	"github.com/nanoteck137/watchbook/types"
@@ -325,8 +324,6 @@ func (m *MyAnimeListAnimeProvider) GetMedia(c provider.Context, id string) (prov
 	if err != nil {
 		return provider.Media{}, err
 	}
-
-	pretty.Println(anime)
 
 	title := anime.Title
 	if anime.TitleEnglish != "" {

@@ -915,8 +915,6 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 					return "", err
 				}
 
-				pretty.Println(data)
-
 				changes := database.CollectionChanges{}
 
 				changes.Type = database.Change[types.CollectionType]{

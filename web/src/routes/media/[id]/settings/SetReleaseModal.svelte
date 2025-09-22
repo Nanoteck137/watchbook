@@ -28,6 +28,7 @@
     type: MediaReleaseTypeEnum.default("not-confirmed"),
     startDate: z.string().refine((s) => isRFC3339(s)),
     numExpectedParts: z.number().min(0),
+    partOffset: z.number(),
     intervalDays: z.number().min(0),
     delayDays: z.number().min(0),
   });
@@ -50,6 +51,7 @@
           type: (release?.releaseType as MediaReleaseType) ?? "not-confirmed",
           startDate: release?.startDate ?? "",
           numExpectedParts: release?.numExpectedParts ?? 0,
+          partOffset: release?.partOffset ?? 0,
           intervalDays: release?.intervalDays ?? 0,
           delayDays: release?.delayDays ?? 0,
         },
@@ -72,6 +74,7 @@
             releaseType: data.type,
             startDate: data.startDate,
             numExpectedParts: data.numExpectedParts,
+            partOffset: data.partOffset,
             intervalDays: data.intervalDays,
             delayDays: data.delayDays,
           });
@@ -169,6 +172,17 @@
           bind:value={$form.numExpectedParts}
         />
         <Errors errors={$errors.numExpectedParts} />
+      </FormItem>
+
+      <FormItem>
+        <Label for="partOffset">Part Offset</Label>
+        <Input
+          id="partOffset"
+          name="partOffset"
+          type="number"
+          bind:value={$form.partOffset}
+        />
+        <Errors errors={$errors.partOffset} />
       </FormItem>
 
       <FormItem>
