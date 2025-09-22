@@ -13,7 +13,6 @@ import (
 
 	"maps"
 
-	"github.com/kr/pretty"
 	"github.com/maruel/natural"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
@@ -636,8 +635,6 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 					return "", err
 				}
 
-				pretty.Println(data)
-
 				if data.AiringSeason != nil {
 					err := app.DB().CreateTag(ctx, *data.AiringSeason, *data.AiringSeason)
 					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
@@ -986,13 +983,6 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 				if err != nil {
 					return nil, err
 				}
-
-				items, err := app.DB().GetFullAllCollectionMediaItemsByCollection(ctx, nil, dbCollection.Id)
-				if err != nil {
-					return nil, err
-				}
-
-				pretty.Println(items)
 
 				itemToMedia := map[string]string{}
 				for _, item := range data.Items {
