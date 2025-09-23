@@ -16,9 +16,9 @@ import (
 	"github.com/maruel/natural"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
+	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
-	"github.com/nanoteck137/watchbook/kvstore"
 	"github.com/nanoteck137/watchbook/provider"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
@@ -30,7 +30,7 @@ type ProviderValue struct {
 	Value       string `json:"value"`
 }
 
-func createProviderValues(pm *provider.ProviderManager, providerStore kvstore.Store) []ProviderValue {
+func createProviderValues(pm *provider.ProviderManager, providerStore ember.KVStore) []ProviderValue {
 	providers := make([]ProviderValue, 0, len(providerStore))
 	for name, value := range providerStore {
 		info, ok := pm.GetProviderInfo(name)
@@ -163,7 +163,7 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 		}
 	}
 
-	providerIds := kvstore.Store{}
+	providerIds := ember.KVStore{}
 	maps.Copy(providerIds, media.ExtraProviderIds)
 	providerIds[providerName] = media.ProviderId
 
@@ -515,7 +515,7 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 						}
 					}
 
-					providerIds := kvstore.Store{}
+					providerIds := ember.KVStore{}
 					maps.Copy(providerIds, data.ExtraProviderIds)
 					providerIds[providerName] = data.ProviderId
 

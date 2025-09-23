@@ -9,10 +9,10 @@ import (
 	"strconv"
 
 	"github.com/nanoteck137/pyrin"
+	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/watchbook"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
-	"github.com/nanoteck137/watchbook/kvstore"
 	"github.com/nanoteck137/watchbook/provider/myanimelist"
 	"github.com/nanoteck137/watchbook/types"
 )
@@ -72,7 +72,7 @@ func Server(app core.App) (*pyrin.Server, error) {
 	})
 
 	app.JobProcessor().RegisterHandler("import-mal-watchlist", func(ctx context.Context, job database.Job) error {
-		store, err := kvstore.Deserialize(job.Payload)
+		store, err := ember.DeserializeKVStore(job.Payload)
 		if err != nil {
 			return err
 		}

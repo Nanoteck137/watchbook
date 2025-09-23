@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/nanoteck137/pyrin/ember"
 	old "github.com/nanoteck137/watchbook/cmd/watchbook/database"
 	"github.com/nanoteck137/watchbook/database"
-	"github.com/nanoteck137/watchbook/kvstore"
 	"github.com/nanoteck137/watchbook/provider/myanimelist"
 	"github.com/nanoteck137/watchbook/provider/tmdb"
 	"github.com/nanoteck137/watchbook/utils"
@@ -105,7 +105,7 @@ var oldCmd = &cobra.Command{
 			}
 
 			for _, media := range media {
-				providers := kvstore.Store{}
+				providers := ember.KVStore{}
 				providerUsed := ""
 
 				if media.TmdbId.Valid {

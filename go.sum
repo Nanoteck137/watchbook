@@ -205,8 +205,8 @@ github.com/muesli/cancelreader v0.2.2 h1:3I4Kt4BQjOR54NavqnDogx/MIoWBFa0StPA8ELU
 github.com/muesli/cancelreader v0.2.2/go.mod h1:3XuTXfFS2VjM+HTLZY9Ak0l6eUKfijIfMUZ4EgX0QYo=
 github.com/muesli/termenv v0.16.0 h1:S5AlUN9dENB57rsbnkPyfdGuWIlkmzJjbFf0Tf5FWUc=
 github.com/muesli/termenv v0.16.0/go.mod h1:ZRfOIKPFDYQoDFF4Olj7/QJbW60Ol/kL1pU3VfY/Cnk=
-github.com/nanoteck137/pyrin v0.15.3-0.20250923134445-b53513700894 h1:6PnH8afrQcXq8gdYstyj+VAN1pnqjLpUCIQMYuwkhlI=
-github.com/nanoteck137/pyrin v0.15.3-0.20250923134445-b53513700894/go.mod h1:EAFQOwTBWkplaCNQ+ZI0jK6atoyNVLFNHscorrAo4iw=
+github.com/nanoteck137/pyrin v0.15.3-0.20250923140657-8109fd789f8a h1:Y+BG7T2dDS4k6cWDVevWlKvjjt2UskPEATSSlhiQ0qg=
+github.com/nanoteck137/pyrin v0.15.3-0.20250923140657-8109fd789f8a/go.mod h1:EAFQOwTBWkplaCNQ+ZI0jK6atoyNVLFNHscorrAo4iw=
 github.com/nanoteck137/validate v0.0.0-20241129211421-90ceb11de343 h1:EjWdC/+BXfC4YTKxdslWV8rFZXlZ48VAKpDTQs4Lo2U=
 github.com/nanoteck137/validate v0.0.0-20241129211421-90ceb11de343/go.mod h1:+21LcVRcjVhpx5vU3qJZpsJwV4NzAk2MH87WMvhG/sk=
 github.com/nrednav/cuid2 v1.0.0 h1:27dn1oGiG+23Wa8XJ2DHeMoMa18Zs9u1+UHI9IlcGKM=

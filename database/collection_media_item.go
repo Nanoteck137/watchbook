@@ -7,7 +7,6 @@ import (
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/nanoteck137/pyrin/ember"
-	"github.com/nanoteck137/watchbook/kvstore"
 	"github.com/nanoteck137/watchbook/types"
 )
 
@@ -56,17 +55,17 @@ type FullCollectionMediaItem struct {
 	MediaLogoFile   sql.NullString `db:"media_logo_file"`
 	MediaBannerFile sql.NullString `db:"media_banner_file"`
 
-	MediaProviders kvstore.Store `db:"media_providers"`
+	MediaProviders ember.KVStore `db:"media_providers"`
 
 	MediaCreated int64 `db:"media_created"`
 	MediaUpdated int64 `db:"media_updated"`
 
 	MediaPartCount sql.NullInt64 `db:"media_part_count"`
 
-	MediaCreators JsonColumn[[]string] `db:"media_creators"`
-	MediaTags     JsonColumn[[]string] `db:"media_tags"`
+	MediaCreators ember.JsonColumn[[]string] `db:"media_creators"`
+	MediaTags     ember.JsonColumn[[]string] `db:"media_tags"`
 
-	MediaUserData JsonColumn[MediaUserData] `db:"media_user_data"`
+	MediaUserData ember.JsonColumn[MediaUserData] `db:"media_user_data"`
 }
 
 // TODO(patrik): Use goqu.T more

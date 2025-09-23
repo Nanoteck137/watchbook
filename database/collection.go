@@ -9,7 +9,6 @@ import (
 	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/watchbook/database/adapter"
 	"github.com/nanoteck137/watchbook/filter"
-	"github.com/nanoteck137/watchbook/kvstore"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
@@ -27,7 +26,7 @@ type Collection struct {
 	BannerFile sql.NullString `db:"banner_file"`
 
 	DefaultProvider sql.NullString `db:"default_provider"`
-	Providers       kvstore.Store  `db:"providers"`
+	Providers       ember.KVStore  `db:"providers"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -138,7 +137,7 @@ type CreateCollectionParams struct {
 	BannerFile sql.NullString
 
 	DefaultProvider sql.NullString
-	Providers       kvstore.Store
+	Providers       ember.KVStore
 
 	Created int64
 	Updated int64
@@ -190,7 +189,7 @@ type CollectionChanges struct {
 	BannerFile Change[sql.NullString]
 
 	DefaultProvider Change[sql.NullString]
-	Providers       Change[kvstore.Store]
+	Providers       Change[ember.KVStore]
 
 	Created Change[int64]
 }

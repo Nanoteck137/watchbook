@@ -8,10 +8,10 @@ import (
 
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
+	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/validate"
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
-	"github.com/nanoteck137/watchbook/kvstore"
 	"github.com/nanoteck137/watchbook/types"
 )
 
@@ -254,7 +254,7 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				store := kvstore.Store{
+				store := ember.KVStore{
 					"username": username,
 					"userId":   user.Id,
 				}
