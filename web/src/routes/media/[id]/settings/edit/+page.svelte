@@ -56,7 +56,7 @@
 
   async function submit(mediaId: string, data: SchemaTy) {
     const res = await apiClient.editMedia(mediaId, {
-      mediaType: data.type,
+      type: data.type,
 
       title: data.title,
       description: data.description,
@@ -89,7 +89,7 @@
   $effect(() => {
     reset({
       data: {
-        type: data.media.mediaType as MediaType,
+        type: data.media.type as MediaType,
 
         title: data.media.title,
         description: data.media.description ?? "",

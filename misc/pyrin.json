@@ -100,7 +100,7 @@
           "omitEmpty": false
         },
         {
-          "name": "collectionType",
+          "name": "type",
           "type": "string",
           "omitEmpty": false
         },
@@ -280,7 +280,7 @@
       "name": "CreateCollectionBody",
       "fields": [
         {
-          "name": "collectionType",
+          "name": "type",
           "type": "string",
           "omitEmpty": false
         },
@@ -320,7 +320,7 @@
       "name": "CreateMediaBody",
       "fields": [
         {
-          "name": "mediaType",
+          "name": "type",
           "type": "string",
           "omitEmpty": false
         },
@@ -400,7 +400,7 @@
       "name": "EditCollectionBody",
       "fields": [
         {
-          "name": "collectionType",
+          "name": "type",
           "type": "*string",
           "omitEmpty": true
         },
@@ -450,7 +450,7 @@
       "name": "EditMediaBody",
       "fields": [
         {
-          "name": "mediaType",
+          "name": "type",
           "type": "*string",
           "omitEmpty": true
         },
@@ -555,7 +555,7 @@
           "omitEmpty": false
         },
         {
-          "name": "collectionType",
+          "name": "type",
           "type": "string",
           "omitEmpty": false
         },
@@ -675,7 +675,7 @@
           "omitEmpty": false
         },
         {
-          "name": "mediaType",
+          "name": "type",
           "type": "string",
           "omitEmpty": false
         },
@@ -840,7 +840,7 @@
           "omitEmpty": false
         },
         {
-          "name": "mediaType",
+          "name": "type",
           "type": "string",
           "omitEmpty": false
         },

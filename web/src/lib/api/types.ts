@@ -67,8 +67,8 @@ export type ProviderValue = z.infer<typeof ProviderValue>;
 export const Collection = z.object({
   // Name: Collection.id
   "id": z.string(),
-  // Name: Collection.collectionType
-  "collectionType": z.string(),
+  // Name: Collection.type
+  "type": z.string(),
   // Name: Collection.name
   "name": z.string(),
   // Name: Collection.coverUrl
@@ -171,8 +171,8 @@ export type CreateCollection = z.infer<typeof CreateCollection>;
 
 // Name: CreateCollectionBody
 export const CreateCollectionBody = z.object({
-  // Name: CreateCollectionBody.collectionType
-  "collectionType": z.string(),
+  // Name: CreateCollectionBody.type
+  "type": z.string(),
   // Name: CreateCollectionBody.name
   "name": z.string(),
   // Name: CreateCollectionBody.coverUrl
@@ -193,8 +193,8 @@ export type CreateMedia = z.infer<typeof CreateMedia>;
 
 // Name: CreateMediaBody
 export const CreateMediaBody = z.object({
-  // Name: CreateMediaBody.mediaType
-  "mediaType": z.string(),
+  // Name: CreateMediaBody.type
+  "type": z.string(),
   // Name: CreateMediaBody.title
   "title": z.string(),
   // Name: CreateMediaBody.description
@@ -228,8 +228,8 @@ export type CreateMediaBody = z.infer<typeof CreateMediaBody>;
 
 // Name: EditCollectionBody
 export const EditCollectionBody = z.object({
-  // Name: EditCollectionBody.collectionType
-  "collectionType": z.string().nullable().optional(),
+  // Name: EditCollectionBody.type
+  "type": z.string().nullable().optional(),
   // Name: EditCollectionBody.name
   "name": z.string().nullable().optional(),
   // Name: EditCollectionBody.coverUrl
@@ -254,8 +254,8 @@ export type EditCollectionItemBody = z.infer<typeof EditCollectionItemBody>;
 
 // Name: EditMediaBody
 export const EditMediaBody = z.object({
-  // Name: EditMediaBody.mediaType
-  "mediaType": z.string().nullable().optional(),
+  // Name: EditMediaBody.type
+  "type": z.string().nullable().optional(),
   // Name: EditMediaBody.title
   "title": z.string().nullable().optional(),
   // Name: EditMediaBody.description
@@ -305,8 +305,8 @@ export type GetAllApiTokens = z.infer<typeof GetAllApiTokens>;
 export const GetCollectionById = z.object({
   // Name: GetCollectionById.id
   "id": z.string(),
-  // Name: GetCollectionById.collectionType
-  "collectionType": z.string(),
+  // Name: GetCollectionById.type
+  "type": z.string(),
   // Name: GetCollectionById.name
   "name": z.string(),
   // Name: GetCollectionById.coverUrl
@@ -395,8 +395,8 @@ export const Media = z.object({
   "title": z.string(),
   // Name: Media.description
   "description": z.string().nullable(),
-  // Name: Media.mediaType
-  "mediaType": z.string(),
+  // Name: Media.type
+  "type": z.string(),
   // Name: Media.score
   "score": z.number().nullable(),
   // Name: Media.status
@@ -449,8 +449,8 @@ export const GetMediaById = z.object({
   "title": z.string(),
   // Name: GetMediaById.description
   "description": z.string().nullable(),
-  // Name: GetMediaById.mediaType
-  "mediaType": z.string(),
+  // Name: GetMediaById.type
+  "type": z.string(),
   // Name: GetMediaById.score
   "score": z.number().nullable(),
   // Name: GetMediaById.status

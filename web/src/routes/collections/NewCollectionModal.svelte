@@ -55,7 +55,7 @@
   async function submit(data: SchemaTy) {
     const res = await apiClient.createCollection({
       name: data.name,
-      collectionType: data.type,
+      type: data.type,
       coverUrl: data.coverUrl ?? "",
       bannerUrl: data.bannerUrl ?? "",
       logoUrl: data.logoUrl ?? "",

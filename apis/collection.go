@@ -22,8 +22,8 @@ import (
 )
 
 type Collection struct {
-	Id             string               `json:"id"`
-	CollectionType types.CollectionType `json:"collectionType"`
+	Id   string               `json:"id"`
+	Type types.CollectionType `json:"type"`
 
 	Name string `json:"name"`
 
@@ -67,7 +67,7 @@ func ConvertDBCollection(c pyrin.Context, pm *provider.ProviderManager, hasUser 
 
 	return Collection{
 		Id:              collection.Id,
-		CollectionType:  collection.Type,
+		Type:            collection.Type,
 		Name:            collection.Name,
 		CoverUrl:        coverUrl,
 		LogoUrl:         logoUrl,
@@ -177,7 +177,7 @@ type CreateCollection struct {
 }
 
 type CreateCollectionBody struct {
-	CollectionType string `json:"collectionType"`
+	Type string `json:"type"`
 
 	Name string `json:"name"`
 
@@ -196,13 +196,13 @@ func (b *CreateCollectionBody) Transform() {
 
 func (b CreateCollectionBody) Validate() error {
 	return validate.ValidateStruct(&b,
-		validate.Field(&b.CollectionType, validate.Required, validate.By(types.ValidateCollectionType)),
+		validate.Field(&b.Type, validate.Required, validate.By(types.ValidateCollectionType)),
 		validate.Field(&b.Name, validate.Required),
 	)
 }
 
 type EditCollectionBody struct {
-	CollectionType *string `json:"collectionType,omitempty"`
+	Type *string `json:"type,omitempty"`
 
 	Name *string `json:"name,omitempty"`
 
@@ -221,7 +221,7 @@ func (b *EditCollectionBody) Transform() {
 
 func (b EditCollectionBody) Validate() error {
 	return validate.ValidateStruct(&b,
-		validate.Field(&b.CollectionType, validate.Required.When(b.CollectionType != nil), validate.By(types.ValidateCollectionType)),
+		validate.Field(&b.Type, validate.Required.When(b.Type != nil), validate.By(types.ValidateCollectionType)),
 
 		validate.Field(&b.Name, validate.Required.When(b.Name != nil)),
 
@@ -401,7 +401,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 
 				ctx := context.Background()
 
-				ty := types.CollectionType(body.CollectionType)
+				ty := types.CollectionType(body.Type)
 
 				id := utils.CreateCollectionId()
 
@@ -510,8 +510,8 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 
 				changes := database.CollectionChanges{}
 
-				if body.CollectionType != nil {
-					t := types.CollectionType(*body.CollectionType)
+				if body.Type != nil {
+					t := types.CollectionType(*body.Type)
 
 					changes.Type = database.Change[types.CollectionType]{
 						Value:   t,

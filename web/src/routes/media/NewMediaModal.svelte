@@ -79,7 +79,7 @@
 
   async function submit(data: SchemaTy) {
     const res = await apiClient.createMedia({
-      mediaType: data.type,
+      type: data.type,
 
       title: data.title,
       description: data.description,

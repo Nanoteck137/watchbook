@@ -22,7 +22,7 @@ func (a *CollectionResolverAdapter) ResolveVariableName(name string) (filter.Nam
 			Kind: filter.NameKindString,
 			Name: "collections.id",
 		}, true
-	case "collectionType":
+	case "type":
 		return filter.Name{
 			Kind: filter.NameKindString,
 			Name: "collections.type",
@@ -95,7 +95,7 @@ func (a *CollectionResolverAdapter) ResolveTable(typ string) (filter.Table, bool
 func (a *CollectionResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, name string, args []ast.Expr) (filter.FilterExpr, error) {
 	switch name {
 	case "hasType":
-		return resolver.In(name, "collectionType", args)
+		return resolver.In(name, "type", args)
 	}
 
 	return nil, filter.UnknownFunction(name)

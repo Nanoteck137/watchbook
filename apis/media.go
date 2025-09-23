@@ -50,7 +50,7 @@ type Media struct {
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
 
-	MediaType    types.MediaType   `json:"mediaType"`
+	Type         types.MediaType   `json:"type"`
 	Score        *float64          `json:"score"`
 	Status       types.MediaStatus `json:"status"`
 	Rating       types.MediaRating `json:"rating"`
@@ -204,7 +204,7 @@ func ConvertDBMedia(c pyrin.Context, pm *provider.ProviderManager, hasUser bool,
 		Id:              media.Id,
 		Title:           media.Title,
 		Description:     utils.SqlNullToStringPtr(media.Description),
-		MediaType:       media.Type,
+		Type:            media.Type,
 		Score:           utils.SqlNullToFloat64Ptr(media.Score),
 		Status:          media.Status,
 		Rating:          media.Rating,
@@ -255,7 +255,7 @@ type CreateMedia struct {
 }
 
 type CreateMediaBody struct {
-	MediaType string `json:"mediaType"`
+	Type string `json:"type"`
 
 	Title       string `json:"title"`
 	Description string `json:"description"`
@@ -300,7 +300,7 @@ func (b *CreateMediaBody) Transform() {
 
 func (b CreateMediaBody) Validate() error {
 	return validate.ValidateStruct(&b,
-		validate.Field(&b.MediaType, validate.Required, validate.By(types.ValidateMediaType)),
+		validate.Field(&b.Type, validate.Required, validate.By(types.ValidateMediaType)),
 
 		validate.Field(&b.Title, validate.Required),
 
@@ -313,7 +313,7 @@ func (b CreateMediaBody) Validate() error {
 }
 
 type EditMediaBody struct {
-	MediaType *string `json:"mediaType,omitempty"`
+	Type *string `json:"type,omitempty"`
 
 	Title       *string `json:"title,omitempty"`
 	Description *string `json:"description,omitempty"`
@@ -361,7 +361,7 @@ func (b *EditMediaBody) Transform() {
 
 func (b EditMediaBody) Validate() error {
 	return validate.ValidateStruct(&b,
-		validate.Field(&b.MediaType, validate.Required.When(b.MediaType != nil), validate.By(types.ValidateMediaType)),
+		validate.Field(&b.Type, validate.Required.When(b.Type != nil), validate.By(types.ValidateMediaType)),
 
 		validate.Field(&b.Title, validate.Required.When(b.Title != nil)),
 
@@ -616,7 +616,7 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 					}
 				}
 
-				ty := types.MediaType(body.MediaType)
+				ty := types.MediaType(body.Type)
 
 				id := utils.CreateMediaId()
 
@@ -801,8 +801,8 @@ func InstallMediaHandlers(app core.App, group pyrin.Group) {
 
 				changes := database.MediaChanges{}
 
-				if body.MediaType != nil {
-					t := types.MediaType(*body.MediaType)
+				if body.Type != nil {
+					t := types.MediaType(*body.Type)
 
 					changes.Type = database.Change[types.MediaType]{
 						Value:   t,

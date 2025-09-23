@@ -61,8 +61,8 @@ type ProviderValue struct {
 type Collection struct {
 	// Name: Collection.id
 	Id string `json:"id"`
-	// Name: Collection.collectionType
-	CollectionType string `json:"collectionType"`
+	// Name: Collection.type
+	Type string `json:"type"`
 	// Name: Collection.name
 	Name string `json:"name"`
 	// Name: Collection.coverUrl
@@ -159,8 +159,8 @@ type CreateCollection struct {
 
 // Name: CreateCollectionBody
 type CreateCollectionBody struct {
-	// Name: CreateCollectionBody.collectionType
-	CollectionType string `json:"collectionType"`
+	// Name: CreateCollectionBody.type
+	Type string `json:"type"`
 	// Name: CreateCollectionBody.name
 	Name string `json:"name"`
 	// Name: CreateCollectionBody.coverUrl
@@ -179,8 +179,8 @@ type CreateMedia struct {
 
 // Name: CreateMediaBody
 type CreateMediaBody struct {
-	// Name: CreateMediaBody.mediaType
-	MediaType string `json:"mediaType"`
+	// Name: CreateMediaBody.type
+	Type string `json:"type"`
 	// Name: CreateMediaBody.title
 	Title string `json:"title"`
 	// Name: CreateMediaBody.description
@@ -213,8 +213,8 @@ type CreateMediaBody struct {
 
 // Name: EditCollectionBody
 type EditCollectionBody struct {
-	// Name: EditCollectionBody.collectionType
-	CollectionType *string `json:"collectionType,omitempty"`
+	// Name: EditCollectionBody.type
+	Type *string `json:"type,omitempty"`
 	// Name: EditCollectionBody.name
 	Name *string `json:"name,omitempty"`
 	// Name: EditCollectionBody.coverUrl
@@ -237,8 +237,8 @@ type EditCollectionItemBody struct {
 
 // Name: EditMediaBody
 type EditMediaBody struct {
-	// Name: EditMediaBody.mediaType
-	MediaType *string `json:"mediaType,omitempty"`
+	// Name: EditMediaBody.type
+	Type *string `json:"type,omitempty"`
 	// Name: EditMediaBody.title
 	Title *string `json:"title,omitempty"`
 	// Name: EditMediaBody.description
@@ -285,8 +285,8 @@ type GetAllApiTokens struct {
 type GetCollectionById struct {
 	// Name: GetCollectionById.id
 	Id string `json:"id"`
-	// Name: GetCollectionById.collectionType
-	CollectionType string `json:"collectionType"`
+	// Name: GetCollectionById.type
+	Type string `json:"type"`
 	// Name: GetCollectionById.name
 	Name string `json:"name"`
 	// Name: GetCollectionById.coverUrl
@@ -369,8 +369,8 @@ type Media struct {
 	Title string `json:"title"`
 	// Name: Media.description
 	Description *string `json:"description,omitempty"`
-	// Name: Media.mediaType
-	MediaType string `json:"mediaType"`
+	// Name: Media.type
+	Type string `json:"type"`
 	// Name: Media.score
 	Score *float32 `json:"score,omitempty"`
 	// Name: Media.status
@@ -421,8 +421,8 @@ type GetMediaById struct {
 	Title string `json:"title"`
 	// Name: GetMediaById.description
 	Description *string `json:"description,omitempty"`
-	// Name: GetMediaById.mediaType
-	MediaType string `json:"mediaType"`
+	// Name: GetMediaById.type
+	Type string `json:"type"`
 	// Name: GetMediaById.score
 	Score *float32 `json:"score,omitempty"`
 	// Name: GetMediaById.status

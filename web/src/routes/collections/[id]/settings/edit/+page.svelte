@@ -27,7 +27,7 @@
   $effect(() => {
     reset({
       data: {
-        type: data.collection.collectionType as CollectionType,
+        type: data.collection.type as CollectionType,
         name: data.collection.name,
       },
     });
@@ -36,7 +36,7 @@
   const { form, errors, enhance, reset, submitting } = superForm(
     defaults(
       {
-        type: data.collection.collectionType as CollectionType,
+        type: data.collection.type as CollectionType,
         name: data.collection.name,
       },
       zod(Schema),
@@ -51,7 +51,7 @@
         if (form.valid) {
           const formData = form.data;
           const res = await apiClient.editCollection(data.collection.id, {
-            collectionType: formData.type,
+            type: formData.type,
             name: formData.name,
           });
           if (!res.success) {
