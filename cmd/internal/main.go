@@ -24,7 +24,6 @@ var genCmd = &cobra.Command{
 		apis.RegisterHandlers(nil, &router)
 
 		nameFilter := spark.NameFilter{}
-		nameFilter.LoadDefault()
 
 		serverDef, err := spark.CreateServerDef(&router, nameFilter)
 		if err != nil {

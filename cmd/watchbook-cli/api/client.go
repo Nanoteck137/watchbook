@@ -2,8 +2,8 @@
 package api
 
 
-func (c *Client) Signup(body SignupBody, options Options) (*Signup, error) {
-	path := "/api/v1/auth/signup"
+func (c *Client) AddCollectionItem(id string, body AddCollectionItemBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/collections/%v/items", id)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -15,11 +15,11 @@ func (c *Client) Signup(body SignupBody, options Options) (*Signup, error) {
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
-	return Request[Signup](data, body)
+	return Request[any](data, body)
 }
 
-func (c *Client) Signin(body SigninBody, options Options) (*Signin, error) {
-	path := "/api/v1/auth/signin"
+func (c *Client) AddPart(id string, body AddPartBody, options Options) (*AddPart, error) {
+	path := Sprintf("/api/v1/media/%v/single/parts", id)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -31,11 +31,11 @@ func (c *Client) Signin(body SigninBody, options Options) (*Signin, error) {
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
-	return Request[Signin](data, body)
+	return Request[AddPart](data, body)
 }
 
-func (c *Client) ChangePassword(body ChangePasswordBody, options Options) (*any, error) {
-	path := "/api/v1/auth/password"
+func (c *Client) ChangeCollectionImages(id string, boundary string, body Reader, options Options) (*any, error) {
+	path := Sprintf("/api/v1/collections/%v/images", id)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -47,59 +47,11 @@ func (c *Client) ChangePassword(body ChangePasswordBody, options Options) (*any,
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
-	return Request[any](data, body)
+	return RequestForm[any](data, boundary, body)
 }
 
-func (c *Client) GetMe(options Options) (*GetMe, error) {
-	path := "/api/v1/auth/me"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "GET",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetMe](data, nil)
-}
-
-func (c *Client) GetSystemInfo(options Options) (*GetSystemInfo, error) {
-	path := "/api/v1/system/info"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "GET",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetSystemInfo](data, nil)
-}
-
-func (c *Client) GetUser(id string, options Options) (*GetUser, error) {
-	path := Sprintf("/api/v1/users/%v", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "GET",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetUser](data, nil)
-}
-
-func (c *Client) UpdateUserSettings(body UpdateUserSettingsBody, options Options) (*any, error) {
-	path := "/api/v1/user/settings"
+func (c *Client) ChangePassword(body ChangePasswordBody, options Options) (*any, error) {
+	path := "/api/v1/auth/password"
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -130,8 +82,8 @@ func (c *Client) CreateApiToken(body CreateApiTokenBody, options Options) (*Crea
 	return Request[CreateApiToken](data, body)
 }
 
-func (c *Client) GetAllApiTokens(options Options) (*GetAllApiTokens, error) {
-	path := "/api/v1/user/apitoken"
+func (c *Client) CreateCollection(body CreateCollectionBody, options Options) (*CreateCollection, error) {
+	path := "/api/v1/collections"
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -139,11 +91,27 @@ func (c *Client) GetAllApiTokens(options Options) (*GetAllApiTokens, error) {
 
 	data := RequestData{
 		Url: url,
-		Method: "GET",
+		Method: "POST",
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
-	return Request[GetAllApiTokens](data, nil)
+	return Request[CreateCollection](data, body)
+}
+
+func (c *Client) CreateMedia(body CreateMediaBody, options Options) (*CreateMedia, error) {
+	path := "/api/v1/media"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[CreateMedia](data, body)
 }
 
 func (c *Client) DeleteApiToken(id string, options Options) (*any, error) {
@@ -162,8 +130,8 @@ func (c *Client) DeleteApiToken(id string, options Options) (*any, error) {
 	return Request[any](data, nil)
 }
 
-func (c *Client) ImportMalAnimeList(username string, options Options) (*any, error) {
-	path := Sprintf("/api/v1/users/import/mal/%v/anime", username)
+func (c *Client) DeleteCollection(id string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/collections/%v", id)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -171,11 +139,204 @@ func (c *Client) ImportMalAnimeList(username string, options Options) (*any, err
 
 	data := RequestData{
 		Url: url,
-		Method: "POST",
+		Method: "DELETE",
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
 	return Request[any](data, nil)
+}
+
+func (c *Client) DeleteMedia(id string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "DELETE",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
+func (c *Client) DeleteMediaRelease(id string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/release", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "DELETE",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
+func (c *Client) DeleteMediaUserData(id string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/user", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "DELETE",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
+func (c *Client) EditCollection(id string, body EditCollectionBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/collections/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) EditCollectionItem(id string, mediaId string, body EditCollectionItemBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/collections/%v/items/%v", id, mediaId)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) EditMedia(id string, body EditMediaBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) EditPart(id string, index string, body EditPartBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) GetAllApiTokens(options Options) (*GetAllApiTokens, error) {
+	path := "/api/v1/user/apitoken"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetAllApiTokens](data, nil)
+}
+
+func (c *Client) GetCollectionById(id string, options Options) (*GetCollectionById, error) {
+	path := Sprintf("/api/v1/collections/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetCollectionById](data, nil)
+}
+
+
+func (c *Client) GetCollectionItems(id string, options Options) (*GetCollectionItems, error) {
+	path := Sprintf("/api/v1/collections/%v/items", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetCollectionItems](data, nil)
+}
+
+func (c *Client) GetCollections(options Options) (*GetCollections, error) {
+	path := "/api/v1/collections"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetCollections](data, nil)
+}
+
+func (c *Client) GetMe(options Options) (*GetMe, error) {
+	path := "/api/v1/auth/me"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetMe](data, nil)
 }
 
 func (c *Client) GetMedia(options Options) (*GetMedia, error) {
@@ -210,6 +371,7 @@ func (c *Client) GetMediaById(id string, options Options) (*GetMediaById, error)
 	return Request[GetMediaById](data, nil)
 }
 
+
 func (c *Client) GetMediaParts(id string, options Options) (*GetMediaParts, error) {
 	path := Sprintf("/api/v1/media/%v/parts", id)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -226,8 +388,56 @@ func (c *Client) GetMediaParts(id string, options Options) (*GetMediaParts, erro
 	return Request[GetMediaParts](data, nil)
 }
 
-func (c *Client) CreateMedia(body CreateMediaBody, options Options) (*CreateMedia, error) {
-	path := "/api/v1/media"
+func (c *Client) GetProviders(options Options) (*GetProviders, error) {
+	path := "/api/v1/providers"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetProviders](data, nil)
+}
+
+func (c *Client) GetSystemInfo(options Options) (*GetSystemInfo, error) {
+	path := "/api/v1/system/info"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetSystemInfo](data, nil)
+}
+
+func (c *Client) GetUser(id string, options Options) (*GetUser, error) {
+	path := Sprintf("/api/v1/users/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetUser](data, nil)
+}
+
+func (c *Client) ImportMalAnimeList(username string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/users/import/mal/%v/anime", username)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -239,11 +449,75 @@ func (c *Client) CreateMedia(body CreateMediaBody, options Options) (*CreateMedi
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
-	return Request[CreateMedia](data, body)
+	return Request[any](data, nil)
 }
 
-func (c *Client) EditMedia(id string, body EditMediaBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/%v", id)
+func (c *Client) ProviderImportCollections(providerName string, body PostProviderImportCollectionsBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/providers/%v/collections/import", providerName)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) ProviderImportMedia(providerName string, body PostProviderImportMediaBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/providers/%v/media/import", providerName)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) ProviderSearchCollections(providerName string, options Options) (*GetProviderSearch, error) {
+	path := Sprintf("/api/v1/providers/%v/collections", providerName)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetProviderSearch](data, nil)
+}
+
+func (c *Client) ProviderSearchMedia(providerName string, options Options) (*GetProviderSearch, error) {
+	path := Sprintf("/api/v1/providers/%v/media", providerName)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetProviderSearch](data, nil)
+}
+
+func (c *Client) ProviderUpdateCollection(providerName string, collectionId string, body ProviderCollectionUpdateBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/providers/%v/collections/%v", providerName, collectionId)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -258,8 +532,24 @@ func (c *Client) EditMedia(id string, body EditMediaBody, options Options) (*any
 	return Request[any](data, body)
 }
 
-func (c *Client) DeleteMedia(id string, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/%v", id)
+func (c *Client) ProviderUpdateMedia(providerName string, mediaId string, body ProviderMediaUpdateBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/providers/%v/media/%v", providerName, mediaId)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) RemoveCollectionItem(id string, mediaId string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/collections/%v/items/%v", id, mediaId)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -272,90 +562,10 @@ func (c *Client) DeleteMedia(id string, options Options) (*any, error) {
 		Headers: options.Header,
 	}
 	return Request[any](data, nil)
-}
-
-func (c *Client) AddPart(id string, body AddPartBody, options Options) (*AddPart, error) {
-	path := Sprintf("/api/v1/media/%v/single/parts", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[AddPart](data, body)
-}
-
-func (c *Client) EditPart(id string, index string, body EditPartBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "PATCH",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
 }
 
 func (c *Client) RemovePart(id string, index string, options Options) (*any, error) {
 	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "DELETE",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, nil)
-}
-
-func (c *Client) SetParts(id string, body SetPartsBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/%v/parts", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
-}
-
-func (c *Client) SetMediaUserData(id string, body SetMediaUserData, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/%v/user", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
-}
-
-func (c *Client) DeleteMediaUserData(id string, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/%v/user", id)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -386,136 +596,8 @@ func (c *Client) SetMediaRelease(id string, body SetMediaReleaseBody, options Op
 	return Request[any](data, body)
 }
 
-func (c *Client) DeleteMediaRelease(id string, options Options) (*any, error) {
-	path := Sprintf("/api/v1/media/%v/release", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "DELETE",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, nil)
-}
-
-func (c *Client) GetCollections(options Options) (*GetCollections, error) {
-	path := "/api/v1/collections"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "GET",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetCollections](data, nil)
-}
-
-func (c *Client) GetCollectionById(id string, options Options) (*GetCollectionById, error) {
-	path := Sprintf("/api/v1/collections/%v", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "GET",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetCollectionById](data, nil)
-}
-
-func (c *Client) GetCollectionItems(id string, options Options) (*GetCollectionItems, error) {
-	path := Sprintf("/api/v1/collections/%v/items", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "GET",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetCollectionItems](data, nil)
-}
-
-func (c *Client) CreateCollection(body CreateCollectionBody, options Options) (*CreateCollection, error) {
-	path := "/api/v1/collections"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "POST",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[CreateCollection](data, body)
-}
-
-func (c *Client) EditCollection(id string, body EditCollectionBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/collections/%v", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "PATCH",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
-}
-
-func (c *Client) DeleteCollection(id string, options Options) (*any, error) {
-	path := Sprintf("/api/v1/collections/%v", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "DELETE",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, nil)
-}
-
-func (c *Client) ChangeCollectionImages(id string, boundary string, body Reader, options Options) (*any, error) {
-	path := Sprintf("/api/v1/collections/%v/images", id)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "PATCH",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return RequestForm[any](data, boundary, body)
-}
-
-func (c *Client) AddCollectionItem(id string, body AddCollectionItemBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/collections/%v/items", id)
+func (c *Client) SetMediaUserData(id string, body SetMediaUserData, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/user", id)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -530,88 +612,8 @@ func (c *Client) AddCollectionItem(id string, body AddCollectionItemBody, option
 	return Request[any](data, body)
 }
 
-func (c *Client) RemoveCollectionItem(id string, mediaId string, options Options) (*any, error) {
-	path := Sprintf("/api/v1/collections/%v/items/%v", id, mediaId)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "DELETE",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, nil)
-}
-
-func (c *Client) EditCollectionItem(id string, mediaId string, body EditCollectionItemBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/collections/%v/items/%v", id, mediaId)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "PATCH",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
-}
-
-func (c *Client) GetProviders(options Options) (*GetProviders, error) {
-	path := "/api/v1/providers"
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "GET",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetProviders](data, nil)
-}
-
-func (c *Client) ProviderSearchMedia(providerName string, options Options) (*GetProviderSearch, error) {
-	path := Sprintf("/api/v1/providers/%v/media", providerName)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "GET",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetProviderSearch](data, nil)
-}
-
-func (c *Client) ProviderSearchCollections(providerName string, options Options) (*GetProviderSearch, error) {
-	path := Sprintf("/api/v1/providers/%v/collections", providerName)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "GET",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[GetProviderSearch](data, nil)
-}
-
-func (c *Client) ProviderImportMedia(providerName string, body PostProviderImportMediaBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/providers/%v/media/import", providerName)
+func (c *Client) SetParts(id string, body SetPartsBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/media/%v/parts", id)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -626,8 +628,8 @@ func (c *Client) ProviderImportMedia(providerName string, body PostProviderImpor
 	return Request[any](data, body)
 }
 
-func (c *Client) ProviderImportCollections(providerName string, body PostProviderImportCollectionsBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/providers/%v/collections/import", providerName)
+func (c *Client) Signin(body SigninBody, options Options) (*Signin, error) {
+	path := "/api/v1/auth/signin"
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -639,50 +641,53 @@ func (c *Client) ProviderImportCollections(providerName string, body PostProvide
 		ClientHeaders: c.Headers,
 		Headers: options.Header,
 	}
-	return Request[any](data, body)
+	return Request[Signin](data, body)
 }
 
-func (c *Client) ProviderUpdateMedia(providerName string, mediaId string, body ProviderMediaUpdateBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/providers/%v/media/%v", providerName, mediaId)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "PATCH",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
-}
-
-func (c *Client) ProviderUpdateCollection(providerName string, collectionId string, body ProviderCollectionUpdateBody, options Options) (*any, error) {
-	path := Sprintf("/api/v1/providers/%v/collections/%v", providerName, collectionId)
-	url, err := createUrl(c.addr, path, options.Query)
-	if err != nil {
-		return nil, err
-	}
-
-	data := RequestData{
-		Url: url,
-		Method: "PATCH",
-		ClientHeaders: c.Headers,
-		Headers: options.Header,
-	}
-	return Request[any](data, body)
-}
-
-
-
-func (c *ClientUrls) Signup() (*URL, error) {
+func (c *Client) Signup(body SignupBody, options Options) (*Signup, error) {
 	path := "/api/v1/auth/signup"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[Signup](data, body)
+}
+
+func (c *Client) UpdateUserSettings(body UpdateUserSettingsBody, options Options) (*any, error) {
+	path := "/api/v1/user/settings"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *ClientUrls) AddCollectionItem(id string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v/items", id)
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) Signin() (*URL, error) {
-	path := "/api/v1/auth/signin"
+func (c *ClientUrls) AddPart(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/single/parts", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) ChangeCollectionImages(id string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v/images", id)
 	return c.getUrl(path)
 }
 
@@ -691,33 +696,18 @@ func (c *ClientUrls) ChangePassword() (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) GetMe() (*URL, error) {
-	path := "/api/v1/auth/me"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) GetSystemInfo() (*URL, error) {
-	path := "/api/v1/system/info"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) GetUser(id string) (*URL, error) {
-	path := Sprintf("/api/v1/users/%v", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) UpdateUserSettings() (*URL, error) {
-	path := "/api/v1/user/settings"
-	return c.getUrl(path)
-}
-
 func (c *ClientUrls) CreateApiToken() (*URL, error) {
 	path := "/api/v1/user/apitoken"
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) GetAllApiTokens() (*URL, error) {
-	path := "/api/v1/user/apitoken"
+func (c *ClientUrls) CreateCollection() (*URL, error) {
+	path := "/api/v1/collections"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) CreateMedia() (*URL, error) {
+	path := "/api/v1/media"
 	return c.getUrl(path)
 }
 
@@ -726,8 +716,73 @@ func (c *ClientUrls) DeleteApiToken(id string) (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) ImportMalAnimeList(username string) (*URL, error) {
-	path := Sprintf("/api/v1/users/import/mal/%v/anime", username)
+func (c *ClientUrls) DeleteCollection(id string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) DeleteMedia(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) DeleteMediaRelease(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/release", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) DeleteMediaUserData(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/user", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditCollection(id string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditCollectionItem(id string, mediaId string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v/items/%v", id, mediaId)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditMedia(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditPart(id string, index string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetAllApiTokens() (*URL, error) {
+	path := "/api/v1/user/apitoken"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetCollectionById(id string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetCollectionImage(id string, file string) (*URL, error) {
+	path := Sprintf("/files/collections/%v/images/%v", id, file)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetCollectionItems(id string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v/items", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetCollections() (*URL, error) {
+	path := "/api/v1/collections"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetMe() (*URL, error) {
+	path := "/api/v1/auth/me"
 	return c.getUrl(path)
 }
 
@@ -741,113 +796,13 @@ func (c *ClientUrls) GetMediaById(id string) (*URL, error) {
 	return c.getUrl(path)
 }
 
+func (c *ClientUrls) GetMediaImage(id string, file string) (*URL, error) {
+	path := Sprintf("/files/media/%v/images/%v", id, file)
+	return c.getUrl(path)
+}
+
 func (c *ClientUrls) GetMediaParts(id string) (*URL, error) {
 	path := Sprintf("/api/v1/media/%v/parts", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) CreateMedia() (*URL, error) {
-	path := "/api/v1/media"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) EditMedia(id string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) DeleteMedia(id string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) AddPart(id string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/single/parts", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) EditPart(id string, index string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) RemovePart(id string, index string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) SetParts(id string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/parts", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) SetMediaUserData(id string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/user", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) DeleteMediaUserData(id string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/user", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) SetMediaRelease(id string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/release", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) DeleteMediaRelease(id string) (*URL, error) {
-	path := Sprintf("/api/v1/media/%v/release", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) GetCollections() (*URL, error) {
-	path := "/api/v1/collections"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) GetCollectionById(id string) (*URL, error) {
-	path := Sprintf("/api/v1/collections/%v", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) GetCollectionItems(id string) (*URL, error) {
-	path := Sprintf("/api/v1/collections/%v/items", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) CreateCollection() (*URL, error) {
-	path := "/api/v1/collections"
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) EditCollection(id string) (*URL, error) {
-	path := Sprintf("/api/v1/collections/%v", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) DeleteCollection(id string) (*URL, error) {
-	path := Sprintf("/api/v1/collections/%v", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) ChangeCollectionImages(id string) (*URL, error) {
-	path := Sprintf("/api/v1/collections/%v/images", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) AddCollectionItem(id string) (*URL, error) {
-	path := Sprintf("/api/v1/collections/%v/items", id)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) RemoveCollectionItem(id string, mediaId string) (*URL, error) {
-	path := Sprintf("/api/v1/collections/%v/items/%v", id, mediaId)
-	return c.getUrl(path)
-}
-
-func (c *ClientUrls) EditCollectionItem(id string, mediaId string) (*URL, error) {
-	path := Sprintf("/api/v1/collections/%v/items/%v", id, mediaId)
 	return c.getUrl(path)
 }
 
@@ -856,18 +811,18 @@ func (c *ClientUrls) GetProviders() (*URL, error) {
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) ProviderSearchMedia(providerName string) (*URL, error) {
-	path := Sprintf("/api/v1/providers/%v/media", providerName)
+func (c *ClientUrls) GetSystemInfo() (*URL, error) {
+	path := "/api/v1/system/info"
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) ProviderSearchCollections(providerName string) (*URL, error) {
-	path := Sprintf("/api/v1/providers/%v/collections", providerName)
+func (c *ClientUrls) GetUser(id string) (*URL, error) {
+	path := Sprintf("/api/v1/users/%v", id)
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) ProviderImportMedia(providerName string) (*URL, error) {
-	path := Sprintf("/api/v1/providers/%v/media/import", providerName)
+func (c *ClientUrls) ImportMalAnimeList(username string) (*URL, error) {
+	path := Sprintf("/api/v1/users/import/mal/%v/anime", username)
 	return c.getUrl(path)
 }
 
@@ -876,8 +831,18 @@ func (c *ClientUrls) ProviderImportCollections(providerName string) (*URL, error
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) ProviderUpdateMedia(providerName string, mediaId string) (*URL, error) {
-	path := Sprintf("/api/v1/providers/%v/media/%v", providerName, mediaId)
+func (c *ClientUrls) ProviderImportMedia(providerName string) (*URL, error) {
+	path := Sprintf("/api/v1/providers/%v/media/import", providerName)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) ProviderSearchCollections(providerName string) (*URL, error) {
+	path := Sprintf("/api/v1/providers/%v/collections", providerName)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) ProviderSearchMedia(providerName string) (*URL, error) {
+	path := Sprintf("/api/v1/providers/%v/media", providerName)
 	return c.getUrl(path)
 }
 
@@ -886,12 +851,47 @@ func (c *ClientUrls) ProviderUpdateCollection(providerName string, collectionId 
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) GetMediaImage(id string, file string) (*URL, error) {
-	path := Sprintf("/files/media/%v/images/%v", id, file)
+func (c *ClientUrls) ProviderUpdateMedia(providerName string, mediaId string) (*URL, error) {
+	path := Sprintf("/api/v1/providers/%v/media/%v", providerName, mediaId)
 	return c.getUrl(path)
 }
 
-func (c *ClientUrls) GetCollectionImage(id string, file string) (*URL, error) {
-	path := Sprintf("/files/collections/%v/images/%v", id, file)
+func (c *ClientUrls) RemoveCollectionItem(id string, mediaId string) (*URL, error) {
+	path := Sprintf("/api/v1/collections/%v/items/%v", id, mediaId)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) RemovePart(id string, index string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) SetMediaRelease(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/release", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) SetMediaUserData(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/user", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) SetParts(id string) (*URL, error) {
+	path := Sprintf("/api/v1/media/%v/parts", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) Signin() (*URL, error) {
+	path := "/api/v1/auth/signin"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) Signup() (*URL, error) {
+	path := "/api/v1/auth/signup"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) UpdateUserSettings() (*URL, error) {
+	path := "/api/v1/user/settings"
 	return c.getUrl(path)
 }

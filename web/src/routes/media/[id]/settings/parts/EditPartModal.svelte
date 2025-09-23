@@ -57,6 +57,7 @@
             part.index.toString(),
             {
               name: data.name,
+              releaseDate: data.releaseDate,
             },
           );
           if (!res.success) {

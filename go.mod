@@ -12,8 +12,9 @@ require (
 	github.com/gosimple/slug v1.14.0
 	github.com/kr/pretty v0.3.1
 	github.com/labstack/gommon v0.4.2
+	github.com/maruel/natural v1.1.1
 	github.com/mattn/go-sqlite3 v1.14.28
-	github.com/nanoteck137/pyrin v0.15.3-0.20250821080749-7c8836341627
+	github.com/nanoteck137/pyrin v0.15.3-0.20250923134445-b53513700894
 	github.com/nanoteck137/validate v0.0.0-20241129211421-90ceb11de343
 	github.com/nrednav/cuid2 v1.0.0
 	github.com/pelletier/go-toml/v2 v2.1.0
@@ -58,7 +59,6 @@ require (
 	github.com/labstack/echo/v4 v4.12.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
-	github.com/maruel/natural v1.1.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
