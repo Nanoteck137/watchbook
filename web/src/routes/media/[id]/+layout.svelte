@@ -117,6 +117,6 @@
 
 <SetListModal
   bind:open={openSetListModal}
-  mediaId={data.media.id}
+  media={data.media}
   userList={data.media.user ?? undefined}
 />

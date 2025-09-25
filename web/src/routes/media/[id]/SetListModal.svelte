@@ -14,7 +14,7 @@
   import { defaults, superForm } from "sveltekit-superforms/client";
   import { z } from "zod";
   import Spinner from "$lib/components/Spinner.svelte";
-  import type { MediaUser } from "$lib/api/types";
+  import type { Media, MediaUser } from "$lib/api/types";
   import toast from "svelte-5-french-toast";
   import { invalidateAll } from "$app/navigation";
   import { Trash } from "lucide-svelte";
@@ -36,11 +36,11 @@
 
   export type Props = {
     open: boolean;
-    mediaId: string;
+    media: Media;
     userList?: MediaUser;
   };
 
-  let { open = $bindable(), mediaId, userList }: Props = $props();
+  let { open = $bindable(), media, userList }: Props = $props();
   const apiClient = getApiClient();
 
   let openDeleteConfirmModal = $state(false);
@@ -60,7 +60,7 @@
   });
 
   async function submit(data: SchemaTy) {
-    const res = await apiClient.setMediaUserData(mediaId, {
+    const res = await apiClient.setMediaUserData(media.id, {
       list: data.list,
       score: parseInt(data.score),
       currentPart: data.currentPart,
@@ -84,6 +84,12 @@
       validators: zod(Schema),
       dataType: "json",
       resetForm: true,
+      onChange(event) {
+        const t = event.get("list");
+        if (t === "completed") {
+          event.set("currentPart", media.partCount);
+        }
+      },
       async onUpdate({ form }) {
         if (form.valid) {
           await submit(form.data);
@@ -253,7 +259,7 @@
   title="Remove from list?"
   description="Are you sure you want to remove this from the list? This action cannot be undone."
   onResult={async () => {
-    const res = await apiClient.deleteMediaUserData(mediaId);
+    const res = await apiClient.deleteMediaUserData(media.id);
     if (!res.success) {
       return handleApiError(res.error);
     }
