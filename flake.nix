@@ -35,7 +35,7 @@
             "-X github.com/nanoteck137/watchbook.Commit=${self.dirtyRev or self.rev or "no-commit"}"
           ];
 
-          vendorHash = "sha256-e6R8fUKTmaw3iVF13s6k0+2ONsaaVnay8QumuHz7Ri0=";
+          vendorHash = "sha256-Ff9ZWbP2GaqeIUT3Glg2eIZ29Vgs12sEf1GWaohIHY4=";
         };
 
         frontend = pkgs.buildNpmPackage {
