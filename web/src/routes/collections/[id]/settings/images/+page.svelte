@@ -15,14 +15,8 @@
     bannerUrl: z.string().url().optional().or(z.literal("")),
     logoUrl: z.string().url().optional().or(z.literal("")),
   });
-  type SchemaTy = z.infer<typeof Schema>;
 
-  export type Props = {
-    open: boolean;
-    collectionId: string;
-  };
-
-  let { open = $bindable(), collectionId }: Props = $props();
+  let { data } = $props();
   const apiClient = getApiClient();
 
   const { form, errors, enhance, submitting } = superForm(
@@ -35,11 +29,11 @@
       resetForm: true,
       async onUpdate({ form }) {
         if (form.valid) {
-          const data = form.data;
-          const res = await apiClient.editCollection(collectionId, {
-            coverUrl: data.coverUrl !== "" ? data.coverUrl : null,
-            bannerUrl: data.bannerUrl !== "" ? data.bannerUrl : null,
-            logoUrl: data.logoUrl !== "" ? data.logoUrl : null,
+          const formData = form.data;
+          const res = await apiClient.editCollection(data.collection.id, {
+            coverUrl: formData.coverUrl !== "" ? formData.coverUrl : null,
+            bannerUrl: formData.bannerUrl !== "" ? formData.bannerUrl : null,
+            logoUrl: formData.logoUrl !== "" ? formData.logoUrl : null,
           });
           if (!res.success) {
             return handleApiError(res.error);
