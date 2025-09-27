@@ -307,6 +307,31 @@
       ]
     },
     {
+      "name": "CreateFolder",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "CreateFolderBody",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "coverUrl",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "CreateMedia",
       "fields": [
         {
@@ -447,6 +472,21 @@
       ]
     },
     {
+      "name": "EditFolderBody",
+      "fields": [
+        {
+          "name": "name",
+          "type": "*string",
+          "omitEmpty": true
+        },
+        {
+          "name": "coverUrl",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
       "name": "EditMediaBody",
       "fields": [
         {
@@ -537,6 +577,131 @@
       ]
     },
     {
+      "name": "Folder",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "userId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "coverUrl",
+          "type": "*string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "FolderItem",
+      "fields": [
+        {
+          "name": "folderId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "mediaId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "position",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "description",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "mediaType",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "score",
+          "type": "*float",
+          "omitEmpty": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "rating",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "partCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "airingSeason",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "startDate",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "endDate",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "creators",
+          "type": "[]string",
+          "omitEmpty": false
+        },
+        {
+          "name": "tags",
+          "type": "[]string",
+          "omitEmpty": false
+        },
+        {
+          "name": "coverUrl",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "logoUrl",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "bannerUrl",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "user",
+          "type": "*MediaUser",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
       "name": "GetAllApiTokens",
       "fields": [
         {
@@ -612,6 +777,51 @@
         {
           "name": "collections",
           "type": "[]Collection",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetFolderById",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "userId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "coverUrl",
+          "type": "*string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetFolderItems",
+      "fields": [
+        {
+          "name": "items",
+          "type": "[]FolderItem",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetFolders",
+      "fields": [
+        {
+          "name": "folders",
+          "type": "[]Folder",
           "omitEmpty": false
         }
       ]
@@ -1392,6 +1602,12 @@
     },
     {
       "type": "api",
+      "name": "AddFolderItem",
+      "method": "POST",
+      "path": "/api/v1/folders/:id/items/:mediaId"
+    },
+    {
+      "type": "api",
       "name": "AddPart",
       "method": "POST",
       "path": "/api/v1/media/:id/single/parts",
@@ -1429,6 +1645,14 @@
     },
     {
       "type": "api",
+      "name": "CreateFolder",
+      "method": "POST",
+      "path": "/api/v1/folders",
+      "response": "CreateFolder",
+      "body": "CreateFolderBody"
+    },
+    {
+      "type": "api",
       "name": "CreateMedia",
       "method": "POST",
       "path": "/api/v1/media",
@@ -1446,6 +1670,12 @@
       "name": "DeleteCollection",
       "method": "DELETE",
       "path": "/api/v1/collections/:id"
+    },
+    {
+      "type": "api",
+      "name": "DeleteFolder",
+      "method": "DELETE",
+      "path": "/api/v1/folders/:id"
     },
     {
       "type": "api",
@@ -1478,6 +1708,13 @@
       "method": "PATCH",
       "path": "/api/v1/collections/:id/items/:mediaId",
       "body": "EditCollectionItemBody"
+    },
+    {
+      "type": "api",
+      "name": "EditFolder",
+      "method": "PATCH",
+      "path": "/api/v1/folders/:id",
+      "body": "EditFolderBody"
     },
     {
       "type": "api",
@@ -1526,6 +1763,27 @@
       "method": "GET",
       "path": "/api/v1/collections",
       "response": "GetCollections"
+    },
+    {
+      "type": "api",
+      "name": "GetFolderById",
+      "method": "GET",
+      "path": "/api/v1/folders/:id",
+      "response": "GetFolderById"
+    },
+    {
+      "type": "api",
+      "name": "GetFolderItems",
+      "method": "GET",
+      "path": "/api/v1/folders/:id/items",
+      "response": "GetFolderItems"
+    },
+    {
+      "type": "api",
+      "name": "GetFolders",
+      "method": "GET",
+      "path": "/api/v1/folders",
+      "response": "GetFolders"
     },
     {
       "type": "api",
@@ -1590,6 +1848,12 @@
     },
     {
       "type": "api",
+      "name": "MoveFolderItem",
+      "method": "POST",
+      "path": "/api/v1/folders/:id/items/:mediaId/move/:pos"
+    },
+    {
+      "type": "api",
       "name": "ProviderImportCollections",
       "method": "POST",
       "path": "/api/v1/providers/:providerName/collections/import",
@@ -1635,6 +1899,12 @@
       "name": "RemoveCollectionItem",
       "method": "DELETE",
       "path": "/api/v1/collections/:id/items/:mediaId"
+    },
+    {
+      "type": "api",
+      "name": "RemoveFolderItem",
+      "method": "DELETE",
+      "path": "/api/v1/folders/:id/items/:mediaId"
     },
     {
       "type": "api",

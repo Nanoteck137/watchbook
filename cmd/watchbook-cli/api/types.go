@@ -171,6 +171,20 @@ type CreateCollectionBody struct {
 	LogoUrl string `json:"logoUrl"`
 }
 
+// Name: CreateFolder
+type CreateFolder struct {
+	// Name: CreateFolder.id
+	Id string `json:"id"`
+}
+
+// Name: CreateFolderBody
+type CreateFolderBody struct {
+	// Name: CreateFolderBody.name
+	Name string `json:"name"`
+	// Name: CreateFolderBody.coverUrl
+	CoverUrl string `json:"coverUrl"`
+}
+
 // Name: CreateMedia
 type CreateMedia struct {
 	// Name: CreateMedia.id
@@ -235,6 +249,14 @@ type EditCollectionItemBody struct {
 	Position *int `json:"position,omitempty"`
 }
 
+// Name: EditFolderBody
+type EditFolderBody struct {
+	// Name: EditFolderBody.name
+	Name *string `json:"name,omitempty"`
+	// Name: EditFolderBody.coverUrl
+	CoverUrl *string `json:"coverUrl,omitempty"`
+}
+
 // Name: EditMediaBody
 type EditMediaBody struct {
 	// Name: EditMediaBody.type
@@ -273,6 +295,60 @@ type EditPartBody struct {
 	Name *string `json:"name,omitempty"`
 	// Name: EditPartBody.releaseDate
 	ReleaseDate *string `json:"releaseDate,omitempty"`
+}
+
+// Name: Folder
+type Folder struct {
+	// Name: Folder.id
+	Id string `json:"id"`
+	// Name: Folder.userId
+	UserId string `json:"userId"`
+	// Name: Folder.name
+	Name string `json:"name"`
+	// Name: Folder.coverUrl
+	CoverUrl *string `json:"coverUrl,omitempty"`
+}
+
+// Name: FolderItem
+type FolderItem struct {
+	// Name: FolderItem.folderId
+	FolderId string `json:"folderId"`
+	// Name: FolderItem.mediaId
+	MediaId string `json:"mediaId"`
+	// Name: FolderItem.position
+	Position int `json:"position"`
+	// Name: FolderItem.title
+	Title string `json:"title"`
+	// Name: FolderItem.description
+	Description *string `json:"description,omitempty"`
+	// Name: FolderItem.mediaType
+	MediaType string `json:"mediaType"`
+	// Name: FolderItem.score
+	Score *float32 `json:"score,omitempty"`
+	// Name: FolderItem.status
+	Status string `json:"status"`
+	// Name: FolderItem.rating
+	Rating string `json:"rating"`
+	// Name: FolderItem.partCount
+	PartCount int `json:"partCount"`
+	// Name: FolderItem.airingSeason
+	AiringSeason *string `json:"airingSeason,omitempty"`
+	// Name: FolderItem.startDate
+	StartDate *string `json:"startDate,omitempty"`
+	// Name: FolderItem.endDate
+	EndDate *string `json:"endDate,omitempty"`
+	// Name: FolderItem.creators
+	Creators []string `json:"creators"`
+	// Name: FolderItem.tags
+	Tags []string `json:"tags"`
+	// Name: FolderItem.coverUrl
+	CoverUrl *string `json:"coverUrl,omitempty"`
+	// Name: FolderItem.logoUrl
+	LogoUrl *string `json:"logoUrl,omitempty"`
+	// Name: FolderItem.bannerUrl
+	BannerUrl *string `json:"bannerUrl,omitempty"`
+	// Name: FolderItem.user
+	User *MediaUser `json:"user,omitempty"`
 }
 
 // Name: GetAllApiTokens
@@ -325,6 +401,30 @@ type GetCollections struct {
 	Page Page `json:"page"`
 	// Name: GetCollections.collections
 	Collections []Collection `json:"collections"`
+}
+
+// Name: GetFolderById
+type GetFolderById struct {
+	// Name: GetFolderById.id
+	Id string `json:"id"`
+	// Name: GetFolderById.userId
+	UserId string `json:"userId"`
+	// Name: GetFolderById.name
+	Name string `json:"name"`
+	// Name: GetFolderById.coverUrl
+	CoverUrl *string `json:"coverUrl,omitempty"`
+}
+
+// Name: GetFolderItems
+type GetFolderItems struct {
+	// Name: GetFolderItems.items
+	Items []FolderItem `json:"items"`
+}
+
+// Name: GetFolders
+type GetFolders struct {
+	// Name: GetFolders.folders
+	Folders []Folder `json:"folders"`
 }
 
 // Name: GetMe

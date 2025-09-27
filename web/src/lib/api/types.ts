@@ -184,6 +184,22 @@ export const CreateCollectionBody = z.object({
 });
 export type CreateCollectionBody = z.infer<typeof CreateCollectionBody>;
 
+// Name: CreateFolder
+export const CreateFolder = z.object({
+  // Name: CreateFolder.id
+  "id": z.string(),
+});
+export type CreateFolder = z.infer<typeof CreateFolder>;
+
+// Name: CreateFolderBody
+export const CreateFolderBody = z.object({
+  // Name: CreateFolderBody.name
+  "name": z.string(),
+  // Name: CreateFolderBody.coverUrl
+  "coverUrl": z.string(),
+});
+export type CreateFolderBody = z.infer<typeof CreateFolderBody>;
+
 // Name: CreateMedia
 export const CreateMedia = z.object({
   // Name: CreateMedia.id
@@ -252,6 +268,15 @@ export const EditCollectionItemBody = z.object({
 });
 export type EditCollectionItemBody = z.infer<typeof EditCollectionItemBody>;
 
+// Name: EditFolderBody
+export const EditFolderBody = z.object({
+  // Name: EditFolderBody.name
+  "name": z.string().nullable().optional(),
+  // Name: EditFolderBody.coverUrl
+  "coverUrl": z.string().nullable().optional(),
+});
+export type EditFolderBody = z.infer<typeof EditFolderBody>;
+
 // Name: EditMediaBody
 export const EditMediaBody = z.object({
   // Name: EditMediaBody.type
@@ -293,6 +318,62 @@ export const EditPartBody = z.object({
   "releaseDate": z.string().nullable().optional(),
 });
 export type EditPartBody = z.infer<typeof EditPartBody>;
+
+// Name: Folder
+export const Folder = z.object({
+  // Name: Folder.id
+  "id": z.string(),
+  // Name: Folder.userId
+  "userId": z.string(),
+  // Name: Folder.name
+  "name": z.string(),
+  // Name: Folder.coverUrl
+  "coverUrl": z.string().nullable(),
+});
+export type Folder = z.infer<typeof Folder>;
+
+// Name: FolderItem
+export const FolderItem = z.object({
+  // Name: FolderItem.folderId
+  "folderId": z.string(),
+  // Name: FolderItem.mediaId
+  "mediaId": z.string(),
+  // Name: FolderItem.position
+  "position": z.number(),
+  // Name: FolderItem.title
+  "title": z.string(),
+  // Name: FolderItem.description
+  "description": z.string().nullable(),
+  // Name: FolderItem.mediaType
+  "mediaType": z.string(),
+  // Name: FolderItem.score
+  "score": z.number().nullable(),
+  // Name: FolderItem.status
+  "status": z.string(),
+  // Name: FolderItem.rating
+  "rating": z.string(),
+  // Name: FolderItem.partCount
+  "partCount": z.number(),
+  // Name: FolderItem.airingSeason
+  "airingSeason": z.string().nullable(),
+  // Name: FolderItem.startDate
+  "startDate": z.string().nullable(),
+  // Name: FolderItem.endDate
+  "endDate": z.string().nullable(),
+  // Name: FolderItem.creators
+  "creators": z.array(z.string()),
+  // Name: FolderItem.tags
+  "tags": z.array(z.string()),
+  // Name: FolderItem.coverUrl
+  "coverUrl": z.string().nullable(),
+  // Name: FolderItem.logoUrl
+  "logoUrl": z.string().nullable(),
+  // Name: FolderItem.bannerUrl
+  "bannerUrl": z.string().nullable(),
+  // Name: FolderItem.user
+  "user": MediaUser.nullable().optional(),
+});
+export type FolderItem = z.infer<typeof FolderItem>;
 
 // Name: GetAllApiTokens
 export const GetAllApiTokens = z.object({
@@ -350,6 +431,33 @@ export const GetCollections = z.object({
   "collections": z.array(Collection),
 });
 export type GetCollections = z.infer<typeof GetCollections>;
+
+// Name: GetFolderById
+export const GetFolderById = z.object({
+  // Name: GetFolderById.id
+  "id": z.string(),
+  // Name: GetFolderById.userId
+  "userId": z.string(),
+  // Name: GetFolderById.name
+  "name": z.string(),
+  // Name: GetFolderById.coverUrl
+  "coverUrl": z.string().nullable(),
+});
+export type GetFolderById = z.infer<typeof GetFolderById>;
+
+// Name: GetFolderItems
+export const GetFolderItems = z.object({
+  // Name: GetFolderItems.items
+  "items": z.array(FolderItem),
+});
+export type GetFolderItems = z.infer<typeof GetFolderItems>;
+
+// Name: GetFolders
+export const GetFolders = z.object({
+  // Name: GetFolders.folders
+  "folders": z.array(Folder),
+});
+export type GetFolders = z.infer<typeof GetFolders>;
 
 // Name: GetMe
 export const GetMe = z.object({

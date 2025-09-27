@@ -37,6 +37,8 @@ var CreateCollectionId = createIdGenerator(8)
 
 var CreateJobId = createIdGenerator(6)
 
+var CreateFolderId = createIdGenerator(8)
+
 var CreateApiTokenId = createIdGenerator(32)
 
 func createIdGenerator(length int) func() string {

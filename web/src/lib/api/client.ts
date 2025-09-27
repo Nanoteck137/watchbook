@@ -15,6 +15,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/collections/${id}/items`, "POST", z.undefined(), z.any(), body, options)
   }
   
+  addFolderItem(id: string, mediaId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/folders/${id}/items/${mediaId}`, "POST", z.undefined(), z.any(), undefined, options)
+  }
+  
   addPart(id: string, body: api.AddPartBody, options?: ExtraOptions) {
     return this.request(`/api/v1/media/${id}/single/parts`, "POST", api.AddPart, z.any(), body, options)
   }
@@ -35,6 +39,10 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/collections", "POST", api.CreateCollection, z.any(), body, options)
   }
   
+  createFolder(body: api.CreateFolderBody, options?: ExtraOptions) {
+    return this.request("/api/v1/folders", "POST", api.CreateFolder, z.any(), body, options)
+  }
+  
   createMedia(body: api.CreateMediaBody, options?: ExtraOptions) {
     return this.request("/api/v1/media", "POST", api.CreateMedia, z.any(), body, options)
   }
@@ -45,6 +53,10 @@ export class ApiClient extends BaseApiClient {
   
   deleteCollection(id: string, options?: ExtraOptions) {
     return this.request(`/api/v1/collections/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  }
+  
+  deleteFolder(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/folders/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
   deleteMedia(id: string, options?: ExtraOptions) {
@@ -65,6 +77,10 @@ export class ApiClient extends BaseApiClient {
   
   editCollectionItem(id: string, mediaId: string, body: api.EditCollectionItemBody, options?: ExtraOptions) {
     return this.request(`/api/v1/collections/${id}/items/${mediaId}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  editFolder(id: string, body: api.EditFolderBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/folders/${id}`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
   editMedia(id: string, body: api.EditMediaBody, options?: ExtraOptions) {
@@ -90,6 +106,18 @@ export class ApiClient extends BaseApiClient {
   
   getCollections(options?: ExtraOptions) {
     return this.request("/api/v1/collections", "GET", api.GetCollections, z.any(), undefined, options)
+  }
+  
+  getFolderById(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/folders/${id}`, "GET", api.GetFolderById, z.any(), undefined, options)
+  }
+  
+  getFolderItems(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/folders/${id}/items`, "GET", api.GetFolderItems, z.any(), undefined, options)
+  }
+  
+  getFolders(options?: ExtraOptions) {
+    return this.request("/api/v1/folders", "GET", api.GetFolders, z.any(), undefined, options)
   }
   
   getMe(options?: ExtraOptions) {
@@ -125,6 +153,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/users/import/mal/${username}/anime`, "POST", z.undefined(), z.any(), undefined, options)
   }
   
+  moveFolderItem(id: string, mediaId: string, pos: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/folders/${id}/items/${mediaId}/move/${pos}`, "POST", z.undefined(), z.any(), undefined, options)
+  }
+  
   providerImportCollections(providerName: string, body: api.PostProviderImportCollectionsBody, options?: ExtraOptions) {
     return this.request(`/api/v1/providers/${providerName}/collections/import`, "POST", z.undefined(), z.any(), body, options)
   }
@@ -151,6 +183,10 @@ export class ApiClient extends BaseApiClient {
   
   removeCollectionItem(id: string, mediaId: string, options?: ExtraOptions) {
     return this.request(`/api/v1/collections/${id}/items/${mediaId}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  }
+  
+  removeFolderItem(id: string, mediaId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/folders/${id}/items/${mediaId}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
   removePart(id: string, index: string, options?: ExtraOptions) {
@@ -193,6 +229,10 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/collections/${id}/items`)
   }
   
+  addFolderItem(id: string, mediaId: string) {
+    return createUrl(this.baseUrl, `/api/v1/folders/${id}/items/${mediaId}`)
+  }
+  
   addPart(id: string) {
     return createUrl(this.baseUrl, `/api/v1/media/${id}/single/parts`)
   }
@@ -213,6 +253,10 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/collections")
   }
   
+  createFolder() {
+    return createUrl(this.baseUrl, "/api/v1/folders")
+  }
+  
   createMedia() {
     return createUrl(this.baseUrl, "/api/v1/media")
   }
@@ -223,6 +267,10 @@ export class ClientUrls {
   
   deleteCollection(id: string) {
     return createUrl(this.baseUrl, `/api/v1/collections/${id}`)
+  }
+  
+  deleteFolder(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/folders/${id}`)
   }
   
   deleteMedia(id: string) {
@@ -243,6 +291,10 @@ export class ClientUrls {
   
   editCollectionItem(id: string, mediaId: string) {
     return createUrl(this.baseUrl, `/api/v1/collections/${id}/items/${mediaId}`)
+  }
+  
+  editFolder(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/folders/${id}`)
   }
   
   editMedia(id: string) {
@@ -271,6 +323,18 @@ export class ClientUrls {
   
   getCollections() {
     return createUrl(this.baseUrl, "/api/v1/collections")
+  }
+  
+  getFolderById(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/folders/${id}`)
+  }
+  
+  getFolderItems(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/folders/${id}/items`)
+  }
+  
+  getFolders() {
+    return createUrl(this.baseUrl, "/api/v1/folders")
   }
   
   getMe() {
@@ -309,6 +373,10 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/users/import/mal/${username}/anime`)
   }
   
+  moveFolderItem(id: string, mediaId: string, pos: string) {
+    return createUrl(this.baseUrl, `/api/v1/folders/${id}/items/${mediaId}/move/${pos}`)
+  }
+  
   providerImportCollections(providerName: string) {
     return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/collections/import`)
   }
@@ -335,6 +403,10 @@ export class ClientUrls {
   
   removeCollectionItem(id: string, mediaId: string) {
     return createUrl(this.baseUrl, `/api/v1/collections/${id}/items/${mediaId}`)
+  }
+  
+  removeFolderItem(id: string, mediaId: string) {
+    return createUrl(this.baseUrl, `/api/v1/folders/${id}/items/${mediaId}`)
   }
   
   removePart(id: string, index: string) {

@@ -13,16 +13,18 @@ const (
 	ErrTypeApiTokenNotFound   pyrin.ErrorType = "API_TOKEN_NOT_FOUND"
 	ErrTypeInvalidCredentials pyrin.ErrorType = "INVALID_CREDENTIALS"
 
-	ErrTypeInvalidFilter      pyrin.ErrorType = "INVALID_FILTER"
-	ErrTypeInvalidSort        pyrin.ErrorType = "INVALID_SORT"
+	ErrTypeInvalidFilter pyrin.ErrorType = "INVALID_FILTER"
+	ErrTypeInvalidSort   pyrin.ErrorType = "INVALID_SORT"
 
 	ErrTypeMediaNotFound            pyrin.ErrorType = "MEDIA_NOT_FOUND"
 	ErrTypeMediaPartReleaseNotFound pyrin.ErrorType = "MEDIA_PART_RELEASE_NOT_FOUND"
 	ErrTypeCollectionNotFound       pyrin.ErrorType = "COLLECTION_NOT_FOUND"
-	ErrTypeCollectionItemNotFound       pyrin.ErrorType = "COLLECTION_ITEM_NOT_FOUND"
+	ErrTypeCollectionItemNotFound   pyrin.ErrorType = "COLLECTION_ITEM_NOT_FOUND"
 	ErrTypePartNotFound             pyrin.ErrorType = "PART_NOT_FOUND"
 	ErrTypeImageNotFound            pyrin.ErrorType = "IMAGE_NOT_FOUND"
 	ErrTypeNotificationNotFound     pyrin.ErrorType = "NOTIFICATION_NOT_FOUND"
+	ErrTypeFolderNotFound           pyrin.ErrorType = "FOLDER_NOT_FOUND"
+	ErrTypeFolderItemNotFound       pyrin.ErrorType = "FOLDER_ITEM_NOT_FOUND"
 
 	ErrTypePartAlreadyExists pyrin.ErrorType = "PART_ALREADY_EXISTS"
 )
@@ -104,6 +106,22 @@ func NotificationNotFound() *pyrin.Error {
 		Code:    http.StatusNotFound,
 		Type:    ErrTypeNotificationNotFound,
 		Message: "Notification not found",
+	}
+}
+
+func FolderNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeFolderNotFound,
+		Message: "Folder not found",
+	}
+}
+
+func FolderItemNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeFolderItemNotFound,
+		Message: "Folder Item not found",
 	}
 }
 
