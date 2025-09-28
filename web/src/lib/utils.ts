@@ -132,3 +132,10 @@ export function debounce<T extends (...args: never[]) => void>(
     timer = window.setTimeout(() => fn(...args), delay);
   };
 }
+
+export function getYear(s?: string): number | null {
+  if (!s) return null;
+
+  const d = new Date(s);
+  return d.getFullYear();
+}

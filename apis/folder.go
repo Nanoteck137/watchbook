@@ -26,6 +26,8 @@ type Folder struct {
 
 	Name string `json:"name"`
 
+	ItemCount int `json:"itemCount"`
+
 	CoverUrl *string `json:"coverUrl"`
 }
 
@@ -47,10 +49,11 @@ func ConvertDBFolder(c pyrin.Context, hasUser bool, folder database.Folder) Fold
 	}
 
 	return Folder{
-		Id:       folder.Id,
-		UserId:   folder.UserId,
-		Name:     folder.Name,
-		CoverUrl: coverUrl,
+		Id:        folder.Id,
+		UserId:    folder.UserId,
+		Name:      folder.Name,
+		ItemCount: int(folder.ItemCount.Int64),
+		CoverUrl:  coverUrl,
 	}
 }
 
@@ -515,9 +518,9 @@ func InstallFolderHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "AddFolderItem",
-			Method:       http.MethodPost,
-			Path:         "/folders/:id/items/:mediaId",
+			Name:   "AddFolderItem",
+			Method: http.MethodPost,
+			Path:   "/folders/:id/items/:mediaId",
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 				mediaId := c.Param("mediaId")
@@ -620,9 +623,9 @@ func InstallFolderHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:         "MoveFolderItem",
-			Method:       http.MethodPost,
-			Path:         "/folders/:id/items/:mediaId/move/:pos",
+			Name:   "MoveFolderItem",
+			Method: http.MethodPost,
+			Path:   "/folders/:id/items/:mediaId/move/:pos",
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 				mediaId := c.Param("mediaId")
@@ -672,20 +675,10 @@ func InstallFolderHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				// pos, err := app.DB().GetLastFolderItemPosition(ctx, dbFolder.Id)
-				// if err != nil {
-				// 	return nil, err
-				// }
-				//
-				// err = app.DB().CreateFolderItem(ctx, database.CreateFolderItemParams{
-				// 	FolderId: dbFolder.Id,
-				// 	MediaId:  dbMedia.Id,
-				// 	Position: pos + 1,
-				// })
-				// if err != nil {
-				// 	// TODO(patrik): Better handling of error
-				// 	return nil, err
-				// }
+				err = app.DB().RepackFolderItems(ctx, dbFolder.Id)
+				if err != nil {
+					return nil, err
+				}
 
 				return nil, nil
 			},

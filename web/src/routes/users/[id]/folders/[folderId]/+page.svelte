@@ -1,73 +1,68 @@
 <script lang="ts">
   import { Button } from "@nanoteck137/nano-ui";
   import AddMediaItem from "./AddMediaItem.svelte";
-  import { getApiClient, handleApiError } from "$lib";
-  import toast from "svelte-5-french-toast";
-  import { invalidateAll } from "$app/navigation";
+  import Item from "./Item.svelte";
+  import { type MediaType } from "$lib/api-types";
+  import { isRoleAdmin } from "$lib/utils";
+  import { Plus, Settings } from "lucide-svelte";
+  import Spacer from "$lib/components/Spacer.svelte";
+  import EditFolderModal from "./EditFolderModal.svelte";
 
   const { data } = $props();
-  const apiClient = getApiClient();
 
   let openAddItemModal = $state(false);
+  let openEditFolderModal = $state(false);
 </script>
 
-<p>Folder: {data.folder.name}</p>
+<Spacer size="md" />
 
-<Button
-  onclick={() => {
-    openAddItemModal = true;
-  }}>Add Item</Button
->
+<div class="flex items-center gap-2">
+  <p class="text-2xl font-bold">{data.folder.name}</p>
+  <Button
+    variant="ghost"
+    size="icon"
+    onclick={() => {
+      openEditFolderModal = true;
+    }}
+  >
+    <Settings />
+  </Button>
+</div>
 
-{#each data.items as item}
-  <div>
-    <p>{item.position} - {item.title}</p>
-    <Button
-      onclick={async () => {
-        const res = await apiClient.moveFolderItem(
-          data.folder.id,
-          item.mediaId,
-          (item.position - 1).toString(),
-        );
-        if (!res.success) {
-          return handleApiError(res.error);
-        }
+<Spacer size="md" />
 
-        toast.success("Successfully removed folder item");
-        invalidateAll();
-      }}>Move Up</Button
-    >
-    <Button
-      onclick={async () => {
-        const res = await apiClient.moveFolderItem(
-          data.folder.id,
-          item.mediaId,
-          (item.position + 1).toString(),
-        );
-        if (!res.success) {
-          return handleApiError(res.error);
-        }
+<div class="flex items-center justify-between">
+  <h2 class="text-bold text-xl">
+    Media
+    {#if isRoleAdmin(data.user?.role)}
+      <Button
+        variant="ghost"
+        size="icon"
+        onclick={() => {
+          openAddItemModal = true;
+        }}
+      >
+        <Plus />
+      </Button>
+    {/if}
+  </h2>
+  <p class="text-sm">{data.items.length} item(s)</p>
+</div>
 
-        toast.success("Successfully removed folder item");
-        invalidateAll();
-      }}>Move Down</Button
-    >
-    <Button
-      variant="destructive"
-      onclick={async () => {
-        const res = await apiClient.removeFolderItem(
-          data.folder.id,
-          item.mediaId,
-        );
-        if (!res.success) {
-          return handleApiError(res.error);
-        }
+<Spacer size="md" />
 
-        toast.success("Successfully removed folder item");
-        invalidateAll();
-      }}>Delete</Button
-    >
-  </div>
+{#each data.items as item, i}
+  <Item
+    folderId={data.folder.id}
+    mediaId={item.mediaId}
+    position={item.position}
+    index={i}
+    numItems={data.items.length}
+    title={item.title}
+    type={item.mediaType as MediaType}
+    coverUrl={item.coverUrl}
+    startDate={item.startDate ?? undefined}
+  />
 {/each}
 
 <AddMediaItem
@@ -75,3 +70,5 @@
   folderId={data.folder.id}
   itemIds={data.items.map((i) => i.mediaId)}
 />
+
+<EditFolderModal bind:open={openEditFolderModal} folder={data.folder} />

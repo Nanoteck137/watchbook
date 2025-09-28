@@ -595,6 +595,11 @@
           "omitEmpty": false
         },
         {
+          "name": "itemCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
           "name": "coverUrl",
           "type": "*string",
           "omitEmpty": false
@@ -797,6 +802,11 @@
         {
           "name": "name",
           "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "itemCount",
+          "type": "int",
           "omitEmpty": false
         },
         {

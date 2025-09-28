@@ -42,22 +42,20 @@
 
 <Spacer size="md" />
 
-<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-  <div
-    class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] items-center justify-items-center gap-6"
-  >
-    {#each data.media as media}
-      <MediaCard
-        href="/media/{media.id}"
-        title={media.title}
-        coverUrl={media.coverUrl}
-        startDate={media.startDate}
-        partCount={media.partCount}
-        score={media.score}
-        userList={media.user?.list ?? null}
-      />
-    {/each}
-  </div>
+<div
+  class="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] items-center justify-items-center gap-6"
+>
+  {#each data.media as media}
+    <MediaCard
+      href="/media/{media.id}"
+      title={media.title}
+      coverUrl={media.coverUrl}
+      startDate={media.startDate}
+      partCount={media.partCount}
+      score={media.score}
+      userList={media.user?.list ?? null}
+    />
+  {/each}
 </div>
 
 <Spacer size="sm" />

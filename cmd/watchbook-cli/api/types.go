@@ -305,6 +305,8 @@ type Folder struct {
 	UserId string `json:"userId"`
 	// Name: Folder.name
 	Name string `json:"name"`
+	// Name: Folder.itemCount
+	ItemCount int `json:"itemCount"`
 	// Name: Folder.coverUrl
 	CoverUrl *string `json:"coverUrl,omitempty"`
 }
@@ -411,6 +413,8 @@ type GetFolderById struct {
 	UserId string `json:"userId"`
 	// Name: GetFolderById.name
 	Name string `json:"name"`
+	// Name: GetFolderById.itemCount
+	ItemCount int `json:"itemCount"`
 	// Name: GetFolderById.coverUrl
 	CoverUrl *string `json:"coverUrl,omitempty"`
 }

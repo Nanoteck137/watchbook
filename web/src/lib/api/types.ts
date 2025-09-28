@@ -327,6 +327,8 @@ export const Folder = z.object({
   "userId": z.string(),
   // Name: Folder.name
   "name": z.string(),
+  // Name: Folder.itemCount
+  "itemCount": z.number(),
   // Name: Folder.coverUrl
   "coverUrl": z.string().nullable(),
 });
@@ -440,6 +442,8 @@ export const GetFolderById = z.object({
   "userId": z.string(),
   // Name: GetFolderById.name
   "name": z.string(),
+  // Name: GetFolderById.itemCount
+  "itemCount": z.number(),
   // Name: GetFolderById.coverUrl
   "coverUrl": z.string().nullable(),
 });

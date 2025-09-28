@@ -23,6 +23,19 @@ type Folder struct {
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
+
+	ItemCount sql.NullInt64 `db:"item_count"`
+}
+
+func FolderItemCountQuery() *goqu.SelectDataset {
+	query := dialect.From("folder_items").
+		Select(
+			goqu.I("folder_items.folder_id").As("id"),
+			goqu.COUNT(goqu.I("folder_items.media_id")).As("data"),
+		).
+		GroupBy(goqu.I("folder_items.folder_id"))
+
+	return query
 }
 
 // TODO(patrik): Use goqu.T more
@@ -41,6 +54,12 @@ func FolderQuery() *goqu.SelectDataset {
 
 			"folders.created",
 			"folders.updated",
+
+			goqu.I("item_count.data").As("item_count"),
+		).
+		LeftJoin(
+			FolderItemCountQuery().As("item_count"),
+			goqu.On(goqu.I("folders.id").Eq(goqu.I("item_count.id"))),
 		)
 
 	return query
