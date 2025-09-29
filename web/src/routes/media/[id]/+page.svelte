@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getApiClient } from "$lib";
-  import { mediaRatings, mediaStatus } from "$lib/api-types.js";
+  import { mediaRatings, mediaStatus, mediaTypes } from "$lib/api-types.js";
   import Spacer from "$lib/components/Spacer.svelte";
   import { Button, Card } from "@nanoteck137/nano-ui";
 
@@ -57,6 +57,13 @@
     <dl
       class="grid grid-cols-1 gap-x-8 gap-y-4 text-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
     >
+      <div>
+        <dt class="font-medium">Type</dt>
+        <dd class="text-muted-foreground">
+          {mediaTypes.find((i) => i.value === data.media.type)?.label}
+        </dd>
+      </div>
+
       <div>
         <dt class="font-medium">Score</dt>
         <dd class="text-muted-foreground">

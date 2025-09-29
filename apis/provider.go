@@ -644,6 +644,11 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 
 				changes := database.MediaChanges{}
 
+				changes.Type = database.Change[types.MediaType]{
+					Value:   data.Type,
+					Changed: data.Type != dbMedia.Type,
+				}
+
 				changes.Title = database.Change[string]{
 					Value:   data.Title,
 					Changed: data.Title != dbMedia.Title,

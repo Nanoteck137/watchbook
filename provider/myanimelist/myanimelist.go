@@ -212,15 +212,6 @@ func fetchAnimeData(malId string) (AnimeEntry, error) {
 	return res, nil
 }
 
-func RawGetAnime(malId string) (AnimeEntry, error) {
-	res, err := fetchAnimeData(malId)
-	if err != nil {
-		return AnimeEntry{}, err
-	}
-
-	return res, nil
-}
-
 type AnimeEpisode struct{}
 
 type AnimePictures struct{}
