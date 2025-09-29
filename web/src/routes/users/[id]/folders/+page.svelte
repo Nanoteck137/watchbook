@@ -30,7 +30,7 @@
     {#each data.folders as folder}
       <a
         href="/users/{data.userData.id}/folders/{folder.id}"
-        class="w-[240px] cursor-pointer overflow-hidden rounded-xl border shadow-md transition hover:shadow-lg"
+        class="group w-[240px] cursor-pointer overflow-hidden rounded-xl border shadow-md transition hover:shadow-lg"
       >
         <div class="relative flex h-32 items-center justify-center">
           <div
@@ -39,7 +39,7 @@
         </div>
         <div class="flex flex-col justify-between p-4">
           <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold">
+            <h2 class="text-lg font-semibold group-hover:underline">
               {folder.name}
             </h2>
           </div>

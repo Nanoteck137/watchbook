@@ -66,7 +66,10 @@
   }
 </script>
 
-<div class="flex items-center justify-between gap-2 border-b py-2">
+<a
+  href="/media/{mediaId}"
+  class="group flex items-center justify-between gap-2 border-b py-2"
+>
   <div class="flex items-center gap-4">
     <img
       src={coverUrl}
@@ -74,7 +77,9 @@
       class="aspect-[75/106] w-14 rounded object-cover"
     />
     <div>
-      <div class="line-clamp-2 text-sm font-medium">{title}</div>
+      <div class="line-clamp-2 text-sm font-medium group-hover:underline">
+        {title}
+      </div>
       <div class="text-xs text-muted-foreground">
         {#if year}
           {year} ·
@@ -139,7 +144,7 @@
       </DropdownMenu.Root>
     </div>
   {/if}
-</div>
+</a>
 
 <ConfirmBox
   bind:open={openRemoveModal}
