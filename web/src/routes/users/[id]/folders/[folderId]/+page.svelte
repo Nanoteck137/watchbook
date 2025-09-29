@@ -18,15 +18,17 @@
 
 <div class="flex items-center gap-2">
   <p class="text-2xl font-bold">{data.folder.name}</p>
-  <Button
-    variant="ghost"
-    size="icon"
-    onclick={() => {
-      openEditFolderModal = true;
-    }}
-  >
-    <Settings />
-  </Button>
+  {#if data.userData.id === data.user?.id}
+    <Button
+      variant="ghost"
+      size="icon"
+      onclick={() => {
+        openEditFolderModal = true;
+      }}
+    >
+      <Settings />
+    </Button>
+  {/if}
 </div>
 
 <Spacer size="md" />
@@ -62,6 +64,7 @@
     type={item.mediaType as MediaType}
     coverUrl={item.coverUrl}
     startDate={item.startDate ?? undefined}
+    isUser={data.userData.id === data.user?.id}
   />
 {/each}
 

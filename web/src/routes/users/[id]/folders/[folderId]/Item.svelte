@@ -27,6 +27,8 @@
     type: MediaType;
     coverUrl?: string | null;
     startDate?: string;
+
+    isUser?: boolean;
   };
 
   const {
@@ -39,6 +41,7 @@
     type,
     coverUrl,
     startDate,
+    isUser,
   }: Props = $props();
   const apiClient = getApiClient();
 
@@ -80,60 +83,62 @@
       </div>
     </div>
   </div>
-  <div class="flex gap-2">
-    <Button
-      variant="ghost"
-      size="icon"
-      onclick={() => moveItem(position - 1)}
-      disabled={isFirst}
-    >
-      <ArrowUp />
-    </Button>
-
-    <Button
-      variant="ghost"
-      size="icon"
-      onclick={() => moveItem(position + 1)}
-      disabled={isLast}
-    >
-      <ArrowDown />
-    </Button>
-
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger
-        class={buttonVariants({ variant: "outline", size: "icon" })}
+  {#if isUser}
+    <div class="flex gap-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        onclick={() => moveItem(position - 1)}
+        disabled={isFirst}
       >
-        <EllipsisVertical />
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Content class="w-40" align="end">
-        <DropdownMenu.Group>
-          <DropdownMenu.Item onclick={() => moveItem(0)} disabled={isFirst}>
-            <ArrowUpToLine />
-            Move First
-          </DropdownMenu.Item>
+        <ArrowUp />
+      </Button>
 
-          <DropdownMenu.Item
-            onclick={() => moveItem(numItems)}
-            disabled={isLast}
-          >
-            <ArrowDownToLine />
-            Move Last
-          </DropdownMenu.Item>
+      <Button
+        variant="ghost"
+        size="icon"
+        onclick={() => moveItem(position + 1)}
+        disabled={isLast}
+      >
+        <ArrowDown />
+      </Button>
 
-          <DropdownMenu.Separator />
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger
+          class={buttonVariants({ variant: "outline", size: "icon" })}
+        >
+          <EllipsisVertical />
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content class="w-40" align="end">
+          <DropdownMenu.Group>
+            <DropdownMenu.Item onclick={() => moveItem(0)} disabled={isFirst}>
+              <ArrowUpToLine />
+              Move First
+            </DropdownMenu.Item>
 
-          <DropdownMenu.Item
-            onclick={() => {
-              openRemoveModal = true;
-            }}
-          >
-            <Trash />
-            Remove
-          </DropdownMenu.Item>
-        </DropdownMenu.Group>
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
-  </div>
+            <DropdownMenu.Item
+              onclick={() => moveItem(numItems)}
+              disabled={isLast}
+            >
+              <ArrowDownToLine />
+              Move Last
+            </DropdownMenu.Item>
+
+            <DropdownMenu.Separator />
+
+            <DropdownMenu.Item
+              onclick={() => {
+                openRemoveModal = true;
+              }}
+            >
+              <Trash />
+              Remove
+            </DropdownMenu.Item>
+          </DropdownMenu.Group>
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
+    </div>
+  {/if}
 </div>
 
 <ConfirmBox
