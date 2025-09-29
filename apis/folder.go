@@ -234,14 +234,35 @@ func InstallFolderHandlers(app core.App, group pyrin.Group) {
 			Path:         "/folders",
 			ResponseType: GetFolders{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
+				url := c.Request().URL
+				q := url.Query()
 
 				ctx := context.TODO()
 
-				folders, err := app.DB().GetAllFoldersByUserId(ctx, user.Id)
+				var userId string
+				if q.Has("userId") {
+					id := q.Get("userId")
+
+					user, err := app.DB().GetUserById(ctx, id)
+					if err != nil {
+						if errors.Is(err, database.ErrItemNotFound) {
+							return nil, UserNotFound()
+						}
+
+						return nil, err
+					}
+
+					userId = user.Id
+				} else {
+					user, err := User(app, c)
+					if err != nil {
+						return nil, err
+					}
+
+					userId = user.Id
+				}
+
+				folders, err := app.DB().GetAllFoldersByUserId(ctx, userId)
 				if err != nil {
 					return nil, err
 				}
@@ -266,11 +287,6 @@ func InstallFolderHandlers(app core.App, group pyrin.Group) {
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
-				}
-
 				folder, err := app.DB().GetFolderById(c.Request().Context(), id)
 				if err != nil {
 					if errors.Is(err, database.ErrItemNotFound) {
@@ -278,10 +294,6 @@ func InstallFolderHandlers(app core.App, group pyrin.Group) {
 					}
 
 					return nil, err
-				}
-
-				if folder.UserId != user.Id {
-					return nil, FolderNotFound()
 				}
 
 				return GetFolderById{
@@ -298,9 +310,9 @@ func InstallFolderHandlers(app core.App, group pyrin.Group) {
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				id := c.Param("id")
 
-				user, err := User(app, c)
-				if err != nil {
-					return nil, err
+				var userId *string
+				if user, err := User(app, c); err == nil {
+					userId = &user.Id
 				}
 
 				ctx := c.Request().Context()
@@ -314,11 +326,7 @@ func InstallFolderHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				if folder.UserId != user.Id {
-					return nil, FolderNotFound()
-				}
-
-				items, err := app.DB().GetFullAllFolderItemsByFolder(ctx, &user.Id, folder.Id)
+				items, err := app.DB().GetFullAllFolderItemsByFolder(ctx, userId, folder.Id)
 				if err != nil {
 					return nil, err
 				}
