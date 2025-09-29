@@ -9,7 +9,6 @@
   import { defaults, superForm } from "sveltekit-superforms/client";
   import { z } from "zod";
   import Spinner from "$lib/components/Spinner.svelte";
-  import type { Collection } from "$lib/api/types";
   import {
     type CollectionType,
     CollectionTypeEnum,
@@ -34,13 +33,7 @@
   });
 
   const { form, errors, enhance, reset, submitting } = superForm(
-    defaults(
-      {
-        type: data.collection.type as CollectionType,
-        name: data.collection.name,
-      },
-      zod(Schema),
-    ),
+    defaults(zod(Schema)),
     {
       id: "edit",
       SPA: true,

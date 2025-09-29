@@ -14,9 +14,6 @@
     displayName: z.string().min(1),
   });
 
-  export type Props = {};
-
-  let {}: Props = $props();
   const apiClient = getApiClient();
 
   const f = superForm(defaults(zod(Schema)), {
@@ -26,10 +23,9 @@
     dataType: "json",
     async onUpdate({ form }) {
       if (form.valid) {
-        const data = form.data;
-
+        const formData = form.data;
         const res = await apiClient.updateUserSettings({
-          displayName: data.displayName,
+          displayName: formData.displayName,
         });
         if (!res.success) {
           return handleApiError(res.error);

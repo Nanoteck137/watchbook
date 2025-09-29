@@ -1,13 +1,10 @@
 <script lang="ts">
-  import { invalidateAll } from "$app/navigation";
-  import { getApiClient, handleApiError } from "$lib";
+  import { getApiClient } from "$lib";
   import { mediaRatings, mediaStatus } from "$lib/api-types.js";
   import Spacer from "$lib/components/Spacer.svelte";
-  import type { UserList } from "$lib/types.js";
   import { Button, Card } from "@nanoteck137/nano-ui";
 
   const { data } = $props();
-  const apiClient = getApiClient();
 
   let descriptionShowMore = $state(false);
 

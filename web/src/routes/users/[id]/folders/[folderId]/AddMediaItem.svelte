@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { invalidate, invalidateAll } from "$app/navigation";
+  import { invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
   import type { Media } from "$lib/api/types";
   import FormItem from "$lib/components/FormItem.svelte";
   import Image from "$lib/components/Image.svelte";
-  import type { Modal } from "$lib/components/modals";
   import { cn, debounce } from "$lib/utils";
   import {
     Button,

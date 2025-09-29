@@ -2,7 +2,6 @@
   import { PUBLIC_COMMIT, PUBLIC_VERSION } from "$env/static/public";
   import { Button, Card } from "@nanoteck137/nano-ui";
   import Provider from "./Provider.svelte";
-  import Spacer from "$lib/components/Spacer.svelte";
 
   const { data } = $props();
 </script>

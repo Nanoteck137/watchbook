@@ -18,43 +18,44 @@
 
   const apiClient = getApiClient();
 
-  const f = superForm(defaults(zod(Schema)), {
-    id: "change-password",
-    SPA: true,
-    validators: zod(Schema),
-    dataType: "json",
-    async onUpdate({ form }) {
-      if (form.valid) {
-        const data = form.data;
+  const { form, errors, enhance, submitting } = superForm(
+    defaults(zod(Schema)),
+    {
+      id: "change-password",
+      SPA: true,
+      validators: zod(Schema),
+      dataType: "json",
+      async onUpdate({ form }) {
+        if (form.valid) {
+          const formData = form.data;
+          const res = await apiClient.changePassword({
+            currentPassword: formData.currentPassword,
+            newPassword: formData.newPassword,
+            newPasswordConfirm: formData.confirmPassword,
+          });
+          if (!res.success) {
+            if (res.error.type === "VALIDATION_ERROR") {
+              setError(form, "newPassword", res.error.extra.newPassword);
+              setError(
+                form,
+                "confirmPassword",
+                res.error.extra.newPasswordConfirm,
+              );
+            }
 
-        const res = await apiClient.changePassword({
-          currentPassword: data.currentPassword,
-          newPassword: data.newPassword,
-          newPasswordConfirm: data.confirmPassword,
-        });
-        if (!res.success) {
-          if (res.error.type === "VALIDATION_ERROR") {
-            setError(form, "newPassword", res.error.extra.newPassword);
-            setError(
-              form,
-              "confirmPassword",
-              res.error.extra.newPasswordConfirm,
-            );
+            if (res.error.type === "INVALID_CREDENTIALS") {
+              setError(form, "currentPassword", res.error.message);
+            }
+
+            return handleApiError(res.error);
           }
 
-          if (res.error.type === "INVALID_CREDENTIALS") {
-            setError(form, "currentPassword", res.error.message);
-          }
-
-          return handleApiError(res.error);
+          toast.success("Successfully changed password");
+          invalidateAll();
         }
-
-        toast.success("Successfully changed password");
-        invalidateAll();
-      }
+      },
     },
-  });
-  const { form, errors, enhance, submitting } = f;
+  );
 </script>
 
 <div class="flex flex-col items-center gap-4 border-b p-6">

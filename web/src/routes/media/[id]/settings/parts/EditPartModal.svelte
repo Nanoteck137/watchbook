@@ -51,13 +51,13 @@
       resetForm: true,
       async onUpdate({ form }) {
         if (form.valid) {
-          const data = form.data;
+          const formData = form.data;
           const res = await apiClient.editPart(
             part.mediaId,
             part.index.toString(),
             {
-              name: data.name,
-              releaseDate: data.releaseDate,
+              name: formData.name,
+              releaseDate: formData.releaseDate,
             },
           );
           if (!res.success) {

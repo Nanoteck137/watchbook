@@ -2,7 +2,7 @@
   import { getApiClient, handleApiError } from "$lib";
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
-  import { Button, Dialog, Input, Label, Select } from "@nanoteck137/nano-ui";
+  import { Button, Input, Label, Select } from "@nanoteck137/nano-ui";
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
   import { z } from "zod";
@@ -49,42 +49,9 @@
     tags: z.string(),
     creators: z.string(),
   });
-  type SchemaTy = z.infer<typeof Schema>;
 
   const { data } = $props();
   const apiClient = getApiClient();
-
-  async function submit(mediaId: string, data: SchemaTy) {
-    const res = await apiClient.editMedia(mediaId, {
-      type: data.type,
-
-      title: data.title,
-      description: data.description,
-
-      score: data.score,
-      status: data.status,
-      rating: data.rating,
-      airingSeason: data.airingSeason,
-
-      startDate: data.startDate,
-      endDate: data.endDate,
-
-      tags: data.tags
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s !== ""),
-      creators: data.creators
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s !== ""),
-    });
-    if (!res.success) {
-      return handleApiError(res.error);
-    }
-
-    toast.success("Successfully updated media");
-    invalidateAll();
-  }
 
   $effect(() => {
     reset({
@@ -117,7 +84,36 @@
       resetForm: true,
       async onUpdate({ form }) {
         if (form.valid) {
-          await submit(data.media.id, form.data);
+          const formData = form.data;
+          const res = await apiClient.editMedia(data.media.id, {
+            type: formData.type,
+
+            title: formData.title,
+            description: formData.description,
+
+            score: formData.score,
+            status: formData.status,
+            rating: formData.rating,
+            airingSeason: formData.airingSeason,
+
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+
+            tags: formData.tags
+              .split(",")
+              .map((s) => s.trim())
+              .filter((s) => s !== ""),
+            creators: formData.creators
+              .split(",")
+              .map((s) => s.trim())
+              .filter((s) => s !== ""),
+          });
+          if (!res.success) {
+            return handleApiError(res.error);
+          }
+
+          toast.success("Successfully updated media");
+          invalidateAll();
         }
       },
     },

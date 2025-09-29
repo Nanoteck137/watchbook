@@ -11,7 +11,6 @@
 
     class: className,
     children,
-    onResult,
   }: Props & Modal<void> = $props();
 
   let open = $state(false);

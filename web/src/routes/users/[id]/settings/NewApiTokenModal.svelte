@@ -1,16 +1,9 @@
 <script lang="ts">
-  import { goto, invalidateAll } from "$app/navigation";
+  import { invalidateAll } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
-  import {
-    Button,
-    Dialog,
-    Input,
-    Label,
-    Select,
-    Separator,
-  } from "@nanoteck137/nano-ui";
+  import { Button, Dialog, Input, Label } from "@nanoteck137/nano-ui";
   import toast from "svelte-5-french-toast";
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
@@ -43,9 +36,9 @@
       resetForm: true,
       async onUpdate({ form }) {
         if (form.valid) {
-          const data = form.data;
+          const formData = form.data;
           const res = await apiClient.createApiToken({
-            name: data.name,
+            name: formData.name,
           });
           if (!res.success) {
             return handleApiError(res.error);

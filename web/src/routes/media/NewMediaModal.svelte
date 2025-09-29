@@ -62,7 +62,6 @@
       .or(z.literal("")),
     logoUrl: z.string().url("Logo URL must be valid url").or(z.literal("")),
   });
-  type SchemaTy = z.infer<typeof Schema>;
 
   export type Props = {
     open: boolean;
@@ -77,46 +76,6 @@
     }
   });
 
-  async function submit(data: SchemaTy) {
-    const res = await apiClient.createMedia({
-      type: data.type,
-
-      title: data.title,
-      description: data.description,
-
-      score: data.score,
-      status: data.status,
-      rating: data.rating,
-      airingSeason: data.airingSeason,
-
-      startDate: data.startDate,
-      endDate: data.endDate,
-
-      partCount: data.partCount,
-
-      tags: data.tags
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s !== ""),
-      creators: data.creators
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s !== ""),
-
-      coverUrl: data.coverUrl,
-      bannerUrl: data.bannerUrl,
-      logoUrl: data.logoUrl,
-    });
-    if (!res.success) {
-      return handleApiError(res.error);
-    }
-
-    open = false;
-
-    toast.success("Successfully create new media");
-    goto(`/media/${res.data.id}`, { invalidateAll: true });
-  }
-
   const { form, errors, enhance, reset, submitting } = superForm(
     defaults(zod(Schema)),
     {
@@ -126,7 +85,44 @@
       resetForm: true,
       async onUpdate({ form }) {
         if (form.valid) {
-          await submit(form.data);
+          const formData = form.data;
+          const res = await apiClient.createMedia({
+            type: formData.type,
+
+            title: formData.title,
+            description: formData.description,
+
+            score: formData.score,
+            status: formData.status,
+            rating: formData.rating,
+            airingSeason: formData.airingSeason,
+
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+
+            partCount: formData.partCount,
+
+            tags: formData.tags
+              .split(",")
+              .map((s) => s.trim())
+              .filter((s) => s !== ""),
+            creators: formData.creators
+              .split(",")
+              .map((s) => s.trim())
+              .filter((s) => s !== ""),
+
+            coverUrl: formData.coverUrl,
+            bannerUrl: formData.bannerUrl,
+            logoUrl: formData.logoUrl,
+          });
+          if (!res.success) {
+            return handleApiError(res.error);
+          }
+
+          open = false;
+
+          toast.success("Successfully create new media");
+          goto(`/media/${res.data.id}`, { invalidateAll: true });
         }
       },
     },

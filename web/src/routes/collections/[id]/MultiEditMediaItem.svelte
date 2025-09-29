@@ -1,9 +1,6 @@
 <script lang="ts">
-  import { getApiClient, handleApiError } from "$lib";
   import FormItem from "$lib/components/FormItem.svelte";
-  import Image from "$lib/components/Image.svelte";
   import type { Modal } from "$lib/components/modals";
-  import { cn } from "$lib/utils";
   import {
     Button,
     Dialog,
@@ -11,7 +8,7 @@
     Label,
     ScrollArea,
   } from "@nanoteck137/nano-ui";
-  import { Check, UndoDot } from "lucide-svelte";
+  import { UndoDot } from "lucide-svelte";
   import type { MediaItem, SearchResult } from "./AddMediaItem.svelte";
   import Errors from "$lib/components/Errors.svelte";
   import Spacer from "$lib/components/Spacer.svelte";

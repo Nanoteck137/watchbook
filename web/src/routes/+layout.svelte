@@ -1,6 +1,5 @@
 <script lang="ts">
   import {
-    AlarmClock,
     Calendar,
     Clapperboard,
     Home,
@@ -8,7 +7,6 @@
     LogIn,
     LogOut,
     Menu,
-    Origami,
     Search,
     Server,
     User,

@@ -3,7 +3,7 @@
   import { getApiClient, handleApiError } from "$lib";
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
-  import { Button, Dialog, Input, Label } from "@nanoteck137/nano-ui";
+  import { Button, Input, Label } from "@nanoteck137/nano-ui";
   import toast from "svelte-5-french-toast";
   import { zod } from "sveltekit-superforms/adapters";
   import { defaults, superForm } from "sveltekit-superforms/client";
@@ -20,33 +20,30 @@
   const apiClient = getApiClient();
 
   $effect(() => {
-    reset({ data: { coverUrl: "", bannerUrl: "", logoUrl: "" } });
+    reset({});
   });
 
-  async function submit(mediaId: string, data: SchemaTy) {
-    const res = await apiClient.editMedia(mediaId, {
-      coverUrl: data.coverUrl !== "" ? data.coverUrl : null,
-      bannerUrl: data.bannerUrl !== "" ? data.bannerUrl : null,
-      logoUrl: data.logoUrl !== "" ? data.logoUrl : null,
-    });
-    if (!res.success) {
-      return handleApiError(res.error);
-    }
-
-    toast.success("Successfully updated media images");
-    invalidateAll();
-  }
-
   const { form, errors, enhance, validateForm, reset } = superForm(
-    defaults({ coverUrl: "", bannerUrl: "", logoUrl: "" }, zod(Schema)),
+    defaults(zod(Schema)),
     {
       SPA: true,
       validators: zod(Schema),
       dataType: "json",
       resetForm: true,
-      onUpdate({ form }) {
+      async onUpdate({ form }) {
         if (form.valid) {
-          submit(data.media.id, form.data);
+          const formData = form.data;
+          const res = await apiClient.editMedia(data.media.id, {
+            coverUrl: formData.coverUrl !== "" ? formData.coverUrl : null,
+            bannerUrl: formData.bannerUrl !== "" ? formData.bannerUrl : null,
+            logoUrl: formData.logoUrl !== "" ? formData.logoUrl : null,
+          });
+          if (!res.success) {
+            return handleApiError(res.error);
+          }
+
+          toast.success("Successfully updated media images");
+          invalidateAll();
         }
       },
     },

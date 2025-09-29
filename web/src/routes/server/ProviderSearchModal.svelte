@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getApiClient, handleApiError } from "$lib";
-  import { Collection, ProviderSearchResult } from "$lib/api/types";
+  import { ProviderSearchResult } from "$lib/api/types";
   import FormItem from "$lib/components/FormItem.svelte";
   import Image from "$lib/components/Image.svelte";
   import type { Modal } from "$lib/components/modals";

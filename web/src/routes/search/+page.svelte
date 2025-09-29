@@ -35,11 +35,6 @@
       invalidateAll();
     }
   });
-
-  function formatError(err: { type: string; code: number; message: string }) {
-    // TODO(patrik): Better error
-    return err.message;
-  }
 </script>
 
 <form

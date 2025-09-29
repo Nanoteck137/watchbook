@@ -20,7 +20,7 @@
   const apiClient = getApiClient();
 
   const { form, errors, enhance, submitting } = superForm(
-    defaults({ coverUrl: "", bannerUrl: "", logoUrl: "" }, zod(Schema)),
+    defaults(zod(Schema)),
     {
       id: "images",
       SPA: true,

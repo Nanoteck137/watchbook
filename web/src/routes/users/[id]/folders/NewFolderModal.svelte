@@ -37,7 +37,6 @@
       async onUpdate({ form }) {
         if (form.valid) {
           const formData = form.data;
-
           const res = await apiClient.createFolder({
             name: formData.name,
             coverUrl: "",

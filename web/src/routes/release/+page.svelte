@@ -1,22 +1,10 @@
 <script lang="ts">
-  import Badge from "$lib/components/Badge.svelte";
-  import Image from "$lib/components/Image.svelte";
-  import MediaCard from "$lib/components/MediaCard.svelte";
   import ReleaseMediaCard from "$lib/components/ReleaseMediaCard.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
   import StandardPagination from "$lib/components/StandardPagination.svelte";
-  import { parseUserList } from "$lib/types";
-  import {
-    clamp,
-    formatTimeDiff,
-    getTimeDifference,
-    isRoleAdmin,
-  } from "$lib/utils";
   import Filter from "./Filter.svelte";
 
   const { data } = $props();
-
-  const now = new Date();
 </script>
 
 <Filter fullFilter={data.filter} />
@@ -24,20 +12,7 @@
 <Spacer size="md" />
 
 <div class="flex items-center justify-between">
-  <h2 class="text-bold text-xl">
-    Media
-    <!-- {#if isRoleAdmin(data.user?.role)}
-      <Button
-        variant="ghost"
-        size="icon"
-        onclick={() => {
-          openNewMediaModal = true;
-        }}
-      >
-        <Plus />
-      </Button>
-    {/if} -->
-  </h2>
+  <h2 class="text-bold text-xl">Media</h2>
   <p class="text-sm">{data.page.totalItems} item(s)</p>
 </div>
 

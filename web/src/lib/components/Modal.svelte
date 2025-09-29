@@ -24,6 +24,7 @@
 </script>
 
 {#if open}
+  <!-- svelte-ignore a11y_consider_explicit_label -->
   <button class="fixed inset-0 bg-black/70" onclick={() => onClose()}></button>
   {#if children}
     {@render children()}

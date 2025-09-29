@@ -52,11 +52,4 @@
   </div>
 </Card.Root>
 
-<!-- <a
-        href="/users/{data.userData.id}/folders/{folder.id}"
-        class="font-medium hover:underline"
-      >
-        
-      </a> -->
-
 <NewFolderModal bind:open={openNewModal} />

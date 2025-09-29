@@ -82,18 +82,6 @@ function constructFilterSort(
 export const load: PageServerLoad = async ({ locals, params, url }) => {
   const query = getPageOptions(url.searchParams);
 
-  // query["userId"] = params.id;
-  // query["filter"] = "userList != null";
-
-  // let list = queryParams.get("list");
-  // if (!list || list === "") {
-  //   list = "all";
-  // }
-
-  // if (list !== "all") {
-  //   query["filter"] = `userList == "${list}"`;
-  // }
-
   query["userId"] = params.id;
 
   const filter = FullFilter.parse({
@@ -110,11 +98,8 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
         .filter((t) => t !== "") ?? [],
     sort: url.searchParams.get("sort") ?? undefined,
   });
-  console.log(filter);
 
   constructFilterSort(filter, query);
-
-  console.log(query);
 
   const media = await locals.apiClient.getMedia({
     query,

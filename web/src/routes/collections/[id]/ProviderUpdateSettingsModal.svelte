@@ -13,7 +13,6 @@
   const Schema = z.object({
     replaceImages: z.boolean(),
   });
-  type SchemaTy = z.infer<typeof Schema>;
 
   export type Props = {
     open: boolean;
@@ -30,30 +29,26 @@
     }
   });
 
-  async function submit(data: SchemaTy) {
-    const res = await apiClient.providerUpdateCollection(
-      provider.name,
-      collectionId,
-      data,
-    );
-    if (!res.success) {
-      return handleApiError(res.error);
-    }
-
-    toast.success("Successfully update media");
-    invalidateAll();
-  }
-
   const { form, errors, enhance, reset } = superForm(defaults(zod(Schema)), {
     SPA: true,
     validators: zod(Schema),
     resetForm: true,
-    onUpdate({ form }) {
+    async onUpdate({ form }) {
       if (form.valid) {
-        submit(form.data);
+        const formData = form.data;
+        const res = await apiClient.providerUpdateCollection(
+          provider.name,
+          collectionId,
+          formData,
+        );
+        if (!res.success) {
+          return handleApiError(res.error);
+        }
 
         open = false;
-        reset({});
+
+        toast.success("Successfully update media");
+        invalidateAll();
       }
     },
   });

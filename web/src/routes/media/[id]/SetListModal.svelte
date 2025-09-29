@@ -32,7 +32,6 @@
     revisitCount: z.number().min(0),
     isRevisiting: z.boolean(),
   });
-  type SchemaTy = z.infer<typeof Schema>;
 
   export type Props = {
     open: boolean;
@@ -59,24 +58,6 @@
     }
   });
 
-  async function submit(data: SchemaTy) {
-    const res = await apiClient.setMediaUserData(media.id, {
-      list: data.list,
-      score: parseInt(data.score),
-      currentPart: data.currentPart,
-      revisitCount: data.revisitCount,
-      isRevisiting: data.isRevisiting,
-    });
-    if (!res.success) {
-      return handleApiError(res.error);
-    }
-
-    open = false;
-
-    toast.success("Successfully updated list");
-    invalidateAll();
-  }
-
   const { form, errors, enhance, reset, submitting } = superForm(
     defaults(zod(Schema)),
     {
@@ -92,7 +73,22 @@
       },
       async onUpdate({ form }) {
         if (form.valid) {
-          await submit(form.data);
+          const formData = form.data;
+          const res = await apiClient.setMediaUserData(media.id, {
+            list: formData.list,
+            score: parseInt(formData.score),
+            currentPart: formData.currentPart,
+            revisitCount: formData.revisitCount,
+            isRevisiting: formData.isRevisiting,
+          });
+          if (!res.success) {
+            return handleApiError(res.error);
+          }
+
+          open = false;
+
+          toast.success("Successfully updated list");
+          invalidateAll();
         }
       },
     },

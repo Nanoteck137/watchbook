@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto, invalidateAll } from "$app/navigation";
+  import { goto } from "$app/navigation";
   import { getApiClient, handleApiError } from "$lib";
   import Errors from "$lib/components/Errors.svelte";
   import FormItem from "$lib/components/FormItem.svelte";
@@ -37,7 +37,6 @@
       .optional()
       .or(z.literal("")),
   });
-  type SchemaTy = z.infer<typeof Schema>;
 
   export type Props = {
     open: boolean;
@@ -52,25 +51,6 @@
     }
   });
 
-  async function submit(data: SchemaTy) {
-    const res = await apiClient.createCollection({
-      name: data.name,
-      type: data.type,
-      coverUrl: data.coverUrl ?? "",
-      bannerUrl: data.bannerUrl ?? "",
-      logoUrl: data.logoUrl ?? "",
-    });
-    if (!res.success) {
-      return handleApiError(res.error);
-    }
-
-    open = false;
-    reset({});
-
-    toast.success("Successfully created new collection");
-    goto(`/collections/${res.data.id}`, { invalidateAll: true });
-  }
-
   const { form, errors, enhance, reset, submitting } = superForm(
     defaults(zod(Schema)),
     {
@@ -80,7 +60,22 @@
       resetForm: true,
       async onUpdate({ form }) {
         if (form.valid) {
-          await submit(form.data);
+          const formData = form.data;
+          const res = await apiClient.createCollection({
+            name: formData.name,
+            type: formData.type,
+            coverUrl: formData.coverUrl ?? "",
+            bannerUrl: formData.bannerUrl ?? "",
+            logoUrl: formData.logoUrl ?? "",
+          });
+          if (!res.success) {
+            return handleApiError(res.error);
+          }
+
+          open = false;
+
+          toast.success("Successfully created new collection");
+          goto(`/collections/${res.data.id}`, { invalidateAll: true });
         }
       },
     },
@@ -162,7 +157,6 @@
           variant="outline"
           onclick={() => {
             open = false;
-            reset();
           }}
         >
           Close

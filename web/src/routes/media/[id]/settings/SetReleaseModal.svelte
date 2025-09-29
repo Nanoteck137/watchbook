@@ -68,15 +68,14 @@
       resetForm: false,
       async onUpdate({ form }) {
         if (form.valid) {
-          const data = form.data;
-
+          const formData = form.data;
           const res = await apiClient.setMediaRelease(media.id, {
-            releaseType: data.type,
-            startDate: data.startDate,
-            numExpectedParts: data.numExpectedParts,
-            partOffset: data.partOffset,
-            intervalDays: data.intervalDays,
-            delayDays: data.delayDays,
+            releaseType: formData.type,
+            startDate: formData.startDate,
+            numExpectedParts: formData.numExpectedParts,
+            partOffset: formData.partOffset,
+            intervalDays: formData.intervalDays,
+            delayDays: formData.delayDays,
           });
           if (!res.success) {
             return handleApiError(res.error);
