@@ -15,6 +15,8 @@ export const MediaTypeEnum = z.enum(
   mediaTypes.map((f) => f.value) as [MediaType, ...MediaType[]],
 );
 
+export const statTypes = [...mediaTypes] as const;
+
 export const mediaStatus = [
   { label: "Unknown", value: "unknown" },
   { label: "On-Going", value: "ongoing" },
@@ -51,6 +53,14 @@ export type MediaUserList = (typeof mediaUserLists)[number]["value"];
 export const MediaUserListEnum = z.enum(
   mediaUserLists.map((f) => f.value) as [MediaUserList, ...MediaUserList[]],
 );
+
+export const statNames = [
+  ...mediaUserLists,
+  {
+    label: "All",
+    value: "all",
+  },
+] as const;
 
 export const collectionTypes = [
   { label: "Unknown", value: "unknown" },

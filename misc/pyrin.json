@@ -1042,6 +1042,56 @@
       ]
     },
     {
+      "name": "GetUserStats",
+      "fields": [
+        {
+          "name": "all",
+          "type": "MainStat",
+          "omitEmpty": false
+        },
+        {
+          "name": "completed",
+          "type": "MainStat",
+          "omitEmpty": false
+        },
+        {
+          "name": "inProgress",
+          "type": "MainStat",
+          "omitEmpty": false
+        },
+        {
+          "name": "onHold",
+          "type": "MainStat",
+          "omitEmpty": false
+        },
+        {
+          "name": "dropped",
+          "type": "MainStat",
+          "omitEmpty": false
+        },
+        {
+          "name": "backlog",
+          "type": "MainStat",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "MainStat",
+      "fields": [
+        {
+          "name": "main",
+          "type": "Stat",
+          "omitEmpty": false
+        },
+        {
+          "name": "sub",
+          "type": "[]Stat",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "Media",
       "fields": [
         {
@@ -1572,6 +1622,21 @@
       ]
     },
     {
+      "name": "Stat",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "value",
+          "type": "int",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "UpdateUserSettingsBody",
       "fields": [
         {
@@ -1849,6 +1914,13 @@
       "method": "GET",
       "path": "/api/v1/users/:id",
       "response": "GetUser"
+    },
+    {
+      "type": "api",
+      "name": "GetUserStats",
+      "method": "GET",
+      "path": "/api/v1/users/:id/stats",
+      "response": "GetUserStats"
     },
     {
       "type": "api",

@@ -68,6 +68,25 @@ type GetAllApiTokens struct {
 	Tokens []ApiToken `json:"tokens"`
 }
 
+type Stat struct {
+	Name  string `json:"name"`
+	Value int    `json:"value"`
+}
+
+type MainStat struct {
+	Main Stat   `json:"main"`
+	Sub  []Stat `json:"sub"`
+}
+
+type GetUserStats struct {
+	All        MainStat `json:"all"`
+	Completed  MainStat `json:"completed"`
+	InProgress MainStat `json:"inProgress"`
+	OnHold     MainStat `json:"onHold"`
+	Dropped    MainStat `json:"dropped"`
+	Backlog    MainStat `json:"backlog"`
+}
+
 func InstallUserHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -279,6 +298,70 @@ func InstallUserHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:         "GetUserStats",
+			Method:       http.MethodGet,
+			Path:         "/users/:id/stats",
+			ResponseType: GetUserStats{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				id := c.Param("id")
+
+				ctx := context.Background()
+
+				stats, err := app.DB().GetUserMediaStats(ctx, id)
+				if err != nil {
+					return nil, err
+				}
+
+				mapped := map[string][]Stat{
+					"backlog":     {},
+					"completed":   {},
+					"dropped":     {},
+					"in-progress": {},
+					"on-hold":     {},
+				}
+
+				for _, stat := range stats {
+					mapped[stat.List] = append(mapped[stat.List], Stat{
+						Name:  stat.Name,
+						Value: stat.Value,
+					})
+				}
+
+				convert := func(k string) MainStat {
+					stats := mapped[k]
+
+					var main Stat
+					subStats := []Stat{}
+					for _, s := range stats {
+						if s.Name == "total" {
+							main = s
+						} else {
+							subStats = append(subStats, s)
+						}
+					}
+
+					main.Name = k
+
+					return MainStat{
+						Main: main,
+						Sub:  subStats,
+					}
+				}
+
+				res := GetUserStats{
+					All:        convert("all"),
+					Completed:  convert("completed"),
+					InProgress: convert("in-progress"),
+					OnHold:     convert("on-hold"),
+					Dropped:    convert("dropped"),
+					Backlog:    convert("backlog"),
+				}
+
+				return res, nil
 			},
 		},
 	)

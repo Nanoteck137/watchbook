@@ -687,6 +687,41 @@ export const GetUser = z.object({
 });
 export type GetUser = z.infer<typeof GetUser>;
 
+// Name: Stat
+export const Stat = z.object({
+  // Name: Stat.name
+  "name": z.string(),
+  // Name: Stat.value
+  "value": z.number(),
+});
+export type Stat = z.infer<typeof Stat>;
+
+// Name: MainStat
+export const MainStat = z.object({
+  // Name: MainStat.main
+  "main": Stat,
+  // Name: MainStat.sub
+  "sub": z.array(Stat),
+});
+export type MainStat = z.infer<typeof MainStat>;
+
+// Name: GetUserStats
+export const GetUserStats = z.object({
+  // Name: GetUserStats.all
+  "all": MainStat,
+  // Name: GetUserStats.completed
+  "completed": MainStat,
+  // Name: GetUserStats.inProgress
+  "inProgress": MainStat,
+  // Name: GetUserStats.onHold
+  "onHold": MainStat,
+  // Name: GetUserStats.dropped
+  "dropped": MainStat,
+  // Name: GetUserStats.backlog
+  "backlog": MainStat,
+});
+export type GetUserStats = z.infer<typeof GetUserStats>;
+
 // Name: PartBody
 export const PartBody = z.object({
   // Name: PartBody.name

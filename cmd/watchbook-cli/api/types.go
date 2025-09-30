@@ -641,6 +641,38 @@ type GetUser struct {
 	DisplayName string `json:"displayName"`
 }
 
+// Name: Stat
+type Stat struct {
+	// Name: Stat.name
+	Name string `json:"name"`
+	// Name: Stat.value
+	Value int `json:"value"`
+}
+
+// Name: MainStat
+type MainStat struct {
+	// Name: MainStat.main
+	Main Stat `json:"main"`
+	// Name: MainStat.sub
+	Sub []Stat `json:"sub"`
+}
+
+// Name: GetUserStats
+type GetUserStats struct {
+	// Name: GetUserStats.all
+	All MainStat `json:"all"`
+	// Name: GetUserStats.completed
+	Completed MainStat `json:"completed"`
+	// Name: GetUserStats.inProgress
+	InProgress MainStat `json:"inProgress"`
+	// Name: GetUserStats.onHold
+	OnHold MainStat `json:"onHold"`
+	// Name: GetUserStats.dropped
+	Dropped MainStat `json:"dropped"`
+	// Name: GetUserStats.backlog
+	Backlog MainStat `json:"backlog"`
+}
+
 // Name: PartBody
 type PartBody struct {
 	// Name: PartBody.name

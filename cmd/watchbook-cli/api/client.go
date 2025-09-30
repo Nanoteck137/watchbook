@@ -548,6 +548,22 @@ func (c *Client) GetUser(id string, options Options) (*GetUser, error) {
 	return Request[GetUser](data, nil)
 }
 
+func (c *Client) GetUserStats(id string, options Options) (*GetUserStats, error) {
+	path := Sprintf("/api/v1/users/%v/stats", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetUserStats](data, nil)
+}
+
 func (c *Client) ImportMalAnimeList(username string, options Options) (*any, error) {
 	path := Sprintf("/api/v1/users/import/mal/%v/anime", username)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -997,6 +1013,11 @@ func (c *ClientUrls) GetSystemInfo() (*URL, error) {
 
 func (c *ClientUrls) GetUser(id string) (*URL, error) {
 	path := Sprintf("/api/v1/users/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetUserStats(id string) (*URL, error) {
+	path := Sprintf("/api/v1/users/%v/stats", id)
 	return c.getUrl(path)
 }
 

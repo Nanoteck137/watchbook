@@ -762,3 +762,46 @@ func (db DB) RemoveMediaPartRelease(ctx context.Context, mediaId string) error {
 
 	return nil
 }
+
+type Stat struct {
+	List  string `db:"list"`
+	Name  string `db:"name"`
+	Value int    `db:"value"`
+}
+
+func (db DB) GetUserMediaStats(ctx context.Context, userId string) ([]Stat, error) {
+	total := MediaQuery(&userId).
+		Select(
+			goqu.I("user_data.list").As("list"),
+			goqu.V("total").As("name"),
+			goqu.COUNT(goqu.I("media.id")).As("value"),
+		).
+		Where(goqu.I("user_data.list").Neq(nil)).
+		GroupBy(
+			goqu.I("user_data.list"),
+		)
+
+	all := MediaQuery(&userId).
+		Select(
+			goqu.V("all").As("list"),
+			goqu.V("total").As("name"),
+			goqu.COUNT(goqu.I("media.id")).As("value"),
+		).
+		Where(goqu.I("user_data.list").Neq(nil))
+
+	query := MediaQuery(&userId).
+		Select(
+			goqu.I("user_data.list").As("list"),
+			goqu.I("media.type").As("name"),
+			goqu.COUNT(goqu.I("media.id")).As("value"),
+		).
+		Where(goqu.I("user_data.list").Neq(nil)).
+		GroupBy(
+			goqu.I("media.type"),
+			goqu.I("user_data.list"),
+		).
+		Union(total).
+		Union(all)
+
+	return ember.Multiple[Stat](db.db, ctx, query)
+}

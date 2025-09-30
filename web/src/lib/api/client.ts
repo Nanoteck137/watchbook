@@ -149,6 +149,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/users/${id}`, "GET", api.GetUser, z.any(), undefined, options)
   }
   
+  getUserStats(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/users/${id}/stats`, "GET", api.GetUserStats, z.any(), undefined, options)
+  }
+  
   importMalAnimeList(username: string, options?: ExtraOptions) {
     return this.request(`/api/v1/users/import/mal/${username}/anime`, "POST", z.undefined(), z.any(), undefined, options)
   }
@@ -367,6 +371,10 @@ export class ClientUrls {
   
   getUser(id: string) {
     return createUrl(this.baseUrl, `/api/v1/users/${id}`)
+  }
+  
+  getUserStats(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/users/${id}/stats`)
   }
   
   importMalAnimeList(username: string) {
