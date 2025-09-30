@@ -1,4 +1,4 @@
-import type { Collection, Media } from "$lib/api/types";
+import type { Collection, GetUserStats, Media } from "$lib/api/types";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
@@ -9,6 +9,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
   let userBacklogMedia: Media[] = [];
   let recentlyCreatedMedia: Media[] = [];
   let recentlyCreatedCollections: Collection[] = [];
+  let stats: GetUserStats | null = null;
 
   if (data.user) {
     {
@@ -70,6 +71,15 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 
       recentlyCreatedCollections = res.data.collections;
     }
+
+    {
+      const res = await locals.apiClient.getUserStats(data.user.id);
+      if (!res.success) {
+        throw error(res.error.code, { message: res.error.message });
+      }
+
+      stats = res.data;
+    }
   }
 
   return {
@@ -78,5 +88,6 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
     userBacklogMedia,
     recentlyCreatedMedia,
     recentlyCreatedCollections,
+    stats,
   };
 };

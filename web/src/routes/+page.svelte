@@ -3,6 +3,7 @@
   import NotLoggedIn from "./NotLoggedIn.svelte";
   import Spacer from "$lib/components/Spacer.svelte";
   import SmallMediaCard from "$lib/components/SmallMediaCard.svelte";
+  import Stat from "$lib/components/Stat.svelte";
 
   const { data } = $props();
 </script>
@@ -29,26 +30,17 @@
   <Spacer size="md" />
 
   <Card.Root>
-    <div class="grid grid-cols-2 justify-around gap-6 p-6 sm:grid-cols-4">
-      <div class="flex flex-col items-center">
-        <p class="text-xl">6</p>
-        <p class="text-center text-xs">In Progress</p>
-      </div>
-
-      <div class="flex flex-col items-center">
-        <p class="text-xl">6</p>
-        <p class="text-center text-xs">In Progress</p>
-      </div>
-
-      <div class="flex flex-col items-center">
-        <p class="text-xl">6</p>
-        <p class="text-center text-xs">In Progress</p>
-      </div>
-
-      <div class="flex flex-col items-center">
-        <p class="text-xl">6</p>
-        <p class="text-center text-xs">In Progress</p>
-      </div>
+    <div
+      class="grid grid-cols-2 justify-around gap-6 border-b p-6 md:grid-cols-3 lg:grid-cols-6"
+    >
+      {#if data.stats}
+        <Stat stat={data.stats.all} />
+        <Stat stat={data.stats.completed} />
+        <Stat stat={data.stats.inProgress} />
+        <Stat stat={data.stats.onHold} />
+        <Stat stat={data.stats.dropped} />
+        <Stat stat={data.stats.backlog} />
+      {/if}
     </div>
 
     <div class="p-6">

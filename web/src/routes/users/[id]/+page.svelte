@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Card, Popover, Tooltip } from "@nanoteck137/nano-ui";
-  import Stat from "./Stat.svelte";
+  import Stat from "$lib/components/Stat.svelte";
+  import { Card } from "@nanoteck137/nano-ui";
   const { data } = $props();
 </script>
 
@@ -14,29 +14,5 @@
     <Stat stat={data.stats.onHold} />
     <Stat stat={data.stats.dropped} />
     <Stat stat={data.stats.backlog} />
-
-    <!-- <Tooltip.Provider>
-      <Tooltip.Root>
-        <Tooltip.Trigger class="flex flex-col items-center">
-          <p class="text-xl">6</p>
-          <p class="text-center text-xs">In Progress</p>
-        </Tooltip.Trigger>
-        <Tooltip.Content>
-          <div class="flex items-center gap-2">
-            <p>Anime: 100</p>
-          </div>
-        </Tooltip.Content>
-      </Tooltip.Root>
-    </Tooltip.Provider>
-
-    <div class="flex flex-col items-center">
-      <p class="text-xl">6</p>
-      <p class="text-center text-xs">In Progress</p>
-    </div>
-
-    <div class="flex flex-col items-center">
-      <p class="text-xl">6</p>
-      <p class="text-center text-xs">In Progress</p>
-    </div> -->
   </div>
 </Card.Root>
