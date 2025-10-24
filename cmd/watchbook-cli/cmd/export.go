@@ -264,9 +264,10 @@ var importShowCmd = &cobra.Command{
 		dir := args[0]
 
 		apiAddress, _ := cmd.Flags().GetString("api-address")
+		authToken, _ := cmd.Flags().GetString("auth-token")
 
 		client := api.New(apiAddress)
-		client.Headers.Add("X-Api-Token", "ziake6ka1bmx65txfmkpigoryfvme6hg")
+		client.Headers.Add("X-Api-Token", authToken)
 
 		d, err := os.ReadFile(path.Join(dir, "export.json"))
 		if err != nil {
@@ -333,6 +334,9 @@ var importShowCmd = &cobra.Command{
 func init() {
 	exportCollectionsCmd.Flags().StringP("output", "o", "", "output directory")
 	exportCollectionsCmd.MarkFlagRequired("output")
+
+	importShowCmd.Flags().StringP("auth-token", "t", "", "auth token")
+	importShowCmd.MarkFlagRequired("auth-token")
 
 	rootCmd.AddCommand(exportCollectionsCmd, importShowCmd)
 }
