@@ -13,6 +13,7 @@ import (
 
 	"maps"
 
+	"github.com/kr/pretty"
 	"github.com/maruel/natural"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
@@ -328,6 +329,255 @@ type ProviderCollectionUpdateBody struct {
 	ReplaceImages bool `json:"replaceImages,omitempty"`
 }
 
+func UpdateMedia(ctx context.Context, app core.App, settings ProviderMediaUpdateBody, dbMedia database.Media, provider, providerId string) error {
+	pm := app.ProviderManager()
+
+	data, err := pm.GetMedia(ctx, provider, providerId)
+	if err != nil {
+		return err
+	}
+
+	if data.AiringSeason != nil {
+		err := app.DB().CreateTag(ctx, *data.AiringSeason, *data.AiringSeason)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+	}
+
+	changes := database.MediaChanges{}
+
+	changes.Type = database.Change[types.MediaType]{
+		Value:   data.Type,
+		Changed: data.Type != dbMedia.Type,
+	}
+
+	changes.Title = database.Change[string]{
+		Value:   data.Title,
+		Changed: data.Title != dbMedia.Title,
+	}
+
+	desc := utils.NullToDefault(data.Description)
+	changes.Description = database.Change[sql.NullString]{
+		Value: sql.NullString{
+			String: desc,
+			Valid:  desc != "",
+		},
+		Changed: desc != dbMedia.Description.String,
+	}
+
+	score := utils.NullToDefault(data.Score)
+	changes.Score = database.Change[sql.NullFloat64]{
+		Value: sql.NullFloat64{
+			Float64: score,
+			Valid:   score != 0.0,
+		},
+		Changed: score != dbMedia.Score.Float64,
+	}
+
+	changes.Status = database.Change[types.MediaStatus]{
+		Value:   data.Status,
+		Changed: data.Status != dbMedia.Status,
+	}
+
+	changes.Rating = database.Change[types.MediaRating]{
+		Value:   data.Rating,
+		Changed: data.Rating != dbMedia.Rating,
+	}
+
+	changes.Rating = database.Change[types.MediaRating]{
+		Value:   data.Rating,
+		Changed: data.Rating != dbMedia.Rating,
+	}
+
+	airingSeason := utils.NullToDefault(data.AiringSeason)
+	changes.AiringSeason = database.Change[sql.NullString]{
+		Value: sql.NullString{
+			String: airingSeason,
+			Valid:  airingSeason != "",
+		},
+		Changed: airingSeason != dbMedia.AiringSeason.String,
+	}
+
+	formatNullTime := func(t *time.Time) string {
+		if t == nil {
+			return ""
+		}
+
+		return t.Format(types.MediaDateLayout)
+	}
+
+	startDate := formatNullTime(data.StartDate)
+	changes.StartDate = database.Change[sql.NullString]{
+		Value: sql.NullString{
+			String: startDate,
+			Valid:  startDate != "",
+		},
+		Changed: startDate != dbMedia.StartDate.String,
+	}
+
+	endDate := formatNullTime(data.EndDate)
+	changes.EndDate = database.Change[sql.NullString]{
+		Value: sql.NullString{
+			String: endDate,
+			Valid:  endDate != "",
+		},
+		Changed: endDate != dbMedia.EndDate.String,
+	}
+
+	if settings.ReplaceImages {
+		mediaDir := app.WorkDir().MediaDirById(dbMedia.Id)
+
+		if data.CoverUrl != nil {
+			p, err := utils.DownloadImageHashed(*data.CoverUrl, mediaDir.Images())
+			if err != nil {
+				return fmt.Errorf("failed to download cover image for media: %w", err)
+			}
+
+			n := path.Base(p)
+			changes.CoverFile = database.Change[sql.NullString]{
+				Value: sql.NullString{
+					String: n,
+					Valid:  n != "",
+				},
+				Changed: true,
+			}
+		}
+
+		if data.BannerUrl != nil {
+			p, err := utils.DownloadImageHashed(*data.BannerUrl, mediaDir.Images())
+			if err != nil {
+				return fmt.Errorf("failed to download banner image for media: %w", err)
+			}
+
+			n := path.Base(p)
+			changes.BannerFile = database.Change[sql.NullString]{
+				Value: sql.NullString{
+					String: n,
+					Valid:  n != "",
+				},
+				Changed: true,
+			}
+		}
+
+		if data.LogoUrl != nil {
+			p, err := utils.DownloadImageHashed(*data.LogoUrl, mediaDir.Images())
+			if err != nil {
+				return fmt.Errorf("failed to download logo image for media: %w", err)
+			}
+
+			n := path.Base(p)
+			changes.LogoFile = database.Change[sql.NullString]{
+				Value: sql.NullString{
+					String: n,
+					Valid:  n != "",
+				},
+				Changed: true,
+			}
+		}
+	}
+
+	// TODO(patrik): Extra Provider Ids?
+
+	err = app.DB().UpdateMedia(ctx, dbMedia.Id, changes)
+	if err != nil {
+		return err
+	}
+
+	if settings.OverrideParts {
+		err = app.DB().RemoveAllMediaParts(ctx, dbMedia.Id)
+		if err != nil {
+			return err
+		}
+
+		if data.Type.IsMovie() {
+			releaseDate := ""
+			if data.StartDate != nil {
+				releaseDate = data.StartDate.Format(types.MediaDateLayout)
+			}
+
+			err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
+				MediaId: dbMedia.Id,
+				Name:    data.Title,
+				Index:   1,
+				ReleaseDate: sql.NullString{
+					String: releaseDate,
+					Valid:  releaseDate != "",
+				},
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			for _, part := range data.Parts {
+				releaseDate := ""
+				if part.ReleaseDate != nil {
+					releaseDate = part.ReleaseDate.Format(types.MediaDateLayout)
+				}
+
+				// TODO(patrik): Check for duplicated numbers
+				err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
+					MediaId: dbMedia.Id,
+					Name:    part.Name,
+					Index:   int64(part.Number),
+					ReleaseDate: sql.NullString{
+						String: releaseDate,
+						Valid:  releaseDate != "",
+					},
+				})
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	for _, tag := range data.Tags {
+		tag = utils.Slug(tag)
+
+		err := app.DB().CreateTag(ctx, tag, tag)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+
+		err = app.DB().AddTagToMedia(ctx, dbMedia.Id, tag)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+	}
+
+	for _, tag := range data.Creators {
+		tag = utils.Slug(tag)
+
+		err := app.DB().CreateTag(ctx, tag, tag)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+
+		err = app.DB().AddCreatorToMedia(ctx, dbMedia.Id, tag)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return err
+		}
+	}
+
+	if settings.SetRelease {
+		if data.Release != nil {
+			err := app.DB().SetMediaPartRelease(ctx, dbMedia.Id, database.SetMediaPartRelease{
+				Type:             types.MediaPartReleaseTypeNotConfirmed,
+				StartDate:        data.Release.Format(time.RFC3339),
+				NumExpectedParts: len(data.Parts),
+				PartOffset:       0,
+				IntervalDays:     7,
+				DelayDays:        0,
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func InstallProviderHandlers(app core.App, group pyrin.Group) {
 	group.Register(
 		pyrin.ApiHandler{
@@ -627,6 +877,14 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 				if !ok {
 					return nil, errors.New("provider not found on media")
 				}
+
+				err = UpdateMedia(ctx, app, body, dbMedia, providerName, providerId)
+				if err != nil {
+					// TODO(patrik): handle err
+					return nil, err
+				}
+
+				return nil, nil
 
 				data, err := pm.GetMedia(ctx, providerName, providerId)
 				if err != nil {
@@ -1021,6 +1279,27 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 						return nil, err
 					}
 				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:     "ProviderUpdateUnknownMedia",
+			Method:   http.MethodPost,
+			Path:     "/providers/updateUnknownMedia",
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				// pm := app.ProviderManager()
+
+				ctx := context.Background()
+
+				media, err := app.DB().GetAllMediaForUnknownUpdate(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				pretty.Println(media)
+				fmt.Printf("len(media): %v\n", len(media))
 
 				return nil, nil
 			},

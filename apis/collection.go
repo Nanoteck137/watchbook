@@ -622,6 +622,7 @@ func InstallCollectionHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
+		// TODO(patrik): Change this, hash and don't remove old images
 		pyrin.FormApiHandler{
 			Name:         "ChangeCollectionImages",
 			Method:       http.MethodPatch,

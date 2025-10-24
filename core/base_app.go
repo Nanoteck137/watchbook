@@ -62,6 +62,7 @@ func (app *BaseApp) Bootstrap() error {
 	dirs := []string{
 		workDir.MediaDir(),
 		workDir.CollectionsDir(),
+		workDir.ShowsDir(),
 	}
 
 	for _, dir := range dirs {

@@ -25,6 +25,9 @@ const (
 	ErrTypeNotificationNotFound     pyrin.ErrorType = "NOTIFICATION_NOT_FOUND"
 	ErrTypeFolderNotFound           pyrin.ErrorType = "FOLDER_NOT_FOUND"
 	ErrTypeFolderItemNotFound       pyrin.ErrorType = "FOLDER_ITEM_NOT_FOUND"
+	ErrTypeShowNotFound             pyrin.ErrorType = "SHOW_NOT_FOUND"
+	ErrTypeShowSeasonNotFound       pyrin.ErrorType = "SHOW_SEASON_NOT_FOUND"
+	ErrTypeShowSeasonItemNotFound   pyrin.ErrorType = "SHOW_SEASON_ITEM_NOT_FOUND"
 
 	ErrTypePartAlreadyExists pyrin.ErrorType = "PART_ALREADY_EXISTS"
 )
@@ -122,6 +125,30 @@ func FolderItemNotFound() *pyrin.Error {
 		Code:    http.StatusNotFound,
 		Type:    ErrTypeFolderItemNotFound,
 		Message: "Folder Item not found",
+	}
+}
+
+func ShowNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeShowNotFound,
+		Message: "Show not found",
+	}
+}
+
+func ShowSeasonNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeShowSeasonNotFound,
+		Message: "Show Season not found",
+	}
+}
+
+func ShowSeasonItemNotFound() *pyrin.Error {
+	return &pyrin.Error{
+		Code:    http.StatusNotFound,
+		Type:    ErrTypeShowSeasonItemNotFound,
+		Message: "Show Season Item not found",
 	}
 }
 

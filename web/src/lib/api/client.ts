@@ -23,12 +23,24 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/media/${id}/single/parts`, "POST", api.AddPart, z.any(), body, options)
   }
   
+  addShowSeason(id: string, body: api.AddShowSeasonBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/shows/${id}/seasons`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
+  addShowSeasonItem(id: string, seasonNum: string, body: api.AddShowSeasonItemBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/shows/${id}/seasons/${seasonNum}/items`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
   changeCollectionImages(id: string, body: FormData, options?: ExtraOptions) {
     return this.requestForm(`/api/v1/collections/${id}/images`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
   changePassword(body: api.ChangePasswordBody, options?: ExtraOptions) {
     return this.request("/api/v1/auth/password", "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  changeShowImages(id: string, body: FormData, options?: ExtraOptions) {
+    return this.requestForm(`/api/v1/shows/${id}/images`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
   createApiToken(body: api.CreateApiTokenBody, options?: ExtraOptions) {
@@ -45,6 +57,10 @@ export class ApiClient extends BaseApiClient {
   
   createMedia(body: api.CreateMediaBody, options?: ExtraOptions) {
     return this.request("/api/v1/media", "POST", api.CreateMedia, z.any(), body, options)
+  }
+  
+  createShow(body: api.CreateShowBody, options?: ExtraOptions) {
+    return this.request("/api/v1/shows", "POST", api.CreateShow, z.any(), body, options)
   }
   
   deleteApiToken(id: string, options?: ExtraOptions) {
@@ -71,6 +87,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/media/${id}/user`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
+  deleteShow(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/shows/${id}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  }
+  
   editCollection(id: string, body: api.EditCollectionBody, options?: ExtraOptions) {
     return this.request(`/api/v1/collections/${id}`, "PATCH", z.undefined(), z.any(), body, options)
   }
@@ -89,6 +109,18 @@ export class ApiClient extends BaseApiClient {
   
   editPart(id: string, index: string, body: api.EditPartBody, options?: ExtraOptions) {
     return this.request(`/api/v1/media/${id}/parts/${index}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  editShow(id: string, body: api.EditShowBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/shows/${id}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  editShowSeason(id: string, seasonNum: string, body: api.EditShowSeasonBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/shows/${id}/seasons/${seasonNum}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
+  editShowSeasonItem(id: string, seasonNum: string, mediaId: string, body: api.EditShowSeasonItemBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/shows/${id}/seasons/${seasonNum}/items/${mediaId}`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
   getAllApiTokens(options?: ExtraOptions) {
@@ -141,6 +173,27 @@ export class ApiClient extends BaseApiClient {
     return this.request("/api/v1/providers", "GET", api.GetProviders, z.any(), undefined, options)
   }
   
+  getShowById(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/shows/${id}`, "GET", api.GetShowById, z.any(), undefined, options)
+  }
+  
+  
+  getShowSeason(id: string, seasonNum: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/shows/${id}/seasons/${seasonNum}`, "GET", api.GetShowSeason, z.any(), undefined, options)
+  }
+  
+  getShowSeasonEpisodes(id: string, seasonNum: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/shows/${id}/seasons/${seasonNum}/episodes`, "GET", api.GetShowSeasonEpisodes, z.any(), undefined, options)
+  }
+  
+  getShowSeasons(id: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/shows/${id}/seasons`, "GET", api.GetShowSeasons, z.any(), undefined, options)
+  }
+  
+  getShows(options?: ExtraOptions) {
+    return this.request("/api/v1/shows", "GET", api.GetShows, z.any(), undefined, options)
+  }
+  
   getSystemInfo(options?: ExtraOptions) {
     return this.request("/api/v1/system/info", "GET", api.GetSystemInfo, z.any(), undefined, options)
   }
@@ -185,6 +238,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/providers/${providerName}/media/${mediaId}`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
+  providerUpdateUnknownMedia(options?: ExtraOptions) {
+    return this.request("/api/v1/providers/updateUnknownMedia", "POST", z.undefined(), z.any(), undefined, options)
+  }
+  
   removeCollectionItem(id: string, mediaId: string, options?: ExtraOptions) {
     return this.request(`/api/v1/collections/${id}/items/${mediaId}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
@@ -195,6 +252,14 @@ export class ApiClient extends BaseApiClient {
   
   removePart(id: string, index: string, options?: ExtraOptions) {
     return this.request(`/api/v1/media/${id}/parts/${index}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  }
+  
+  removeShowSeason(id: string, seasonNum: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/shows/${id}/seasons/${seasonNum}`, "DELETE", z.undefined(), z.any(), undefined, options)
+  }
+  
+  removeShowSeasonItem(id: string, seasonNum: string, mediaId: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/shows/${id}/seasons/${seasonNum}/items/${mediaId}`, "DELETE", z.undefined(), z.any(), undefined, options)
   }
   
   setMediaRelease(id: string, body: api.SetMediaReleaseBody, options?: ExtraOptions) {
@@ -241,12 +306,24 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/media/${id}/single/parts`)
   }
   
+  addShowSeason(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/shows/${id}/seasons`)
+  }
+  
+  addShowSeasonItem(id: string, seasonNum: string) {
+    return createUrl(this.baseUrl, `/api/v1/shows/${id}/seasons/${seasonNum}/items`)
+  }
+  
   changeCollectionImages(id: string) {
     return createUrl(this.baseUrl, `/api/v1/collections/${id}/images`)
   }
   
   changePassword() {
     return createUrl(this.baseUrl, "/api/v1/auth/password")
+  }
+  
+  changeShowImages(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/shows/${id}/images`)
   }
   
   createApiToken() {
@@ -263,6 +340,10 @@ export class ClientUrls {
   
   createMedia() {
     return createUrl(this.baseUrl, "/api/v1/media")
+  }
+  
+  createShow() {
+    return createUrl(this.baseUrl, "/api/v1/shows")
   }
   
   deleteApiToken(id: string) {
@@ -289,6 +370,10 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/media/${id}/user`)
   }
   
+  deleteShow(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/shows/${id}`)
+  }
+  
   editCollection(id: string) {
     return createUrl(this.baseUrl, `/api/v1/collections/${id}`)
   }
@@ -307,6 +392,18 @@ export class ClientUrls {
   
   editPart(id: string, index: string) {
     return createUrl(this.baseUrl, `/api/v1/media/${id}/parts/${index}`)
+  }
+  
+  editShow(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/shows/${id}`)
+  }
+  
+  editShowSeason(id: string, seasonNum: string) {
+    return createUrl(this.baseUrl, `/api/v1/shows/${id}/seasons/${seasonNum}`)
+  }
+  
+  editShowSeasonItem(id: string, seasonNum: string, mediaId: string) {
+    return createUrl(this.baseUrl, `/api/v1/shows/${id}/seasons/${seasonNum}/items/${mediaId}`)
   }
   
   getAllApiTokens() {
@@ -365,6 +462,30 @@ export class ClientUrls {
     return createUrl(this.baseUrl, "/api/v1/providers")
   }
   
+  getShowById(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/shows/${id}`)
+  }
+  
+  getShowImage(id: string, file: string) {
+    return createUrl(this.baseUrl, `/files/shows/${id}/images/${file}`)
+  }
+  
+  getShowSeason(id: string, seasonNum: string) {
+    return createUrl(this.baseUrl, `/api/v1/shows/${id}/seasons/${seasonNum}`)
+  }
+  
+  getShowSeasonEpisodes(id: string, seasonNum: string) {
+    return createUrl(this.baseUrl, `/api/v1/shows/${id}/seasons/${seasonNum}/episodes`)
+  }
+  
+  getShowSeasons(id: string) {
+    return createUrl(this.baseUrl, `/api/v1/shows/${id}/seasons`)
+  }
+  
+  getShows() {
+    return createUrl(this.baseUrl, "/api/v1/shows")
+  }
+  
   getSystemInfo() {
     return createUrl(this.baseUrl, "/api/v1/system/info")
   }
@@ -409,6 +530,10 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/media/${mediaId}`)
   }
   
+  providerUpdateUnknownMedia() {
+    return createUrl(this.baseUrl, "/api/v1/providers/updateUnknownMedia")
+  }
+  
   removeCollectionItem(id: string, mediaId: string) {
     return createUrl(this.baseUrl, `/api/v1/collections/${id}/items/${mediaId}`)
   }
@@ -419,6 +544,14 @@ export class ClientUrls {
   
   removePart(id: string, index: string) {
     return createUrl(this.baseUrl, `/api/v1/media/${id}/parts/${index}`)
+  }
+  
+  removeShowSeason(id: string, seasonNum: string) {
+    return createUrl(this.baseUrl, `/api/v1/shows/${id}/seasons/${seasonNum}`)
+  }
+  
+  removeShowSeasonItem(id: string, seasonNum: string, mediaId: string) {
+    return createUrl(this.baseUrl, `/api/v1/shows/${id}/seasons/${seasonNum}/items/${mediaId}`)
   }
   
   setMediaRelease(id: string) {

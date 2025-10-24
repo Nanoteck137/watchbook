@@ -29,6 +29,24 @@ type AddPartBody struct {
 	ReleaseDate string `json:"releaseDate"`
 }
 
+// Name: AddShowSeasonBody
+type AddShowSeasonBody struct {
+	// Name: AddShowSeasonBody.num
+	Num int `json:"num"`
+	// Name: AddShowSeasonBody.name
+	Name string `json:"name"`
+	// Name: AddShowSeasonBody.searchSlug
+	SearchSlug string `json:"searchSlug"`
+}
+
+// Name: AddShowSeasonItemBody
+type AddShowSeasonItemBody struct {
+	// Name: AddShowSeasonItemBody.mediaId
+	MediaId string `json:"mediaId"`
+	// Name: AddShowSeasonItemBody.position
+	Position int `json:"position"`
+}
+
 // Name: ApiToken
 type ApiToken struct {
 	// Name: ApiToken.id
@@ -225,6 +243,26 @@ type CreateMediaBody struct {
 	Creators []string `json:"creators"`
 }
 
+// Name: CreateShow
+type CreateShow struct {
+	// Name: CreateShow.id
+	Id string `json:"id"`
+}
+
+// Name: CreateShowBody
+type CreateShowBody struct {
+	// Name: CreateShowBody.type
+	Type string `json:"type"`
+	// Name: CreateShowBody.name
+	Name string `json:"name"`
+	// Name: CreateShowBody.coverUrl
+	CoverUrl string `json:"coverUrl"`
+	// Name: CreateShowBody.bannerUrl
+	BannerUrl string `json:"bannerUrl"`
+	// Name: CreateShowBody.logoUrl
+	LogoUrl string `json:"logoUrl"`
+}
+
 // Name: EditCollectionBody
 type EditCollectionBody struct {
 	// Name: EditCollectionBody.type
@@ -295,6 +333,36 @@ type EditPartBody struct {
 	Name *string `json:"name,omitempty"`
 	// Name: EditPartBody.releaseDate
 	ReleaseDate *string `json:"releaseDate,omitempty"`
+}
+
+// Name: EditShowBody
+type EditShowBody struct {
+	// Name: EditShowBody.type
+	Type *string `json:"type,omitempty"`
+	// Name: EditShowBody.name
+	Name *string `json:"name,omitempty"`
+	// Name: EditShowBody.coverUrl
+	CoverUrl *string `json:"coverUrl,omitempty"`
+	// Name: EditShowBody.bannerUrl
+	BannerUrl *string `json:"bannerUrl,omitempty"`
+	// Name: EditShowBody.logoUrl
+	LogoUrl *string `json:"logoUrl,omitempty"`
+}
+
+// Name: EditShowSeasonBody
+type EditShowSeasonBody struct {
+	// Name: EditShowSeasonBody.num
+	Num *int `json:"num,omitempty"`
+	// Name: EditShowSeasonBody.name
+	Name *string `json:"name,omitempty"`
+	// Name: EditShowSeasonBody.searchSlug
+	SearchSlug *string `json:"searchSlug,omitempty"`
+}
+
+// Name: EditShowSeasonItemBody
+type EditShowSeasonItemBody struct {
+	// Name: EditShowSeasonItemBody.position
+	Position *int `json:"position,omitempty"`
 }
 
 // Name: Folder
@@ -623,6 +691,144 @@ type Provider struct {
 type GetProviders struct {
 	// Name: GetProviders.providers
 	Providers []Provider `json:"providers"`
+}
+
+// Name: GetShowById
+type GetShowById struct {
+	// Name: GetShowById.id
+	Id string `json:"id"`
+	// Name: GetShowById.type
+	Type string `json:"type"`
+	// Name: GetShowById.name
+	Name string `json:"name"`
+	// Name: GetShowById.coverUrl
+	CoverUrl *string `json:"coverUrl,omitempty"`
+	// Name: GetShowById.logoUrl
+	LogoUrl *string `json:"logoUrl,omitempty"`
+	// Name: GetShowById.bannerUrl
+	BannerUrl *string `json:"bannerUrl,omitempty"`
+	// Name: GetShowById.defaultProvider
+	DefaultProvider *string `json:"defaultProvider,omitempty"`
+	// Name: GetShowById.providers
+	Providers []ProviderValue `json:"providers"`
+}
+
+// Name: ShowSeasonItem
+type ShowSeasonItem struct {
+	// Name: ShowSeasonItem.showSeasonNum
+	ShowSeasonNum int `json:"showSeasonNum"`
+	// Name: ShowSeasonItem.showId
+	ShowId string `json:"showId"`
+	// Name: ShowSeasonItem.mediaId
+	MediaId string `json:"mediaId"`
+	// Name: ShowSeasonItem.position
+	Position int `json:"position"`
+	// Name: ShowSeasonItem.title
+	Title string `json:"title"`
+	// Name: ShowSeasonItem.description
+	Description *string `json:"description,omitempty"`
+	// Name: ShowSeasonItem.type
+	Type string `json:"type"`
+	// Name: ShowSeasonItem.score
+	Score *float32 `json:"score,omitempty"`
+	// Name: ShowSeasonItem.status
+	Status string `json:"status"`
+	// Name: ShowSeasonItem.rating
+	Rating string `json:"rating"`
+	// Name: ShowSeasonItem.partCount
+	PartCount int `json:"partCount"`
+	// Name: ShowSeasonItem.airingSeason
+	AiringSeason *string `json:"airingSeason,omitempty"`
+	// Name: ShowSeasonItem.startDate
+	StartDate *string `json:"startDate,omitempty"`
+	// Name: ShowSeasonItem.endDate
+	EndDate *string `json:"endDate,omitempty"`
+	// Name: ShowSeasonItem.creators
+	Creators []string `json:"creators"`
+	// Name: ShowSeasonItem.tags
+	Tags []string `json:"tags"`
+	// Name: ShowSeasonItem.coverUrl
+	CoverUrl *string `json:"coverUrl,omitempty"`
+	// Name: ShowSeasonItem.bannerUrl
+	BannerUrl *string `json:"bannerUrl,omitempty"`
+	// Name: ShowSeasonItem.logoUrl
+	LogoUrl *string `json:"logoUrl,omitempty"`
+	// Name: ShowSeasonItem.defaultProvider
+	DefaultProvider *string `json:"defaultProvider,omitempty"`
+	// Name: ShowSeasonItem.providers
+	Providers []ProviderValue `json:"providers"`
+	// Name: ShowSeasonItem.user
+	User *MediaUser `json:"user,omitempty"`
+	// Name: ShowSeasonItem.release
+	Release *MediaRelease `json:"release,omitempty"`
+}
+
+// Name: GetShowSeason
+type GetShowSeason struct {
+	// Name: GetShowSeason.num
+	Num int `json:"num"`
+	// Name: GetShowSeason.showId
+	ShowId string `json:"showId"`
+	// Name: GetShowSeason.name
+	Name string `json:"name"`
+	// Name: GetShowSeason.searchSlug
+	SearchSlug string `json:"searchSlug"`
+	// Name: GetShowSeason.items
+	Items []ShowSeasonItem `json:"items"`
+}
+
+// Name: GetShowSeasonEpisodes
+type GetShowSeasonEpisodes struct {
+	// Name: GetShowSeasonEpisodes.episodes
+	Episodes []MediaPart `json:"episodes"`
+}
+
+// Name: ShowSeason
+type ShowSeason struct {
+	// Name: ShowSeason.num
+	Num int `json:"num"`
+	// Name: ShowSeason.showId
+	ShowId string `json:"showId"`
+	// Name: ShowSeason.name
+	Name string `json:"name"`
+	// Name: ShowSeason.searchSlug
+	SearchSlug string `json:"searchSlug"`
+	// Name: ShowSeason.items
+	Items []ShowSeasonItem `json:"items"`
+}
+
+// Name: GetShowSeasons
+type GetShowSeasons struct {
+	// Name: GetShowSeasons.seasons
+	Seasons []ShowSeason `json:"seasons"`
+}
+
+// Name: Show
+type Show struct {
+	// Name: Show.id
+	Id string `json:"id"`
+	// Name: Show.type
+	Type string `json:"type"`
+	// Name: Show.name
+	Name string `json:"name"`
+	// Name: Show.coverUrl
+	CoverUrl *string `json:"coverUrl,omitempty"`
+	// Name: Show.logoUrl
+	LogoUrl *string `json:"logoUrl,omitempty"`
+	// Name: Show.bannerUrl
+	BannerUrl *string `json:"bannerUrl,omitempty"`
+	// Name: Show.defaultProvider
+	DefaultProvider *string `json:"defaultProvider,omitempty"`
+	// Name: Show.providers
+	Providers []ProviderValue `json:"providers"`
+}
+
+// Name: GetShows
+type GetShows struct {
+	// Name: GetShows.page
+	Page Page `json:"page"`
+	// Name: GetShows.shows
+	Shows []Show `json:"shows"`
 }
 
 // Name: GetSystemInfo

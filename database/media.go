@@ -361,6 +361,14 @@ func (db DB) GetAllMedia(ctx context.Context) ([]Media, error) {
 	return ember.Multiple[Media](db.db, ctx, query)
 }
 
+func (db DB) GetAllMediaForUnknownUpdate(ctx context.Context) ([]Media, error) {
+	query := MediaQuery(nil).
+		Where(
+			goqu.I("media.type").In(types.MediaTypeUnknown),
+		)
+	return ember.Multiple[Media](db.db, ctx, query)
+}
+
 func (db DB) GetMediaById(ctx context.Context, userId *string, id string) (Media, error) {
 	query := MediaQuery(userId).
 		Where(goqu.I("media.id").Eq(id))

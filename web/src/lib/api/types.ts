@@ -32,6 +32,26 @@ export const AddPartBody = z.object({
 });
 export type AddPartBody = z.infer<typeof AddPartBody>;
 
+// Name: AddShowSeasonBody
+export const AddShowSeasonBody = z.object({
+  // Name: AddShowSeasonBody.num
+  "num": z.number(),
+  // Name: AddShowSeasonBody.name
+  "name": z.string(),
+  // Name: AddShowSeasonBody.searchSlug
+  "searchSlug": z.string(),
+});
+export type AddShowSeasonBody = z.infer<typeof AddShowSeasonBody>;
+
+// Name: AddShowSeasonItemBody
+export const AddShowSeasonItemBody = z.object({
+  // Name: AddShowSeasonItemBody.mediaId
+  "mediaId": z.string(),
+  // Name: AddShowSeasonItemBody.position
+  "position": z.number(),
+});
+export type AddShowSeasonItemBody = z.infer<typeof AddShowSeasonItemBody>;
+
 // Name: ApiToken
 export const ApiToken = z.object({
   // Name: ApiToken.id
@@ -242,6 +262,28 @@ export const CreateMediaBody = z.object({
 });
 export type CreateMediaBody = z.infer<typeof CreateMediaBody>;
 
+// Name: CreateShow
+export const CreateShow = z.object({
+  // Name: CreateShow.id
+  "id": z.string(),
+});
+export type CreateShow = z.infer<typeof CreateShow>;
+
+// Name: CreateShowBody
+export const CreateShowBody = z.object({
+  // Name: CreateShowBody.type
+  "type": z.string(),
+  // Name: CreateShowBody.name
+  "name": z.string(),
+  // Name: CreateShowBody.coverUrl
+  "coverUrl": z.string(),
+  // Name: CreateShowBody.bannerUrl
+  "bannerUrl": z.string(),
+  // Name: CreateShowBody.logoUrl
+  "logoUrl": z.string(),
+});
+export type CreateShowBody = z.infer<typeof CreateShowBody>;
+
 // Name: EditCollectionBody
 export const EditCollectionBody = z.object({
   // Name: EditCollectionBody.type
@@ -318,6 +360,39 @@ export const EditPartBody = z.object({
   "releaseDate": z.string().nullable().optional(),
 });
 export type EditPartBody = z.infer<typeof EditPartBody>;
+
+// Name: EditShowBody
+export const EditShowBody = z.object({
+  // Name: EditShowBody.type
+  "type": z.string().nullable().optional(),
+  // Name: EditShowBody.name
+  "name": z.string().nullable().optional(),
+  // Name: EditShowBody.coverUrl
+  "coverUrl": z.string().nullable().optional(),
+  // Name: EditShowBody.bannerUrl
+  "bannerUrl": z.string().nullable().optional(),
+  // Name: EditShowBody.logoUrl
+  "logoUrl": z.string().nullable().optional(),
+});
+export type EditShowBody = z.infer<typeof EditShowBody>;
+
+// Name: EditShowSeasonBody
+export const EditShowSeasonBody = z.object({
+  // Name: EditShowSeasonBody.num
+  "num": z.number().nullable().optional(),
+  // Name: EditShowSeasonBody.name
+  "name": z.string().nullable().optional(),
+  // Name: EditShowSeasonBody.searchSlug
+  "searchSlug": z.string().nullable().optional(),
+});
+export type EditShowSeasonBody = z.infer<typeof EditShowSeasonBody>;
+
+// Name: EditShowSeasonItemBody
+export const EditShowSeasonItemBody = z.object({
+  // Name: EditShowSeasonItemBody.position
+  "position": z.number().nullable().optional(),
+});
+export type EditShowSeasonItemBody = z.infer<typeof EditShowSeasonItemBody>;
 
 // Name: Folder
 export const Folder = z.object({
@@ -668,6 +743,152 @@ export const GetProviders = z.object({
   "providers": z.array(Provider),
 });
 export type GetProviders = z.infer<typeof GetProviders>;
+
+// Name: GetShowById
+export const GetShowById = z.object({
+  // Name: GetShowById.id
+  "id": z.string(),
+  // Name: GetShowById.type
+  "type": z.string(),
+  // Name: GetShowById.name
+  "name": z.string(),
+  // Name: GetShowById.coverUrl
+  "coverUrl": z.string().nullable(),
+  // Name: GetShowById.logoUrl
+  "logoUrl": z.string().nullable(),
+  // Name: GetShowById.bannerUrl
+  "bannerUrl": z.string().nullable(),
+  // Name: GetShowById.defaultProvider
+  "defaultProvider": z.string().nullable(),
+  // Name: GetShowById.providers
+  "providers": z.array(ProviderValue),
+});
+export type GetShowById = z.infer<typeof GetShowById>;
+
+// Name: ShowSeasonItem
+export const ShowSeasonItem = z.object({
+  // Name: ShowSeasonItem.showSeasonNum
+  "showSeasonNum": z.number(),
+  // Name: ShowSeasonItem.showId
+  "showId": z.string(),
+  // Name: ShowSeasonItem.mediaId
+  "mediaId": z.string(),
+  // Name: ShowSeasonItem.position
+  "position": z.number(),
+  // Name: ShowSeasonItem.title
+  "title": z.string(),
+  // Name: ShowSeasonItem.description
+  "description": z.string().nullable(),
+  // Name: ShowSeasonItem.type
+  "type": z.string(),
+  // Name: ShowSeasonItem.score
+  "score": z.number().nullable(),
+  // Name: ShowSeasonItem.status
+  "status": z.string(),
+  // Name: ShowSeasonItem.rating
+  "rating": z.string(),
+  // Name: ShowSeasonItem.partCount
+  "partCount": z.number(),
+  // Name: ShowSeasonItem.airingSeason
+  "airingSeason": z.string().nullable(),
+  // Name: ShowSeasonItem.startDate
+  "startDate": z.string().nullable(),
+  // Name: ShowSeasonItem.endDate
+  "endDate": z.string().nullable(),
+  // Name: ShowSeasonItem.creators
+  "creators": z.array(z.string()),
+  // Name: ShowSeasonItem.tags
+  "tags": z.array(z.string()),
+  // Name: ShowSeasonItem.coverUrl
+  "coverUrl": z.string().nullable(),
+  // Name: ShowSeasonItem.bannerUrl
+  "bannerUrl": z.string().nullable(),
+  // Name: ShowSeasonItem.logoUrl
+  "logoUrl": z.string().nullable(),
+  // Name: ShowSeasonItem.defaultProvider
+  "defaultProvider": z.string().nullable(),
+  // Name: ShowSeasonItem.providers
+  "providers": z.array(ProviderValue),
+  // Name: ShowSeasonItem.user
+  "user": MediaUser.nullable().optional(),
+  // Name: ShowSeasonItem.release
+  "release": MediaRelease.nullable(),
+});
+export type ShowSeasonItem = z.infer<typeof ShowSeasonItem>;
+
+// Name: GetShowSeason
+export const GetShowSeason = z.object({
+  // Name: GetShowSeason.num
+  "num": z.number(),
+  // Name: GetShowSeason.showId
+  "showId": z.string(),
+  // Name: GetShowSeason.name
+  "name": z.string(),
+  // Name: GetShowSeason.searchSlug
+  "searchSlug": z.string(),
+  // Name: GetShowSeason.items
+  "items": z.array(ShowSeasonItem),
+});
+export type GetShowSeason = z.infer<typeof GetShowSeason>;
+
+// Name: GetShowSeasonEpisodes
+export const GetShowSeasonEpisodes = z.object({
+  // Name: GetShowSeasonEpisodes.episodes
+  "episodes": z.array(MediaPart),
+});
+export type GetShowSeasonEpisodes = z.infer<typeof GetShowSeasonEpisodes>;
+
+// Name: ShowSeason
+export const ShowSeason = z.object({
+  // Name: ShowSeason.num
+  "num": z.number(),
+  // Name: ShowSeason.showId
+  "showId": z.string(),
+  // Name: ShowSeason.name
+  "name": z.string(),
+  // Name: ShowSeason.searchSlug
+  "searchSlug": z.string(),
+  // Name: ShowSeason.items
+  "items": z.array(ShowSeasonItem),
+});
+export type ShowSeason = z.infer<typeof ShowSeason>;
+
+// Name: GetShowSeasons
+export const GetShowSeasons = z.object({
+  // Name: GetShowSeasons.seasons
+  "seasons": z.array(ShowSeason),
+});
+export type GetShowSeasons = z.infer<typeof GetShowSeasons>;
+
+// Name: Show
+export const Show = z.object({
+  // Name: Show.id
+  "id": z.string(),
+  // Name: Show.type
+  "type": z.string(),
+  // Name: Show.name
+  "name": z.string(),
+  // Name: Show.coverUrl
+  "coverUrl": z.string().nullable(),
+  // Name: Show.logoUrl
+  "logoUrl": z.string().nullable(),
+  // Name: Show.bannerUrl
+  "bannerUrl": z.string().nullable(),
+  // Name: Show.defaultProvider
+  "defaultProvider": z.string().nullable(),
+  // Name: Show.providers
+  "providers": z.array(ProviderValue),
+});
+export type Show = z.infer<typeof Show>;
+
+// Name: GetShows
+export const GetShows = z.object({
+  // Name: GetShows.page
+  "page": Page,
+  // Name: GetShows.shows
+  "shows": z.array(Show),
+});
+export type GetShows = z.infer<typeof GetShows>;
 
 // Name: GetSystemInfo
 export const GetSystemInfo = z.object({

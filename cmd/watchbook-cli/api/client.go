@@ -50,6 +50,38 @@ func (c *Client) AddPart(id string, body AddPartBody, options Options) (*AddPart
 	return Request[AddPart](data, body)
 }
 
+func (c *Client) AddShowSeason(id string, body AddShowSeasonBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) AddShowSeasonItem(id string, seasonNum string, body AddShowSeasonItemBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons/%v/items", id, seasonNum)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
 func (c *Client) ChangeCollectionImages(id string, boundary string, body Reader, options Options) (*any, error) {
 	path := Sprintf("/api/v1/collections/%v/images", id)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -80,6 +112,22 @@ func (c *Client) ChangePassword(body ChangePasswordBody, options Options) (*any,
 		Headers: options.Header,
 	}
 	return Request[any](data, body)
+}
+
+func (c *Client) ChangeShowImages(id string, boundary string, body Reader, options Options) (*any, error) {
+	path := Sprintf("/api/v1/shows/%v/images", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return RequestForm[any](data, boundary, body)
 }
 
 func (c *Client) CreateApiToken(body CreateApiTokenBody, options Options) (*CreateApiToken, error) {
@@ -144,6 +192,22 @@ func (c *Client) CreateMedia(body CreateMediaBody, options Options) (*CreateMedi
 		Headers: options.Header,
 	}
 	return Request[CreateMedia](data, body)
+}
+
+func (c *Client) CreateShow(body CreateShowBody, options Options) (*CreateShow, error) {
+	path := "/api/v1/shows"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[CreateShow](data, body)
 }
 
 func (c *Client) DeleteApiToken(id string, options Options) (*any, error) {
@@ -242,6 +306,22 @@ func (c *Client) DeleteMediaUserData(id string, options Options) (*any, error) {
 	return Request[any](data, nil)
 }
 
+func (c *Client) DeleteShow(id string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/shows/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "DELETE",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
 func (c *Client) EditCollection(id string, body EditCollectionBody, options Options) (*any, error) {
 	path := Sprintf("/api/v1/collections/%v", id)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -308,6 +388,54 @@ func (c *Client) EditMedia(id string, body EditMediaBody, options Options) (*any
 
 func (c *Client) EditPart(id string, index string, body EditPartBody, options Options) (*any, error) {
 	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) EditShow(id string, body EditShowBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/shows/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) EditShowSeason(id string, seasonNum string, body EditShowSeasonBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons/%v", id, seasonNum)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "PATCH",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
+func (c *Client) EditShowSeasonItem(id string, seasonNum string, mediaId string, body EditShowSeasonItemBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons/%v/items/%v", id, seasonNum, mediaId)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -516,6 +644,87 @@ func (c *Client) GetProviders(options Options) (*GetProviders, error) {
 	return Request[GetProviders](data, nil)
 }
 
+func (c *Client) GetShowById(id string, options Options) (*GetShowById, error) {
+	path := Sprintf("/api/v1/shows/%v", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetShowById](data, nil)
+}
+
+
+func (c *Client) GetShowSeason(id string, seasonNum string, options Options) (*GetShowSeason, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons/%v", id, seasonNum)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetShowSeason](data, nil)
+}
+
+func (c *Client) GetShowSeasonEpisodes(id string, seasonNum string, options Options) (*GetShowSeasonEpisodes, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons/%v/episodes", id, seasonNum)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetShowSeasonEpisodes](data, nil)
+}
+
+func (c *Client) GetShowSeasons(id string, options Options) (*GetShowSeasons, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons", id)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetShowSeasons](data, nil)
+}
+
+func (c *Client) GetShows(options Options) (*GetShows, error) {
+	path := "/api/v1/shows"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetShows](data, nil)
+}
+
 func (c *Client) GetSystemInfo(options Options) (*GetSystemInfo, error) {
 	path := "/api/v1/system/info"
 	url, err := createUrl(c.addr, path, options.Query)
@@ -692,6 +901,22 @@ func (c *Client) ProviderUpdateMedia(providerName string, mediaId string, body P
 	return Request[any](data, body)
 }
 
+func (c *Client) ProviderUpdateUnknownMedia(options Options) (*any, error) {
+	path := "/api/v1/providers/updateUnknownMedia"
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
 func (c *Client) RemoveCollectionItem(id string, mediaId string, options Options) (*any, error) {
 	path := Sprintf("/api/v1/collections/%v/items/%v", id, mediaId)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -726,6 +951,38 @@ func (c *Client) RemoveFolderItem(id string, mediaId string, options Options) (*
 
 func (c *Client) RemovePart(id string, index string, options Options) (*any, error) {
 	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "DELETE",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
+func (c *Client) RemoveShowSeason(id string, seasonNum string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons/%v", id, seasonNum)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "DELETE",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, nil)
+}
+
+func (c *Client) RemoveShowSeasonItem(id string, seasonNum string, mediaId string, options Options) (*any, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons/%v/items/%v", id, seasonNum, mediaId)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -851,6 +1108,16 @@ func (c *ClientUrls) AddPart(id string) (*URL, error) {
 	return c.getUrl(path)
 }
 
+func (c *ClientUrls) AddShowSeason(id string) (*URL, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) AddShowSeasonItem(id string, seasonNum string) (*URL, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons/%v/items", id, seasonNum)
+	return c.getUrl(path)
+}
+
 func (c *ClientUrls) ChangeCollectionImages(id string) (*URL, error) {
 	path := Sprintf("/api/v1/collections/%v/images", id)
 	return c.getUrl(path)
@@ -858,6 +1125,11 @@ func (c *ClientUrls) ChangeCollectionImages(id string) (*URL, error) {
 
 func (c *ClientUrls) ChangePassword() (*URL, error) {
 	path := "/api/v1/auth/password"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) ChangeShowImages(id string) (*URL, error) {
+	path := Sprintf("/api/v1/shows/%v/images", id)
 	return c.getUrl(path)
 }
 
@@ -878,6 +1150,11 @@ func (c *ClientUrls) CreateFolder() (*URL, error) {
 
 func (c *ClientUrls) CreateMedia() (*URL, error) {
 	path := "/api/v1/media"
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) CreateShow() (*URL, error) {
+	path := "/api/v1/shows"
 	return c.getUrl(path)
 }
 
@@ -911,6 +1188,11 @@ func (c *ClientUrls) DeleteMediaUserData(id string) (*URL, error) {
 	return c.getUrl(path)
 }
 
+func (c *ClientUrls) DeleteShow(id string) (*URL, error) {
+	path := Sprintf("/api/v1/shows/%v", id)
+	return c.getUrl(path)
+}
+
 func (c *ClientUrls) EditCollection(id string) (*URL, error) {
 	path := Sprintf("/api/v1/collections/%v", id)
 	return c.getUrl(path)
@@ -933,6 +1215,21 @@ func (c *ClientUrls) EditMedia(id string) (*URL, error) {
 
 func (c *ClientUrls) EditPart(id string, index string) (*URL, error) {
 	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditShow(id string) (*URL, error) {
+	path := Sprintf("/api/v1/shows/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditShowSeason(id string, seasonNum string) (*URL, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons/%v", id, seasonNum)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) EditShowSeasonItem(id string, seasonNum string, mediaId string) (*URL, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons/%v/items/%v", id, seasonNum, mediaId)
 	return c.getUrl(path)
 }
 
@@ -1006,6 +1303,36 @@ func (c *ClientUrls) GetProviders() (*URL, error) {
 	return c.getUrl(path)
 }
 
+func (c *ClientUrls) GetShowById(id string) (*URL, error) {
+	path := Sprintf("/api/v1/shows/%v", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetShowImage(id string, file string) (*URL, error) {
+	path := Sprintf("/files/shows/%v/images/%v", id, file)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetShowSeason(id string, seasonNum string) (*URL, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons/%v", id, seasonNum)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetShowSeasonEpisodes(id string, seasonNum string) (*URL, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons/%v/episodes", id, seasonNum)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetShowSeasons(id string) (*URL, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons", id)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) GetShows() (*URL, error) {
+	path := "/api/v1/shows"
+	return c.getUrl(path)
+}
+
 func (c *ClientUrls) GetSystemInfo() (*URL, error) {
 	path := "/api/v1/system/info"
 	return c.getUrl(path)
@@ -1061,6 +1388,11 @@ func (c *ClientUrls) ProviderUpdateMedia(providerName string, mediaId string) (*
 	return c.getUrl(path)
 }
 
+func (c *ClientUrls) ProviderUpdateUnknownMedia() (*URL, error) {
+	path := "/api/v1/providers/updateUnknownMedia"
+	return c.getUrl(path)
+}
+
 func (c *ClientUrls) RemoveCollectionItem(id string, mediaId string) (*URL, error) {
 	path := Sprintf("/api/v1/collections/%v/items/%v", id, mediaId)
 	return c.getUrl(path)
@@ -1073,6 +1405,16 @@ func (c *ClientUrls) RemoveFolderItem(id string, mediaId string) (*URL, error) {
 
 func (c *ClientUrls) RemovePart(id string, index string) (*URL, error) {
 	path := Sprintf("/api/v1/media/%v/parts/%v", id, index)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) RemoveShowSeason(id string, seasonNum string) (*URL, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons/%v", id, seasonNum)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) RemoveShowSeasonItem(id string, seasonNum string, mediaId string) (*URL, error) {
+	path := Sprintf("/api/v1/shows/%v/seasons/%v/items/%v", id, seasonNum, mediaId)
 	return c.getUrl(path)
 }
 

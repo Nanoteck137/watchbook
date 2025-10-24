@@ -34,6 +34,8 @@ var CreateUserId = createIdGenerator(8)
 
 var CreateMediaId = createIdGenerator(12)
 var CreateCollectionId = createIdGenerator(8)
+var CreateShowId = createIdGenerator(8)
+var CreateShowSeasonId = createIdGenerator(8)
 
 var CreateJobId = createIdGenerator(6)
 
@@ -240,8 +242,8 @@ func CopyFile(src, dst string) (int64, error) {
 }
 
 func RoundFloat(val float64, precision uint) float64 {
-    ratio := math.Pow(10, float64(precision))
-    return math.Round(val*ratio) / ratio
+	ratio := math.Pow(10, float64(precision))
+	return math.Round(val*ratio) / ratio
 }
 
 func CreateUrlBase(addr, path string, query url.Values) (*url.URL, error) {
@@ -367,6 +369,27 @@ func DownloadImage(url, outDir, name string) (string, error) {
 	return out, nil
 }
 
+func WriteHashedFile(data []byte, outDir, ext string) (string, error) {
+	h := md5.Sum(data)
+	hash := hex.EncodeToString(h[:])
+
+	name := hash+ext
+	out := path.Join(outDir, name)
+
+	f, err := os.OpenFile(out, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return "", fmt.Errorf("failed to open output file: %w", err)
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, bytes.NewReader(data))
+	if err != nil {
+		return "", fmt.Errorf("failed to copy response body to file: %w", err)
+	}
+
+	return out, nil
+}
+
 func DownloadImageHashed(url, outDir string) (string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -389,23 +412,13 @@ func DownloadImageHashed(url, outDir string) (string, error) {
 		return "", fmt.Errorf("failed to read body: %w", err)
 	}
 
-	h := md5.Sum(data)
-	hash := hex.EncodeToString(h[:])
-
-	out := path.Join(outDir, hash+ext)
-
-	f, err := os.OpenFile(out, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	filename, err := WriteHashedFile(data, outDir, ext)
 	if err != nil {
-		return "", fmt.Errorf("failed to open output file: %w", err)
-	}
-	defer f.Close()
-
-	_, err = io.Copy(f, bytes.NewReader(data))
-	if err != nil {
-		return "", fmt.Errorf("failed to copy response body to file: %w", err)
+		return "", err
 	}
 
-	return out, nil
+	// TODO(patrik): Change this to only return the filename
+	return path.Join(outDir, filename), nil
 }
 
 func NextAiringDate(start time.Time, delayDays, intervalDays int) time.Time {

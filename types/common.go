@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"os"
 	"path"
 )
 
@@ -39,6 +40,14 @@ func (d WorkDir) CollectionDirById(id string) CollectionDir {
 	return CollectionDir(path.Join(d.CollectionsDir(), id))
 }
 
+func (d WorkDir) ShowsDir() string {
+	return path.Join(d.String(), "shows")
+}
+
+func (d WorkDir) ShowDirById(id string) ShowDir {
+	return ShowDir(path.Join(d.ShowsDir(), id))
+}
+
 type MediaDir string
 
 func (d MediaDir) String() string {
@@ -56,6 +65,32 @@ func (d CollectionDir) String() string {
 }
 
 func (d CollectionDir) Images() string {
+	return path.Join(d.String(), "images")
+}
+
+type ShowDir string
+
+func (d ShowDir) Create() error {
+	dirs := []string{
+		d.String(),
+		d.Images(),
+	}
+
+	for _, dir := range dirs {
+		err := os.Mkdir(dir, 0755)
+		if err != nil && !os.IsExist(err) {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (d ShowDir) String() string {
+	return string(d)
+}
+
+func (d ShowDir) Images() string {
 	return path.Join(d.String(), "images")
 }
 

@@ -57,6 +57,41 @@
       ]
     },
     {
+      "name": "AddShowSeasonBody",
+      "fields": [
+        {
+          "name": "num",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "searchSlug",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "AddShowSeasonItemBody",
+      "fields": [
+        {
+          "name": "mediaId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "position",
+          "type": "int",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "ApiToken",
       "fields": [
         {
@@ -422,6 +457,46 @@
       ]
     },
     {
+      "name": "CreateShow",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "CreateShowBody",
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "coverUrl",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "bannerUrl",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "logoUrl",
+          "type": "string",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "EditCollectionBody",
       "fields": [
         {
@@ -572,6 +647,66 @@
         {
           "name": "releaseDate",
           "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "EditShowBody",
+      "fields": [
+        {
+          "name": "type",
+          "type": "*string",
+          "omitEmpty": true
+        },
+        {
+          "name": "name",
+          "type": "*string",
+          "omitEmpty": true
+        },
+        {
+          "name": "coverUrl",
+          "type": "*string",
+          "omitEmpty": true
+        },
+        {
+          "name": "bannerUrl",
+          "type": "*string",
+          "omitEmpty": true
+        },
+        {
+          "name": "logoUrl",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "EditShowSeasonBody",
+      "fields": [
+        {
+          "name": "num",
+          "type": "*int",
+          "omitEmpty": true
+        },
+        {
+          "name": "name",
+          "type": "*string",
+          "omitEmpty": true
+        },
+        {
+          "name": "searchSlug",
+          "type": "*string",
+          "omitEmpty": true
+        }
+      ]
+    },
+    {
+      "name": "EditShowSeasonItemBody",
+      "fields": [
+        {
+          "name": "position",
+          "type": "*int",
           "omitEmpty": true
         }
       ]
@@ -1007,6 +1142,116 @@
         {
           "name": "providers",
           "type": "[]Provider",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetShowById",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "coverUrl",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "logoUrl",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "bannerUrl",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "defaultProvider",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "providers",
+          "type": "[]ProviderValue",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetShowSeason",
+      "fields": [
+        {
+          "name": "num",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "showId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "searchSlug",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "items",
+          "type": "[]ShowSeasonItem",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetShowSeasonEpisodes",
+      "fields": [
+        {
+          "name": "episodes",
+          "type": "[]MediaPart",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetShowSeasons",
+      "fields": [
+        {
+          "name": "seasons",
+          "type": "[]ShowSeason",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "GetShows",
+      "fields": [
+        {
+          "name": "page",
+          "type": "Page",
+          "omitEmpty": false
+        },
+        {
+          "name": "shows",
+          "type": "[]Show",
           "omitEmpty": false
         }
       ]
@@ -1562,6 +1807,201 @@
       ]
     },
     {
+      "name": "Show",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "coverUrl",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "logoUrl",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "bannerUrl",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "defaultProvider",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "providers",
+          "type": "[]ProviderValue",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ShowSeason",
+      "fields": [
+        {
+          "name": "num",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "showId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "searchSlug",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "items",
+          "type": "[]ShowSeasonItem",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
+      "name": "ShowSeasonItem",
+      "fields": [
+        {
+          "name": "showSeasonNum",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "showId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "mediaId",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "position",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "description",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "score",
+          "type": "*float",
+          "omitEmpty": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "rating",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "partCount",
+          "type": "int",
+          "omitEmpty": false
+        },
+        {
+          "name": "airingSeason",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "startDate",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "endDate",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "creators",
+          "type": "[]string",
+          "omitEmpty": false
+        },
+        {
+          "name": "tags",
+          "type": "[]string",
+          "omitEmpty": false
+        },
+        {
+          "name": "coverUrl",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "bannerUrl",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "logoUrl",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "defaultProvider",
+          "type": "*string",
+          "omitEmpty": false
+        },
+        {
+          "name": "providers",
+          "type": "[]ProviderValue",
+          "omitEmpty": false
+        },
+        {
+          "name": "user",
+          "type": "*MediaUser",
+          "omitEmpty": true
+        },
+        {
+          "name": "release",
+          "type": "*MediaRelease",
+          "omitEmpty": false
+        }
+      ]
+    },
+    {
       "name": "Signin",
       "fields": [
         {
@@ -1690,6 +2130,20 @@
       "body": "AddPartBody"
     },
     {
+      "type": "api",
+      "name": "AddShowSeason",
+      "method": "POST",
+      "path": "/api/v1/shows/:id/seasons",
+      "body": "AddShowSeasonBody"
+    },
+    {
+      "type": "api",
+      "name": "AddShowSeasonItem",
+      "method": "POST",
+      "path": "/api/v1/shows/:id/seasons/:seasonNum/items",
+      "body": "AddShowSeasonItemBody"
+    },
+    {
       "type": "form",
       "name": "ChangeCollectionImages",
       "method": "PATCH",
@@ -1701,6 +2155,12 @@
       "method": "PATCH",
       "path": "/api/v1/auth/password",
       "body": "ChangePasswordBody"
+    },
+    {
+      "type": "form",
+      "name": "ChangeShowImages",
+      "method": "PATCH",
+      "path": "/api/v1/shows/:id/images"
     },
     {
       "type": "api",
@@ -1733,6 +2193,14 @@
       "path": "/api/v1/media",
       "response": "CreateMedia",
       "body": "CreateMediaBody"
+    },
+    {
+      "type": "api",
+      "name": "CreateShow",
+      "method": "POST",
+      "path": "/api/v1/shows",
+      "response": "CreateShow",
+      "body": "CreateShowBody"
     },
     {
       "type": "api",
@@ -1772,6 +2240,12 @@
     },
     {
       "type": "api",
+      "name": "DeleteShow",
+      "method": "DELETE",
+      "path": "/api/v1/shows/:id"
+    },
+    {
+      "type": "api",
       "name": "EditCollection",
       "method": "PATCH",
       "path": "/api/v1/collections/:id",
@@ -1804,6 +2278,27 @@
       "method": "PATCH",
       "path": "/api/v1/media/:id/parts/:index",
       "body": "EditPartBody"
+    },
+    {
+      "type": "api",
+      "name": "EditShow",
+      "method": "PATCH",
+      "path": "/api/v1/shows/:id",
+      "body": "EditShowBody"
+    },
+    {
+      "type": "api",
+      "name": "EditShowSeason",
+      "method": "PATCH",
+      "path": "/api/v1/shows/:id/seasons/:seasonNum",
+      "body": "EditShowSeasonBody"
+    },
+    {
+      "type": "api",
+      "name": "EditShowSeasonItem",
+      "method": "PATCH",
+      "path": "/api/v1/shows/:id/seasons/:seasonNum/items/:mediaId",
+      "body": "EditShowSeasonItemBody"
     },
     {
       "type": "api",
@@ -1903,6 +2398,47 @@
     },
     {
       "type": "api",
+      "name": "GetShowById",
+      "method": "GET",
+      "path": "/api/v1/shows/:id",
+      "response": "GetShowById"
+    },
+    {
+      "type": "normal",
+      "name": "GetShowImage",
+      "method": "GET",
+      "path": "/files/shows/:id/images/:file"
+    },
+    {
+      "type": "api",
+      "name": "GetShowSeason",
+      "method": "GET",
+      "path": "/api/v1/shows/:id/seasons/:seasonNum",
+      "response": "GetShowSeason"
+    },
+    {
+      "type": "api",
+      "name": "GetShowSeasonEpisodes",
+      "method": "GET",
+      "path": "/api/v1/shows/:id/seasons/:seasonNum/episodes",
+      "response": "GetShowSeasonEpisodes"
+    },
+    {
+      "type": "api",
+      "name": "GetShowSeasons",
+      "method": "GET",
+      "path": "/api/v1/shows/:id/seasons",
+      "response": "GetShowSeasons"
+    },
+    {
+      "type": "api",
+      "name": "GetShows",
+      "method": "GET",
+      "path": "/api/v1/shows",
+      "response": "GetShows"
+    },
+    {
+      "type": "api",
       "name": "GetSystemInfo",
       "method": "GET",
       "path": "/api/v1/system/info",
@@ -1978,6 +2514,12 @@
     },
     {
       "type": "api",
+      "name": "ProviderUpdateUnknownMedia",
+      "method": "POST",
+      "path": "/api/v1/providers/updateUnknownMedia"
+    },
+    {
+      "type": "api",
       "name": "RemoveCollectionItem",
       "method": "DELETE",
       "path": "/api/v1/collections/:id/items/:mediaId"
@@ -1993,6 +2535,18 @@
       "name": "RemovePart",
       "method": "DELETE",
       "path": "/api/v1/media/:id/parts/:index"
+    },
+    {
+      "type": "api",
+      "name": "RemoveShowSeason",
+      "method": "DELETE",
+      "path": "/api/v1/shows/:id/seasons/:seasonNum"
+    },
+    {
+      "type": "api",
+      "name": "RemoveShowSeasonItem",
+      "method": "DELETE",
+      "path": "/api/v1/shows/:id/seasons/:seasonNum/items/:mediaId"
     },
     {
       "type": "api",

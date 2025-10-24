@@ -9,7 +9,6 @@ import (
 
 var AppName = "watchbook"
 var CliAppName = AppName + "-cli"
-var LibraryAppName = AppName + "-library"
 
 var Version = "no-version"
 var Commit = "no-commit"

@@ -7,10 +7,14 @@ export const load: LayoutServerLoad = async ({ locals }) => {
   if (locals.token) {
     const res = await locals.apiClient.getMe();
     if (!res.success) {
-      throw error(res.error.code, { message: res.error.message });
-    }
+      if (res.error.type !== "INVALID_AUTH") {
+        throw error(res.error.code, { message: res.error.message });
+      }
 
-    user = res.data;
+      user = null;
+    } else {
+      user = res.data;
+    }
   }
 
   return {

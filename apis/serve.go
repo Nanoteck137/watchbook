@@ -27,6 +27,7 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 	InstallCollectionHandlers(app, g)
 	InstallProviderHandlers(app, g)
 	InstallFolderHandlers(app, g)
+	InstallShowHandlers(app, g)
 
 	g = router.Group("/files")
 	g.Register(
@@ -55,6 +56,22 @@ func RegisterHandlers(app core.App, router pyrin.Router) {
 				file := c.Param("file")
 
 				dir := app.WorkDir().CollectionDirById(id)
+				p := dir.Images()
+				f := os.DirFS(p)
+
+				return pyrin.ServeFile(c, f, file)
+			},
+		},
+
+		pyrin.NormalHandler{
+			Name:        "GetShowImage",
+			Method:      http.MethodGet,
+			Path:        "/shows/:id/images/:file",
+			HandlerFunc: func(c pyrin.Context) error {
+				id := c.Param("id")
+				file := c.Param("file")
+
+				dir := app.WorkDir().ShowDirById(id)
 				p := dir.Images()
 				f := os.DirFS(p)
 
