@@ -27,8 +27,7 @@
           pname = "watchbook";
           version = fullVersion;
           src = ./.;
-          # subPackages = ["cmd/watchbook" "cmd/watchbook-cli"];
-          subPackages = ["cmd/watchbook"];
+          subPackages = ["cmd/watchbook" "cmd/watchbook-cli"];
 
           ldflags = [
             "-X github.com/nanoteck137/watchbook.Version=${version}"
