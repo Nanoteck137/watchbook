@@ -9,6 +9,7 @@
     Menu,
     Search,
     Server,
+    Tv,
     User,
   } from "lucide-svelte";
   import "../app.css";
@@ -119,6 +120,7 @@
         icon={Library}
         onClick={close}
       />
+      <Link title="Shows" href="/shows" icon={Tv} onClick={close} />
       <Link title="Releases" href="/release" icon={Calendar} onClick={close} />
     </div>
     <div class="flex-grow"></div>
