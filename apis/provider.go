@@ -689,6 +689,41 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
+			Name:         "ProviderSearchShows",
+			Method:       http.MethodGet,
+			Path:         "/providers/:providerName/shows",
+			ResponseType: GetProviderSearch{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				providerName := c.Param("providerName")
+				url := c.Request().URL
+				query := url.Query().Get("query")
+
+				pm := app.ProviderManager()
+
+				items, err := pm.SearchCollection(context.Background(), providerName, query)
+				if err != nil {
+					// TODO(patrik): Handle some of the errors the provider gives, like the provider not found
+					return nil, err
+				}
+
+				res := GetProviderSearch{
+					SearchResults: make([]ProviderSearchResult, len(items)),
+				}
+
+				for i, item := range items {
+					res.SearchResults[i] = ProviderSearchResult{
+						ProviderName: providerName,
+						ProviderId:   item.ProviderId,
+						Title:        item.Title,
+						ImageUrl:     item.ImageUrl,
+					}
+				}
+
+				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
 			Name:   "ProviderImportMedia",
 			Method: http.MethodPost,
 			Path:   "/providers/:providerName/media/import",
@@ -838,6 +873,181 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 							Name:         item.Name,
 							SearchSlug:   utils.Slug(item.Name),
 							Position:     i,
+						})
+						if err != nil {
+							return nil, err
+						}
+					}
+				}
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:   "ProviderImportShows",
+			Method: http.MethodPost,
+			Path:   "/providers/:providerName/shows/import",
+			// ResponseType: PostProviderImportMedia{},
+			BodyType: PostProviderImportCollectionsBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				providerName := c.Param("providerName")
+
+				body, err := pyrin.Body[PostProviderImportCollectionsBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				pm := app.ProviderManager()
+
+				ctx := context.Background()
+
+				for _, providerId := range body.Ids {
+					_, err := app.DB().GetShowByProviderId(ctx, providerName, providerId)
+					if err == nil {
+						fmt.Printf("id already exists: %v\n", providerId)
+						continue
+					}
+
+					if !errors.Is(err, database.ErrItemNotFound) {
+						return nil, err
+					}
+
+					data, err := pm.GetCollection(ctx, providerName, providerId)
+					if err != nil {
+						// TODO(patrik): Handle err
+						return nil, err
+					}
+
+					id := utils.CreateShowId()
+
+					showDir := app.WorkDir().ShowDirById(id)
+					dirs := []string{
+						showDir.String(),
+						showDir.Images(),
+					}
+
+					for _, dir := range dirs {
+						err = os.Mkdir(dir, 0755)
+						if err != nil && !os.IsExist(err) {
+							return nil, err
+						}
+					}
+
+					providerIds := ember.KVStore{}
+					maps.Copy(providerIds, data.ExtraProviderIds)
+					providerIds[providerName] = data.ProviderId
+
+					coverFilename := ""
+					bannerFilename := ""
+					logoFilename := ""
+
+					if data.CoverUrl != nil {
+						p, err := utils.DownloadImageHashed(*data.CoverUrl, showDir.Images())
+						if err == nil {
+							coverFilename = path.Base(p)
+						} else {
+							app.Logger().Error("failed to download cover image for collection", "err", err)
+						}
+					}
+
+					if data.BannerUrl != nil {
+						p, err := utils.DownloadImageHashed(*data.BannerUrl, showDir.Images())
+						if err == nil {
+							bannerFilename = path.Base(p)
+						} else {
+							app.Logger().Error("failed to download banner image for collection", "err", err)
+						}
+					}
+
+					if data.LogoUrl != nil {
+						p, err := utils.DownloadImageHashed(*data.LogoUrl, showDir.Images())
+						if err == nil {
+							logoFilename = path.Base(p)
+						} else {
+							app.Logger().Error("failed to download logo image for collection", "err", err)
+						}
+					}
+
+					// database.CreateCollectionParams{
+					// 	Id:   id,
+					// 	Type: data.Type,
+					// 	Name: data.Name,
+					// 	CoverFile: sql.NullString{
+					// 		String: coverFilename,
+					// 		Valid:  coverFilename != "",
+					// 	},
+					// 	BannerFile: sql.NullString{
+					// 		String: bannerFilename,
+					// 		Valid:  bannerFilename != "",
+					// 	},
+					// 	LogoFile: sql.NullString{
+					// 		String: logoFilename,
+					// 		Valid:  logoFilename != "",
+					// 	},
+					// 	DefaultProvider: sql.NullString{
+					// 		String: providerName,
+					// 		Valid:  providerName != "",
+					// 	},
+					// 	Providers: providerIds,
+					// }
+
+					ty := types.ShowTypeUnknown
+					switch data.Type {
+					case types.CollectionTypeAnime:
+						ty = types.ShowTypeAnime
+					case types.CollectionTypeSeries:
+						ty = types.ShowTypeTVSeries
+					}
+
+					_, err = app.DB().CreateShow(ctx, database.CreateShowParams{
+						Id:         id,
+						Type:       ty,
+						Name:       data.Name,
+						SearchSlug: utils.Slug(data.Name),
+						CoverFile: sql.NullString{
+							String: coverFilename,
+							Valid:  coverFilename != "",
+						},
+						BannerFile: sql.NullString{
+							String: bannerFilename,
+							Valid:  bannerFilename != "",
+						},
+						LogoFile: sql.NullString{
+							String: logoFilename,
+							Valid:  logoFilename != "",
+						},
+						DefaultProvider: sql.NullString{
+							String: providerName,
+							Valid:  providerName != "",
+						},
+						Providers: providerIds,
+					})
+					if err != nil {
+						return nil, err
+					}
+
+					for _, item := range data.Items {
+						mediaId, err := ImportMedia(ctx, app, providerName, item.Id)
+						if err != nil {
+							return nil, err
+						}
+
+						err = app.DB().CreateShowSeason(ctx, database.CreateShowSeasonParams{
+							Num:        item.Position,
+							ShowId:     id,
+							Name:       item.Name,
+							SearchSlug: utils.Slug(item.Name),
+						})
+						if err != nil {
+							return nil, err
+						}
+
+						err = app.DB().CreateShowSeasonItem(ctx, database.CreateShowSeasonItemParams{
+							ShowSeasonNum: item.Position,
+							ShowId:        id,
+							MediaId:       mediaId,
+							Position:      0,
 						})
 						if err != nil {
 							return nil, err
@@ -1285,9 +1495,164 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 		},
 
 		pyrin.ApiHandler{
-			Name:     "ProviderUpdateUnknownMedia",
-			Method:   http.MethodPost,
-			Path:     "/providers/updateUnknownMedia",
+			Name:     "ProviderUpdateShow",
+			Method:   http.MethodPatch,
+			Path:     "/providers/:providerName/collections/:showId",
+			BodyType: ProviderCollectionUpdateBody{},
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				providerName := c.Param("providerName")
+				showId := c.Param("showId")
+
+				body, err := pyrin.Body[ProviderCollectionUpdateBody](c)
+				if err != nil {
+					return nil, err
+				}
+
+				pm := app.ProviderManager()
+
+				ctx := context.Background()
+
+				dbShow, err := app.DB().GetShowById(ctx, showId)
+				if err != nil {
+					// TODO(patrik): Handle err
+					return nil, err
+				}
+
+				providerId, ok := dbShow.Providers[providerName]
+				if !ok {
+					// TODO(patrik): Better error
+					return nil, errors.New("provider not found on show")
+				}
+
+				data, err := pm.GetCollection(ctx, providerName, providerId)
+				if err != nil {
+					fmt.Printf("err: %v\n", err)
+					// TODO(patrik): Handle err
+					return "", err
+				}
+
+				changes := database.ShowChanges{}
+
+				ty := types.ShowTypeUnknown
+				switch data.Type {
+				case types.CollectionTypeAnime:
+					ty = types.ShowTypeAnime
+				case types.CollectionTypeSeries:
+					ty = types.ShowTypeTVSeries
+				}
+
+				changes.Type = database.Change[types.ShowType]{
+					Value:   ty,
+					Changed: ty != dbShow.Type,
+				}
+
+				changes.Name = database.Change[string]{
+					Value:   data.Name,
+					Changed: data.Name != dbShow.Name,
+				}
+
+				if body.ReplaceImages {
+					showDir := app.WorkDir().CollectionDirById(dbShow.Id)
+
+					if data.CoverUrl != nil {
+						p, err := utils.DownloadImageHashed(*data.CoverUrl, showDir.Images())
+						if err != nil {
+							// TODO(patrik): Better error
+							return "", fmt.Errorf("failed to download cover image for show: %w", err)
+						}
+
+						n := path.Base(p)
+						changes.CoverFile = database.Change[sql.NullString]{
+							Value: sql.NullString{
+								String: n,
+								Valid:  n != "",
+							},
+							Changed: true,
+						}
+					}
+
+					if data.BannerUrl != nil {
+						p, err := utils.DownloadImageHashed(*data.BannerUrl, showDir.Images())
+						if err != nil {
+							// TODO(patrik): Better error
+							return "", fmt.Errorf("failed to download banner image for show: %w", err)
+						}
+
+						n := path.Base(p)
+						changes.BannerFile = database.Change[sql.NullString]{
+							Value: sql.NullString{
+								String: n,
+								Valid:  n != "",
+							},
+							Changed: true,
+						}
+					}
+
+					if data.LogoUrl != nil {
+						p, err := utils.DownloadImageHashed(*data.LogoUrl, showDir.Images())
+						if err != nil {
+							// TODO(patrik): Better error
+							return "", fmt.Errorf("failed to download logo image for show: %w", err)
+						}
+
+						n := path.Base(p)
+						changes.LogoFile = database.Change[sql.NullString]{
+							Value: sql.NullString{
+								String: n,
+								Valid:  n != "",
+							},
+							Changed: true,
+						}
+					}
+				}
+
+				err = app.DB().UpdateShow(ctx, dbShow.Id, changes)
+				if err != nil {
+					return nil, err
+				}
+
+				// TODO(patrik): Implement
+				// itemToMedia := map[string]string{}
+				// for _, item := range data.Items {
+				// 	mediaId, err := ImportMedia(ctx, app, providerName, item.Id)
+				// 	if err != nil {
+				// 		return nil, err
+				// 	}
+				//
+				// 	itemToMedia[item.Id] = mediaId
+				// }
+				//
+				// err = app.DB().RemoveAllShowSeasonItems(ctx, dbShow.Id)
+				// if err != nil {
+				// 	return nil, err
+				// }
+				//
+				// for _, item := range data.Items {
+				// 	mediaId, ok := itemToMedia[item.Id]
+				// 	if !ok {
+				// 		continue
+				// 	}
+				//
+				// 	err := app.DB().CreateCollectionMediaItem(ctx, database.CreateCollectionMediaItemParams{
+				// 		CollectionId: dbShow.Id,
+				// 		MediaId:      mediaId,
+				// 		Name:         item.Name,
+				// 		SearchSlug:   utils.Slug(item.Name),
+				// 		Position:     item.Position,
+				// 	})
+				// 	if err != nil {
+				// 		return nil, err
+				// 	}
+				// }
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:   "ProviderUpdateUnknownMedia",
+			Method: http.MethodPost,
+			Path:   "/providers/updateUnknownMedia",
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				// pm := app.ProviderManager()
 

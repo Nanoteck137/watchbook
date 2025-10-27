@@ -222,12 +222,20 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/providers/${providerName}/media/import`, "POST", z.undefined(), z.any(), body, options)
   }
   
+  providerImportShows(providerName: string, body: api.PostProviderImportCollectionsBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/providers/${providerName}/shows/import`, "POST", z.undefined(), z.any(), body, options)
+  }
+  
   providerSearchCollections(providerName: string, options?: ExtraOptions) {
     return this.request(`/api/v1/providers/${providerName}/collections`, "GET", api.GetProviderSearch, z.any(), undefined, options)
   }
   
   providerSearchMedia(providerName: string, options?: ExtraOptions) {
     return this.request(`/api/v1/providers/${providerName}/media`, "GET", api.GetProviderSearch, z.any(), undefined, options)
+  }
+  
+  providerSearchShows(providerName: string, options?: ExtraOptions) {
+    return this.request(`/api/v1/providers/${providerName}/shows`, "GET", api.GetProviderSearch, z.any(), undefined, options)
   }
   
   providerUpdateCollection(providerName: string, collectionId: string, body: api.ProviderCollectionUpdateBody, options?: ExtraOptions) {
@@ -514,12 +522,20 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/media/import`)
   }
   
+  providerImportShows(providerName: string) {
+    return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/shows/import`)
+  }
+  
   providerSearchCollections(providerName: string) {
     return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/collections`)
   }
   
   providerSearchMedia(providerName: string) {
     return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/media`)
+  }
+  
+  providerSearchShows(providerName: string) {
+    return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/shows`)
   }
   
   providerUpdateCollection(providerName: string, collectionId: string) {

@@ -2486,6 +2486,13 @@
     },
     {
       "type": "api",
+      "name": "ProviderImportShows",
+      "method": "POST",
+      "path": "/api/v1/providers/:providerName/shows/import",
+      "body": "PostProviderImportCollectionsBody"
+    },
+    {
+      "type": "api",
       "name": "ProviderSearchCollections",
       "method": "GET",
       "path": "/api/v1/providers/:providerName/collections",
@@ -2496,6 +2503,13 @@
       "name": "ProviderSearchMedia",
       "method": "GET",
       "path": "/api/v1/providers/:providerName/media",
+      "response": "GetProviderSearch"
+    },
+    {
+      "type": "api",
+      "name": "ProviderSearchShows",
+      "method": "GET",
+      "path": "/api/v1/providers/:providerName/shows",
       "response": "GetProviderSearch"
     },
     {

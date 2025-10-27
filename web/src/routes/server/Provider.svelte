@@ -15,6 +15,7 @@
 
   let providerSearchMediaModalOpen = $state(false);
   let providerSearchCollectionModalOpen = $state(false);
+  let providerSearchShowModalOpen = $state(false);
 </script>
 
 <div class="flex flex-col items-start gap-1">
@@ -45,6 +46,19 @@
 
     <Button disabled={!provider.supports.getCollection} onclick={() => {}}>
       Get Collection
+    </Button>
+
+    <Button
+      disabled={!provider.supports.searchCollection}
+      onclick={() => {
+        providerSearchShowModalOpen = true;
+      }}
+    >
+      Search Show
+    </Button>
+
+    <Button disabled={!provider.supports.getCollection} onclick={() => {}}>
+      Get Show
     </Button>
   </div>
 </div>
@@ -80,6 +94,23 @@
       return handleApiError(res.error);
     }
     toast.success("Successfully imported collections");
+    invalidateAll();
+  }}
+/>
+
+<ProviderSearchModal
+  bind:open={providerSearchShowModalOpen}
+  type="collection"
+  providerName={provider.name}
+  providerDisplayName={provider.displayName}
+  onResult={async (items) => {
+    const res = await apiClient.providerImportShows(provider.name, {
+      ids: items.map((i) => i.providerId),
+    });
+    if (!res.success) {
+      return handleApiError(res.error);
+    }
+    toast.success("Successfully imported shows");
     invalidateAll();
   }}
 />

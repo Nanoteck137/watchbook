@@ -16,7 +16,7 @@
   export type Props = {
     open: boolean;
     providerName: string;
-    type: "media" | "collection";
+    type: "media" | "collection" | "show";
     providerDisplayName: string;
   };
 
@@ -46,15 +46,20 @@
   });
 
   function runSearch(query: string) {
-    if (type === "media") {
-      return apiClient.providerSearchMedia(providerName, {
-        query: { query },
-      });
+    switch (type) {
+      case "media":
+        return apiClient.providerSearchMedia(providerName, {
+          query: { query },
+        });
+      case "collection":
+        return apiClient.providerSearchCollections(providerName, {
+          query: { query },
+        });
+      case "show":
+        return apiClient.providerSearchShows(providerName, {
+          query: { query },
+        });
     }
-
-    return apiClient.providerSearchCollections(providerName, {
-      query: { query },
-    });
   }
 
   async function search(query: string) {

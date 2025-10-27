@@ -837,6 +837,22 @@ func (c *Client) ProviderImportMedia(providerName string, body PostProviderImpor
 	return Request[any](data, body)
 }
 
+func (c *Client) ProviderImportShows(providerName string, body PostProviderImportCollectionsBody, options Options) (*any, error) {
+	path := Sprintf("/api/v1/providers/%v/shows/import", providerName)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "POST",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[any](data, body)
+}
+
 func (c *Client) ProviderSearchCollections(providerName string, options Options) (*GetProviderSearch, error) {
 	path := Sprintf("/api/v1/providers/%v/collections", providerName)
 	url, err := createUrl(c.addr, path, options.Query)
@@ -855,6 +871,22 @@ func (c *Client) ProviderSearchCollections(providerName string, options Options)
 
 func (c *Client) ProviderSearchMedia(providerName string, options Options) (*GetProviderSearch, error) {
 	path := Sprintf("/api/v1/providers/%v/media", providerName)
+	url, err := createUrl(c.addr, path, options.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	data := RequestData{
+		Url: url,
+		Method: "GET",
+		ClientHeaders: c.Headers,
+		Headers: options.Header,
+	}
+	return Request[GetProviderSearch](data, nil)
+}
+
+func (c *Client) ProviderSearchShows(providerName string, options Options) (*GetProviderSearch, error) {
+	path := Sprintf("/api/v1/providers/%v/shows", providerName)
 	url, err := createUrl(c.addr, path, options.Query)
 	if err != nil {
 		return nil, err
@@ -1368,6 +1400,11 @@ func (c *ClientUrls) ProviderImportMedia(providerName string) (*URL, error) {
 	return c.getUrl(path)
 }
 
+func (c *ClientUrls) ProviderImportShows(providerName string) (*URL, error) {
+	path := Sprintf("/api/v1/providers/%v/shows/import", providerName)
+	return c.getUrl(path)
+}
+
 func (c *ClientUrls) ProviderSearchCollections(providerName string) (*URL, error) {
 	path := Sprintf("/api/v1/providers/%v/collections", providerName)
 	return c.getUrl(path)
@@ -1375,6 +1412,11 @@ func (c *ClientUrls) ProviderSearchCollections(providerName string) (*URL, error
 
 func (c *ClientUrls) ProviderSearchMedia(providerName string) (*URL, error) {
 	path := Sprintf("/api/v1/providers/%v/media", providerName)
+	return c.getUrl(path)
+}
+
+func (c *ClientUrls) ProviderSearchShows(providerName string) (*URL, error) {
+	path := Sprintf("/api/v1/providers/%v/shows", providerName)
 	return c.getUrl(path)
 }
 
