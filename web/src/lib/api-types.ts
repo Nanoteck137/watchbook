@@ -72,6 +72,16 @@ export const CollectionTypeEnum = z.enum(
   collectionTypes.map((f) => f.value) as [CollectionType, ...CollectionType[]],
 );
 
+export const showTypes = [
+  { label: "Unknown", value: "unknown" },
+  { label: "TV Series", value: "tv-series" },
+  { label: "Anime", value: "anime" },
+] as const;
+export type ShowType = (typeof showTypes)[number]["value"];
+export const ShowTypeEnum = z.enum(
+  showTypes.map((f) => f.value) as [ShowType, ...ShowType[]],
+);
+
 export const mediaReleaseTypes = [
   { label: "Confirmed", value: "confirmed" },
   { label: "Not Confirmed", value: "not-confirmed" },

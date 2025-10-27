@@ -1,4 +1,4 @@
-import { CollectionTypeEnum } from "$lib/api-types";
+import { ShowTypeEnum } from "$lib/api-types";
 import { z } from "zod";
 
 export const sortTypes = [
@@ -19,10 +19,10 @@ export const defaultSort: SortType = "name-a-z";
 export const FullFilter = z.object({
   query: z.string(),
   filters: z.object({
-    type: z.array(CollectionTypeEnum),
+    type: z.array(ShowTypeEnum),
   }),
   excludes: z.object({
-    type: z.array(CollectionTypeEnum),
+    type: z.array(ShowTypeEnum),
   }),
   sort: SortTypeEnum.default(defaultSort),
 });

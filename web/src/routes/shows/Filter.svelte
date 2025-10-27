@@ -8,7 +8,7 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import { FilterX } from "lucide-svelte";
-  import { collectionTypes } from "$lib/api-types";
+  import { showTypes } from "$lib/api-types";
 
   export type Props = {
     fullFilter: FullFilter;
@@ -23,7 +23,6 @@
       query.delete("sort");
 
       query.delete("filterType");
-
       query.delete("excludeType");
 
       query.set("query", data.query);
@@ -74,7 +73,7 @@
           <Select.Root type="multiple" bind:value={$form.filters.type}>
             <Select.Trigger>Type</Select.Trigger>
             <Select.Content>
-              {#each collectionTypes as ty (ty.value)}
+              {#each showTypes as ty (ty.value)}
                 <Select.Item value={ty.value} label={ty.label} />
               {/each}
             </Select.Content>
@@ -87,7 +86,7 @@
           <Select.Root type="multiple" bind:value={$form.excludes.type}>
             <Select.Trigger>Type</Select.Trigger>
             <Select.Content>
-              {#each collectionTypes as ty (ty.value)}
+              {#each showTypes as ty (ty.value)}
                 <Select.Item value={ty.value} label={ty.label} />
               {/each}
             </Select.Content>

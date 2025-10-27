@@ -61,7 +61,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     },
   });
 
-  // constructFilterSort(filter, query);
+  constructFilterSort(filter, query);
 
   const res = await locals.apiClient.getShows({ query });
   if (!res.success) {

@@ -74,10 +74,10 @@ func (a *ShowResolverAdapter) ResolveTable(typ string) (filter.Table, bool) {
 }
 
 func (a *ShowResolverAdapter) ResolveFunctionCall(resolver *filter.Resolver, name string, args []ast.Expr) (filter.FilterExpr, error) {
-	// switch name {
-	// case "hasType":
-	// 	return resolver.In(name, "type", args)
-	// }
+	switch name {
+	case "hasType":
+		return resolver.In(name, "type", args)
+	}
 
 	return nil, filter.UnknownFunction(name)
 }
