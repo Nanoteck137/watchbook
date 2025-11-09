@@ -120,6 +120,70 @@ func ValidateMediaType(val any) error {
 // 	MediaTypeTVSpecial MediaType = "tv-special"
 // )
 
+type MediaSegmentType string
+
+const (
+	MediaSegmentTypeUnknown     MediaSegmentType = "unknown"
+	MediaSegmentTypeTV          MediaSegmentType = "tv"
+	MediaSegmentTypeMovie       MediaSegmentType = "movie"
+	MediaSegmentTypeAnimeSeason MediaSegmentType = "anime-season"
+	MediaSegmentTypeAnimeMovie  MediaSegmentType = "anime-movie"
+	MediaSegmentTypeGame        MediaSegmentType = "game"
+	MediaSegmentTypeManga       MediaSegmentType = "manga"
+	MediaSegmentTypeComic       MediaSegmentType = "comic"
+)
+
+func (t MediaSegmentType) IsMovie() bool {
+	return t == MediaSegmentTypeMovie || t == MediaSegmentTypeAnimeMovie
+}
+
+func IsValidMediaSegmentType(t MediaSegmentType) bool {
+	switch t {
+	case MediaSegmentTypeUnknown,
+		MediaSegmentTypeTV,
+		MediaSegmentTypeMovie,
+		MediaSegmentTypeAnimeSeason,
+		MediaSegmentTypeAnimeMovie,
+		MediaSegmentTypeGame,
+		MediaSegmentTypeManga,
+		MediaSegmentTypeComic:
+		return true
+	}
+
+	return false
+}
+
+func ValidateMediaSegmentType(val any) error {
+	if s, ok := val.(string); ok {
+		if s == "" {
+			return nil
+		}
+
+		t := MediaSegmentType(s)
+		if !IsValidMediaSegmentType(t) {
+			return errors.New("invalid type")
+		}
+	} else if p, ok := val.(*string); ok {
+		if p == nil {
+			return nil
+		}
+
+		s := *p
+		if s == "" {
+			return nil
+		}
+
+		t := MediaSegmentType(s)
+		if !IsValidMediaSegmentType(t) {
+			return errors.New("invalid type")
+		}
+	} else {
+		return errors.New("expected string")
+	}
+
+	return nil
+}
+
 type MediaStatus string
 
 const (

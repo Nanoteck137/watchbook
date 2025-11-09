@@ -18,6 +18,8 @@ import (
 	"github.com/nanoteck137/watchbook/core"
 	"github.com/nanoteck137/watchbook/database"
 	"github.com/nanoteck137/watchbook/provider"
+	"github.com/nanoteck137/watchbook/provider/myanimelist"
+	"github.com/nanoteck137/watchbook/provider/sonarr"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
@@ -1268,6 +1270,176 @@ func InstallShowHandlers(app core.App, group pyrin.Group) {
 				}
 
 				return res, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:   "Test",
+			Method: http.MethodPost,
+			Path:   "/test",
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				sonarrApiKey := os.Getenv("TEMP_SONARR_API_KEY")
+				sc := sonarr.NewClient("https://sonarr.nanoteck137.net", sonarrApiKey)
+
+				ctx := context.Background()
+
+				series, err := sc.GetAllSeries()
+				if err != nil {
+					return nil, err
+				}
+
+				serie := series[1]
+
+				id := utils.CreateShowId()
+
+				showDir := app.WorkDir().ShowDirById(id)
+				dirs := []string{
+					showDir.String(),
+					showDir.Images(),
+				}
+
+				for _, dir := range dirs {
+					err = os.Mkdir(dir, 0755)
+					if err != nil && !os.IsExist(err) {
+						return nil, err
+					}
+				}
+
+				// providerIds := ember.KVStore{}
+				// maps.Copy(providerIds, data.ExtraProviderIds)
+				// providerIds[providerName] = data.ProviderId
+
+				coverFilename := ""
+				bannerFilename := ""
+				logoFilename := ""
+
+				coverUrl := ""
+				bannerUrl := ""
+				logoUrl := ""
+
+				for _, img := range serie.Images {
+					if img.CoverType == "poster" && coverUrl == "" {
+						coverUrl = img.RemoteURL
+					}
+
+					if img.CoverType == "banner" && bannerUrl == "" {
+						bannerUrl = img.RemoteURL
+					}
+
+					if img.CoverType == "clearlogo" && logoUrl == "" {
+						logoUrl = img.RemoteURL
+					}
+				}
+
+				if coverUrl != "" {
+					p, err := utils.DownloadImageHashed(coverUrl, showDir.Images())
+					if err == nil {
+						coverFilename = path.Base(p)
+					} else {
+						app.Logger().Error("failed to download cover image for collection", "err", err)
+					}
+				}
+
+				if bannerUrl != "" {
+					p, err := utils.DownloadImageHashed(bannerUrl, showDir.Images())
+					if err == nil {
+						bannerFilename = path.Base(p)
+					} else {
+						app.Logger().Error("failed to download banner image for collection", "err", err)
+					}
+				}
+
+				if logoUrl != "" {
+					p, err := utils.DownloadImageHashed(logoUrl, showDir.Images())
+					if err == nil {
+						logoFilename = path.Base(p)
+					} else {
+						app.Logger().Error("failed to download logo image for collection", "err", err)
+					}
+				}
+
+				ty := types.ShowTypeUnknown
+				// switch data.Type {
+				// case types.CollectionTypeAnime:
+				// 	ty = types.ShowTypeAnime
+				// case types.CollectionTypeSeries:
+				// 	ty = types.ShowTypeTVSeries
+				// }
+
+				_, err = app.DB().CreateShow(ctx, database.CreateShowParams{
+					Id:         id,
+					Type:       ty,
+					Name:       serie.Title,
+					SearchSlug: utils.Slug(serie.Title),
+					CoverFile: sql.NullString{
+						String: coverFilename,
+						Valid:  coverFilename != "",
+					},
+					BannerFile: sql.NullString{
+						String: bannerFilename,
+						Valid:  bannerFilename != "",
+					},
+					LogoFile: sql.NullString{
+						String: logoFilename,
+						Valid:  logoFilename != "",
+					},
+					// DefaultProvider: sql.NullString{
+					// 	String: providerName,
+					// 	Valid:  providerName != "",
+					// },
+					// Providers: providerIds,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				// for _, item := range serie.Seasons {
+				// 	mediaId, err := ImportMedia(ctx, app, providerName, item.Id)
+				// 	if err != nil {
+				// 		return nil, err
+				// 	}
+				//
+				// 	err = app.DB().CreateShowSeason(ctx, database.CreateShowSeasonParams{
+				// 		Num:        item.Position,
+				// 		ShowId:     id,
+				// 		Name:       item.Name,
+				// 		SearchSlug: utils.Slug(item.Name),
+				// 	})
+				// 	if err != nil {
+				// 		return nil, err
+				// 	}
+				//
+				// 	err = app.DB().CreateShowSeasonItem(ctx, database.CreateShowSeasonItemParams{
+				// 		ShowSeasonNum: item.Position,
+				// 		ShowId:        id,
+				// 		MediaId:       mediaId,
+				// 		Position:      0,
+				// 	})
+				// 	if err != nil {
+				// 		return nil, err
+				// 	}
+				// }
+
+				return nil, nil
+			},
+		},
+
+		pyrin.ApiHandler{
+			Name:   "Test2",
+			Method: http.MethodPost,
+			Path:   "/test2",
+			HandlerFunc: func(c pyrin.Context) (any, error) {
+				ctx := context.Background()
+
+				id, err := NewImportMedia(ctx, app, myanimelist.AnimeProviderName, "35760", []string{"38524"})
+				if err != nil {
+					fmt.Printf("err: %v\n", err)
+					return nil, err
+				}
+
+				fmt.Printf("id: %v\n", id)
+
+				return nil, nil
 			},
 		},
 	)

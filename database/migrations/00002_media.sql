@@ -25,6 +25,39 @@ CREATE TABLE media (
     updated INTEGER NOT NULL
 );
 
+CREATE TABLE media_segments (
+    idx INTEGER NOT NULL,
+    media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE,
+
+    type TEXT NOT NULL,
+
+	title TEXT NOT NULL CHECK(title<>''),
+    description TEXT,
+
+	score FLOAT,
+	status TEXT NOT NULL,
+    rating TEXT NOT NULL,
+    airing_season TEXT REFERENCES tags(slug) ON DELETE SET NULL,
+
+	start_date TEXT, 
+    end_date TEXT,
+
+    cover_file TEXT,
+    -- TODO(patrik): Remove?
+    logo_file TEXT,
+    banner_file TEXT,
+
+    default_provider TEXT,
+    providers TEXT NOT NULL,
+
+    -- TODO(patrik): Add bool (Provide Parts)
+
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
+
+    PRIMARY KEY(idx, media_id)
+);
+
 CREATE TABLE media_tags (
     media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE,
     tag_slug TEXT NOT NULL REFERENCES tags(slug) ON DELETE CASCADE,

@@ -5,13 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"os"
 	"path"
 	"sort"
 	"time"
-
-	"maps"
 
 	"github.com/kr/pretty"
 	"github.com/maruel/natural"
@@ -315,6 +314,317 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 			return "", err
 		}
 	}
+
+	return id, nil
+}
+
+func NewImportMedia(ctx context.Context, app core.App, providerName, providerId string, otherProviderIds []string) (string, error) {
+	pm := app.ProviderManager()
+
+	check := func(pid string) (string, error) {
+		dbMediaSegment, err := app.DB().GetMediaSegmentByProviderId(ctx, providerName, pid)
+		if err != nil {
+			return "", err
+		}
+
+		fmt.Printf("id already exists: %v\n", providerId)
+		return dbMediaSegment.MediaId, nil
+	}
+
+	mediaId, err := check(providerId)
+	if err != nil && !errors.Is(err, database.ErrItemNotFound) {
+		return "", err
+	}
+
+	if mediaId != "" {
+		return "", fmt.Errorf("provider id '%s/%s' already in use", providerName, providerId)
+	}
+
+	for _, pid := range otherProviderIds {
+		mediaId, err := check(pid)
+		if err != nil && !errors.Is(err, database.ErrItemNotFound) {
+			return "", err
+		}
+
+		if mediaId != "" {
+			return "", fmt.Errorf("provider id '%s/%s' already in use", providerName, providerId)
+		}
+	}
+
+	media, err := pm.GetMedia(ctx, providerName, providerId)
+	if err != nil {
+		// TODO(patrik): Handle err
+		return "", err
+	}
+
+	otherMedia := make([]provider.Media, 0, len(otherProviderIds))
+
+	for _, id := range otherProviderIds {
+		media, err := pm.GetMedia(ctx, providerName, id)
+		if err != nil {
+			// TODO(patrik): Handle err
+			return "", err
+		}
+
+		otherMedia = append(otherMedia, media)
+	}
+
+	id := utils.CreateMediaId()
+
+	// TODO(patrik): Better way to do this, ensure that these directories exists
+	mediaDir := app.WorkDir().MediaDirById(id)
+	dirs := []string{
+		mediaDir.String(),
+		mediaDir.Images(),
+	}
+
+	for _, dir := range dirs {
+		err = os.Mkdir(dir, 0755)
+		if err != nil && !os.IsExist(err) {
+			return "", err
+		}
+	}
+
+	initMedia := func(media provider.Media) error {
+		if media.AiringSeason != nil {
+			*media.AiringSeason = utils.Slug(*media.AiringSeason)
+
+			err := app.DB().CreateTag(ctx, *media.AiringSeason, *media.AiringSeason)
+			if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+				return err
+			}
+		}
+
+		return nil
+	}
+
+	err = initMedia(media)
+	if err != nil {
+		return "", nil
+	}
+
+	for _, media := range otherMedia {
+		err = initMedia(media)
+		if err != nil {
+			return "", nil
+		}
+	}
+
+	_, err = app.DB().CreateMedia(ctx, database.CreateMediaParams{
+		Id:    id,
+		Type:  media.Type,
+		Title: media.Title,
+		// Description:  utils.StringPtrToSqlNull(media.Description),
+		// Score:        utils.Float64PtrToSqlNull(media.Score),
+		// Status:       media.Status,
+		// Rating:       media.Rating,
+		// AiringSeason: utils.StringPtrToSqlNull(media.AiringSeason),
+		// StartDate: sql.NullString{
+		// 	String: startDate,
+		// 	Valid:  startDate != "",
+		// },
+		// EndDate: sql.NullString{
+		// 	String: endDate,
+		// 	Valid:  endDate != "",
+		// },
+		// CoverFile: sql.NullString{
+		// 	String: coverFilename,
+		// 	Valid:  coverFilename != "",
+		// },
+		// BannerFile: sql.NullString{
+		// 	String: bannerFilename,
+		// 	Valid:  bannerFilename != "",
+		// },
+		// LogoFile: sql.NullString{
+		// 	String: logoFilename,
+		// 	Valid:  logoFilename != "",
+		// },
+		// DefaultProvider: sql.NullString{
+		// 	String: providerName,
+		// 	Valid:  providerName != "",
+		// },
+		// Providers: providerIds,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	createSegment := func(idx int, media provider.Media) error {
+		providerIds := ember.KVStore{}
+		maps.Copy(providerIds, media.ExtraProviderIds)
+		providerIds[providerName] = media.ProviderId
+
+		startDate := ""
+		if media.StartDate != nil {
+			startDate = media.StartDate.Format(types.MediaDateLayout)
+		}
+
+		endDate := ""
+		if media.EndDate != nil {
+			endDate = media.EndDate.Format(types.MediaDateLayout)
+		}
+
+		coverFilename := ""
+		bannerFilename := ""
+		logoFilename := ""
+
+		_ = startDate
+		_ = endDate
+		_ = coverFilename
+		_ = bannerFilename
+		_ = logoFilename
+
+		if media.CoverUrl != nil {
+			p, err := utils.DownloadImageHashed(*media.CoverUrl, mediaDir.Images())
+			if err == nil {
+				coverFilename = path.Base(p)
+			} else {
+				app.Logger().Error("failed to download cover image for media", "err", err)
+			}
+		}
+
+		// TODO(patrik): Remove?
+		if media.BannerUrl != nil {
+			p, err := utils.DownloadImageHashed(*media.BannerUrl, mediaDir.Images())
+			if err == nil {
+				bannerFilename = path.Base(p)
+			} else {
+				app.Logger().Error("failed to download banner image for media", "err", err)
+			}
+		}
+
+		// TODO(patrik): Remove?
+		if media.LogoUrl != nil {
+			p, err := utils.DownloadImageHashed(*media.LogoUrl, mediaDir.Images())
+			if err == nil {
+				logoFilename = path.Base(p)
+			} else {
+				app.Logger().Error("failed to download logo image for media", "err", err)
+			}
+		}
+
+		err := app.DB().CreateMediaSegment(ctx, database.CreateMediaSegmentParams{
+			Idx:          idx,
+			MediaId:      id,
+			Type:         types.MediaSegmentTypeUnknown,
+			Title:        media.Title,
+			Description:  utils.StringPtrToSqlNull(media.Description),
+			Score:        utils.Float64PtrToSqlNull(media.Score),
+			Status:       media.Status,
+			Rating:       media.Rating,
+			AiringSeason: utils.StringPtrToSqlNull(media.AiringSeason),
+			StartDate: sql.NullString{
+				String: startDate,
+				Valid:  startDate != "",
+			},
+			EndDate: sql.NullString{
+				String: endDate,
+				Valid:  endDate != "",
+			},
+			CoverFile: sql.NullString{
+				String: coverFilename,
+				Valid:  coverFilename != "",
+			},
+			BannerFile: sql.NullString{
+				String: bannerFilename,
+				Valid:  bannerFilename != "",
+			},
+			LogoFile: sql.NullString{
+				String: logoFilename,
+				Valid:  logoFilename != "",
+			},
+			DefaultProvider: sql.NullString{
+				String: providerName,
+				Valid:  providerName != "",
+			},
+			Providers: providerIds,
+		})
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	err = createSegment(0, media)
+	if err != nil {
+		return "", err
+	}
+
+	for i, media := range otherMedia {
+		err = createSegment(i+1, media)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// if media.Type.IsMovie() {
+	// 	releaseDate := ""
+	// 	if media.StartDate != nil {
+	// 		releaseDate = media.StartDate.Format(types.MediaDateLayout)
+	// 	}
+	//
+	// 	err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
+	// 		MediaId: id,
+	// 		Name:    media.Title,
+	// 		Index:   1,
+	// 		ReleaseDate: sql.NullString{
+	// 			String: releaseDate,
+	// 			Valid:  releaseDate != "",
+	// 		},
+	// 	})
+	// 	if err != nil {
+	// 		return "", err
+	// 	}
+	// } else {
+	// 	for _, part := range media.Parts {
+	// 		releaseDate := ""
+	// 		if part.ReleaseDate != nil {
+	// 			releaseDate = part.ReleaseDate.Format(types.MediaDateLayout)
+	// 		}
+	//
+	// 		err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
+	// 			MediaId: id,
+	// 			Name:    part.Name,
+	// 			Index:   int64(part.Number),
+	// 			ReleaseDate: sql.NullString{
+	// 				String: releaseDate,
+	// 				Valid:  releaseDate != "",
+	// 			},
+	// 		})
+	// 		if err != nil {
+	// 			return "", err
+	// 		}
+	// 	}
+	// }
+	//
+	// for _, tag := range media.Tags {
+	// 	tag = utils.Slug(tag)
+	//
+	// 	err := app.DB().CreateTag(ctx, tag, tag)
+	// 	if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+	// 		return "", err
+	// 	}
+	//
+	// 	err = app.DB().AddTagToMedia(ctx, id, tag)
+	// 	if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+	// 		return "", err
+	// 	}
+	// }
+	//
+	// for _, tag := range media.Creators {
+	// 	tag = utils.Slug(tag)
+	//
+	// 	err := app.DB().CreateTag(ctx, tag, tag)
+	// 	if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+	// 		return "", err
+	// 	}
+	//
+	// 	err = app.DB().AddCreatorToMedia(ctx, id, tag)
+	// 	if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+	// 		return "", err
+	// 	}
+	// }
 
 	return id, nil
 }
