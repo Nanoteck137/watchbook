@@ -3,8 +3,10 @@ package core
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 
+	"github.com/kr/pretty"
 	"github.com/nanoteck137/pyrin/ember"
 	"github.com/nanoteck137/pyrin/trail"
 	"github.com/nanoteck137/watchbook"
@@ -14,6 +16,7 @@ import (
 	"github.com/nanoteck137/watchbook/provider"
 	"github.com/nanoteck137/watchbook/provider/dummy"
 	"github.com/nanoteck137/watchbook/provider/myanimelist"
+	"github.com/nanoteck137/watchbook/provider/sonarr"
 	"github.com/nanoteck137/watchbook/provider/tmdb"
 	"github.com/nanoteck137/watchbook/tools/cache"
 	"github.com/nanoteck137/watchbook/types"
@@ -89,12 +92,12 @@ func (app *BaseApp) Bootstrap() error {
 		return err
 	}
 
-	cache, err := cache.NewProvider(app.cacheDb)
+	c, err := cache.NewProvider(app.cacheDb)
 	if err != nil {
 		return err
 	}
 
-	pm := provider.NewProviderManager(cache)
+	pm := provider.NewProviderManager(c)
 	pm.RegisterProvider(&myanimelist.MyAnimeListAnimeProvider{})
 	pm.RegisterProvider(&dummy.DummyProvider{})
 	pm.RegisterProvider(&tmdb.TmdbMovieProvider{})
@@ -102,6 +105,31 @@ func (app *BaseApp) Bootstrap() error {
 
 	app.providerManager = pm
 	app.jobProcessor = job.NewJobProcessor(app.db)
+
+	ac := sonarr.NewApiClient(&cache.NoOpCache{}, app.config.SonarrUrl, app.config.SonarrApiKey)
+	serie, err := ac.GetSerieById(context.TODO(), "2")
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		return err
+	}
+
+	pretty.Println(serie)
+
+	series, err := ac.GetSeries(context.TODO())
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		return err
+	}
+
+	pretty.Println(series)
+
+	episodes, err := ac.GetSeasonEpisodes(context.TODO(), "2", 1)
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		return err
+	}
+
+	pretty.Println(episodes)
 
 	_, err = os.Stat(workDir.SetupFile())
 	if errors.Is(err, os.ErrNotExist) && app.config.Username != "" {

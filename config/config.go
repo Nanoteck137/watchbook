@@ -17,6 +17,8 @@ type Config struct {
 	Username        string `mapstructure:"username"`
 	InitialPassword string `mapstructure:"initial_password"`
 	JwtSecret       string `mapstructure:"jwt_secret"`
+	SonarrUrl       string `mapstructure:"sonarr_url"`
+	SonarrApiKey    string `mapstructure:"sonarr_api_key"`
 }
 
 func (c *Config) WorkDir() types.WorkDir {
@@ -49,6 +51,8 @@ func validateConfig(config *Config) {
 	validate(config.Username == "", "username needs to be set")
 	validate(config.InitialPassword == "", "initial_password needs to be set")
 	validate(config.JwtSecret == "", "jwt_secret needs to be set")
+	validate(config.SonarrUrl == "", "sonarr_url needs to be set")
+	validate(config.SonarrApiKey == "", "sonarr_api_key needs to be set")
 
 	if hasError {
 		os.Exit(1)
@@ -93,6 +97,7 @@ func InitConfig() {
 	configCopy := LoadedConfig
 	configCopy.JwtSecret = hide(configCopy.JwtSecret)
 	configCopy.InitialPassword = hide(configCopy.InitialPassword)
+	configCopy.SonarrApiKey = hide(configCopy.SonarrApiKey)
 
 	logger.Debug("Current Config", "config", configCopy)
 

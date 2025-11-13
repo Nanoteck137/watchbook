@@ -173,3 +173,17 @@ func SetJson[T any](cache Cache, key string, data T, ttl time.Duration) error {
 
 	return nil
 }
+
+var _ Cache = (*NoOpCache)(nil)
+
+type NoOpCache struct {}
+
+func (n *NoOpCache) Get(key string) ([]byte, bool) {
+	return nil, false
+}
+
+// Set implements Cache.
+func (n *NoOpCache) Set(key string, value []byte, ttl time.Duration) error {
+	return nil
+}
+
