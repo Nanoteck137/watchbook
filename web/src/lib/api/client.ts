@@ -246,6 +246,10 @@ export class ApiClient extends BaseApiClient {
     return this.request(`/api/v1/providers/${providerName}/media/${mediaId}`, "PATCH", z.undefined(), z.any(), body, options)
   }
   
+  providerUpdateShow(providerName: string, showId: string, body: api.ProviderCollectionUpdateBody, options?: ExtraOptions) {
+    return this.request(`/api/v1/providers/${providerName}/collections/${showId}`, "PATCH", z.undefined(), z.any(), body, options)
+  }
+  
   providerUpdateUnknownMedia(options?: ExtraOptions) {
     return this.request("/api/v1/providers/updateUnknownMedia", "POST", z.undefined(), z.any(), undefined, options)
   }
@@ -288,6 +292,14 @@ export class ApiClient extends BaseApiClient {
   
   signup(body: api.SignupBody, options?: ExtraOptions) {
     return this.request("/api/v1/auth/signup", "POST", api.Signup, z.any(), body, options)
+  }
+  
+  test(options?: ExtraOptions) {
+    return this.request("/api/v1/test", "POST", z.undefined(), z.any(), undefined, options)
+  }
+  
+  test2(options?: ExtraOptions) {
+    return this.request("/api/v1/test2", "POST", z.undefined(), z.any(), undefined, options)
   }
   
   updateUserSettings(body: api.UpdateUserSettingsBody, options?: ExtraOptions) {
@@ -546,6 +558,10 @@ export class ClientUrls {
     return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/media/${mediaId}`)
   }
   
+  providerUpdateShow(providerName: string, showId: string) {
+    return createUrl(this.baseUrl, `/api/v1/providers/${providerName}/collections/${showId}`)
+  }
+  
   providerUpdateUnknownMedia() {
     return createUrl(this.baseUrl, "/api/v1/providers/updateUnknownMedia")
   }
@@ -588,6 +604,14 @@ export class ClientUrls {
   
   signup() {
     return createUrl(this.baseUrl, "/api/v1/auth/signup")
+  }
+  
+  test() {
+    return createUrl(this.baseUrl, "/api/v1/test")
+  }
+  
+  test2() {
+    return createUrl(this.baseUrl, "/api/v1/test2")
   }
   
   updateUserSettings() {

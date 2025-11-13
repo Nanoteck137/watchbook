@@ -47,6 +47,9 @@ type MediaRelease struct {
 type Media struct {
 	Id string `json:"id"`
 
+	Provider   string `json:"provider"`
+	ProviderId string `json:"provider_id"`
+
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
 
@@ -66,9 +69,6 @@ type Media struct {
 	CoverUrl  *string `json:"coverUrl"`
 	BannerUrl *string `json:"bannerUrl"`
 	LogoUrl   *string `json:"logoUrl"`
-
-	DefaultProvider *string         `json:"defaultProvider"`
-	Providers       []ProviderValue `json:"providers"`
 
 	User    *MediaUser    `json:"user,omitempty"`
 	Release *MediaRelease `json:"release"`
@@ -201,26 +201,26 @@ func ConvertDBMedia(c pyrin.Context, pm *provider.ProviderManager, hasUser bool,
 	}
 
 	return Media{
-		Id:              media.Id,
-		Title:           media.Title,
-		Description:     utils.SqlNullToStringPtr(media.Description),
-		Type:            media.Type,
-		Score:           utils.SqlNullToFloat64Ptr(media.Score),
-		Status:          media.Status,
-		Rating:          media.Rating,
-		PartCount:       media.PartCount.Int64,
-		Creators:        utils.FixNilArrayToEmpty(media.Creators.Data),
-		Tags:            utils.FixNilArrayToEmpty(media.Tags.Data),
-		AiringSeason:    utils.SqlNullToStringPtr(media.AiringSeason),
-		StartDate:       utils.SqlNullToStringPtr(media.StartDate),
-		EndDate:         utils.SqlNullToStringPtr(media.EndDate),
-		CoverUrl:        coverUrl,
-		BannerUrl:       bannerUrl,
-		LogoUrl:         logoUrl,
-		DefaultProvider: utils.SqlNullToStringPtr(media.DefaultProvider),
-		Providers:       createProviderValues(pm, media.Providers),
-		User:            user,
-		Release:         release,
+		Id:           media.Id,
+		Provider:     media.Provider,
+		ProviderId:   media.ProviderId,
+		Type:         media.Type,
+		Title:        media.Title,
+		Description:  utils.SqlNullToStringPtr(media.Description),
+		Score:        utils.SqlNullToFloat64Ptr(media.Score),
+		Status:       media.Status,
+		Rating:       media.Rating,
+		PartCount:    media.PartCount.Int64,
+		Creators:     utils.FixNilArrayToEmpty(media.Creators.Data),
+		Tags:         utils.FixNilArrayToEmpty(media.Tags.Data),
+		AiringSeason: utils.SqlNullToStringPtr(media.AiringSeason),
+		StartDate:    utils.SqlNullToStringPtr(media.StartDate),
+		EndDate:      utils.SqlNullToStringPtr(media.EndDate),
+		CoverUrl:     coverUrl,
+		BannerUrl:    bannerUrl,
+		LogoUrl:      logoUrl,
+		User:         user,
+		Release:      release,
 	}
 }
 

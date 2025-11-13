@@ -578,6 +578,10 @@ export type MediaRelease = z.infer<typeof MediaRelease>;
 export const Media = z.object({
   // Name: Media.id
   "id": z.string(),
+  // Name: Media.provider
+  "provider": z.string(),
+  // Name: Media.provider_id
+  "provider_id": z.string(),
   // Name: Media.title
   "title": z.string(),
   // Name: Media.description
@@ -608,10 +612,6 @@ export const Media = z.object({
   "bannerUrl": z.string().nullable(),
   // Name: Media.logoUrl
   "logoUrl": z.string().nullable(),
-  // Name: Media.defaultProvider
-  "defaultProvider": z.string().nullable(),
-  // Name: Media.providers
-  "providers": z.array(ProviderValue),
   // Name: Media.user
   "user": MediaUser.nullable().optional(),
   // Name: Media.release
@@ -632,6 +632,10 @@ export type GetMedia = z.infer<typeof GetMedia>;
 export const GetMediaById = z.object({
   // Name: GetMediaById.id
   "id": z.string(),
+  // Name: GetMediaById.provider
+  "provider": z.string(),
+  // Name: GetMediaById.provider_id
+  "provider_id": z.string(),
   // Name: GetMediaById.title
   "title": z.string(),
   // Name: GetMediaById.description
@@ -662,10 +666,6 @@ export const GetMediaById = z.object({
   "bannerUrl": z.string().nullable(),
   // Name: GetMediaById.logoUrl
   "logoUrl": z.string().nullable(),
-  // Name: GetMediaById.defaultProvider
-  "defaultProvider": z.string().nullable(),
-  // Name: GetMediaById.providers
-  "providers": z.array(ProviderValue),
   // Name: GetMediaById.user
   "user": MediaUser.nullable().optional(),
   // Name: GetMediaById.release

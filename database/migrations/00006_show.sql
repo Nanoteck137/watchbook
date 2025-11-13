@@ -21,8 +21,6 @@ CREATE TABLE show_seasons (
     num INTEGER NOT NULL,
     show_id TEXT NOT NULL REFERENCES shows(id) ON DELETE CASCADE,
 
-    media_id TEXT NOT NULL REFERENCES media(id) ON DELETE CASCADE,
-
     name TEXT NOT NULL,
     search_slug TEXT NOT NULL,
 
@@ -30,6 +28,21 @@ CREATE TABLE show_seasons (
     updated INTEGER NOT NULL,
 
     PRIMARY KEY(num, show_id)
+);
+
+CREATE TABLE show_season_parts (
+    show_id TEXT NOT NULL REFERENCES shows(id) ON DELETE CASCADE,
+    season_num INTEGER NOT NULL,
+    idx INTEGER NOT NULL,
+
+    name TEXT NOT NULL,
+	release_date TEXT, 
+
+    created INTEGER NOT NULL,
+    updated INTEGER NOT NULL,
+
+    FOREIGN KEY(season_num, show_id) REFERENCES show_seasons(num, show_id),
+    PRIMARY KEY(idx, season_num, show_id)
 );
 
 -- CREATE TABLE show_season_items (
@@ -48,5 +61,6 @@ CREATE TABLE show_seasons (
 
 -- +goose Down
 -- DROP TABLE show_season_items;
+DROP TABLE show_season_parts;
 DROP TABLE show_seasons;
 DROP TABLE shows;

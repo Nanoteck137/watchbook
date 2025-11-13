@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/kr/pretty"
 	"github.com/nanoteck137/pyrin"
 	"github.com/nanoteck137/pyrin/anvil"
 	"github.com/nanoteck137/validate"
@@ -20,6 +21,7 @@ import (
 	"github.com/nanoteck137/watchbook/provider"
 	"github.com/nanoteck137/watchbook/provider/myanimelist"
 	"github.com/nanoteck137/watchbook/provider/sonarr"
+	"github.com/nanoteck137/watchbook/provider/tmdb"
 	"github.com/nanoteck137/watchbook/types"
 	"github.com/nanoteck137/watchbook/utils"
 )
@@ -487,17 +489,20 @@ func InstallShowHandlers(app core.App, group pyrin.Group) {
 					Seasons: make([]ShowSeason, 0, len(seasons)),
 				}
 
+				_ = pm
+				_ = userId
+
 				for _, season := range seasons {
 					s := ConvertDBShowSeason(c, season)
 
-					items, err := app.DB().GetFullAllShowSeasonItemsByShowSeason(ctx, userId, season.Num, season.ShowId)
-					if err != nil {
-						return nil, err
-					}
-
-					for _, item := range items {
-						s.Items = append(s.Items, ConvertDBShowSeasonItem(c, pm, userId != nil, item))
-					}
+					// items, err := app.DB().GetFullAllShowSeasonItemsByShowSeason(ctx, userId, season.Num, season.ShowId)
+					// if err != nil {
+					// 	return nil, err
+					// }
+					//
+					// for _, item := range items {
+					// 	s.Items = append(s.Items, ConvertDBShowSeasonItem(c, pm, userId != nil, item))
+					// }
 
 					res.Seasons = append(res.Seasons, s)
 				}
@@ -1288,7 +1293,16 @@ func InstallShowHandlers(app core.App, group pyrin.Group) {
 					return nil, err
 				}
 
-				serie := series[1]
+				idx := 0
+				for i, s := range series {
+					if s.ID == 16 {
+						idx = i 
+						break
+					}
+				}
+
+				serie := series[idx]
+
 
 				id := utils.CreateShowId()
 
@@ -1309,13 +1323,23 @@ func InstallShowHandlers(app core.App, group pyrin.Group) {
 				// maps.Copy(providerIds, data.ExtraProviderIds)
 				// providerIds[providerName] = data.ProviderId
 
+				fmt.Printf("serie.TmdbId: %v\n", serie.TmdbId)
+
+				m, err := app.ProviderManager().GetCollection(ctx, tmdb.TvProviderName, strconv.Itoa(serie.TmdbId))
+				if err != nil {
+					fmt.Printf("err: %v\n", err)
+					return nil, err
+				}
+
+				pretty.Println(m)
+
 				coverFilename := ""
 				bannerFilename := ""
 				logoFilename := ""
 
-				coverUrl := ""
-				bannerUrl := ""
-				logoUrl := ""
+				coverUrl := utils.NullToDefault(m.CoverUrl)
+				bannerUrl := utils.NullToDefault(m.BannerUrl)
+				logoUrl := utils.NullToDefault(m.LogoUrl)
 
 				for _, img := range serie.Images {
 					if img.CoverType == "poster" && coverUrl == "" {
@@ -1390,35 +1414,56 @@ func InstallShowHandlers(app core.App, group pyrin.Group) {
 					// Providers: providerIds,
 				})
 				if err != nil {
+					fmt.Printf("err: %v\n", err)
 					return nil, err
 				}
 
-				// for _, item := range serie.Seasons {
-				// 	mediaId, err := ImportMedia(ctx, app, providerName, item.Id)
-				// 	if err != nil {
-				// 		return nil, err
-				// 	}
-				//
-				// 	err = app.DB().CreateShowSeason(ctx, database.CreateShowSeasonParams{
-				// 		Num:        item.Position,
-				// 		ShowId:     id,
-				// 		Name:       item.Name,
-				// 		SearchSlug: utils.Slug(item.Name),
-				// 	})
-				// 	if err != nil {
-				// 		return nil, err
-				// 	}
-				//
-				// 	err = app.DB().CreateShowSeasonItem(ctx, database.CreateShowSeasonItemParams{
-				// 		ShowSeasonNum: item.Position,
-				// 		ShowId:        id,
-				// 		MediaId:       mediaId,
-				// 		Position:      0,
-				// 	})
-				// 	if err != nil {
-				// 		return nil, err
-				// 	}
-				// }
+				for _, item := range serie.Seasons {
+					// mediaId, err := ImportMedia(ctx, app, providerName, item.Id)
+					// if err != nil {
+					// 	return nil, err
+					// }
+
+					name := fmt.Sprintf("Season %d", item.SeasonNumber)
+
+					err = app.DB().CreateShowSeason(ctx, database.CreateShowSeasonParams{
+						Num:        item.SeasonNumber,
+						ShowId:     id,
+						Name:       name,
+						SearchSlug: utils.Slug(name),
+					})
+					if err != nil {
+						return nil, err
+					}
+
+					episodes, err := sc.GetEpisodesBySeason(serie.ID, item.SeasonNumber)
+					if err != nil {
+						return nil, err
+					}
+
+					for _, episode := range episodes {
+						err := app.DB().CreateShowSeasonPart(ctx, database.CreateShowSeasonPartParams{
+							ShowId:       id,
+							SeasonNumber: item.SeasonNumber,
+							Index:        episode.EpisodeNumber,
+							Name:         episode.Title,
+							ReleaseDate:  sql.NullString{},
+						})
+						if err != nil {
+							return nil, err
+						}
+					}
+
+					// err = app.DB().CreateShowSeasonItem(ctx, database.CreateShowSeasonItemParams{
+					// 	ShowSeasonNum: item.Position,
+					// 	ShowId:        id,
+					// 	MediaId:       mediaId,
+					// 	Position:      0,
+					// })
+					// if err != nil {
+					// 	return nil, err
+					// }
+				}
 
 				return nil, nil
 			},
@@ -1431,13 +1476,20 @@ func InstallShowHandlers(app core.App, group pyrin.Group) {
 			HandlerFunc: func(c pyrin.Context) (any, error) {
 				ctx := context.Background()
 
-				id, err := NewImportMedia(ctx, app, myanimelist.AnimeProviderName, "35760", []string{"38524"})
+				id, err := ImportMedia(ctx, app, myanimelist.AnimeProviderName, "52807")
 				if err != nil {
-					fmt.Printf("err: %v\n", err)
 					return nil, err
 				}
 
 				fmt.Printf("id: %v\n", id)
+
+				// id, err := NewImportMedia(ctx, app, myanimelist.AnimeProviderName, "35760", []string{"38524"})
+				// if err != nil {
+				// 	fmt.Printf("err: %v\n", err)
+				// 	return nil, err
+				// }
+				//
+				// fmt.Printf("id: %v\n", id)
 
 				return nil, nil
 			},

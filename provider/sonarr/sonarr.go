@@ -31,6 +31,7 @@ type Series struct {
 	ID            int       `json:"id"`
 	Title         string    `json:"title"`
 	TvdbID        int       `json:"tvdbId"`
+	TmdbId        int       `json:"tmdbId"`
 	ImdbID        string    `json:"imdbId"`
 	Overview      string    `json:"overview"`
 	Year          int       `json:"year"`
@@ -147,9 +148,8 @@ func (c *Client) GetSeriesByID(id int) (*Series, error) {
 	return &series, nil
 }
 
-// GetEpisodesBySeries fetches all episodes for a specific series
-func (c *Client) GetEpisodesBySeries(seriesID int) ([]Episode, error) {
-	body, err := c.makeRequest(fmt.Sprintf("episode?seriesId=%d", seriesID))
+func (c *Client) GetEpisodesBySeason(seriesID, seasonNumber int) ([]Episode, error) {
+	body, err := c.makeRequest(fmt.Sprintf("episode?seriesId=%d&seasonNumber=%d", seriesID, seasonNumber))
 	if err != nil {
 		return nil, err
 	}

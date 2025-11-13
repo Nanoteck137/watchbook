@@ -537,6 +537,10 @@ type MediaRelease struct {
 type Media struct {
 	// Name: Media.id
 	Id string `json:"id"`
+	// Name: Media.provider
+	Provider string `json:"provider"`
+	// Name: Media.provider_id
+	ProviderId string `json:"provider_id"`
 	// Name: Media.title
 	Title string `json:"title"`
 	// Name: Media.description
@@ -567,10 +571,6 @@ type Media struct {
 	BannerUrl *string `json:"bannerUrl,omitempty"`
 	// Name: Media.logoUrl
 	LogoUrl *string `json:"logoUrl,omitempty"`
-	// Name: Media.defaultProvider
-	DefaultProvider *string `json:"defaultProvider,omitempty"`
-	// Name: Media.providers
-	Providers []ProviderValue `json:"providers"`
 	// Name: Media.user
 	User *MediaUser `json:"user,omitempty"`
 	// Name: Media.release
@@ -589,6 +589,10 @@ type GetMedia struct {
 type GetMediaById struct {
 	// Name: GetMediaById.id
 	Id string `json:"id"`
+	// Name: GetMediaById.provider
+	Provider string `json:"provider"`
+	// Name: GetMediaById.provider_id
+	ProviderId string `json:"provider_id"`
 	// Name: GetMediaById.title
 	Title string `json:"title"`
 	// Name: GetMediaById.description
@@ -619,10 +623,6 @@ type GetMediaById struct {
 	BannerUrl *string `json:"bannerUrl,omitempty"`
 	// Name: GetMediaById.logoUrl
 	LogoUrl *string `json:"logoUrl,omitempty"`
-	// Name: GetMediaById.defaultProvider
-	DefaultProvider *string `json:"defaultProvider,omitempty"`
-	// Name: GetMediaById.providers
-	Providers []ProviderValue `json:"providers"`
 	// Name: GetMediaById.user
 	User *MediaUser `json:"user,omitempty"`
 	// Name: GetMediaById.release

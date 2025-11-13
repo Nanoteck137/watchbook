@@ -1020,6 +1020,16 @@
           "omitEmpty": false
         },
         {
+          "name": "provider",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "provider_id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
           "name": "title",
           "type": "string",
           "omitEmpty": false
@@ -1092,16 +1102,6 @@
         {
           "name": "logoUrl",
           "type": "*string",
-          "omitEmpty": false
-        },
-        {
-          "name": "defaultProvider",
-          "type": "*string",
-          "omitEmpty": false
-        },
-        {
-          "name": "providers",
-          "type": "[]ProviderValue",
           "omitEmpty": false
         },
         {
@@ -1345,6 +1345,16 @@
           "omitEmpty": false
         },
         {
+          "name": "provider",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
+          "name": "provider_id",
+          "type": "string",
+          "omitEmpty": false
+        },
+        {
           "name": "title",
           "type": "string",
           "omitEmpty": false
@@ -1417,16 +1427,6 @@
         {
           "name": "logoUrl",
           "type": "*string",
-          "omitEmpty": false
-        },
-        {
-          "name": "defaultProvider",
-          "type": "*string",
-          "omitEmpty": false
-        },
-        {
-          "name": "providers",
-          "type": "[]ProviderValue",
           "omitEmpty": false
         },
         {
@@ -2528,6 +2528,13 @@
     },
     {
       "type": "api",
+      "name": "ProviderUpdateShow",
+      "method": "PATCH",
+      "path": "/api/v1/providers/:providerName/collections/:showId",
+      "body": "ProviderCollectionUpdateBody"
+    },
+    {
+      "type": "api",
       "name": "ProviderUpdateUnknownMedia",
       "method": "POST",
       "path": "/api/v1/providers/updateUnknownMedia"
@@ -2598,6 +2605,18 @@
       "path": "/api/v1/auth/signup",
       "response": "Signup",
       "body": "SignupBody"
+    },
+    {
+      "type": "api",
+      "name": "Test",
+      "method": "POST",
+      "path": "/api/v1/test"
+    },
+    {
+      "type": "api",
+      "name": "Test2",
+      "method": "POST",
+      "path": "/api/v1/test2"
     },
     {
       "type": "api",

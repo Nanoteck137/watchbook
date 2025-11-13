@@ -363,11 +363,14 @@ func (m *MyAnimeListAnimeProvider) GetMedia(c provider.Context, id string) (prov
 
 	episodes, _ := FetchAnimeEpisodes(dl, id)
 
+	if episodeCount > 0 && len(episodes) > episodeCount {
+		episodes = episodes[:episodeCount]
+	}
+
 	numEpisodesFound := len(episodes)
 	missingEpisodes := max(episodeCount-numEpisodesFound, 0)
 
 	lastEpisodeNumber := 0
-
 	for _, episode := range episodes {
 		var releaseDate *time.Time
 		d, err := time.Parse(types.MediaDateLayout, episode.Aired)

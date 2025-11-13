@@ -210,6 +210,8 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 
 	_, err = app.DB().CreateMedia(ctx, database.CreateMediaParams{
 		Id:           id,
+		Provider:     providerName,
+		ProviderId:   media.ProviderId,
 		Type:         media.Type,
 		Title:        media.Title,
 		Description:  utils.StringPtrToSqlNull(media.Description),
@@ -237,14 +239,37 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 			String: logoFilename,
 			Valid:  logoFilename != "",
 		},
-		DefaultProvider: sql.NullString{
-			String: providerName,
-			Valid:  providerName != "",
-		},
-		Providers: providerIds,
 	})
 	if err != nil {
 		return "", err
+	}
+
+	for _, tag := range media.Tags {
+		tag = utils.Slug(tag)
+
+		err := app.DB().CreateTag(ctx, tag, tag)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return "", err
+		}
+
+		err = app.DB().AddTagToMedia(ctx, id, tag)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return "", err
+		}
+	}
+
+	for _, tag := range media.Creators {
+		tag = utils.Slug(tag)
+
+		err := app.DB().CreateTag(ctx, tag, tag)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return "", err
+		}
+
+		err = app.DB().AddCreatorToMedia(ctx, id, tag)
+		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+			return "", err
+		}
 	}
 
 	if media.Type.IsMovie() {
@@ -286,345 +311,6 @@ func ImportMedia(ctx context.Context, app core.App, providerName, providerId str
 			}
 		}
 	}
-
-	for _, tag := range media.Tags {
-		tag = utils.Slug(tag)
-
-		err := app.DB().CreateTag(ctx, tag, tag)
-		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-			return "", err
-		}
-
-		err = app.DB().AddTagToMedia(ctx, id, tag)
-		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-			return "", err
-		}
-	}
-
-	for _, tag := range media.Creators {
-		tag = utils.Slug(tag)
-
-		err := app.DB().CreateTag(ctx, tag, tag)
-		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-			return "", err
-		}
-
-		err = app.DB().AddCreatorToMedia(ctx, id, tag)
-		if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-			return "", err
-		}
-	}
-
-	return id, nil
-}
-
-func NewImportMedia(ctx context.Context, app core.App, providerName, providerId string, otherProviderIds []string) (string, error) {
-	pm := app.ProviderManager()
-
-	check := func(pid string) (string, error) {
-		dbMediaSegment, err := app.DB().GetMediaSegmentByProviderId(ctx, providerName, pid)
-		if err != nil {
-			return "", err
-		}
-
-		fmt.Printf("id already exists: %v\n", providerId)
-		return dbMediaSegment.MediaId, nil
-	}
-
-	mediaId, err := check(providerId)
-	if err != nil && !errors.Is(err, database.ErrItemNotFound) {
-		return "", err
-	}
-
-	if mediaId != "" {
-		return "", fmt.Errorf("provider id '%s/%s' already in use", providerName, providerId)
-	}
-
-	for _, pid := range otherProviderIds {
-		mediaId, err := check(pid)
-		if err != nil && !errors.Is(err, database.ErrItemNotFound) {
-			return "", err
-		}
-
-		if mediaId != "" {
-			return "", fmt.Errorf("provider id '%s/%s' already in use", providerName, providerId)
-		}
-	}
-
-	media, err := pm.GetMedia(ctx, providerName, providerId)
-	if err != nil {
-		// TODO(patrik): Handle err
-		return "", err
-	}
-
-	otherMedia := make([]provider.Media, 0, len(otherProviderIds))
-
-	for _, id := range otherProviderIds {
-		media, err := pm.GetMedia(ctx, providerName, id)
-		if err != nil {
-			// TODO(patrik): Handle err
-			return "", err
-		}
-
-		otherMedia = append(otherMedia, media)
-	}
-
-	id := utils.CreateMediaId()
-
-	// TODO(patrik): Better way to do this, ensure that these directories exists
-	mediaDir := app.WorkDir().MediaDirById(id)
-	dirs := []string{
-		mediaDir.String(),
-		mediaDir.Images(),
-	}
-
-	for _, dir := range dirs {
-		err = os.Mkdir(dir, 0755)
-		if err != nil && !os.IsExist(err) {
-			return "", err
-		}
-	}
-
-	initMedia := func(media provider.Media) error {
-		if media.AiringSeason != nil {
-			*media.AiringSeason = utils.Slug(*media.AiringSeason)
-
-			err := app.DB().CreateTag(ctx, *media.AiringSeason, *media.AiringSeason)
-			if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-				return err
-			}
-		}
-
-		return nil
-	}
-
-	err = initMedia(media)
-	if err != nil {
-		return "", nil
-	}
-
-	for _, media := range otherMedia {
-		err = initMedia(media)
-		if err != nil {
-			return "", nil
-		}
-	}
-
-	_, err = app.DB().CreateMedia(ctx, database.CreateMediaParams{
-		Id:    id,
-		Type:  media.Type,
-		Title: media.Title,
-		// Description:  utils.StringPtrToSqlNull(media.Description),
-		// Score:        utils.Float64PtrToSqlNull(media.Score),
-		// Status:       media.Status,
-		// Rating:       media.Rating,
-		// AiringSeason: utils.StringPtrToSqlNull(media.AiringSeason),
-		// StartDate: sql.NullString{
-		// 	String: startDate,
-		// 	Valid:  startDate != "",
-		// },
-		// EndDate: sql.NullString{
-		// 	String: endDate,
-		// 	Valid:  endDate != "",
-		// },
-		// CoverFile: sql.NullString{
-		// 	String: coverFilename,
-		// 	Valid:  coverFilename != "",
-		// },
-		// BannerFile: sql.NullString{
-		// 	String: bannerFilename,
-		// 	Valid:  bannerFilename != "",
-		// },
-		// LogoFile: sql.NullString{
-		// 	String: logoFilename,
-		// 	Valid:  logoFilename != "",
-		// },
-		// DefaultProvider: sql.NullString{
-		// 	String: providerName,
-		// 	Valid:  providerName != "",
-		// },
-		// Providers: providerIds,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	createSegment := func(idx int, media provider.Media) error {
-		providerIds := ember.KVStore{}
-		maps.Copy(providerIds, media.ExtraProviderIds)
-		providerIds[providerName] = media.ProviderId
-
-		startDate := ""
-		if media.StartDate != nil {
-			startDate = media.StartDate.Format(types.MediaDateLayout)
-		}
-
-		endDate := ""
-		if media.EndDate != nil {
-			endDate = media.EndDate.Format(types.MediaDateLayout)
-		}
-
-		coverFilename := ""
-		bannerFilename := ""
-		logoFilename := ""
-
-		_ = startDate
-		_ = endDate
-		_ = coverFilename
-		_ = bannerFilename
-		_ = logoFilename
-
-		if media.CoverUrl != nil {
-			p, err := utils.DownloadImageHashed(*media.CoverUrl, mediaDir.Images())
-			if err == nil {
-				coverFilename = path.Base(p)
-			} else {
-				app.Logger().Error("failed to download cover image for media", "err", err)
-			}
-		}
-
-		// TODO(patrik): Remove?
-		if media.BannerUrl != nil {
-			p, err := utils.DownloadImageHashed(*media.BannerUrl, mediaDir.Images())
-			if err == nil {
-				bannerFilename = path.Base(p)
-			} else {
-				app.Logger().Error("failed to download banner image for media", "err", err)
-			}
-		}
-
-		// TODO(patrik): Remove?
-		if media.LogoUrl != nil {
-			p, err := utils.DownloadImageHashed(*media.LogoUrl, mediaDir.Images())
-			if err == nil {
-				logoFilename = path.Base(p)
-			} else {
-				app.Logger().Error("failed to download logo image for media", "err", err)
-			}
-		}
-
-		err := app.DB().CreateMediaSegment(ctx, database.CreateMediaSegmentParams{
-			Idx:          idx,
-			MediaId:      id,
-			Type:         types.MediaSegmentTypeUnknown,
-			Title:        media.Title,
-			Description:  utils.StringPtrToSqlNull(media.Description),
-			Score:        utils.Float64PtrToSqlNull(media.Score),
-			Status:       media.Status,
-			Rating:       media.Rating,
-			AiringSeason: utils.StringPtrToSqlNull(media.AiringSeason),
-			StartDate: sql.NullString{
-				String: startDate,
-				Valid:  startDate != "",
-			},
-			EndDate: sql.NullString{
-				String: endDate,
-				Valid:  endDate != "",
-			},
-			CoverFile: sql.NullString{
-				String: coverFilename,
-				Valid:  coverFilename != "",
-			},
-			BannerFile: sql.NullString{
-				String: bannerFilename,
-				Valid:  bannerFilename != "",
-			},
-			LogoFile: sql.NullString{
-				String: logoFilename,
-				Valid:  logoFilename != "",
-			},
-			DefaultProvider: sql.NullString{
-				String: providerName,
-				Valid:  providerName != "",
-			},
-			Providers: providerIds,
-		})
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-
-	err = createSegment(0, media)
-	if err != nil {
-		return "", err
-	}
-
-	for i, media := range otherMedia {
-		err = createSegment(i+1, media)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	// if media.Type.IsMovie() {
-	// 	releaseDate := ""
-	// 	if media.StartDate != nil {
-	// 		releaseDate = media.StartDate.Format(types.MediaDateLayout)
-	// 	}
-	//
-	// 	err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
-	// 		MediaId: id,
-	// 		Name:    media.Title,
-	// 		Index:   1,
-	// 		ReleaseDate: sql.NullString{
-	// 			String: releaseDate,
-	// 			Valid:  releaseDate != "",
-	// 		},
-	// 	})
-	// 	if err != nil {
-	// 		return "", err
-	// 	}
-	// } else {
-	// 	for _, part := range media.Parts {
-	// 		releaseDate := ""
-	// 		if part.ReleaseDate != nil {
-	// 			releaseDate = part.ReleaseDate.Format(types.MediaDateLayout)
-	// 		}
-	//
-	// 		err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
-	// 			MediaId: id,
-	// 			Name:    part.Name,
-	// 			Index:   int64(part.Number),
-	// 			ReleaseDate: sql.NullString{
-	// 				String: releaseDate,
-	// 				Valid:  releaseDate != "",
-	// 			},
-	// 		})
-	// 		if err != nil {
-	// 			return "", err
-	// 		}
-	// 	}
-	// }
-	//
-	// for _, tag := range media.Tags {
-	// 	tag = utils.Slug(tag)
-	//
-	// 	err := app.DB().CreateTag(ctx, tag, tag)
-	// 	if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-	// 		return "", err
-	// 	}
-	//
-	// 	err = app.DB().AddTagToMedia(ctx, id, tag)
-	// 	if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-	// 		return "", err
-	// 	}
-	// }
-	//
-	// for _, tag := range media.Creators {
-	// 	tag = utils.Slug(tag)
-	//
-	// 	err := app.DB().CreateTag(ctx, tag, tag)
-	// 	if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-	// 		return "", err
-	// 	}
-	//
-	// 	err = app.DB().AddCreatorToMedia(ctx, id, tag)
-	// 	if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-	// 		return "", err
-	// 	}
-	// }
 
 	return id, nil
 }
@@ -1369,290 +1055,293 @@ func InstallProviderHandlers(app core.App, group pyrin.Group) {
 			},
 		},
 
+		// TODO(patrik): Change
 		pyrin.ApiHandler{
 			Name:     "ProviderUpdateMedia",
 			Method:   http.MethodPatch,
 			Path:     "/providers/:providerName/media/:mediaId",
 			BodyType: ProviderMediaUpdateBody{},
 			HandlerFunc: func(c pyrin.Context) (any, error) {
-				providerName := c.Param("providerName")
-				mediaId := c.Param("mediaId")
-
-				body, err := pyrin.Body[ProviderMediaUpdateBody](c)
-				if err != nil {
-					return nil, err
-				}
-
-				pm := app.ProviderManager()
-
-				ctx := context.Background()
-
-				dbMedia, err := app.DB().GetMediaById(ctx, nil, mediaId)
-				if err != nil {
-					// TODO(patrik): Handle err
-					return nil, err
-				}
-
-				providerId, ok := dbMedia.Providers[providerName]
-				if !ok {
-					return nil, errors.New("provider not found on media")
-				}
-
-				err = UpdateMedia(ctx, app, body, dbMedia, providerName, providerId)
-				if err != nil {
-					// TODO(patrik): handle err
-					return nil, err
-				}
-
-				return nil, nil
-
-				data, err := pm.GetMedia(ctx, providerName, providerId)
-				if err != nil {
-					fmt.Printf("err: %v\n", err)
-					// TODO(patrik): Handle err
-					return "", err
-				}
-
-				if data.AiringSeason != nil {
-					err := app.DB().CreateTag(ctx, *data.AiringSeason, *data.AiringSeason)
-					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-						return "", err
-					}
-				}
-
-				changes := database.MediaChanges{}
-
-				changes.Type = database.Change[types.MediaType]{
-					Value:   data.Type,
-					Changed: data.Type != dbMedia.Type,
-				}
-
-				changes.Title = database.Change[string]{
-					Value:   data.Title,
-					Changed: data.Title != dbMedia.Title,
-				}
-
-				desc := utils.NullToDefault(data.Description)
-				changes.Description = database.Change[sql.NullString]{
-					Value: sql.NullString{
-						String: desc,
-						Valid:  desc != "",
-					},
-					Changed: desc != dbMedia.Description.String,
-				}
-
-				score := utils.NullToDefault(data.Score)
-				changes.Score = database.Change[sql.NullFloat64]{
-					Value: sql.NullFloat64{
-						Float64: score,
-						Valid:   score != 0.0,
-					},
-					Changed: score != dbMedia.Score.Float64,
-				}
-
-				changes.Status = database.Change[types.MediaStatus]{
-					Value:   data.Status,
-					Changed: data.Status != dbMedia.Status,
-				}
-
-				changes.Rating = database.Change[types.MediaRating]{
-					Value:   data.Rating,
-					Changed: data.Rating != dbMedia.Rating,
-				}
-
-				changes.Rating = database.Change[types.MediaRating]{
-					Value:   data.Rating,
-					Changed: data.Rating != dbMedia.Rating,
-				}
-
-				airingSeason := utils.NullToDefault(data.AiringSeason)
-				changes.AiringSeason = database.Change[sql.NullString]{
-					Value: sql.NullString{
-						String: airingSeason,
-						Valid:  airingSeason != "",
-					},
-					Changed: airingSeason != dbMedia.AiringSeason.String,
-				}
-
-				formatNullTime := func(t *time.Time) string {
-					if t == nil {
-						return ""
-					}
-
-					return t.Format(types.MediaDateLayout)
-				}
-
-				startDate := formatNullTime(data.StartDate)
-				changes.StartDate = database.Change[sql.NullString]{
-					Value: sql.NullString{
-						String: startDate,
-						Valid:  startDate != "",
-					},
-					Changed: startDate != dbMedia.StartDate.String,
-				}
-
-				endDate := formatNullTime(data.EndDate)
-				changes.EndDate = database.Change[sql.NullString]{
-					Value: sql.NullString{
-						String: endDate,
-						Valid:  endDate != "",
-					},
-					Changed: endDate != dbMedia.EndDate.String,
-				}
-
-				if body.ReplaceImages {
-					// TODO(patrik): Cover
-					// TODO(patrik): Banner
-					// TODO(patrik): Logo
-					mediaDir := app.WorkDir().MediaDirById(dbMedia.Id)
-
-					if data.CoverUrl != nil {
-						p, err := utils.DownloadImageHashed(*data.CoverUrl, mediaDir.Images())
-						if err != nil {
-							return "", fmt.Errorf("failed to download cover image for media: %w", err)
-						}
-
-						n := path.Base(p)
-						changes.CoverFile = database.Change[sql.NullString]{
-							Value: sql.NullString{
-								String: n,
-								Valid:  n != "",
-							},
-							Changed: true,
-						}
-					}
-
-					if data.BannerUrl != nil {
-						p, err := utils.DownloadImageHashed(*data.BannerUrl, mediaDir.Images())
-						if err != nil {
-							return "", fmt.Errorf("failed to download banner image for media: %w", err)
-						}
-
-						n := path.Base(p)
-						changes.BannerFile = database.Change[sql.NullString]{
-							Value: sql.NullString{
-								String: n,
-								Valid:  n != "",
-							},
-							Changed: true,
-						}
-					}
-
-					if data.LogoUrl != nil {
-						p, err := utils.DownloadImageHashed(*data.LogoUrl, mediaDir.Images())
-						if err != nil {
-							return "", fmt.Errorf("failed to download logo image for media: %w", err)
-						}
-
-						n := path.Base(p)
-						changes.LogoFile = database.Change[sql.NullString]{
-							Value: sql.NullString{
-								String: n,
-								Valid:  n != "",
-							},
-							Changed: true,
-						}
-					}
-				}
-
-				// TODO(patrik): Extra Provider Ids?
-
-				err = app.DB().UpdateMedia(ctx, dbMedia.Id, changes)
-				if err != nil {
-					return nil, err
-				}
-
-				if body.OverrideParts {
-					err = app.DB().RemoveAllMediaParts(ctx, dbMedia.Id)
-					if err != nil {
-						return nil, err
-					}
-
-					if data.Type.IsMovie() {
-						releaseDate := ""
-						if data.StartDate != nil {
-							releaseDate = data.StartDate.Format(types.MediaDateLayout)
-						}
-
-						err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
-							MediaId: dbMedia.Id,
-							Name:    data.Title,
-							Index:   1,
-							ReleaseDate: sql.NullString{
-								String: releaseDate,
-								Valid:  releaseDate != "",
-							},
-						})
-						if err != nil {
-							return nil, err
-						}
-					} else {
-						for _, part := range data.Parts {
-							releaseDate := ""
-							if part.ReleaseDate != nil {
-								releaseDate = part.ReleaseDate.Format(types.MediaDateLayout)
-							}
-
-							// TODO(patrik): Check for duplicated numbers
-							err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
-								MediaId: dbMedia.Id,
-								Name:    part.Name,
-								Index:   int64(part.Number),
-								ReleaseDate: sql.NullString{
-									String: releaseDate,
-									Valid:  releaseDate != "",
-								},
-							})
-							if err != nil {
-								return nil, err
-							}
-						}
-					}
-				}
-
-				for _, tag := range data.Tags {
-					tag = utils.Slug(tag)
-
-					err := app.DB().CreateTag(ctx, tag, tag)
-					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-						return nil, err
-					}
-
-					err = app.DB().AddTagToMedia(ctx, dbMedia.Id, tag)
-					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-						return nil, err
-					}
-				}
-
-				for _, tag := range data.Creators {
-					tag = utils.Slug(tag)
-
-					err := app.DB().CreateTag(ctx, tag, tag)
-					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-						return nil, err
-					}
-
-					err = app.DB().AddCreatorToMedia(ctx, dbMedia.Id, tag)
-					if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
-						return nil, err
-					}
-				}
-
-				if body.SetRelease {
-					if data.Release != nil {
-						err := app.DB().SetMediaPartRelease(ctx, dbMedia.Id, database.SetMediaPartRelease{
-							Type:             types.MediaPartReleaseTypeNotConfirmed,
-							StartDate:        data.Release.Format(time.RFC3339),
-							NumExpectedParts: len(data.Parts),
-							PartOffset:       0,
-							IntervalDays:     7,
-							DelayDays:        0,
-						})
-						if err != nil {
-							return nil, err
-						}
-					}
-				}
+				// providerName := c.Param("providerName")
+				// mediaId := c.Param("mediaId")
+				//
+				// body, err := pyrin.Body[ProviderMediaUpdateBody](c)
+				// if err != nil {
+				// 	return nil, err
+				// }
+				//
+				// pm := app.ProviderManager()
+				//
+				// ctx := context.Background()
+				//
+				// dbMedia, err := app.DB().GetMediaById(ctx, nil, mediaId)
+				// if err != nil {
+				// 	// TODO(patrik): Handle err
+				// 	return nil, err
+				// }
+				//
+				// providerId, ok := dbMedia.Providers[providerName]
+				// if !ok {
+				// 	return nil, errors.New("provider not found on media")
+				// }
+				//
+				// err = UpdateMedia(ctx, app, body, dbMedia, providerName, providerId)
+				// if err != nil {
+				// 	// TODO(patrik): handle err
+				// 	return nil, err
+				// }
+				//
+				// return nil, nil
+				//
+				// data, err := pm.GetMedia(ctx, providerName, providerId)
+				// if err != nil {
+				// 	fmt.Printf("err: %v\n", err)
+				// 	// TODO(patrik): Handle err
+				// 	return "", err
+				// }
+				//
+				// if data.AiringSeason != nil {
+				// 	err := app.DB().CreateTag(ctx, *data.AiringSeason, *data.AiringSeason)
+				// 	if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+				// 		return "", err
+				// 	}
+				// }
+				//
+				// changes := database.MediaChanges{}
+				//
+				// changes.Type = database.Change[types.MediaType]{
+				// 	Value:   data.Type,
+				// 	Changed: data.Type != dbMedia.Type,
+				// }
+				//
+				// changes.Title = database.Change[string]{
+				// 	Value:   data.Title,
+				// 	Changed: data.Title != dbMedia.Title,
+				// }
+				//
+				// desc := utils.NullToDefault(data.Description)
+				// changes.Description = database.Change[sql.NullString]{
+				// 	Value: sql.NullString{
+				// 		String: desc,
+				// 		Valid:  desc != "",
+				// 	},
+				// 	Changed: desc != dbMedia.Description.String,
+				// }
+				//
+				// score := utils.NullToDefault(data.Score)
+				// changes.Score = database.Change[sql.NullFloat64]{
+				// 	Value: sql.NullFloat64{
+				// 		Float64: score,
+				// 		Valid:   score != 0.0,
+				// 	},
+				// 	Changed: score != dbMedia.Score.Float64,
+				// }
+				//
+				// changes.Status = database.Change[types.MediaStatus]{
+				// 	Value:   data.Status,
+				// 	Changed: data.Status != dbMedia.Status,
+				// }
+				//
+				// changes.Rating = database.Change[types.MediaRating]{
+				// 	Value:   data.Rating,
+				// 	Changed: data.Rating != dbMedia.Rating,
+				// }
+				//
+				// changes.Rating = database.Change[types.MediaRating]{
+				// 	Value:   data.Rating,
+				// 	Changed: data.Rating != dbMedia.Rating,
+				// }
+				//
+				// airingSeason := utils.NullToDefault(data.AiringSeason)
+				// changes.AiringSeason = database.Change[sql.NullString]{
+				// 	Value: sql.NullString{
+				// 		String: airingSeason,
+				// 		Valid:  airingSeason != "",
+				// 	},
+				// 	Changed: airingSeason != dbMedia.AiringSeason.String,
+				// }
+				//
+				// formatNullTime := func(t *time.Time) string {
+				// 	if t == nil {
+				// 		return ""
+				// 	}
+				//
+				// 	return t.Format(types.MediaDateLayout)
+				// }
+				//
+				// startDate := formatNullTime(data.StartDate)
+				// changes.StartDate = database.Change[sql.NullString]{
+				// 	Value: sql.NullString{
+				// 		String: startDate,
+				// 		Valid:  startDate != "",
+				// 	},
+				// 	Changed: startDate != dbMedia.StartDate.String,
+				// }
+				//
+				// endDate := formatNullTime(data.EndDate)
+				// changes.EndDate = database.Change[sql.NullString]{
+				// 	Value: sql.NullString{
+				// 		String: endDate,
+				// 		Valid:  endDate != "",
+				// 	},
+				// 	Changed: endDate != dbMedia.EndDate.String,
+				// }
+				//
+				// if body.ReplaceImages {
+				// 	// TODO(patrik): Cover
+				// 	// TODO(patrik): Banner
+				// 	// TODO(patrik): Logo
+				// 	mediaDir := app.WorkDir().MediaDirById(dbMedia.Id)
+				//
+				// 	if data.CoverUrl != nil {
+				// 		p, err := utils.DownloadImageHashed(*data.CoverUrl, mediaDir.Images())
+				// 		if err != nil {
+				// 			return "", fmt.Errorf("failed to download cover image for media: %w", err)
+				// 		}
+				//
+				// 		n := path.Base(p)
+				// 		changes.CoverFile = database.Change[sql.NullString]{
+				// 			Value: sql.NullString{
+				// 				String: n,
+				// 				Valid:  n != "",
+				// 			},
+				// 			Changed: true,
+				// 		}
+				// 	}
+				//
+				// 	if data.BannerUrl != nil {
+				// 		p, err := utils.DownloadImageHashed(*data.BannerUrl, mediaDir.Images())
+				// 		if err != nil {
+				// 			return "", fmt.Errorf("failed to download banner image for media: %w", err)
+				// 		}
+				//
+				// 		n := path.Base(p)
+				// 		changes.BannerFile = database.Change[sql.NullString]{
+				// 			Value: sql.NullString{
+				// 				String: n,
+				// 				Valid:  n != "",
+				// 			},
+				// 			Changed: true,
+				// 		}
+				// 	}
+				//
+				// 	if data.LogoUrl != nil {
+				// 		p, err := utils.DownloadImageHashed(*data.LogoUrl, mediaDir.Images())
+				// 		if err != nil {
+				// 			return "", fmt.Errorf("failed to download logo image for media: %w", err)
+				// 		}
+				//
+				// 		n := path.Base(p)
+				// 		changes.LogoFile = database.Change[sql.NullString]{
+				// 			Value: sql.NullString{
+				// 				String: n,
+				// 				Valid:  n != "",
+				// 			},
+				// 			Changed: true,
+				// 		}
+				// 	}
+				// }
+				//
+				// // TODO(patrik): Extra Provider Ids?
+				//
+				// err = app.DB().UpdateMedia(ctx, dbMedia.Id, changes)
+				// if err != nil {
+				// 	return nil, err
+				// }
+				//
+				// if body.OverrideParts {
+				// 	err = app.DB().RemoveAllMediaParts(ctx, dbMedia.Id)
+				// 	if err != nil {
+				// 		return nil, err
+				// 	}
+				//
+				// 	if data.Type.IsMovie() {
+				// 		releaseDate := ""
+				// 		if data.StartDate != nil {
+				// 			releaseDate = data.StartDate.Format(types.MediaDateLayout)
+				// 		}
+				//
+				// 		err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
+				// 			MediaId: dbMedia.Id,
+				// 			Name:    data.Title,
+				// 			Index:   1,
+				// 			ReleaseDate: sql.NullString{
+				// 				String: releaseDate,
+				// 				Valid:  releaseDate != "",
+				// 			},
+				// 		})
+				// 		if err != nil {
+				// 			return nil, err
+				// 		}
+				// 	} else {
+				// 		for _, part := range data.Parts {
+				// 			releaseDate := ""
+				// 			if part.ReleaseDate != nil {
+				// 				releaseDate = part.ReleaseDate.Format(types.MediaDateLayout)
+				// 			}
+				//
+				// 			// TODO(patrik): Check for duplicated numbers
+				// 			err := app.DB().CreateMediaPart(ctx, database.CreateMediaPartParams{
+				// 				MediaId: dbMedia.Id,
+				// 				Name:    part.Name,
+				// 				Index:   int64(part.Number),
+				// 				ReleaseDate: sql.NullString{
+				// 					String: releaseDate,
+				// 					Valid:  releaseDate != "",
+				// 				},
+				// 			})
+				// 			if err != nil {
+				// 				return nil, err
+				// 			}
+				// 		}
+				// 	}
+				// }
+				//
+				// for _, tag := range data.Tags {
+				// 	tag = utils.Slug(tag)
+				//
+				// 	err := app.DB().CreateTag(ctx, tag, tag)
+				// 	if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+				// 		return nil, err
+				// 	}
+				//
+				// 	err = app.DB().AddTagToMedia(ctx, dbMedia.Id, tag)
+				// 	if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+				// 		return nil, err
+				// 	}
+				// }
+				//
+				// for _, tag := range data.Creators {
+				// 	tag = utils.Slug(tag)
+				//
+				// 	err := app.DB().CreateTag(ctx, tag, tag)
+				// 	if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+				// 		return nil, err
+				// 	}
+				//
+				// 	err = app.DB().AddCreatorToMedia(ctx, dbMedia.Id, tag)
+				// 	if err != nil && !errors.Is(err, database.ErrItemAlreadyExists) {
+				// 		return nil, err
+				// 	}
+				// }
+				//
+				// if body.SetRelease {
+				// 	if data.Release != nil {
+				// 		err := app.DB().SetMediaPartRelease(ctx, dbMedia.Id, database.SetMediaPartRelease{
+				// 			Type:             types.MediaPartReleaseTypeNotConfirmed,
+				// 			StartDate:        data.Release.Format(time.RFC3339),
+				// 			NumExpectedParts: len(data.Parts),
+				// 			PartOffset:       0,
+				// 			IntervalDays:     7,
+				// 			DelayDays:        0,
+				// 		})
+				// 		if err != nil {
+				// 			return nil, err
+				// 		}
+				// 	}
+				// }
+				//
+				// return nil, nil
 
 				return nil, nil
 			},

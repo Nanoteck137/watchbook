@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
 
@@ -107,6 +106,7 @@ var oldCmd = &cobra.Command{
 			for _, media := range media {
 				providers := ember.KVStore{}
 				providerUsed := ""
+				_ = providerUsed
 
 				if media.TmdbId.Valid {
 					splits := strings.Split(media.TmdbId.String, "@")
@@ -163,11 +163,11 @@ var oldCmd = &cobra.Command{
 					CoverFile:    media.CoverFile,
 					LogoFile:     media.LogoFile,
 					BannerFile:   media.BannerFile,
-					DefaultProvider: sql.NullString{
-						String: providerUsed,
-						Valid:  providerUsed != "",
-					},
-					Providers:    providers,
+					// DefaultProvider: sql.NullString{
+					// 	String: providerUsed,
+					// 	Valid:  providerUsed != "",
+					// },
+					// Providers:    providers,
 					Created:      media.Created,
 					Updated:      media.Updated,
 				})

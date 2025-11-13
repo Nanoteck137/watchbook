@@ -37,7 +37,11 @@ type MediaRelease struct {
 type Media struct {
 	RowId int `db:"rowid"`
 
-	Id   string          `db:"id"`
+	Id string `db:"id"`
+
+	Provider   string `db:"provider"`
+	ProviderId string `db:"provider_id"`
+
 	Type types.MediaType `db:"type"`
 
 	Title       string         `db:"title"`
@@ -54,9 +58,6 @@ type Media struct {
 	CoverFile  sql.NullString `db:"cover_file"`
 	LogoFile   sql.NullString `db:"logo_file"`
 	BannerFile sql.NullString `db:"banner_file"`
-
-	DefaultProvider sql.NullString `db:"default_provider"`
-	Providers       ember.KVStore  `db:"providers"`
 
 	Created int64 `db:"created"`
 	Updated int64 `db:"updated"`
@@ -239,6 +240,10 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 			"media.rowid",
 
 			"media.id",
+
+			"media.provider",
+			"media.provider_id",
+
 			"media.type",
 
 			"media.title",
@@ -255,9 +260,6 @@ func MediaQuery(userId *string) *goqu.SelectDataset {
 			"media.cover_file",
 			"media.logo_file",
 			"media.banner_file",
-
-			"media.default_provider",
-			"media.providers",
 
 			"media.created",
 			"media.updated",
@@ -376,17 +378,22 @@ func (db DB) GetMediaById(ctx context.Context, userId *string, id string) (Media
 	return ember.Single[Media](db.db, ctx, query)
 }
 
-func (db DB) GetMediaByProviderId(ctx context.Context, userId *string, providerName, value string) (Media, error) {
+func (db DB) GetMediaByProviderId(ctx context.Context, userId *string, provider, providerId string) (Media, error) {
 	query := MediaQuery(userId).
 		Where(
-			goqu.Func("json_extract", goqu.I("media.providers"), "$."+providerName).Eq(value),
+			goqu.I("media.provider").Eq(provider),
+			goqu.I("media.provider_id").Eq(providerId),
 		)
 
 	return ember.Single[Media](db.db, ctx, query)
 }
 
 type CreateMediaParams struct {
-	Id   string
+	Id string
+
+	Provider   string
+	ProviderId string
+
 	Type types.MediaType
 
 	Title string
@@ -404,9 +411,6 @@ type CreateMediaParams struct {
 	CoverFile  sql.NullString
 	LogoFile   sql.NullString
 	BannerFile sql.NullString
-
-	DefaultProvider sql.NullString
-	Providers       ember.KVStore
 
 	Created int64
 	Updated int64
@@ -440,7 +444,11 @@ func (db DB) CreateMedia(ctx context.Context, params CreateMediaParams) (string,
 	}
 
 	query := dialect.Insert("media").Rows(goqu.Record{
-		"id":   id,
+		"id": id,
+
+		"provider":    params.Provider,
+		"provider_id": params.ProviderId,
+
 		"type": params.Type,
 
 		"title":       params.Title,
@@ -457,9 +465,6 @@ func (db DB) CreateMedia(ctx context.Context, params CreateMediaParams) (string,
 		"cover_file":  params.CoverFile,
 		"logo_file":   params.LogoFile,
 		"banner_file": params.BannerFile,
-
-		"default_provider": params.DefaultProvider,
-		"providers":        params.Providers,
 
 		"created": created,
 		"updated": updated,
@@ -487,9 +492,6 @@ type MediaChanges struct {
 	LogoFile   Change[sql.NullString]
 	BannerFile Change[sql.NullString]
 
-	DefaultProvider Change[sql.NullString]
-	Providers       Change[ember.KVStore]
-
 	Created Change[int64]
 }
 
@@ -512,9 +514,6 @@ func (db DB) UpdateMedia(ctx context.Context, id string, changes MediaChanges) e
 	addToRecord(record, "cover_file", changes.CoverFile)
 	addToRecord(record, "logo_file", changes.LogoFile)
 	addToRecord(record, "banner_file", changes.BannerFile)
-
-	addToRecord(record, "default_provider", changes.DefaultProvider)
-	addToRecord(record, "providers", changes.Providers)
 
 	addToRecord(record, "created", changes.Created)
 

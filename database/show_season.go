@@ -15,8 +15,6 @@ type ShowSeason struct {
 	Num    int    `db:"num"`
 	ShowId string `db:"show_id"`
 
-	MediaId string `db:"media_id"`
-
 	Name       string `db:"name"`
 	SearchSlug string `db:"search_slug"`
 
@@ -32,8 +30,6 @@ func ShowSeasonQuery() *goqu.SelectDataset {
 
 			"show_seasons.num",
 			"show_seasons.show_id",
-
-			"show_seasons.media_id",
 
 			"show_seasons.name",
 			"show_seasons.search_slug",
@@ -71,8 +67,6 @@ type CreateShowSeasonParams struct {
 	Num    int
 	ShowId string
 
-	MediaId string
-
 	Name       string
 	SearchSlug string
 
@@ -95,8 +89,6 @@ func (db DB) CreateShowSeason(ctx context.Context, params CreateShowSeasonParams
 		"num":     params.Num,
 		"show_id": params.ShowId,
 
-		"media_id": params.MediaId,
-
 		"name":        params.Name,
 		"search_slug": params.SearchSlug,
 
@@ -115,8 +107,6 @@ func (db DB) CreateShowSeason(ctx context.Context, params CreateShowSeasonParams
 type ShowSeasonChanges struct {
 	Num Change[int]
 
-	MediaId Change[string]
-
 	Name       Change[string]
 	SearchSlug Change[string]
 
@@ -127,8 +117,6 @@ func (db DB) UpdateShowSeason(ctx context.Context, num int, showId string, chang
 	record := goqu.Record{}
 
 	addToRecord(record, "num", changes.Num)
-
-	addToRecord(record, "media_id", changes.MediaId)
 
 	addToRecord(record, "name", changes.Name)
 	addToRecord(record, "search_slug", changes.SearchSlug)
